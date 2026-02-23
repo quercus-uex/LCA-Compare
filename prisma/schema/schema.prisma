@@ -1,0 +1,62 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id                 String    @id @default(uuid())
+  dni                String    @unique
+  nombre             String
+  apellidos          String
+  email              String    @unique
+  passwordHash       String
+  rol                String
+  fechaRegistro      DateTime  @default(now())
+  fechaActualizacion DateTime  @updatedAt
+  parcelas           Parcela[]
+}
+
+model Parcela {
+  id            String     @id @default(uuid())
+  sigpac        String?    @unique
+  refCat        String?    @unique
+  nombre        String
+  cultivos      Cultivo[]
+  idPropietario String
+  propietario   Usuario    @relation(fields: [idPropietario], references: [id])
+  poblacion     Poblacion? @relation(fields: [poblacionId], references: [id])
+  poblacionId   String?
+}
+
+model Cultivo {
+  id                  String           @id @default(uuid())
+  campania            Int
+  superficieCultivada Float
+  produccion          Float
+  consumoAgua         Float
+  ciclo               Int
+  tipo                String
+  idParcela           String
+  parcela             Parcela          @relation(fields: [idParcela], references: [id])
+  idResultadoImpacto  String           @unique
+  resultadoImpacto    ResultadoImpacto @relation(fields: [idResultadoImpacto], references: [id])
+}
+
+model ResultadoImpacto {
+  id        String        @id @default(uuid())
+  datos     Json
+  idImpacto String
+  impacto   MetodoImpacto @relation(fields: [idImpacto], references: [id])
+  cultivo   Cultivo?
+}
+
+model MetodoImpacto {
+  id         String             @id // id en OpenLCA
+  nombre     String
+  resultados ResultadoImpacto[]
+}

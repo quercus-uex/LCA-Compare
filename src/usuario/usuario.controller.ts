@@ -1,14 +1,15 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
-import { UsuarioPublico, UsuarioService } from './usuario.service';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { UsuarioService } from './usuario.service';
+import { AuthGuard } from '../auth/auth.guard';
+import { AuthUser, type UserJwt } from '../auth/auth-user.decorator';
 
 @Controller('/usuario/')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  @Get(':id')
-  async getById(@Param('id') id: string): Promise<UsuarioPublico> {
-    const usuario = await this.usuarioService.findOnePublic({ id });
-    if (usuario === null) throw new NotFoundException();
-    return usuario;
+  @UseGuards(AuthGuard)
+  @Get('')
+  async get(@AuthUser() user: UserJwt) {
+    return await this.usuarioService.findOnePublic({ email: user.email });
   }
 }

@@ -10,7 +10,6 @@ datasource db {
 
 model Usuario {
   id                 String    @id @default(uuid())
-  dni                String    @unique
   nombre             String
   apellidos          String
   email              String    @unique
@@ -22,29 +21,35 @@ model Usuario {
 }
 
 model Parcela {
-  id            String     @id @default(uuid())
-  sigpac        String?    @unique
-  refCat        String?    @unique
+  id            String                                  @id @default(uuid())
+  sigpac        String?                                 @unique
+  refCat        String?                                 @unique
+  ptIdParcela   String?                                 @unique
   nombre        String
-  cultivos      Cultivo[]
   idPropietario String
-  propietario   Usuario    @relation(fields: [idPropietario], references: [id])
-  poblacion     Poblacion? @relation(fields: [poblacionId], references: [id])
-  poblacionId   String?
+  propietario   Usuario                                 @relation(fields: [idPropietario], references: [id])
+  idPoblacion   String?
+  poblacion     Poblacion?                              @relation(fields: [idPoblacion], references: [id])
+  cultivos      Cultivo[]
+  geom          Unsupported("geometry(Polygon, 4326)")?
 }
 
 model Cultivo {
-  id                  String           @id @default(uuid())
-  campania            Int
+  id                  String   @id @default(uuid())
+  fechaInicioCampania DateTime
   superficieCultivada Float
   produccion          Float
   consumoAgua         Float
   ciclo               Int
   tipo                String
-  idParcela           String
-  parcela             Parcela          @relation(fields: [idParcela], references: [id])
-  idResultadoImpacto  String           @unique
-  resultadoImpacto    ResultadoImpacto @relation(fields: [idResultadoImpacto], references: [id])
+
+  idParcela String
+  parcela   Parcela @relation(fields: [idParcela], references: [id])
+
+  idResultadoImpacto String?           @unique
+  resultadoImpacto   ResultadoImpacto? @relation(fields: [idResultadoImpacto], references: [id])
+
+  @@unique([fechaInicioCampania, idParcela])
 }
 
 model ResultadoImpacto {

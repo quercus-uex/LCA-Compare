@@ -1,5 +1,4 @@
 import {
-  ArrayNotContains,
   ArrayNotEmpty,
   IsArray,
   IsEmail,
@@ -15,11 +14,15 @@ import { Type } from 'class-transformer';
 class MetadatosParcelaDto {
   @IsOptional()
   @IsString()
-  sigpac?: string;
+  es_sigpac?: string;
 
   @IsOptional()
   @IsString()
-  referencia_catastral?: string;
+  es_referencia_catastral?: string;
+
+  @IsOptional()
+  @IsString()
+  pt_id_parcela?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -27,6 +30,9 @@ class MetadatosParcelaDto {
 }
 
 class MetadatosCultivoDto {
+  @IsNumber()
+  fecha_inicio_campania: number;
+
   @IsNumber()
   @IsNotEmpty()
   superficie_cultivada: number;
@@ -49,10 +55,6 @@ class MetadatosCultivoDto {
 }
 
 class MetadatosUsuarioDto {
-  @IsString()
-  @IsNotEmpty()
-  dni: string;
-
   @IsString()
   @IsNotEmpty()
   nombre: string;

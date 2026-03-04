@@ -1,0 +1,44 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - "main"
+      - "develop"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET
+          script: |
+            set -euo pipefail
+            
+            REPO_URL="git@github.com:${{ github.repository }}.git"
+            BRANCH=${{ github.ref_name }}
+            DEPLOY_DIR="$HOME/openlca/${{ github.event.repository.name }}"
+            
+            if [ -d "${DEPLOY_DIR}/.git" ]; then
+              cd "${DEPLOY_DIR}"
+              git fetch --prune origin
+              git checkout "${BRANCH}" || git checkout -B "${BRANCH}"
+              git reset --hard "origin/${BRANCH}"
+            else
+              mkdir -p "$(dirname "${DEPLOY_DIR}")"
+              git clone --branch "${BRANCH}" --depth 1 "${REPO_URL}" "${DEPLOY_DIR}"
+              cd "${DEPLOY_DIR}"
+            fi
+            
+            cd "${DEPLOY_DIR}"
+            docker compose up -d

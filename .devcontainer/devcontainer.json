@@ -1,25 +1,26 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
 {
-  "name": "ubuntu-dind-webstorm",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "name": "ACVCompareService",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true",
+      "moby": "false"
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24"
     }
   },
-  "customizations": {
-    "jetbrains": {
-      "plugins": [
-        "org.intellij.prisma",
-        "org.intellij.ml.llm"
-      ]
-    }
-  },
-  "remoteUser": "root",
-  "privileged": true,
-  "containerEnv": {
-    "DOCKER_BUILDKIT": "1",
-    "COMPOSE_DOCKER_CLI_BUILD": "1"
-  },
-  "postCreateCommand": "docker version && docker compose version || true"
+
+  runArgs: [
+    "--network=openlca-bridge",
+    "--hostname=acv-compare-service"
+  ]
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
 }

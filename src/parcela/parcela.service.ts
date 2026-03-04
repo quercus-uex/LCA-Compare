@@ -11,10 +11,15 @@ export class ParcelaService {
   ): Promise<Parcela | null> {
     return this.prisma.parcela.findUnique({
       where,
+      include: {
+        cultivos: {
+          orderBy: { fechaInicioCampania: 'desc' },
+        },
+      },
     });
   }
 
-  async findAll(params: {
+  async findMany(params: {
     skip?: number;
     take?: number;
     cursor?: Prisma.ParcelaWhereUniqueInput;
@@ -31,8 +36,59 @@ export class ParcelaService {
     });
   }
 
-  async create(data: Prisma.ParcelaCreateInput): Promise<Parcela> {
+  create(data: Prisma.ParcelaCreateInput): Promise<Parcela> {
     return this.prisma.parcela.create({ data });
+  }
+
+  async addGeom(
+    geoJson: { type: string; coordinates: number[][][] },
+    id: string,
+  ): Promise<Parcela | null> {
+    await this.prisma.$executeRaw`
+      UPDATE "Parcela"
+      SET "geom" = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geoJson)}), 4326)
+      WHERE "id" = ${id}
+    `;
+    return await this.findOne({ id });
+  }
+
+  async getGeom(id: string): Promise<number[][] | null> {
+    const rows = await this.prisma.$queryRaw<Array<{ geojson: unknown }>>`
+      SELECT ST_AsGeoJSON("geom")::json AS geojson
+      FROM "Parcela"
+      WHERE "id" = ${id}
+      LIMIT 1
+    `;
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return (rows?.[0]?.geojson['coordinates'][0] as number[][]) ?? null;
+  }
+
+  async findManyByRange(id: string, range: number): Promise<Parcela[]> {
+    return this.prisma.$queryRaw<Array<Parcela>>`
+      WITH target AS (SELECT geom::geography AS geo FROM "Parcela" WHERE id = ${id})
+      SELECT p.*
+      FROM "Parcela" p
+      JOIN target t ON TRUE
+      WHERE p.id <> ${id}
+        AND ST_DWithin(p.geom::geography, t.geo, ${range})
+    `;
+  }
+
+  async findManyByPointRange(
+    lat: number,
+    long: number,
+    range: number,
+  ): Promise<Parcela[]> {
+    return this.prisma.$queryRaw<Array<Parcela>>`
+      WITH target AS (SELECT ST_SetSRID(ST_MakePoint(${long}, ${lat}), 4326)::geography AS geo)
+      SELECT p.*
+      FROM "Parcela" p
+      JOIN target t ON TRUE
+      WHERE ST_DWithin(p.geom::geography, t.geo, ${range})
+    `;
   }
 
   async update(params: {

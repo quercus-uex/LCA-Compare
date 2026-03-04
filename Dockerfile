@@ -7,13 +7,11 @@ RUN npm i
 
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
-RUN npx prisma generate --config prisma.config.ts
-
 COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
+
 RUN npm run build
 
-RUN npm ci --omit=dev
 
 FROM node:22-alpine AS prod
 
@@ -21,8 +19,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
-CMD ["sh", "-c", "node dist/src/main"]
+RUN npm ci --omit=dev && npx prisma generate --config prisma.config.ts
+
+COPY --from=builder /app/dist ./dist
+
+CMD ["node", "dist/src/main"]

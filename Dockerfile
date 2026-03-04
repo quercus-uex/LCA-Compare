@@ -25,4 +25,4 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 
-CMD ["sh", "-c", "node dist/src/main db migrate deploy && node dist/src/main"]
+CMD ["sh", "-c", "node dist/src/main"]

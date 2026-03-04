@@ -41,4 +41,4 @@ jobs:
             fi
             
             cd "${DEPLOY_DIR}"
-            docker compose up -d
+            docker compose up -d --build

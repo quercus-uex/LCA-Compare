@@ -1,0 +1,15 @@
+model Provincia {
+  id          String      @id @default(uuid())
+  nombre      String
+  idCatastro  Int
+  poblaciones Poblacion[]
+}
+
+model Poblacion {
+  id          String    @id @default(uuid())
+  idProvincia String
+  idCatastro  Int
+  provincia   Provincia @relation(fields: [idProvincia], references: [id])
+  nombre      String
+  parcelas    Parcela[]
+}

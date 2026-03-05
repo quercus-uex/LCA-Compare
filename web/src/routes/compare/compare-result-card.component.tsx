@@ -70,7 +70,9 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
                   )}
                   <th>{i.unit}</th>
                   {result.right && (
-                    <th>{result.diff?.impacto_total[index].diff} %</th>
+                    <th className={`${result.diff!.impacto_total[index].diff >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      {result.diff?.impacto_total[index].diff} %
+                    </th>
                   )}
                 </tr>
               ))}

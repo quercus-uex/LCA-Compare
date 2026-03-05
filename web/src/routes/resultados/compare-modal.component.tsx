@@ -14,7 +14,7 @@ export const CompareModal = ({ comparison }: { comparison?: ResultadoImpactoComp
   const DiffFormatted = ({ diff }: { diff: string }) => {
     return (
       <span
-        className={diff.startsWith('+') ? 'text-green-400' : 'text-red-400'}
+        className={diff.startsWith('-') ? 'text-green-400' : 'text-red-400'}
       >{diff}</span>
     );
   }

@@ -106,13 +106,15 @@ export const ResultadoRoute = () => {
                 }}
               />
 
-              <button className="btn btn-primary" onClick={compare}>Comparar cultivo</button>
+              <button className="btn btn-primary" onClick={compare}>
+                Comparar cultivo
+              </button>
             </div>
           </div>
         </div>
         <MapContainer
           className="h-full rounded-box aspect-square"
-          center={parcela.geom![0] as LatLngExpression}
+          center={[parcela.geom![0][1], parcela.geom![0][0]] as LatLngExpression}
           zoom={16}
         >
           <TileLayer
@@ -123,7 +125,7 @@ export const ResultadoRoute = () => {
             center={centroidOfPolygon(parcela.geom!) as LatLngExpression}
             radius={range}
           />
-          <Polygon positions={parcela.geom as LatLngExpression[]} />
+          <Polygon positions={parcela.geom!.map(i => [i[1], i[0]]) as LatLngExpression[]} />
         </MapContainer>
       </div>
 

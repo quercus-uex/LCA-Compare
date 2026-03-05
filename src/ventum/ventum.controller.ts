@@ -59,9 +59,9 @@ export class VentumController {
     mParcela: VentumInputDto['metadatos']['parcela'],
   ): Promise<Parcela> {
     let parcela = await this.parcelaService.findOne({
-      sigpac: mParcela.es_sigpac,
-      refCat: mParcela.es_referencia_catastral,
-      ptIdParcela: mParcela.pt_id_parcela,
+      sigpac: mParcela.es_sigpac ? mParcela.es_sigpac : undefined,
+      refCat: mParcela.es_referencia_catastral ? mParcela.es_referencia_catastral : undefined,
+      ptIdParcela: mParcela.pt_id_parcela ? mParcela.pt_id_parcela : undefined,
     });
 
     if (!parcela) {

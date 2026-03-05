@@ -70,6 +70,7 @@ export class VentumController {
 
       if (mParcela.es_sigpac) {
         polygon = await this.sigpacService.getPolygon(mParcela.es_sigpac);
+        polygon = [polygon[1], polygon[0]];
         poblacion = (
           await this.poblacionService.findMany({
             where: {

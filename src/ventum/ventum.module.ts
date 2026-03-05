@@ -7,6 +7,7 @@ import { UsuarioModule } from '../usuario/usuario.module';
 import { ParcelaModule } from '../parcela/parcela.module';
 import { CultivoModule } from '../cultivo/cultivo.module';
 import { ResultadoImpactoModule } from '../resultadoimpacto/resultado-impacto.module';
+import { PoblacionModule } from '../poblacion/poblacion.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ResultadoImpactoModule } from '../resultadoimpacto/resultado-impacto.mo
     ParcelaModule,
     CultivoModule,
     ResultadoImpactoModule,
+    PoblacionModule,
   ],
   controllers: [VentumController],
   providers: [SigpacService, CatastroService],

@@ -14,6 +14,7 @@ export class CompareService {
 
   getMeanOfResults(results: ResultadoImpacto[]) {
     if (results.length === 0) return null;
+    if (results.length === 1) return results[0].datos as CompareResultDto;
     const keys = [
       'impacto_fertilizantes',
       'impacto_manejo_cultivo',

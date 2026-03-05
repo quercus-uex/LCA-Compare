@@ -9,8 +9,9 @@ import { CultivoService } from '../cultivo/cultivo.service';
 import { DateTime } from 'luxon';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { instanceToPlain } from 'class-transformer';
-import { Parcela } from '../generated/prisma/client';
+import { Parcela, Poblacion } from '../generated/prisma/client';
 import { Cultivo } from '../generated/prisma/browser';
+import { PoblacionService } from '../poblacion/poblacion.service';
 
 @Controller('/ventum')
 export class VentumController {
@@ -21,6 +22,7 @@ export class VentumController {
     private readonly parcelaService: ParcelaService,
     private readonly cultivoService: CultivoService,
     private readonly resultadoImpactoService: ResultadoImpactoService,
+    private readonly poblacionService: PoblacionService,
   ) {}
 
   closePolygon(points: number[][]): number[][] {
@@ -63,21 +65,39 @@ export class VentumController {
     });
 
     if (!parcela) {
-      parcela = await this.parcelaService.create({
-        sigpac: mParcela.es_sigpac,
-        refCat: mParcela.es_referencia_catastral,
-        ptIdParcela: mParcela.pt_id_parcela,
-        nombre: mParcela.nombre,
-        propietario: { connect: { id: idPropietario } },
-      });
-
       let polygon: number[][] = [];
+      let poblacion: Poblacion | undefined;
+
       if (mParcela.es_sigpac) {
         polygon = await this.sigpacService.getPolygon(mParcela.es_sigpac);
+        poblacion = (
+          await this.poblacionService.findMany({
+            where: {
+              provincia: {
+                idCatastro: parseInt(mParcela.es_sigpac.split(':')[0]),
+              },
+              idCatastro: parseInt(mParcela.es_sigpac.split(':')[1]),
+            },
+          })
+        )[0];
       } else if (mParcela.es_referencia_catastral) {
         polygon = await this.catastroService.getPolygon(
           mParcela.es_referencia_catastral,
         );
+        poblacion = (
+          await this.poblacionService.findMany({
+            where: {
+              provincia: {
+                idCatastro: parseInt(
+                  mParcela.es_referencia_catastral.slice(0, 2),
+                ),
+              },
+              idCatastro: parseInt(
+                mParcela.es_referencia_catastral.slice(2, 5),
+              ),
+            },
+          })
+        )[0];
       } else {
         throw new BadRequestException(
           null,
@@ -90,6 +110,16 @@ export class VentumController {
         type: 'Polygon',
         coordinates: [polygon],
       };
+
+      parcela = await this.parcelaService.create({
+        sigpac: mParcela.es_sigpac,
+        refCat: mParcela.es_referencia_catastral,
+        ptIdParcela: mParcela.pt_id_parcela,
+        nombre: mParcela.nombre,
+        propietario: { connect: { id: idPropietario } },
+        poblacion: { connect: { id: poblacion.id } },
+      });
+
       await this.parcelaService.addGeom(geoJson, parcela.id);
     }
 

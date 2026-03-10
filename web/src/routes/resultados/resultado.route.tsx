@@ -12,6 +12,8 @@ import type { LatLngExpression } from 'leaflet';
 import { Circle, MapContainer, Polygon, TileLayer } from 'react-leaflet';
 import { centroidOfPolygon } from '../../utils/centroid-of-polygon.ts';
 import { CompareModal } from './compare-modal.component.tsx';
+import { toast } from 'sonner';
+import { exportJSON } from '../../common/utils.ts';
 
 export const ResultadoRoute = () => {
   const { id } = useParams();
@@ -38,6 +40,9 @@ export const ResultadoRoute = () => {
 
   const compare = async () => {
     const comparison = await resultadoImpacto.compareById(id!, range);
+    if (comparison.nearbyMean.impacto_fertilizantes.length === 0) {
+      return toast.error('No existen datos suficientes para la comparativa');
+    }
     setComparisonResult(comparison);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
@@ -50,7 +55,7 @@ export const ResultadoRoute = () => {
     <div className="flex flex-col items-center gap-2 flex-wrap">
       <h1 className="text-3xl font-bold">Resultado de impacto</h1>
 
-      <div className="flex gap-2 h-96 flex-wrap">
+      <div className="flex gap-2 h-96 flex-wrap w-full">
         <div className="flex flex-col gap-2 grow">
           <div className="card bg-base-100 shadow-sm">
             <div className="card-body">
@@ -78,6 +83,10 @@ export const ResultadoRoute = () => {
               </div>
             </div>
           </div>
+          <button
+            className="btn btn-secondary"
+            onClick={() => exportJSON(resultado.datos)}
+          >Exportar</button>
         </div>
 
         <div className="flex flex-col gap-2 grow">
@@ -97,7 +106,7 @@ export const ResultadoRoute = () => {
               <input
                 type="range"
                 min={10}
-                max={5000}
+                max={500000}
                 value={range}
                 className="range"
                 step={10}
@@ -114,7 +123,9 @@ export const ResultadoRoute = () => {
         </div>
         <MapContainer
           className="h-full rounded-box aspect-square"
-          center={[parcela.geom![0][1], parcela.geom![0][0]] as LatLngExpression}
+          center={
+            [parcela.geom![0][1], parcela.geom![0][0]] as LatLngExpression
+          }
           zoom={16}
         >
           <TileLayer
@@ -125,10 +136,13 @@ export const ResultadoRoute = () => {
             center={centroidOfPolygon(parcela.geom!) as LatLngExpression}
             radius={range}
           />
-          <Polygon positions={parcela.geom!.map(i => [i[1], i[0]]) as LatLngExpression[]} />
+          <Polygon
+            positions={
+              parcela.geom!.map((i) => [i[1], i[0]]) as LatLngExpression[]
+            }
+          />
         </MapContainer>
       </div>
-
       <ResultadoTable resultado={resultado} />
       <CompareModal comparison={comparisonResult} />
     </div>

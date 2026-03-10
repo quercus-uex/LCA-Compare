@@ -13,7 +13,9 @@ export const NavBar = () => {
         </div>
 
         <div className="flex gap-2">
-          <button className="btn" onClick={() => navigate('/compare')}>Comparador</button>
+          <button className="btn" onClick={() => navigate('/compare')}>
+            Comparador
+          </button>
 
           {auth.loading ? (
             <div className="skeleton rounded-full w-10 h-10" />
@@ -29,7 +31,7 @@ export const NavBar = () => {
           )}
 
           {auth.usuario !== null && (
-            <div className="dropdown dropdown-end">
+            <div className="dropdown dropdown-end z-40">
               <div
                 tabIndex={0}
                 role="button"
@@ -45,7 +47,7 @@ export const NavBar = () => {
 
               <ul
                 tabIndex={-1}
-                className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm mt-5"
+                className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-sm mt-5"
               >
                 <li>
                   <Link to="/parcelas">

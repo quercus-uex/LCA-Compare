@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDefined,
   IsInt,
   IsLatitude,
@@ -13,16 +14,19 @@ import { Type } from 'class-transformer';
 
 export class CompareQueryItemDto {
   @IsOptional()
-  @IsUUID()
-  idPoblacion?: string;
+  @IsArray()
+  @IsUUID('all', { each: true })
+  idsPoblacion?: string[];
 
   @IsOptional()
-  @IsUUID()
-  idProvincia?: string;
+  @IsArray()
+  @IsUUID('all', { each: true })
+  idsProvincia?: string[];
 
   @IsOptional()
-  @IsUUID()
-  idParcela?: string;
+  @IsArray()
+  @IsUUID('all', { each: true })
+  idsParcela?: string[];
 
   @IsOptional()
   @Type(() => Number)
@@ -38,11 +42,11 @@ export class CompareQueryItemDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  range: number;
+  range?: number;
 
   @IsOptional()
   @IsString()
-  tipoCultivo: string;
+  tipoCultivo?: string;
 }
 
 export class CompareQueryDto {

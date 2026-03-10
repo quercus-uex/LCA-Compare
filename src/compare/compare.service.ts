@@ -5,6 +5,7 @@ import {
   CompareResultDto,
   CompareResultItemDto,
 } from './dto/compare-result.dto';
+import { CompareQueryItemDto } from './dto/compare-query.dto';
 
 @Injectable()
 export class CompareService {
@@ -54,9 +55,75 @@ export class CompareService {
     return base;
   }
 
-  async getMeanByPoblacionId(id: string) {
+  async getMeanInclusive(filters: CompareQueryItemDto) {
+    const {
+      idsPoblacion,
+      idsProvincia,
+      idsParcela,
+      long,
+      lat,
+      range,
+      tipoCultivo,
+    } = filters;
+
+    const orConditions = [
+      idsPoblacion?.length
+        ? { cultivo: { parcela: { poblacion: { id: { in: idsPoblacion } } } } }
+        : null,
+      idsProvincia?.length
+        ? {
+            cultivo: {
+              parcela: {
+                poblacion: { provincia: { id: { in: idsProvincia } } },
+              },
+            },
+          }
+        : null,
+      idsParcela?.length
+        ? { cultivo: { parcela: { id: { in: idsParcela } } } }
+        : null,
+    ].filter((i) => i !== null);
+
+    const tipoCondition = tipoCultivo
+      ? { cultivo: { tipo: tipoCultivo } }
+      : null;
+
+    const andConditions = [
+      orConditions.length > 0 ? { OR: orConditions } : null,
+      tipoCondition,
+    ].filter((i) => i !== null);
+
+    let results: ResultadoImpacto[] = [];
+
+    if (andConditions.length > 0) {
+      results = await this.resultadoImpactoService.findMany({
+        where: andConditions.length > 0 ? { AND: andConditions } : {},
+      });
+    }
+
+    if (lat && long && range) {
+      const resultsLocation =
+        await this.resultadoImpactoService.findManyAroundPoint(
+          lat,
+          long,
+          range,
+        );
+      const merged = [...results, ...resultsLocation]
+        .reduce((map, item) => {
+          map.set(item.id, item);
+          return map;
+        }, new Map<string, ResultadoImpacto>())
+        .values();
+
+      results = Array.from(merged);
+    }
+
+    return this.getMeanOfResults(results);
+  }
+
+  async getMeanByPoblacionIds(ids: string[]) {
     const results = await this.resultadoImpactoService.findMany({
-      where: { cultivo: { parcela: { idPoblacion: id } } },
+      where: { cultivo: { parcela: { idPoblacion: { in: ids } } } },
     });
     return this.getMeanOfResults(results);
   }

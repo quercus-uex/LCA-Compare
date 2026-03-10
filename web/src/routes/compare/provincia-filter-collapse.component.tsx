@@ -22,7 +22,7 @@ export const ProvinciaFilterCollapse = (
   }, [location]);
 
   useEffect(() => {
-    if (!enabled) setFilters({ ...filters, provincia: undefined });
+    if (!enabled) setFilters({ ...filters, provincias: [] });
   }, [enabled]);
 
   return (
@@ -57,8 +57,17 @@ export const ProvinciaFilterCollapse = (
               .map((p) => (
                 <li
                   key={p.id}
-                  className={`list-row rounded-none flex hover:bg-base-300 cursor-pointer ${p.id === filters.provincia?.id ? 'bg-base-300' : ''}`}
-                  onClick={() => setFilters({ ...filters, provincia: p })}
+                  className={`list-row rounded-none flex hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                  onClick={() => {
+                    if (filters.provincias!.find(i => i.id === p.id)) {
+                      setFilters({ ...filters, provincias: filters.provincias!.filter(i => i.id !== p.id) });
+                    } else {
+                      setFilters({
+                        ...filters,
+                        provincias: [...filters.provincias!, p],
+                      });
+                    }
+                  }}
                 >
                   {p.nombre}
                 </li>

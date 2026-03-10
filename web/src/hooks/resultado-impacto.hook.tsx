@@ -29,11 +29,11 @@ export type ResultadoImpacto = {
 export type ResultadoImpactoComparison = {
   resultado: ResultadoImpacto;
   nearbyMean: {
-    impacto_total: [ResultadoImpactoItem & { diff: string }];
-    impacto_pesticidas: [ResultadoImpactoItem & { diff: string }];
-    impacto_fertilizantes: [ResultadoImpactoItem & { diff: string }];
-    impacto_sistema_riego: [ResultadoImpactoItem & { diff: string }];
-    impacto_manejo_cultivo: [ResultadoImpactoItem & { diff: string }];
+    impacto_total: (ResultadoImpactoItem & { diff: string })[];
+    impacto_pesticidas: (ResultadoImpactoItem & { diff: string })[];
+    impacto_fertilizantes: (ResultadoImpactoItem & { diff: string })[];
+    impacto_sistema_riego: (ResultadoImpactoItem & { diff: string })[];
+    impacto_manejo_cultivo: (ResultadoImpactoItem & { diff: string })[];
   };
 };
 

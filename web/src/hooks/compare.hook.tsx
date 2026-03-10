@@ -5,16 +5,16 @@ import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 
 export type CompareFilterType = {
-  poblacion?: Poblacion;
-  provincia?: Provincia;
-  parcela?: Parcela;
+  poblaciones?: Poblacion[];
+  provincias?: Provincia[];
+  parcelas?: Parcela[];
   lat?: number;
   long?: number;
   range?: number;
   tipoCultivo?: string;
 };
 
-type CompareDiff = {
+export type CompareDiff = {
   impacto_total: { category: string, diff: number }[];
   impacto_pesticidas: { category: string, diff: number }[];
   impacto_fertilizantes: { category: string, diff: number }[];
@@ -38,9 +38,9 @@ const CompareContext = createContext<CompareContextType | undefined>(undefined);
 export function CompareProvider({ children }: { children: React.ReactNode }) {
   const transformFilters = (filters: CompareFilterType) => {
     return {
-      idProvincia: filters.provincia?.id,
-      idPoblacion: filters.poblacion?.id,
-      idParcela: filters.parcela?.id,
+      idsProvincia: filters.provincias?.map(p => p.id),
+      idsPoblacion: filters.poblaciones?.map(p => p.id),
+      idsParcela: filters.parcelas?.map(p => p.id),
       lat: filters.lat,
       long: filters.long,
       range: filters.range,
@@ -77,7 +77,6 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     });
 
     const json = await response.json();
-    console.log(json.data.diff);
     return json.data as CompareResult;
   }
 

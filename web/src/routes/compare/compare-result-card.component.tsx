@@ -1,7 +1,12 @@
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
-import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
+import { ResultComparisonTable } from '../../components/result-comparison-table.component.tsx';
+import { useState } from 'react';
 
 export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
+  const [impact, setImpact] = useState<
+    'impacto_total' | 'impacto_pesticidas' | 'impacto_sistema_riego' | 'impacto_fertilizantes' | 'impacto_manejo_cultivo'
+  >('impacto_total');
+
   if (!result || !result.left) return (
     <div className="card bg-base-100 grow">
       <div className="card-body">
@@ -10,75 +15,55 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
     </div>
   );
 
-  const exportResult = (r: ResultadoImpacto['datos']) => {
-    const json = JSON.stringify(r, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'export.json';
-    link.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <div className="card bg-base-100 grow">
       <div className="card-body">
         <div className="flex w-full justify-between">
           <h2 className="card-title text-xl">Resultado</h2>
-          <div className="flex gap-2">
-            {result.right && result.left && (
-              <button className="btn btn-accent">Exportar comparativa</button>
-            )}
-            {result.left && (
-              <button
-                className="btn btn-accent"
-                onClick={() => exportResult(result.left!)}
-              >
-                Exportar referencia
-              </button>
-            )}
-            {result.right && (
-              <button
-                className="btn btn-accent"
-                onClick={() => exportResult(result.right!)}
-              >
-                Exportar objetivo
-              </button>
-            )}
-          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="table table-md">
-            <thead>
-              <tr>
-                <th>Categoría</th>
-                <th>Cantidad referencia</th>
-                {result.right && <th>Cantidad objetivo</th>}
-                <th>Unidad</th>
-                {result.right && <th>Diferencia</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {result.left.impacto_total.map((i, index) => (
-                <tr key={index}>
-                  <th>{i.category}</th>
-                  <th>{i.amount}</th>
-                  {result.right && (
-                    <th>{result.right.impacto_total[index].amount}</th>
-                  )}
-                  <th>{i.unit}</th>
-                  {result.right && (
-                    <th className={`${result.diff!.impacto_total[index].diff >= 0 ? 'text-red-400' : 'text-green-400'}`}>
-                      {result.diff?.impacto_total[index].diff} %
-                    </th>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="tabs tabs-box w-fit">
+          <input
+            type="radio"
+            name="impact"
+            className="tab"
+            aria-label="Total"
+            defaultChecked
+            onClick={() => setImpact('impacto_total')}
+          />
+          <input
+            type="radio"
+            name="impact"
+            className="tab"
+            aria-label="Pesticidas"
+            onClick={() => setImpact('impacto_pesticidas')}
+          />
+          <input
+            type="radio"
+            name="impact"
+            className="tab"
+            aria-label="Fertilizantes"
+            onClick={() => setImpact('impacto_fertilizantes')}
+          />
+          <input
+            type="radio"
+            name="impact"
+            className="tab"
+            aria-label="Sistema de riego"
+            onClick={() => setImpact('impacto_sistema_riego')}
+          />
+          <input
+            type="radio"
+            name="impact"
+            className="tab"
+            aria-label="Manejo de cultivo"
+            onClick={() => setImpact('impacto_manejo_cultivo')}
+          />
         </div>
+        <ResultComparisonTable
+          reference={result.left[impact]}
+          obj={result.right?.[impact]}
+          diff={result.diff?.[impact]}
+        />
       </div>
     </div>
   );

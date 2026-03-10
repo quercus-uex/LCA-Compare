@@ -20,33 +20,10 @@ export class CompareController {
     const arr = [left, right];
 
     const filtersMean = await Promise.all(
-      arr
-        .map(async (filter) => {
-          if (!filter) return;
-          const {
-            idPoblacion,
-            idProvincia,
-            idParcela,
-            lat,
-            long,
-            range,
-            tipoCultivo,
-          } = filter;
-
-          if (idPoblacion) {
-            return this.compareService.getMeanByPoblacionId(idPoblacion);
-          } else if (idProvincia) {
-            return this.compareService.getMeanByProvinciaId(idProvincia);
-          } else if (idParcela && range) {
-            return this.compareService.getMeanByParcelaId(idParcela, range);
-          } else if (lat && long && range) {
-            return this.compareService.getMeanByPointRange(lat, long, range);
-          } else if (tipoCultivo) {
-            return this.compareService.getMeanByTipoCultivo(tipoCultivo);
-          }
-          return;
-        })
-        .filter((i) => i !== undefined),
+      arr.map(async (filter) => {
+        if (!filter) return;
+        return this.compareService.getMeanInclusive(filter);
+      }),
     );
 
     if (filtersMean[0] && filtersMean[1]) {

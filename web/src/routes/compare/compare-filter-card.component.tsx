@@ -9,10 +9,13 @@ export const CompareFilterCard = (
   { name, required = false, onSubmit }: { name: string, required?: boolean, onSubmit: (data?: CompareFilterType) => void }
 ) => {
   const [enabled, setEnabled] = useState<boolean>(required);
-  const [filters, setFilters] = useState<CompareFilterType>({});
+  const [filters, setFilters] = useState<CompareFilterType>({
+    parcelas: [],
+    provincias: [],
+    poblaciones: [],
+  });
 
   useEffect(() => {
-    console.log(filters);
   }, [filters]);
 
   useEffect(() => {
@@ -35,22 +38,47 @@ export const CompareFilterCard = (
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center justify-start flex-wrap min-h-6">
-            {filters.provincia && (
-              <div className="badge badge-primary">
-                {filters.provincia.nombre}
+            {filters.provincias!.map((p) => (
+              <div
+                key={p.id}
+                className="badge badge-primary cursor-pointer"
+                onClick={() =>
+                  setFilters({
+                    ...filters,
+                    provincias: filters.provincias?.filter(
+                      (i) => i.id !== p.id,
+                    ),
+                  })
+                }
+              >
+                {p.nombre}
               </div>
-            )}
-            {filters.poblacion && (
-              <div className="badge badge-primary">
-                {filters.poblacion.nombre}
+            ))}
+            {filters.poblaciones!.map((p) => (
+              <div
+                key={p.id}
+                className="badge badge-primary cursor-pointer"
+                onClick={() =>
+                  setFilters({
+                    ...filters,
+                    poblaciones: filters.poblaciones?.filter(
+                      (i) => i.id !== p.id,
+                    ),
+                  })
+                }
+              >
+                {p.nombre}
               </div>
-            )}
+            ))}
           </div>
 
           <ProvinciaFilterCollapse filters={filters} setFilters={setFilters} />
           <PoblacionFilterCollapse filters={filters} setFilters={setFilters} />
           <UbicacionFilterCollapse filters={filters} setFilters={setFilters} />
-          <TipocultivoFilterCollapse filters={filters} setFilters={setFilters} />
+          <TipocultivoFilterCollapse
+            filters={filters}
+            setFilters={setFilters}
+          />
 
           <button
             className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}

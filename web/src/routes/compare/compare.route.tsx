@@ -47,11 +47,19 @@ export const CompareRoute = () => {
         />
         <div className="flex flex-col gap-2 grow">
           {result && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-end">
               {result.right && result.left && (
                 <button
                   className="btn btn-accent"
-                  onClick={() => exportJSON(result)}
+                  onClick={() =>
+                    exportJSON({
+                      metadata: {
+                        reference: filtersRef,
+                        target: filtersObj,
+                      },
+                      result,
+                    })
+                  }
                 >
                   Exportar comparativa
                 </button>
@@ -59,7 +67,12 @@ export const CompareRoute = () => {
               {result.left && (
                 <button
                   className="btn btn-accent"
-                  onClick={() => exportJSON(result.left!)}
+                  onClick={() =>
+                    exportJSON({
+                      metadata: filtersRef,
+                      result: result.left!,
+                    })
+                  }
                 >
                   Exportar referencia
                 </button>
@@ -67,7 +80,12 @@ export const CompareRoute = () => {
               {result.right && (
                 <button
                   className="btn btn-accent"
-                  onClick={() => exportJSON(result.right!)}
+                  onClick={() =>
+                    exportJSON({
+                      metadata: filtersObj,
+                      result: result.right!,
+                    })
+                  }
                 >
                   Exportar objetivo
                 </button>

@@ -17,7 +17,7 @@ export const UbicacionFilterCollapse = (
   const [range, setRange] = useState<number>(1);
 
   useEffect(() => {
-    if (!enabled) setFilters({ ...filters, lat: undefined, long: undefined });
+    if (!enabled) setFilters({ ...filters, lat: undefined, long: undefined, range: undefined });
   }, [enabled])
 
   useEffect(() => {

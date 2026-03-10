@@ -41,10 +41,10 @@ export const centroidOfPolygon = (polygon: number[][]) => {
       sumLat += lat;
       sumLng += lng;
     }
-    return [sumLat / n, sumLng / n];
+    return [sumLng / n, sumLat / n];
   }
 
   // (1/(6A)) y como twiceArea = 2A => 1/(6A) = 1/(3*twiceArea)
   const factor = 1 / (3 * twiceArea);
-  return [cy * factor, cx * factor];
+  return [cx * factor, cy * factor];
 }

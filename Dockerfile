@@ -25,8 +25,7 @@ COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
 RUN apt update
-RUN npx playwright install-deps
-RUN npx playwright install chrome
+RUN npx playwright install chromium --with-deps
 RUN npm ci --omit=dev && npx prisma generate --config prisma.config.ts
 
 COPY --from=builder /app/dist ./dist

@@ -3,6 +3,7 @@ import type { Parcela } from './parcela.hook.tsx';
 import type { ResultadoImpacto } from './resultado-impacto.hook.tsx';
 import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
+import { toast } from 'sonner';
 
 export type CompareFilterType = {
   poblaciones?: Poblacion[];
@@ -31,6 +32,7 @@ export type CompareResult = {
 type CompareContextType = {
   compareSingle: (filters: CompareFilterType) => Promise<CompareResult>;
   compare: (left: CompareFilterType, right: CompareFilterType) => Promise<CompareResult>;
+  generateReport: (left: CompareFilterType, right: CompareFilterType) => Promise<void>;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -80,7 +82,35 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     return json.data as CompareResult;
   }
 
-  const value = useMemo(() => ({ compare, compareSingle }), []);
+  const generateReport = async (left: CompareFilterType, right: CompareFilterType) => {
+    toast.info('Generando informe...');
+
+    const response = await fetch(`${API_BASE_URL}/compare/report`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        left: transformFilters(left),
+        right: transformFilters(right),
+      }),
+    });
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Report.pdf';
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Informe generado');
+  }
+
+  const value = useMemo(() => ({ compare, compareSingle, generateReport }), []);
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>
 }

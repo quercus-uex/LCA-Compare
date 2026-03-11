@@ -8,6 +8,6 @@ import { PoblacionModule } from '../poblacion/poblacion.module';
   imports: [PoblacionModule],
   controllers: [ProvinciaController],
   providers: [PrismaService, ProvinciaService],
-  exports: [],
+  exports: [ProvinciaService],
 })
 export class ProvinciaModule {}

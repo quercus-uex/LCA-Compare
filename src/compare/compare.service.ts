@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ResultadoImpacto } from '../generated/prisma/client';
 import {
@@ -6,12 +6,47 @@ import {
   CompareResultItemDto,
 } from './dto/compare-result.dto';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
+import { OpenRouter } from '@openrouter/sdk';
+import { chromium, Browser } from 'playwright';
+import * as fs from 'node:fs';
+import Handlebars from 'handlebars';
+import { ProvinciaService } from '../provincia/provincia.service';
+import { PoblacionService } from '../poblacion/poblacion.service';
 
 @Injectable()
-export class CompareService {
+export class CompareService implements OnModuleInit, OnModuleDestroy {
+  private openRouter: OpenRouter;
+  private readonly reportTemplate: HandlebarsTemplateDelegate;
+  private browser: Browser;
+
   constructor(
     private readonly resultadoImpactoService: ResultadoImpactoService,
-  ) {}
+    private readonly provinciaService: ProvinciaService,
+    private readonly poblacionService: PoblacionService,
+  ) {
+    this.openRouter = new OpenRouter();
+    const reportTemplateFile = fs.readFileSync(
+      './src/templates/compare-report.template.hbs',
+      'utf-8',
+    );
+    this.reportTemplate = Handlebars.compile(reportTemplateFile);
+
+    Handlebars.registerHelper('decimals', function (value, digits: number) {
+      return Number(value).toFixed(digits);
+    });
+
+    Handlebars.registerHelper('isOdd', function (value: number) {
+      return value % 2 == 1;
+    });
+  }
+
+  async onModuleInit() {
+    this.browser = await chromium.launch();
+  }
+
+  async onModuleDestroy() {
+    await this.browser?.close();
+  }
 
   getMeanOfResults(results: ResultadoImpacto[]) {
     if (results.length === 0) return null;
@@ -119,6 +154,151 @@ export class CompareService {
     }
 
     return this.getMeanOfResults(results);
+  }
+
+  async generateReport(
+    refFilters: CompareQueryItemDto,
+    tarFilters: CompareQueryItemDto,
+    result: {
+      left: CompareResultDto;
+      right: CompareResultDto;
+      diff: {
+        impacto_total: { category: string; diff: number }[];
+        impacto_fertilizantes: { category: string; diff: number }[];
+        impacto_sistema_riego: { category: string; diff: number }[];
+        impacto_pesticidas: { category: string; diff: number }[];
+        impacto_manejo_cultivo: { category: string; diff: number }[];
+      };
+    },
+  ) {
+    const overview = await this.openRouter.chat.send({
+      chatGenerationParams: {
+        messages: [
+          {
+            role: 'user',
+            content: `
+              Escribe un resumen claro y conciso tras interpretar los datos proporcionados, teniendo en cuenta que son el resultado de comparar dos conjuntos de datos en la metodología Environmental Footprint 3.1. Sigue las siguientes directrices:
+                - left es el conjunto de referencia y right es el conjunto objetivo.
+                - Nunca menciones right, left ni diff.
+                - La redacción será utilizada en un reporte, adecúate al formato de escritura.
+                - Centra tu redacción en comparar ambos resultados, más que en analizar los resultados individualmente.
+                - El resumen debe ocupar como máximo 300 palabras, pero puede ser considerablemente más corto.
+                - Redacta como si los datos hubieran sido interpretados por una persona y no extraídos de un JSON.
+                - Proporciona el resumen y nada más.
+                - El resumen DEBE COMENZAR POR "El conjunto objetivo...".
+              Datos: \`\`json ${JSON.stringify(result)} \`\`\`
+            `,
+          },
+        ],
+        model: 'deepseek/deepseek-v3.2:nitro',
+      },
+    });
+    /*
+    const overview = {
+      choices: [
+        { message: { content: 'Esto es una prueba para no quedarme pobre.' } },
+      ],
+    };
+     */
+
+    const refProvincias = await this.provinciaService.findMany({
+      where: { id: { in: refFilters.idsProvincia ?? [] } },
+    });
+    const refPoblaciones = await this.poblacionService.findMany({
+      where: { id: { in: refFilters.idsPoblacion ?? [] } },
+    });
+
+    const tarProvincias = await this.provinciaService.findMany({
+      where: { id: { in: tarFilters.idsProvincia ?? [] } },
+    });
+    const tarPoblaciones = await this.poblacionService.findMany({
+      where: { id: { in: tarFilters.idsPoblacion ?? [] } },
+    });
+
+    const topImpacts = result.diff.impacto_total
+      .sort((a, b) => a.diff - b.diff)
+      .map((i) => ({
+        ...i,
+        amountRef: result.left.impacto_total.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        amountTar: result.right.impacto_total.find(
+          (j) => j.category === i.category,
+        )?.amount,
+      }))
+      .slice(0, 3);
+
+    const resultReduced = {
+      impacto_total: result.left.impacto_total.map((i) => ({
+        ...i,
+        amountRef: i.amount,
+        amountTar: result.right.impacto_total.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        diff: result.diff.impacto_total.find((j) => j.category === i.category)
+          ?.diff,
+      })),
+      impacto_fertilizantes: result.left.impacto_fertilizantes.map((i) => ({
+        ...i,
+        amountRef: i.amount,
+        amountTar: result.right.impacto_fertilizantes.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        diff: result.diff.impacto_fertilizantes.find(
+          (j) => j.category === i.category,
+        )?.diff,
+      })),
+      impacto_manejo_cultivo: result.left.impacto_manejo_cultivo.map((i) => ({
+        ...i,
+        amountRef: i.amount,
+        amountTar: result.right.impacto_manejo_cultivo.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        diff: result.diff.impacto_manejo_cultivo.find(
+          (j) => j.category === i.category,
+        )?.diff,
+      })),
+      impacto_pesticidas: result.left.impacto_pesticidas.map((i) => ({
+        ...i,
+        amountRef: i.amount,
+        amountTar: result.right.impacto_pesticidas.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        diff: result.diff.impacto_pesticidas.find(
+          (j) => j.category === i.category,
+        )?.diff,
+      })),
+      impacto_sistema_riego: result.left.impacto_sistema_riego.map((i) => ({
+        ...i,
+        amountRef: i.amount,
+        amountTar: result.right.impacto_sistema_riego.find(
+          (j) => j.category === i.category,
+        )?.amount,
+        diff: result.diff.impacto_sistema_riego.find(
+          (j) => j.category === i.category,
+        )?.diff,
+      })),
+    };
+
+    const html = this.reportTemplate({
+      overview: overview.choices[0].message.content as string,
+      refProvincias,
+      refPoblaciones,
+      refFilters,
+      tarProvincias,
+      tarPoblaciones,
+      tarFilters,
+      result: resultReduced,
+      topImpacts,
+    });
+
+    const page = await this.browser.newPage();
+    await page.setContent(html);
+
+    return await page.pdf({
+      format: 'A4',
+      printBackground: true,
+    });
   }
 
   async getMeanByPoblacionIds(ids: string[]) {

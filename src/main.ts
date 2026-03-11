@@ -20,5 +20,15 @@ async function bootstrap() {
     }),
   );
   await app.listen(process.env.PORT ?? 3000);
+
+  const shutdown = async () => {
+    await app.close();
+    process.exit(0);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  process.on('SIGTERM', shutdown);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  process.on('SIGINT', shutdown);
 }
 bootstrap();

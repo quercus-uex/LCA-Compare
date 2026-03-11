@@ -49,20 +49,29 @@ export const CompareRoute = () => {
           {result && (
             <div className="flex gap-2 justify-end">
               {result.right && result.left && (
-                <button
-                  className="btn btn-accent"
-                  onClick={() =>
-                    exportJSON({
-                      metadata: {
-                        reference: filtersRef,
-                        target: filtersObj,
-                      },
-                      result,
-                    })
-                  }
-                >
-                  Exportar comparativa
-                </button>
+                <>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={async () => {await compare.generateReport(filtersRef, filtersObj!)}}
+                  >
+                    Generar informe
+                  </button>
+
+                  <button
+                    className="btn btn-accent"
+                    onClick={() =>
+                      exportJSON({
+                        metadata: {
+                          reference: filtersRef,
+                          target: filtersObj,
+                        },
+                        result,
+                      })
+                    }
+                  >
+                    Exportar comparativa
+                  </button>
+                </>
               )}
               {result.left && (
                 <button

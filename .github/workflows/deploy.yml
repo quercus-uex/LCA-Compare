@@ -16,12 +16,13 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
-          envs: DB_USER,DB_PASSWORD,JWT_SECRET
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY
           script: |
             set -euo pipefail
             

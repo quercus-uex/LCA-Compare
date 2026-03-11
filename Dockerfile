@@ -14,7 +14,7 @@ RUN npx prisma generate --config prisma.config.ts
 RUN npm run build
 
 
-FROM node:22-alpine AS prod
+FROM node:22-bullseye AS prod
 
 WORKDIR /app
 
@@ -24,6 +24,9 @@ COPY package*.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
+RUN apt update
+RUN npx playwright install-deps
+RUN npx playwright install chrome
 RUN npm ci --omit=dev && npx prisma generate --config prisma.config.ts
 
 COPY --from=builder /app/dist ./dist

@@ -51,7 +51,7 @@
           <div class="card-body bg-gray-100 rounded-lg p-2 flex flex-col items-center gap-2">
             <h2 class="text-gray-700 grow font-bold">FILTROS SELECCIONADOS</h2>
             <div class="flex gap-2 w-full">
-              <div class="card w-full">
+              <div class="card w-full h-full">
                 <div class="card-body rounded-xl border border-blue-200">
                   <div class="w-full bg-blue-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
                     <div class="rounded-full w-2 h-2 bg-blue-600"></div>
@@ -94,11 +94,11 @@
                         </div>
                       </div>
                     {{/if}}
-                    {{#if refTipoCultivo}}
+                    {{#if refFilters.tipoCultivo}}
                       <div class="flex justify-between">
                         <p>Tipo de cultivo: </p>
                         <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{refTipoCultivo}}</span>
+                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{refFilters.tipoCultivo}}</span>
                         </div>
                       </div>
                     {{/if}}
@@ -107,7 +107,7 @@
               </div>
 
               <div class="card w-full">
-                <div class="card-body rounded-xl border border-blue-200">
+                <div class="card-body rounded-xl border border-red-200">
                   <div class="w-full bg-red-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
                     <div class="rounded-full w-2 h-2 bg-red-600"></div>
                     <h3 class="text-red-600">Conjunto objetivo</h3>
@@ -149,11 +149,11 @@
                         </div>
                       </div>
                     {{/if}}
-                    {{#if tarTipoCultivo}}
+                    {{#if tarFilters.tipoCultivo}}
                       <div class="flex justify-between">
                         <p>Tipo de cultivo: </p>
                         <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{tarTipoCultivo}}</span>
+                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{tarFilters.tipoCultivo}}</span>
                         </div>
                       </div>
                     {{/if}}

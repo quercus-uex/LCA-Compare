@@ -217,7 +217,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     });
 
     const topImpacts = result.diff.impacto_total
-      .sort((a, b) => Math.abs(a.diff) - Math.abs(b.diff))
+      .sort((a, b) => Math.abs(a.diff - b.diff))
       .map((i) => ({
         ...i,
         amountRef: result.left.impacto_total.find(

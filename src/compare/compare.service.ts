@@ -12,6 +12,7 @@ import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
+import path from 'node:path';
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
@@ -26,7 +27,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   ) {
     this.openRouter = new OpenRouter();
     const reportTemplateFile = fs.readFileSync(
-      './src/templates/compare-report.template.hbs',
+      path.resolve(__dirname, '../templates/compare-report.template.hbs'),
       'utf-8',
     );
     this.reportTemplate = Handlebars.compile(reportTemplateFile);

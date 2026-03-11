@@ -186,7 +186,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
                 - El resumen debe ocupar como máximo 300 palabras, pero puede ser considerablemente más corto.
                 - Redacta como si los datos hubieran sido interpretados por una persona y no extraídos de un JSON.
                 - Proporciona el resumen y nada más.
-                - El resumen DEBE COMENZAR POR "El conjunto objetivo...".
+                - El resumen DEBE COMENZAR POR "El conjunto de referencia...".
               Datos: \`\`json ${JSON.stringify(result)} \`\`\`
             `,
           },

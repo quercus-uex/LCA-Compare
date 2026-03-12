@@ -1,10 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
-import { ResultadoImpacto } from '../generated/prisma/client';
-import {
-  CompareResultDto,
-  CompareResultItemDto,
-} from './dto/compare-result.dto';
+import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
+import { CompareResultDto } from './dto/compare-result.dto';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { OpenRouter } from '@openrouter/sdk';
 import { chromium, Browser } from 'playwright';
@@ -13,6 +10,10 @@ import Handlebars from 'handlebars';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
 import path from 'node:path';
+import {
+  ResultadoImpactoDataDto,
+  ResultadoImpactoItemDto,
+} from '../resultadoimpacto/dto/resultado-impacto-item.dto';
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
@@ -37,7 +38,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     });
 
     Handlebars.registerHelper('isOdd', function (value: number) {
-      return value % 2 == 1;
+      return value % 2 == 0;
     });
   }
 
@@ -49,9 +50,101 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     await this.browser?.close();
   }
 
-  getMeanOfResults(results: ResultadoImpacto[]) {
-    if (results.length === 0) return null;
-    if (results.length === 1) return results[0].datos as CompareResultDto;
+  async findResults(filters: CompareQueryItemDto) {
+    const {
+      idsPoblacion,
+      idsProvincia,
+      idsParcela,
+      long,
+      lat,
+      range,
+      tipoCultivo,
+      anioCampaniaInicio,
+      anioCampaniaFin,
+    } = filters;
+
+    let locationIds: string[] = [];
+
+    if (lat && long && range) {
+      const locationResults =
+        await this.resultadoImpactoService.findManyAroundPoint(
+          lat,
+          long,
+          range,
+        );
+      locationIds = locationResults.map((i) => i.id);
+    }
+
+    const orConditions = [
+      idsPoblacion?.length
+        ? { cultivo: { parcela: { poblacion: { id: { in: idsPoblacion } } } } }
+        : null,
+      idsProvincia?.length
+        ? {
+            cultivo: {
+              parcela: {
+                poblacion: { provincia: { id: { in: idsProvincia } } },
+              },
+            },
+          }
+        : null,
+      idsParcela?.length
+        ? { cultivo: { parcela: { id: { in: idsParcela } } } }
+        : null,
+      lat && long && range ? { id: { in: locationIds } } : null,
+    ].filter((i) => i !== null);
+
+    const tipoCondition = tipoCultivo
+      ? { cultivo: { tipo: tipoCultivo } }
+      : null;
+
+    const andConditions = [
+      orConditions.length > 0 ? { OR: orConditions } : null,
+      tipoCondition,
+      anioCampaniaInicio || anioCampaniaFin
+        ? {
+            cultivo: {
+              fechaInicioCampania: {
+                ...(anioCampaniaInicio && {
+                  gte: new Date(`${anioCampaniaInicio}-01-01T00:00:00.000Z`),
+                }),
+                ...(anioCampaniaFin && {
+                  lt: new Date(`${anioCampaniaFin + 1}-01-01T00:00:00.000Z`),
+                }),
+              },
+            },
+          }
+        : null,
+    ].filter((i) => i !== null);
+
+    let results: Prisma.ResultadoImpactoGetPayload<{
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } };
+            };
+          };
+        };
+      };
+    }>[] = [];
+
+    if (andConditions.length > 0) {
+      results = await this.resultadoImpactoService.findMany({
+        where: andConditions.length > 0 ? { AND: andConditions } : {},
+      });
+    }
+
+    return results;
+  }
+
+  getMeanOfResults(
+    results: ResultadoImpacto[],
+  ): ResultadoImpactoDataDto | undefined {
+    if (results.length === 0) return undefined;
+    if (results.length === 1)
+      return results[0].datos as ResultadoImpactoDataDto;
+
     const keys = [
       'impacto_fertilizantes',
       'impacto_manejo_cultivo',
@@ -60,7 +153,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       'impacto_total',
     ] as const;
 
-    const base: CompareResultDto = results[0].datos as CompareResultDto;
+    const base = results[0].datos as ResultadoImpactoDataDto;
 
     for (const key of keys) {
       base[key] = base[key].map((item) => ({ ...item, amount: 0, count: 0 }));
@@ -68,7 +161,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
 
     for (const result of results) {
       for (const key of keys) {
-        const arr = result.datos![key] as CompareResultItemDto[];
+        const arr = result.datos![key] as ResultadoImpactoItemDto[];
         base[key] = base[key].map((item) => {
           return {
             ...item,
@@ -91,87 +184,91 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return base;
   }
 
-  async getMeanInclusive(filters: CompareQueryItemDto) {
-    const {
-      idsPoblacion,
-      idsProvincia,
-      idsParcela,
-      long,
-      lat,
-      range,
-      tipoCultivo,
-    } = filters;
+  async getMeanByFilters(filters: CompareQueryItemDto) {
+    const results = await this.findResults(filters);
+    return this.getMeanOfResults(results);
+  }
 
-    const orConditions = [
-      idsPoblacion?.length
-        ? { cultivo: { parcela: { poblacion: { id: { in: idsPoblacion } } } } }
-        : null,
-      idsProvincia?.length
-        ? {
-            cultivo: {
-              parcela: {
-                poblacion: { provincia: { id: { in: idsProvincia } } },
-              },
-            },
-          }
-        : null,
-      idsParcela?.length
-        ? { cultivo: { parcela: { id: { in: idsParcela } } } }
-        : null,
-    ].filter((i) => i !== null);
+  compareResults(
+    refResults: ResultadoImpactoDataDto,
+    tarResults?: ResultadoImpactoDataDto,
+  ): CompareResultDto {
+    const keys = [
+      'impacto_fertilizantes',
+      'impacto_manejo_cultivo',
+      'impacto_pesticidas',
+      'impacto_sistema_riego',
+      'impacto_total',
+    ] as const;
 
-    const tipoCondition = tipoCultivo
-      ? { cultivo: { tipo: tipoCultivo } }
-      : null;
+    const out: CompareResultDto = {
+      impacto_total: [],
+      impacto_fertilizantes: [],
+      impacto_manejo_cultivo: [],
+      impacto_pesticidas: [],
+      impacto_sistema_riego: [],
+    };
 
-    const andConditions = [
-      orConditions.length > 0 ? { OR: orConditions } : null,
-      tipoCondition,
-    ].filter((i) => i !== null);
+    const percentageDiff = (val1: number, val2: number) => {
+      if (val2 === 0) return 0;
+      return ((val1 - val2) / val2) * 100;
+    };
 
-    let results: ResultadoImpacto[] = [];
+    for (const key of keys) {
+      out[key] = refResults[key].map((r) => {
+        if (!tarResults) {
+          return {
+            category: r.category,
+            unit: r.unit,
+            refAmount: r.amount,
+          };
+        }
 
-    if (andConditions.length > 0) {
-      results = await this.resultadoImpactoService.findMany({
-        where: andConditions.length > 0 ? { AND: andConditions } : {},
+        const tarAmount =
+          tarResults[key].find((i) => i.category === r.category)?.amount ?? 0;
+        return {
+          category: r.category,
+          unit: r.unit,
+          refAmount: r.amount,
+          tarAmount,
+          diff: percentageDiff(r.amount, tarAmount),
+        };
       });
     }
 
-    if (lat && long && range) {
-      const resultsLocation =
-        await this.resultadoImpactoService.findManyAroundPoint(
-          lat,
-          long,
-          range,
-        );
-      const merged = [...results, ...resultsLocation]
-        .reduce((map, item) => {
-          map.set(item.id, item);
-          return map;
-        }, new Map<string, ResultadoImpacto>())
-        .values();
-
-      results = Array.from(merged);
-    }
-
-    return this.getMeanOfResults(results);
+    return out;
   }
 
   async generateReport(
     refFilters: CompareQueryItemDto,
-    tarFilters: CompareQueryItemDto,
-    result: {
-      left: CompareResultDto;
-      right: CompareResultDto;
-      diff: {
-        impacto_total: { category: string; diff: number }[];
-        impacto_fertilizantes: { category: string; diff: number }[];
-        impacto_sistema_riego: { category: string; diff: number }[];
-        impacto_pesticidas: { category: string; diff: number }[];
-        impacto_manejo_cultivo: { category: string; diff: number }[];
+    refResults: Prisma.ResultadoImpactoGetPayload<{
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } };
+            };
+          };
+        };
       };
-    },
+    }>[],
+    tarFilters: CompareQueryItemDto,
+    tarResults: Prisma.ResultadoImpactoGetPayload<{
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } };
+            };
+          };
+        };
+      };
+    }>[],
   ) {
+    const reference = this.getMeanOfResults(refResults);
+    const target = this.getMeanOfResults(tarResults);
+    const comparison = this.compareResults(reference!, target);
+
     const overview = await this.openRouter.chat.send({
       chatGenerationParams: {
         messages: [
@@ -179,21 +276,42 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
             role: 'user',
             content: `
               Escribe un resumen claro y conciso tras interpretar los datos proporcionados, teniendo en cuenta que son el resultado de comparar dos conjuntos de datos en la metodología Environmental Footprint 3.1. Sigue las siguientes directrices:
-                - left es el conjunto de referencia y right es el conjunto objetivo.
-                - Nunca menciones right, left ni diff.
+                - refAmount es la cantidad referente al conjunto de referencia.
+                - tarAmount es la cantidad referente al conjunto objetivo.
+                - diff es la diferencia porcentual del conjunto objetivo respecto al de referencia.
                 - La redacción será utilizada en un reporte, adecúate al formato de escritura.
                 - Centra tu redacción en comparar ambos resultados, más que en analizar los resultados individualmente.
-                - El resumen debe ocupar como máximo 300 palabras, pero puede ser considerablemente más corto.
+                - El resumen debe ocupar como máximo 200 palabras, pero puede (y DEBE en la mayoría de situaciones) ser considerablemente más corto.
                 - Redacta como si los datos hubieran sido interpretados por una persona y no extraídos de un JSON.
                 - Proporciona el resumen y nada más.
+                - NUNCA referencies atributos concretos del JSON como refAmount o diff, refiérete a ellos siempre por su nombre (valor de referencia, diferencia).
                 - El resumen DEBE COMENZAR POR "El conjunto de referencia...".
-              Datos: \`\`json ${JSON.stringify(result)} \`\`\`
+                - NUNCA repitas información.
+              Datos: \`\`json ${JSON.stringify(comparison)} \`\`\`
             `,
           },
         ],
-        model: 'deepseek/deepseek-v3.2:nitro',
+        //model: 'deepseek/deepseek-v3.2:nitro',
+        model: 'openai/gpt-oss-120b:nitro',
       },
     });
+
+    const recommendations = await this.openRouter.chat.send({
+      chatGenerationParams: {
+        messages: [
+          {
+            role: 'user',
+            content: `
+              En base al siguiente resumen de impactos usando la metodología Environmental Footprint 3.1, redacta un breve párrafo de posibles mejoras recomendadas para el conjunto objetivo.
+              Si no existe ninguna notable, dilo.
+              Resumen: ${overview.choices[0].message.content as string}
+            `,
+          },
+        ],
+        model: 'openai/gpt-oss-120b:nitro',
+      },
+    });
+
     /*
     const overview = {
       choices: [
@@ -203,95 +321,118 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
      */
 
     const refProvincias = await this.provinciaService.findMany({
-      where: { id: { in: refFilters.idsProvincia ?? [] } },
+      where: {
+        id: {
+          in: refResults.map((r) => r.cultivo!.parcela.poblacion!.idProvincia),
+        },
+      },
     });
     const refPoblaciones = await this.poblacionService.findMany({
-      where: { id: { in: refFilters.idsPoblacion ?? [] } },
+      where: {
+        id: {
+          in: refResults.map((r) => r.cultivo!.parcela.idPoblacion!),
+        },
+      },
     });
 
-    const tarProvincias = await this.provinciaService.findMany({
-      where: { id: { in: tarFilters.idsProvincia ?? [] } },
-    });
-    const tarPoblaciones = await this.poblacionService.findMany({
-      where: { id: { in: tarFilters.idsPoblacion ?? [] } },
-    });
-
-    const topImpacts = result.diff.impacto_total
-      .sort((a, b) => Math.abs(a.diff) - Math.abs(b.diff))
-      .reverse()
-      .map((i) => ({
-        ...i,
-        amountRef: result.left.impacto_total.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        amountTar: result.right.impacto_total.find(
-          (j) => j.category === i.category,
-        )?.amount,
-      }))
-      .slice(0, 3);
-
-    const resultReduced = {
-      impacto_total: result.left.impacto_total.map((i) => ({
-        ...i,
-        amountRef: i.amount,
-        amountTar: result.right.impacto_total.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        diff: result.diff.impacto_total.find((j) => j.category === i.category)
-          ?.diff,
-      })),
-      impacto_fertilizantes: result.left.impacto_fertilizantes.map((i) => ({
-        ...i,
-        amountRef: i.amount,
-        amountTar: result.right.impacto_fertilizantes.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        diff: result.diff.impacto_fertilizantes.find(
-          (j) => j.category === i.category,
-        )?.diff,
-      })),
-      impacto_manejo_cultivo: result.left.impacto_manejo_cultivo.map((i) => ({
-        ...i,
-        amountRef: i.amount,
-        amountTar: result.right.impacto_manejo_cultivo.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        diff: result.diff.impacto_manejo_cultivo.find(
-          (j) => j.category === i.category,
-        )?.diff,
-      })),
-      impacto_pesticidas: result.left.impacto_pesticidas.map((i) => ({
-        ...i,
-        amountRef: i.amount,
-        amountTar: result.right.impacto_pesticidas.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        diff: result.diff.impacto_pesticidas.find(
-          (j) => j.category === i.category,
-        )?.diff,
-      })),
-      impacto_sistema_riego: result.left.impacto_sistema_riego.map((i) => ({
-        ...i,
-        amountRef: i.amount,
-        amountTar: result.right.impacto_sistema_riego.find(
-          (j) => j.category === i.category,
-        )?.amount,
-        diff: result.diff.impacto_sistema_riego.find(
-          (j) => j.category === i.category,
-        )?.diff,
-      })),
+    const refAnioCampania = {
+      inicio: {
+        data: refResults
+          .sort(
+            (a, b) =>
+              a.cultivo!.fechaInicioCampania.getFullYear() -
+              b.cultivo!.fechaInicioCampania.getFullYear(),
+          )[0]
+          .cultivo!.fechaInicioCampania.getFullYear(),
+        chosen: !!refFilters.anioCampaniaInicio,
+      },
+      fin: {
+        data: refResults
+          .sort(
+            (a, b) =>
+              b.cultivo!.fechaInicioCampania.getFullYear() -
+              a.cultivo!.fechaInicioCampania.getFullYear(),
+          )[0]
+          .cultivo!.fechaInicioCampania.getFullYear(),
+        chosen: !!refFilters.anioCampaniaFin,
+      },
     };
 
+    const tarProvincias = await this.provinciaService.findMany({
+      where: {
+        id: {
+          in: tarResults.map((r) => r.cultivo!.parcela.poblacion!.idProvincia),
+        },
+      },
+    });
+    const tarPoblaciones = await this.poblacionService.findMany({
+      where: {
+        id: {
+          in: tarResults.map((r) => r.cultivo!.parcela.idPoblacion!),
+        },
+      },
+    });
+
+    const tarAnioCampania = {
+      inicio: {
+        data: tarResults
+          .sort(
+            (a, b) =>
+              a.cultivo!.fechaInicioCampania.getFullYear() -
+              b.cultivo!.fechaInicioCampania.getFullYear(),
+          )[0]
+          .cultivo!.fechaInicioCampania.getFullYear(),
+        chosen: !!tarFilters.anioCampaniaInicio,
+      },
+      fin: {
+        data: tarResults
+          .sort(
+            (a, b) =>
+              b.cultivo!.fechaInicioCampania.getFullYear() -
+              a.cultivo!.fechaInicioCampania.getFullYear(),
+          )[0]
+          .cultivo!.fechaInicioCampania.getFullYear(),
+        chosen: !!tarFilters.anioCampaniaFin,
+      },
+    };
+
+    const topImpacts = comparison.impacto_total
+      .sort((a, b) => Math.abs(a.diff!) - Math.abs(b.diff!))
+      .reverse()
+      .slice(0, 3);
+
     const html = this.reportTemplate({
+      currentDate: new Date().toLocaleString('es-ES'),
       overview: overview.choices[0].message.content as string,
-      refProvincias,
-      refPoblaciones,
-      refFilters,
-      tarProvincias,
-      tarPoblaciones,
-      tarFilters,
-      result: resultReduced,
+      recommendations: recommendations.choices[0].message.content as string,
+      comparison,
       topImpacts,
+      reference: {
+        provincias: {
+          data: refProvincias,
+          chosen: !!refFilters.idsProvincia,
+        },
+        poblaciones: {
+          data: refPoblaciones,
+          chosen: !!refFilters.idsPoblacion,
+        },
+        filters: refFilters,
+        results: refResults,
+        anioCampania: refAnioCampania,
+      },
+      target: {
+        provincias: {
+          data: tarProvincias,
+          chosen: !!tarFilters.idsProvincia,
+        },
+        poblaciones: {
+          data: tarPoblaciones,
+          chosen: !!tarFilters.idsPoblacion,
+        },
+        filters: tarFilters,
+        results: tarResults,
+        anioCampania: tarAnioCampania,
+      },
     });
 
     const page = await this.browser.newPage();
@@ -301,73 +442,5 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       format: 'A4',
       printBackground: true,
     });
-  }
-
-  async getMeanByPoblacionIds(ids: string[]) {
-    const results = await this.resultadoImpactoService.findMany({
-      where: { cultivo: { parcela: { idPoblacion: { in: ids } } } },
-    });
-    return this.getMeanOfResults(results);
-  }
-
-  async getMeanByProvinciaId(id: string) {
-    const results = await this.resultadoImpactoService.findMany({
-      where: { cultivo: { parcela: { poblacion: { idProvincia: id } } } },
-    });
-    return this.getMeanOfResults(results);
-  }
-
-  async getMeanByParcelaId(id: string, range: number) {
-    const results = await this.resultadoImpactoService.findManyAroundParcela(
-      id,
-      range,
-    );
-    return this.getMeanOfResults(results);
-  }
-
-  async getMeanByPointRange(lat: number, long: number, range: number) {
-    const results = await this.resultadoImpactoService.findManyAroundPoint(
-      lat,
-      long,
-      range,
-    );
-    return this.getMeanOfResults(results);
-  }
-
-  async getMeanByTipoCultivo(tipo: string) {
-    const results =
-      await this.resultadoImpactoService.findManyByTipoCultivo(tipo);
-    return this.getMeanOfResults(results);
-  }
-
-  getDiffBetweenResults(result1: CompareResultDto, result2: CompareResultDto) {
-    const keys = [
-      'impacto_fertilizantes',
-      'impacto_manejo_cultivo',
-      'impacto_pesticidas',
-      'impacto_sistema_riego',
-      'impacto_total',
-    ] as const;
-
-    const percentageDiff = (val1: number, val2: number) => {
-      if (val2 === 0) return 0;
-      return (((val1 - val2) / val2) * 100).toFixed(2);
-    };
-
-    const diff: Map<string, { category: string; diff: number }> = {} as Map<
-      string,
-      { category: string; diff: number }
-    >;
-
-    for (const key of keys) {
-      diff[key] = result1[key].map((left) => {
-        const right = result2[key].find((i) => i.category === left.category);
-        return {
-          category: left.category,
-          diff: percentageDiff(left.amount, right?.amount ?? 0),
-        };
-      });
-    }
-    return diff;
   }
 }

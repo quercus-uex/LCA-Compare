@@ -4,6 +4,7 @@ import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
 import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.tsx';
 import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.component.tsx';
+import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
 
 export const CompareFilterCard = (
   { name, required = false, onSubmit }: { name: string, required?: boolean, onSubmit: (data?: CompareFilterType) => void }
@@ -75,7 +76,18 @@ export const CompareFilterCard = (
           <ProvinciaFilterCollapse filters={filters} setFilters={setFilters} />
           <PoblacionFilterCollapse filters={filters} setFilters={setFilters} />
           <UbicacionFilterCollapse filters={filters} setFilters={setFilters} />
+
+          <div className="flex gap-2">
+            <div className="divider w-full p-0 m-0" />
+            Y
+            <div className="divider w-full p-0 m-0" />
+          </div>
+
           <TipocultivoFilterCollapse
+            filters={filters}
+            setFilters={setFilters}
+          />
+          <AniocampaniaFilterCollapse
             filters={filters}
             setFilters={setFilters}
           />

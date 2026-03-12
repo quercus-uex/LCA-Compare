@@ -34,7 +34,19 @@ export class ResultadoImpactoService {
     cursor?: Prisma.ResultadoImpactoWhereUniqueInput;
     where?: Prisma.ResultadoImpactoWhereInput;
     orderBy?: Prisma.ResultadoImpactoOrderByWithRelationInput;
-  }): Promise<ResultadoImpacto[]> {
+  }): Promise<
+    Prisma.ResultadoImpactoGetPayload<{
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } };
+            };
+          };
+        };
+      };
+    }>[]
+  > {
     const { skip, take, cursor, where, orderBy } = params;
 
     return this.prisma.resultadoImpacto.findMany({
@@ -43,13 +55,34 @@ export class ResultadoImpactoService {
       cursor,
       where,
       orderBy,
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } },
+            },
+          },
+        },
+      },
     });
   }
 
   async findManyAroundParcela(
     parcelaId: string,
     range: number,
-  ): Promise<ResultadoImpacto[]> {
+  ): Promise<
+    Prisma.ResultadoImpactoGetPayload<{
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } };
+            };
+          };
+        };
+      };
+    }>[]
+  > {
     const parcelas = await this.parcelaService.findManyByRange(
       parcelaId,
       range,
@@ -59,6 +92,15 @@ export class ResultadoImpactoService {
     );
     return this.prisma.resultadoImpacto.findMany({
       where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -77,12 +119,19 @@ export class ResultadoImpactoService {
     );
     return this.prisma.resultadoImpacto.findMany({
       where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },
+      include: {
+        cultivo: {
+          include: {
+            parcela: {
+              include: { poblacion: { include: { provincia: true } } },
+            },
+          },
+        },
+      },
     });
   }
 
-  async findManyByTipoCultivo(
-    tipo: string
-  ): Promise<ResultadoImpacto[]> {
+  async findManyByTipoCultivo(tipo: string): Promise<ResultadoImpacto[]> {
     const cultivos = await this.cultivoService.findMany({ where: { tipo } });
     return this.prisma.resultadoImpacto.findMany({
       where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },

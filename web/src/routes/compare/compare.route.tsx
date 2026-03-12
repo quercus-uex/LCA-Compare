@@ -7,7 +7,6 @@ import {
 } from '../../hooks/compare.hook.tsx';
 import { exportJSON, omitNullish } from '../../common/utils.ts';
 import { CompareResultCard } from './compare-result-card.component.tsx';
-import { toast } from 'sonner';
 
 export const CompareRoute = () => {
   const [filtersRef, setFiltersRef] = useState<CompareFilterType>({
@@ -30,17 +29,9 @@ export const CompareRoute = () => {
             setFiltersRef(d);
             if (filtersObj) {
               const result = await compare.compare(d, filtersObj);
-              if (!result.left || !result.right)
-                return toast.error(
-                  'No existen datos con los filtros proporcionados',
-                );
               setResult(result);
             } else {
               const result = await compare.compareSingle(d);
-              if (!result.left)
-                return toast.error(
-                  'No existen datos con los filtros proporcionados',
-                );
               setResult(result);
             }
           }}
@@ -48,11 +39,13 @@ export const CompareRoute = () => {
         <div className="flex flex-col gap-2 grow">
           {result && (
             <div className="flex gap-2 justify-end">
-              {result.right && result.left && (
+              {result.impacto_total[0].tarAmount && (
                 <>
                   <button
                     className="btn btn-secondary"
-                    onClick={async () => {await compare.generateReport(filtersRef, filtersObj!)}}
+                    onClick={async () => {
+                      await compare.generateReport(filtersRef, filtersObj!);
+                    }}
                   >
                     Generar informe
                   </button>
@@ -73,26 +66,88 @@ export const CompareRoute = () => {
                   </button>
                 </>
               )}
-              {result.left && (
+              {result.impacto_total[0].tarAmount && (
                 <button
                   className="btn btn-accent"
                   onClick={() =>
                     exportJSON({
                       metadata: filtersRef,
-                      result: result.left!,
+                      result: {
+                        impacto_total: result?.impacto_total.map((i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.refAmount,
+                        })),
+                        impacto_fertilizantes:
+                          result?.impacto_fertilizantes.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.refAmount,
+                          })),
+                        impacto_sistema_riego:
+                          result?.impacto_sistema_riego.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.refAmount,
+                          })),
+                        impacto_pesticidas: result?.impacto_pesticidas.map(
+                          (i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.refAmount,
+                          }),
+                        ),
+                        impacto_manejo_cultivo:
+                          result?.impacto_manejo_cultivo.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.refAmount,
+                          })),
+                      },
                     })
                   }
                 >
                   Exportar referencia
                 </button>
               )}
-              {result.right && (
+              {result && (
                 <button
                   className="btn btn-accent"
                   onClick={() =>
                     exportJSON({
                       metadata: filtersObj,
-                      result: result.right!,
+                      result: {
+                        impacto_total: result?.impacto_total.map((i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.tarAmount,
+                        })),
+                        impacto_fertilizantes:
+                          result?.impacto_fertilizantes.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.tarAmount,
+                          })),
+                        impacto_sistema_riego:
+                          result?.impacto_sistema_riego.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.tarAmount,
+                          })),
+                        impacto_pesticidas: result?.impacto_pesticidas.map(
+                          (i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.tarAmount,
+                          }),
+                        ),
+                        impacto_manejo_cultivo:
+                          result?.impacto_manejo_cultivo.map((i) => ({
+                            unit: i.unit,
+                            category: i.category,
+                            amount: i.tarAmount,
+                          })),
+                      },
                     })
                   }
                 >
@@ -111,10 +166,6 @@ export const CompareRoute = () => {
             const d = omitNullish(data) as CompareFilterType;
             setFiltersObj(d);
             const result = await compare.compare(filtersRef, d);
-            if (!result.left || !result.right)
-              return toast.error(
-                'No existen datos con los filtros proporcionados',
-              );
             setResult(result);
           }}
         />

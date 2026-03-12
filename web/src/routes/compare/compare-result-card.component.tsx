@@ -7,7 +7,7 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
     'impacto_total' | 'impacto_pesticidas' | 'impacto_sistema_riego' | 'impacto_fertilizantes' | 'impacto_manejo_cultivo'
   >('impacto_total');
 
-  if (!result || !result.left) return (
+  if (!result) return (
     <div className="card bg-base-100 grow">
       <div className="card-body">
         <p>Aquí aparecerá el resultado de la comparativa</p>
@@ -60,9 +60,8 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
           />
         </div>
         <ResultComparisonTable
-          reference={result.left[impact]}
-          obj={result.right?.[impact]}
-          diff={result.diff?.[impact]}
+          result={result}
+          selectedImpact={impact}
         />
       </div>
     </div>

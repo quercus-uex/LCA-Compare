@@ -4,6 +4,7 @@ import {
   IsInt,
   IsLatitude,
   IsLongitude,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -47,15 +48,25 @@ export class CompareQueryItemDto {
   @IsOptional()
   @IsString()
   tipoCultivo?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(2020)
+  anioCampaniaInicio?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(2020)
+  anioCampaniaFin?: number;
 }
 
 export class CompareQueryDto {
   @IsDefined()
   @ValidateNested()
   @Type(() => CompareQueryItemDto)
-  left: CompareQueryItemDto;
+  reference: CompareQueryItemDto;
 
   @ValidateNested()
   @Type(() => CompareQueryItemDto)
-  right?: CompareQueryItemDto;
+  target?: CompareQueryItemDto;
 }

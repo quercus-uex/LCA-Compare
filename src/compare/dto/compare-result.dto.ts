@@ -1,8 +1,9 @@
 export type CompareResultItemDto = {
   category: string;
-  amount: number;
+  refAmount: number;
+  tarAmount?: number;
   unit: string;
-  count?: number;
+  diff?: number;
 };
 
 export type CompareResultDto = {

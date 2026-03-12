@@ -1,6 +1,5 @@
 import type { Poblacion, Provincia } from './location.hook.tsx';
 import type { Parcela } from './parcela.hook.tsx';
-import type { ResultadoImpacto } from './resultado-impacto.hook.tsx';
 import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
@@ -13,21 +12,25 @@ export type CompareFilterType = {
   long?: number;
   range?: number;
   tipoCultivo?: string;
+  anioCampaniaInicio?: number;
+  anioCampaniaFin?: number;
 };
 
-export type CompareDiff = {
-  impacto_total: { category: string, diff: number }[];
-  impacto_pesticidas: { category: string, diff: number }[];
-  impacto_fertilizantes: { category: string, diff: number }[];
-  impacto_sistema_riego: { category: string, diff: number }[];
-  impacto_manejo_cultivo: { category: string, diff: number }[];
+export type CompareResultItem = {
+  category: string;
+  unit: string;
+  refAmount: number;
+  tarAmount?: number;
+  diff: number;
 }
 
 export type CompareResult = {
-  left?: ResultadoImpacto['datos'];
-  right?: ResultadoImpacto['datos'];
-  diff?: CompareDiff;
-};
+  impacto_total: CompareResultItem[];
+  impacto_fertilizantes: CompareResultItem[];
+  impacto_sistema_riego: CompareResultItem[];
+  impacto_manejo_cultivo: CompareResultItem[];
+  impacto_pesticidas: CompareResultItem[];
+}
 
 type CompareContextType = {
   compareSingle: (filters: CompareFilterType) => Promise<CompareResult>;
@@ -47,6 +50,8 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       long: filters.long,
       range: filters.range,
       tipoCultivo: filters.tipoCultivo,
+      anioCampaniaInicio: filters.anioCampaniaInicio,
+      anioCampaniaFin: filters.anioCampaniaFin,
     }
   }
 
@@ -57,32 +62,44 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        left: transformFilters(filters),
+        reference: transformFilters(filters),
       }),
     });
+
+    if (!response.ok) {
+      toast.error(
+        'No existen datos suficientes con los filtros proporcionados',
+      );
+    }
 
     const json = await response.json();
     return json.data as CompareResult;
 
   }
 
-  const compare = async (left: CompareFilterType, right: CompareFilterType) => {
+  const compare = async (reference: CompareFilterType, target: CompareFilterType) => {
     const response = await fetch(`${API_BASE_URL}/compare`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        left: transformFilters(left),
-        right: transformFilters(right),
+        reference: transformFilters(reference),
+        target: transformFilters(target),
       }),
     });
+
+    if (!response.ok) {
+      toast.error(
+        'No existen datos suficientes con los filtros proporcionados',
+      );
+    }
 
     const json = await response.json();
     return json.data as CompareResult;
   }
 
-  const generateReport = async (left: CompareFilterType, right: CompareFilterType) => {
+  const generateReport = async (reference: CompareFilterType, target: CompareFilterType) => {
     toast.info('Generando informe...');
 
     const response = await fetch(`${API_BASE_URL}/compare/report`, {
@@ -91,8 +108,8 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        left: transformFilters(left),
-        right: transformFilters(right),
+        reference: transformFilters(reference),
+        target: transformFilters(target),
       }),
     });
 

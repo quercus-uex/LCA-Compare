@@ -1,9 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Header,
   Post,
-  StreamableFile,
+  StreamableFile, UnprocessableEntityException,
 } from '@nestjs/common';
 import { CompareQueryDto } from './dto/compare-query.dto';
 import { CompareService } from './compare.service';
@@ -14,46 +15,48 @@ export class CompareController {
 
   @Post('')
   async compare(@Body() body: CompareQueryDto) {
-    const { left, right } = body;
+    const { reference, target } = body;
 
-    const arr = [left, right];
+    if (!body.reference)
+      throw new BadRequestException(
+        'Debes especificar los filtros del conjunto objetivo.',
+      );
+
+    const arr = [reference, target];
 
     const filtersMean = await Promise.all(
       arr.map(async (filter) => {
         if (!filter) return;
-        return this.compareService.getMeanInclusive(filter);
+        return this.compareService.getMeanByFilters(filter);
       }),
     );
 
-    let result: { data: any };
-
-    if (filtersMean[0] && filtersMean[1]) {
-      result = {
-        data: {
-          left: filtersMean[0],
-          right: filtersMean[1],
-          diff: this.compareService.getDiffBetweenResults(
-            filtersMean[0],
-            filtersMean[1],
-          ),
-        },
-      };
-    } else {
-      result = { data: { left: filtersMean[0], right: filtersMean[1] } };
+    if (!filtersMean[0] || (!filtersMean[1] && target)) {
+      throw new UnprocessableEntityException('No hay datos suficientes.');
     }
 
-    return result;
+    return {
+      data: this.compareService.compareResults(filtersMean[0], filtersMean[1]),
+    };
   }
 
   @Post('/report')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'inline; filename=report.pdf')
   async compareToReport(@Body() body: CompareQueryDto) {
-    const result = await this.compare(body);
+    if (!body.reference || !body.target)
+      throw new BadRequestException(
+        'Debes especificar los filtros del conjunto objetivo y referencia.',
+      );
+
+    const refResults = await this.compareService.findResults(body.reference);
+    const tarResults = await this.compareService.findResults(body.target);
+
     const report = await this.compareService.generateReport(
-      body.left,
-      body.right!,
-      result.data,
+      body.reference,
+      refResults,
+      body.target,
+      tarResults,
     );
 
     return new StreamableFile(report);

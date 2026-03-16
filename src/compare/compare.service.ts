@@ -281,7 +281,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
                 - diff es la diferencia porcentual del conjunto objetivo respecto al de referencia.
                 - La redacción será utilizada en un reporte, adecúate al formato de escritura.
                 - Centra tu redacción en comparar ambos resultados, más que en analizar los resultados individualmente.
-                - El resumen debe ocupar como máximo 150 palabras, pero puede (y DEBE en la mayoría de situaciones) ser considerablemente más corto.
+                - El resumen debe ocupar como máximo 130 palabras, pero puede (y DEBE en la mayoría de situaciones) ser considerablemente más corto.
                 - Redacta como si los datos hubieran sido interpretados por una persona y no extraídos de un JSON.
                 - Proporciona el resumen y nada más.
                 - NUNCA referencies atributos concretos del JSON como refAmount o diff, refiérete a ellos siempre por su nombre (valor de referencia, diferencia).
@@ -303,7 +303,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
             role: 'user',
             content: `
               En base al siguiente resumen de impactos usando la metodología Environmental Footprint 3.1, redacta un breve párrafo en estilo redactado de posibles mejoras recomendadas para el conjunto objetivo.
-              Si no existe ninguna notable, dilo. Escribe en texto plano, no Markdown. El párrafo debe ocupar a lo sumo 100 palabras.
+              Si no existe ninguna notable, dilo. Escribe en texto plano, no Markdown. El párrafo debe ocupar a lo sumo 80 palabras.
               Resumen: ${overview.choices[0].message.content as string}
             `,
           },

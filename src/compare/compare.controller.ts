@@ -4,7 +4,8 @@ import {
   Controller,
   Header,
   Post,
-  StreamableFile, UnprocessableEntityException,
+  StreamableFile,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { CompareQueryDto } from './dto/compare-query.dto';
 import { CompareService } from './compare.service';

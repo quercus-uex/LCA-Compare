@@ -17,12 +17,14 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          VENTUM_ACV_EMAIL: ${{ secrets.VENTUM_ACV_EMAIL }}
+          VENTUM_ACV_PASSWORD: ${{ secrets.VENTUM_ACV_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
-          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY, VENTUM_ACV_EMAIL, VENTUM_ACV_PASSWORD
           script: |
             set -euo pipefail
             

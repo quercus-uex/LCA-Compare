@@ -60,7 +60,9 @@ export class VentumController {
   ): Promise<Parcela> {
     let parcela = await this.parcelaService.findOne({
       sigpac: mParcela.es_sigpac ? mParcela.es_sigpac : undefined,
-      refCat: mParcela.es_referencia_catastral ? mParcela.es_referencia_catastral : undefined,
+      refCat: mParcela.es_referencia_catastral
+        ? mParcela.es_referencia_catastral
+        : undefined,
       ptIdParcela: mParcela.pt_id_parcela ? mParcela.pt_id_parcela : undefined,
     });
 
@@ -198,6 +200,48 @@ export class VentumController {
       usuario,
       parcela,
       cultivo,
+    };
+  }
+
+  @Post('/bulk')
+  async extractVentumData() {
+    const fetchToken = await fetch(
+      'https://acvapi.dtagro.es/api/usuario/login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: process.env.VENTUM_ACV_EMAIL,
+          password: process.env.VENTUM_ACV_PASSWORD,
+        }),
+      },
+    );
+    const token = (await fetchToken.json()) as { token: string };
+    const cultivos: any[] = [];
+
+    for (let i = 1; i < 50; i++) {
+      const fetchCultivo = await fetch(
+        `https://acvapi.dtagro.es/api/cultivo/calculos/${i}`,
+        {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${token.token}`,
+          },
+        },
+      );
+      try {
+        cultivos.push(await fetchCultivo.json());
+      } catch {
+        console.log(`Error en parcela con ID ${i}`);
+      }
+    }
+
+    console.log(`Recuperadas ${cultivos.length} parcelas`);
+
+    return {
+      data: cultivos,
     };
   }
 }

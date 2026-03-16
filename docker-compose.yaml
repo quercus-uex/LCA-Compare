@@ -9,6 +9,8 @@ services:
       DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/postgres"
       JWT_SECRET: ${JWT_SECRET}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      VENTUM_ACV_EMAIL: ${VENTUM_ACV_EMAIL}
+      VENTUM_ACV_PASSWORD: ${VENTUM_ACV_PASSWORD}
     depends_on:
       - db
     networks:

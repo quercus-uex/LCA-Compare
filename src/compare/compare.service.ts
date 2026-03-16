@@ -401,6 +401,9 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       .reverse()
       .slice(0, 3);
 
+    const refTiposCultivo = new Set(refResults.map((r) => r.cultivo?.tipo));
+    const tarTiposCultivo = new Set(tarResults.map((r) => r.cultivo?.tipo));
+
     const html = this.reportTemplate({
       currentDate: new Date().toLocaleString('es-ES'),
       overview: overview.choices[0].message.content as string,
@@ -408,39 +411,38 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       comparison,
       topImpacts,
       reference: {
-        provincias: {
-          data: refProvincias.map((p) => ({
-            ...p,
-            chosen: !!refFilters.idsProvincia?.find((id) => id === p.id),
-          })),
-          //chosen: !!refFilters.idsProvincia,
-        },
-        poblaciones: {
-          data: refPoblaciones.map((p) => ({
-            ...p,
-            chosen: !!refFilters.idsPoblacion?.find((id) => id === p.id),
-          })),
-        },
+        provincias: refProvincias.map((p) => ({
+          ...p,
+          chosen: !!refFilters.idsProvincia?.find((id) => id === p.id),
+        })),
+        poblaciones: refPoblaciones.map((p) => ({
+          ...p,
+          chosen: !!refFilters.idsPoblacion?.find((id) => id === p.id),
+        })),
         filters: refFilters,
         results: refResults,
         anioCampania: refAnioCampania,
+        tiposCultivo: [...refTiposCultivo].map((r) => ({
+          nombre: r,
+          chosen: r == refFilters.tipoCultivo,
+        })),
       },
       target: {
-        provincias: {
-          data: tarProvincias.map((p) => ({
-            ...p,
-            chosen: !!tarFilters.idsProvincia?.find((id) => id === p.id),
-          })),
-        },
-        poblaciones: {
-          data: tarPoblaciones.map((p) => ({
-            ...p,
-            chosen: !!tarFilters.idsPoblacion?.find((id) => id === p.id),
-          })),
-        },
+        provincias: tarProvincias.map((p) => ({
+          ...p,
+          chosen: !!tarFilters.idsProvincia?.find((id) => id === p.id),
+        })),
+        poblaciones: tarPoblaciones.map((p) => ({
+          ...p,
+          chosen: !!tarFilters.idsPoblacion?.find((id) => id === p.id),
+        })),
         filters: tarFilters,
         results: tarResults,
         anioCampania: tarAnioCampania,
+        tiposCultivo: [...tarTiposCultivo].map((r) => ({
+          nombre: r,
+          chosen: r == tarFilters.tipoCultivo,
+        })),
       },
     });
 

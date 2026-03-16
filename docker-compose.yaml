@@ -14,6 +14,8 @@ services:
     networks:
       acv-compare:
       olca:
+    profiles:
+      - prod
 
   acv-compare-frontend:
     build:
@@ -25,6 +27,8 @@ services:
       - acv-compare-backend
     networks:
       acv-compare:
+    profiles:
+      - prod
 
   db:
     container_name: db

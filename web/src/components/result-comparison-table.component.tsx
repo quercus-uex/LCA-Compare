@@ -35,7 +35,7 @@ export const ResultComparisonTable = ({
                 <th
                   className={`${i.diff >= 0 ? 'text-red-400' : 'text-green-400'}`}
                 >
-                  {i.diff} %
+                  {i.diff.toFixed(2)} %
                 </th>
               )}
             </tr>

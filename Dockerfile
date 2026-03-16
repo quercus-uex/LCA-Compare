@@ -19,6 +19,7 @@ FROM node:22-bullseye AS prod
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV TZ=Europe/Madrid
 
 COPY package*.json ./
 COPY prisma ./prisma/

@@ -409,12 +409,17 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       topImpacts,
       reference: {
         provincias: {
-          data: refProvincias,
-          chosen: !!refFilters.idsProvincia,
+          data: refProvincias.map((p) => ({
+            ...p,
+            chosen: !!refFilters.idsProvincia?.find((id) => id === p.id),
+          })),
+          //chosen: !!refFilters.idsProvincia,
         },
         poblaciones: {
-          data: refPoblaciones,
-          chosen: !!refFilters.idsPoblacion,
+          data: refPoblaciones.map((p) => ({
+            ...p,
+            chosen: !!refFilters.idsPoblacion?.find((id) => id === p.id),
+          })),
         },
         filters: refFilters,
         results: refResults,
@@ -422,12 +427,16 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       },
       target: {
         provincias: {
-          data: tarProvincias,
-          chosen: !!tarFilters.idsProvincia,
+          data: tarProvincias.map((p) => ({
+            ...p,
+            chosen: !!tarFilters.idsProvincia?.find((id) => id === p.id),
+          })),
         },
         poblaciones: {
-          data: tarPoblaciones,
-          chosen: !!tarFilters.idsPoblacion,
+          data: tarPoblaciones.map((p) => ({
+            ...p,
+            chosen: !!tarFilters.idsPoblacion?.find((id) => id === p.id),
+          })),
         },
         filters: tarFilters,
         results: tarResults,

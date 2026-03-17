@@ -29,6 +29,7 @@ services:
       - acv-compare-backend
     networks:
       acv-compare:
+      olca:
     profiles:
       - prod
 

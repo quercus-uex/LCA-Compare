@@ -8,7 +8,7 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
   >('impacto_total');
 
   if (!result) return (
-    <div className="card bg-base-100 grow">
+    <div className="card bg-base-100">
       <div className="card-body">
         <p>Aquí aparecerá el resultado de la comparativa</p>
       </div>
@@ -16,7 +16,7 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
   );
 
   return (
-    <div className="card bg-base-100 grow">
+    <div className="card bg-base-100">
       <div className="card-body">
         <div className="flex w-full justify-between">
           <h2 className="card-title text-xl">Resultado</h2>

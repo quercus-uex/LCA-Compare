@@ -17,7 +17,7 @@ export const ResultComparisonTable = ({
       <table className="table table-md">
         <thead>
           <tr>
-            <th>Categoría</th>
+            <th>Catdegoría</th>
             <th>Cantidad referencia</th>
             {result.impacto_total[0].tarAmount && <th>Cantidad objetivo</th>}
             <th>Unidad</th>

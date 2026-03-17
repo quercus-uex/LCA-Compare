@@ -30,7 +30,7 @@ export const PoblacionFilterCollapse = (
       className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
     >
       <div className="flex p-5">
-        <div className="flex gap-2 items-center justity-between w-full">
+        <div className="flex gap-2 items-center justify-between w-full">
           <p className="font-semibold text-lg">Población</p>
           <input
             type="checkbox"

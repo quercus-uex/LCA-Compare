@@ -24,10 +24,14 @@ export const CompareFilterCard = (
   }, [enabled]);
 
   return (
-    <div className="card bg-base-100 min-w-72 w-1/5 h-fit">
-      <div className="card-body">
-        <div className="flex justify-between">
-          <h2 className="card-title text-xl">{name}</h2>
+    <div className="collapse max-xl:collapse-close xl:collapse-open xl:card bg-base-100 xl:min-w-72 xl:w-1/5 h-fit xl:flex-1">
+      <input type="checkbox" name="compare-filters" className="xl:hidden" />
+
+      <div className="collapse-title font-semibold xl:hidden">{name}</div>
+
+      <div className="collapse-content xl:card-body">
+        <div className="flex xl:justify-between max-xl:justify-end">
+          <h2 className="card-title text-xl max-xl:hidden">{name}</h2>
           {!required && (
             <input
               type="checkbox"

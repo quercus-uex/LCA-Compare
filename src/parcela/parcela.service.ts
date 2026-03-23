@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Parcela } from '../generated/prisma/client';
-import { Feature, Polygon } from 'geojson';
+import { Polygon } from 'geojson';
 
 @Injectable()
 export class ParcelaService {

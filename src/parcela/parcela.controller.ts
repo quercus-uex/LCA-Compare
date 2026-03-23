@@ -9,7 +9,6 @@ import {
 import { ParcelaService } from './parcela.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthUser, type UserJwt } from '../auth/auth-user.decorator';
-import { Feature, Polygon } from 'geojson';
 
 @Controller('/parcela')
 export class ParcelaController {

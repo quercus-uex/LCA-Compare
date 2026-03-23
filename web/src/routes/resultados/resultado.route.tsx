@@ -124,7 +124,7 @@ export const ResultadoRoute = () => {
         <MapContainer
           className="h-full rounded-box aspect-square"
           center={
-            [parcela.geom![0][1], parcela.geom![0][0]] as LatLngExpression
+            parcela.geom!.coordinates[0][0] as LatLngExpression
           }
           zoom={16}
         >
@@ -138,7 +138,7 @@ export const ResultadoRoute = () => {
           />
           <Polygon
             positions={
-              parcela.geom!.map((i) => [i[1], i[0]]) as LatLngExpression[]
+              parcela.geom!.coordinates[0] as LatLngExpression[]
             }
           />
         </MapContainer>

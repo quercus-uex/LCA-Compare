@@ -1,28 +1,19 @@
-export const centroidOfPolygon = (polygon: number[][]) => {
-  if (!polygon || polygon.length === 0) return null;
+import type { Polygon } from "geojson";
 
-  const isClosed =
-    polygon.length > 1 &&
-    polygon[0][0] === polygon[polygon.length - 1][0] &&
-    polygon[0][1] === polygon[polygon.length - 1][1];
+export const centroidOfPolygon = (polygon: Polygon): number[] | null => {
+  if (!polygon?.coordinates?.length) return null;
 
-  const pts: number[][] = isClosed
-    ? polygon
-    : [...polygon, polygon[0]];
+  const ring = polygon.coordinates[0];
+  if (!ring || ring.length === 0) return null;
 
-  // Fórmula del centroide (shoelace), usando x=lng, y=lat
-  let twiceArea = 0; // 2A
-  let cx = 0; // acumulador para x (lng)
-  let cy = 0; // acumulador para y (lat)
+  // Fórmula del centroide (shoelace), coordenadas GeoJSON: [lng, lat]
+  let twiceArea = 0;
+  let cx = 0;
+  let cy = 0;
 
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [lat1, lng1] = pts[i];
-    const [lat2, lng2] = pts[i + 1];
-
-    const x1 = lng1,
-      y1 = lat1;
-    const x2 = lng2,
-      y2 = lat2;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i]; // [lng, lat]
+    const [x2, y2] = ring[i + 1];
 
     const cross = x1 * y2 - x2 * y1;
     twiceArea += cross;
@@ -30,21 +21,19 @@ export const centroidOfPolygon = (polygon: number[][]) => {
     cy += (y1 + y2) * cross;
   }
 
-  // Degenerado: área ~ 0 => promedio de puntos
   if (twiceArea === 0) {
-    const base = isClosed ? pts.slice(0, -1) : polygon;
+    const base = ring.slice(0, -1);
     const n = base.length;
 
-    let sumLat = 0;
     let sumLng = 0;
-    for (const [lat, lng] of base) {
-      sumLat += lat;
+    let sumLat = 0;
+    for (const [lng, lat] of base) {
       sumLng += lng;
+      sumLat += lat;
     }
     return [sumLng / n, sumLat / n];
   }
 
-  // (1/(6A)) y como twiceArea = 2A => 1/(6A) = 1/(3*twiceArea)
   const factor = 1 / (3 * twiceArea);
   return [cx * factor, cy * factor];
-}
+};

@@ -8,6 +8,7 @@
       "include": "./templates/*.hbs",
       "outDir": "./dist/src",
       "watchAssets": true
-    }]
+    }],
+    "plugins": ["@nestjs/swagger"]
   }
 }

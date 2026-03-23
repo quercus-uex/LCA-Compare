@@ -1,18 +1,24 @@
 import type { LatLngExpression } from 'leaflet';
-import { MapContainer, Polygon, TileLayer } from 'react-leaflet';
+import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
+import type { Polygon } from 'geojson';
 
-export const MapPreview = ({ className, polygon }: { className?: string, polygon: number[][] }) => {
+export const MapPreview = ({ className, polygon }: { className?: string, polygon: Polygon }) => {
   return (
     <MapContainer
       className={className}
-      center={polygon[0] as LatLngExpression}
+      center={
+        [
+          polygon.coordinates[0][0][1],
+          polygon.coordinates[0][0][0],
+        ] as LatLngExpression
+      }
       zoom={16}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Polygon positions={polygon as LatLngExpression[]} />
+      <GeoJSON data={polygon} />
     </MapContainer>
   );
 }

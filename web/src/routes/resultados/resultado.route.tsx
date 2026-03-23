@@ -9,7 +9,7 @@ import { ResultadoTable } from './resultado-table.component.tsx';
 import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
 import type { LatLngExpression } from 'leaflet';
-import { Circle, MapContainer, Polygon, TileLayer } from 'react-leaflet';
+import { Circle, GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
 import { centroidOfPolygon } from '../../utils/centroid-of-polygon.ts';
 import { CompareModal } from './compare-modal.component.tsx';
 import { toast } from 'sonner';
@@ -86,7 +86,9 @@ export const ResultadoRoute = () => {
           <button
             className="btn btn-secondary"
             onClick={() => exportJSON(resultado.datos)}
-          >Exportar</button>
+          >
+            Exportar
+          </button>
         </div>
 
         <div className="flex flex-col gap-2 grow">
@@ -124,7 +126,10 @@ export const ResultadoRoute = () => {
         <MapContainer
           className="h-full rounded-box aspect-square"
           center={
-            parcela.geom!.coordinates[0][0] as LatLngExpression
+            [
+              parcela.geom!.coordinates[0][0][1],
+              parcela.geom!.coordinates[0][0][0],
+            ] as LatLngExpression
           }
           zoom={16}
         >
@@ -136,11 +141,7 @@ export const ResultadoRoute = () => {
             center={centroidOfPolygon(parcela.geom!) as LatLngExpression}
             radius={range}
           />
-          <Polygon
-            positions={
-              parcela.geom!.coordinates[0] as LatLngExpression[]
-            }
-          />
+          <GeoJSON data={parcela.geom!} />
         </MapContainer>
       </div>
       <ResultadoTable resultado={resultado} />

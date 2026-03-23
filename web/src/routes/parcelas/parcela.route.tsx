@@ -26,7 +26,7 @@ export const ParcelaRoute = () => {
       <div className="card w-full md:w-auto lg:card-side bg-base-100 shadow-sm">
         <figure>
           <MapPreview
-            polygon={parcela.geom.coordinates[0]}
+            polygon={parcela.geom}
             className="w-full md:w-96 aspect-square rounded-tl-md rounded-tb-md"
           />
         </figure>

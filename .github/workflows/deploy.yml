@@ -19,12 +19,14 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           VENTUM_ACV_EMAIL: ${{ secrets.VENTUM_ACV_EMAIL }}
           VENTUM_ACV_PASSWORD: ${{ secrets.VENTUM_ACV_PASSWORD }}
+          MAILER_EMAIL: ${{ secrets.MAILER_EMAIL }}
+          MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
-          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY, VENTUM_ACV_EMAIL, VENTUM_ACV_PASSWORD
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY,VENTUM_ACV_EMAIL,VENTUM_ACV_PASSWORD,MAILER_EMAIL,MAILER_PASSWORD
           script: |
             set -euo pipefail
             

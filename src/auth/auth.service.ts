@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsuarioService } from '../usuario/usuario.service';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { LoginSuccessDto } from './dto/login-success.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,7 +11,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<LoginSuccessDto> {
     const user = await this.usuarioService.findOne({ email });
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');

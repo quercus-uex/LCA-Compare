@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const json = await response.json();
-    localStorage.setItem('token', json.accessToken);
+    localStorage.setItem('token', json.data.accessToken);
     return true;
   }
 

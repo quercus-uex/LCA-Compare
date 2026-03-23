@@ -11,10 +11,32 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class MetadatosParcelaDto {
+export class SigpacDto {
   @IsOptional()
-  @IsString()
-  es_sigpac?: string;
+  @IsInt()
+  provincia?: number;
+
+  @IsOptional()
+  @IsInt()
+  municipio?: number;
+
+  @IsOptional()
+  @IsInt()
+  poligono?: number;
+
+  @IsOptional()
+  @IsInt()
+  parcela?: number;
+}
+
+class MetadatosParcelaDto {
+  @IsInt()
+  id: number;
+
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => SigpacDto)
+  es_sigpac: SigpacDto;
 
   @IsOptional()
   @IsString()
@@ -22,7 +44,7 @@ class MetadatosParcelaDto {
 
   @IsOptional()
   @IsString()
-  pt_id_parcela?: string;
+  pt_id_parcela_predial?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -30,8 +52,14 @@ class MetadatosParcelaDto {
 }
 
 class MetadatosCultivoDto {
-  @IsNumber()
+  @IsInt()
+  id: number;
+
+  @IsInt()
   fecha_inicio_campania: number;
+
+  @IsInt()
+  fecha_fin_campania: number;
 
   @IsNumber()
   @IsNotEmpty()
@@ -55,13 +83,16 @@ class MetadatosCultivoDto {
 }
 
 class MetadatosUsuarioDto {
+  @IsInt()
+  id: number;
+
   @IsString()
   @IsNotEmpty()
   nombre: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  apellidos: string;
+  apellidos?: string;
 
   @IsEmail()
   @IsNotEmpty()

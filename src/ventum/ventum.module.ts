@@ -8,6 +8,9 @@ import { ParcelaModule } from '../parcela/parcela.module';
 import { CultivoModule } from '../cultivo/cultivo.module';
 import { ResultadoImpactoModule } from '../resultadoimpacto/resultado-impacto.module';
 import { PoblacionModule } from '../poblacion/poblacion.module';
+import { VentumService } from './ventum.service';
+import { MailerModule } from '../mailer/mailer.module';
+import { PredialService } from '../predial/predial.service';
 
 @Module({
   imports: [
@@ -17,8 +20,9 @@ import { PoblacionModule } from '../poblacion/poblacion.module';
     CultivoModule,
     ResultadoImpactoModule,
     PoblacionModule,
+    MailerModule,
   ],
   controllers: [VentumController],
-  providers: [SigpacService, CatastroService],
+  providers: [VentumService, SigpacService, CatastroService, PredialService],
 })
 export class VentumModule {}

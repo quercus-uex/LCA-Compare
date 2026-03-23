@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Parcela } from '../generated/prisma/client';
+import { Feature, Polygon } from 'geojson';
 
 @Injectable()
 export class ParcelaService {
@@ -40,10 +41,7 @@ export class ParcelaService {
     return this.prisma.parcela.create({ data });
   }
 
-  async addGeom(
-    geoJson: { type: string; coordinates: number[][][] },
-    id: string,
-  ): Promise<Parcela | null> {
+  async addGeom(geoJson: Polygon, id: string): Promise<Parcela | null> {
     await this.prisma.$executeRaw`
       UPDATE "Parcela"
       SET "geom" = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geoJson)}), 4326)
@@ -52,7 +50,7 @@ export class ParcelaService {
     return await this.findOne({ id });
   }
 
-  async getGeom(id: string): Promise<number[][] | null> {
+  async getGeom(id: string): Promise<Polygon | null> {
     const rows = await this.prisma.$queryRaw<Array<{ geojson: unknown }>>`
       SELECT ST_AsGeoJSON("geom")::json AS geojson
       FROM "Parcela"
@@ -60,10 +58,7 @@ export class ParcelaService {
       LIMIT 1
     `;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return (rows?.[0]?.geojson['coordinates'][0] as number[][]) ?? null;
+    return (rows?.[0]?.geojson as Polygon) ?? null;
   }
 
   async findManyByRange(id: string, range: number): Promise<Parcela[]> {

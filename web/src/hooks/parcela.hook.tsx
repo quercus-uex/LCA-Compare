@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
 import * as React from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
+import type { Polygon } from 'geojson';
 
 export type Cultivo = {
   id: string;
@@ -21,7 +22,7 @@ export type Parcela = {
   ptIdParcela: string;
   nombre: string;
   idPropietario: string;
-  geom?: number[][];
+  geom?: Polygon;
   cultivos?: Cultivo[];
 }
 

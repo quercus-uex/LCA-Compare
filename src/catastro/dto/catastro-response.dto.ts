@@ -1,21 +1,27 @@
 export interface CatastroResponseDto {
-  Consulta_CPMRCResult: {
-    control: {
-      cucoor: number;
-    };
-    coordenadas: {
-      coord: {
-        pc: {
-          pc1: string;
-          pc2: string;
+  FeatureCollection: {
+    member: {
+      'cp:CadastralParcel': {
+        'cp:geometry': {
+          'gml:MultiSurface': {
+            'gml:surfaceMember': {
+              'gml:Surface': {
+                'gml:patches': {
+                  'gml:PolygonPatch': {
+                    'gml:exterior': {
+                      'gml:LinearRing': {
+                        'gml:posList': {
+                          '#text': string;
+                        };
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
         };
-        geo: {
-          xcen: string;
-          ycen: string;
-          srs: string;
-        };
-        ldt: string;
-      }[];
+      };
     };
   };
 }

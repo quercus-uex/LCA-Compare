@@ -1,7 +1,7 @@
 export interface SigpacResponseDto {
   type: string;
   features: {
-    type: string;
+    type: 'Feature';
     id: number;
     properties: {
       dn_pk: number;
@@ -16,7 +16,7 @@ export interface SigpacResponseDto {
       altitud: number;
     };
     geometry: {
-      type: string;
+      type: 'Polygon';
       coordinates: [[number[]]];
     };
   }[];

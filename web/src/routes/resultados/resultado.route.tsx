@@ -138,7 +138,12 @@ export const ResultadoRoute = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <Circle
-            center={centroidOfPolygon(parcela.geom!) as LatLngExpression}
+            center={
+              [
+                centroidOfPolygon(parcela.geom!)![1],
+                centroidOfPolygon(parcela.geom!)![0],
+              ] as LatLngExpression
+            }
             radius={range}
           />
           <GeoJSON data={parcela.geom!} />

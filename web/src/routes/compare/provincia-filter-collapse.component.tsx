@@ -52,12 +52,12 @@ export const ProvinciaFilterCollapse = (
           <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
             {provincias
               .filter((p) =>
-                p.nombre.match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
+                p.nombre.toUpperCase().match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
               )
               .map((p) => (
                 <li
                   key={p.id}
-                  className={`list-row rounded-none flex hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                  className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
                   onClick={() => {
                     if (filters.provincias!.find(i => i.id === p.id)) {
                       setFilters({ ...filters, provincias: filters.provincias!.filter(i => i.id !== p.id) });
@@ -70,6 +70,7 @@ export const ProvinciaFilterCollapse = (
                   }}
                 >
                   {p.nombre}
+                  <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
                 </li>
               ))}
           </ul>

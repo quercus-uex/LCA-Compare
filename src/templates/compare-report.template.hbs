@@ -61,6 +61,18 @@
                   </div>
                   <div class="w-full flex flex-col gap-2 p-5">
                     <div class="flex justify-between gap-2">
+                      <p>Países: </p>
+                      <div class="flex gap-2 flex-wrap">
+                        {{#each reference.paises}}
+                          {{#if chosen}}
+                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
+                          {{else}}
+                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
+                          {{/if}}
+                        {{/each}}
+                      </div>
+                    </div>
+                    <div class="flex justify-between gap-2">
                       <p>Provincias: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each reference.provincias}}
@@ -148,6 +160,18 @@
                     <p class="text-end line-clamp-1 w-fit text-sm">{{target.results.length}} resultados</p>
                   </div>
                   <div class="w-full flex flex-col gap-2 p-5">
+                    <div class="flex justify-between gap-2">
+                      <p>Países: </p>
+                      <div class="flex gap-2 flex-wrap">
+                        {{#each target.paises}}
+                          {{#if chosen}}
+                            <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
+                          {{else}}
+                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
+                          {{/if}}
+                        {{/each}}
+                      </div>
+                    </div>
                     <div class="flex justify-between gap-2">
                       <p>Provincias: </p>
                       <div class="flex gap-2 flex-wrap">

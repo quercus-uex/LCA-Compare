@@ -54,10 +54,15 @@ export const PoblacionFilterCollapse = (
             {poblaciones.map((p) => (
               <li
                 key={p.id}
-                className={`list-row rounded-none flex hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
                 onClick={() => {
-                  if (filters.poblaciones!.find(i => i.id === p.id)) {
-                    setFilters({ ...filters, poblaciones: filters.poblaciones!.filter(i => i.id !== p.id) })
+                  if (filters.poblaciones!.find((i) => i.id === p.id)) {
+                    setFilters({
+                      ...filters,
+                      poblaciones: filters.poblaciones!.filter(
+                        (i) => i.id !== p.id,
+                      ),
+                    });
                   } else {
                     setFilters({
                       ...filters,
@@ -67,6 +72,9 @@ export const PoblacionFilterCollapse = (
                 }}
               >
                 {p.nombre}
+                <div className="badge badge-md badge-primary w-12">
+                  {p.provincia!.pais!.codigo}
+                </div>
               </li>
             ))}
           </ul>

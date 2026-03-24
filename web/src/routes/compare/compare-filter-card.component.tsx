@@ -5,6 +5,7 @@ import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.t
 import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.tsx';
 import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.component.tsx';
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
+import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 
 export const CompareFilterCard = (
   { name, required = false, onSubmit }: { name: string, required?: boolean, onSubmit: (data?: CompareFilterType) => void }
@@ -75,8 +76,18 @@ export const CompareFilterCard = (
                 {p.nombre}
               </div>
             ))}
+            {filters.pais &&
+              <div
+                className="badge badge-primary cursor-pointer"
+                onClick={() => setFilters({ ...filters, pais: undefined })}
+              >
+                {filters.pais.nombre}
+              </div>
+
+            }
           </div>
 
+          <PaisFilterCollapse filters={filters} setFilters={setFilters} />
           <ProvinciaFilterCollapse filters={filters} setFilters={setFilters} />
           <PoblacionFilterCollapse filters={filters} setFilters={setFilters} />
           <UbicacionFilterCollapse filters={filters} setFilters={setFilters} />

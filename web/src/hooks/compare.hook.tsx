@@ -1,10 +1,11 @@
-import type { Poblacion, Provincia } from './location.hook.tsx';
+import type { Pais, Poblacion, Provincia } from './location.hook.tsx';
 import type { Parcela } from './parcela.hook.tsx';
 import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
 
 export type CompareFilterType = {
+  pais?: Pais;
   poblaciones?: Poblacion[];
   provincias?: Provincia[];
   parcelas?: Parcela[];
@@ -52,6 +53,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       tipoCultivo: filters.tipoCultivo,
       anioCampaniaInicio: filters.anioCampaniaInicio,
       anioCampaniaFin: filters.anioCampaniaFin,
+      idPais: filters.pais?.id
     }
   }
 

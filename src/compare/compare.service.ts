@@ -14,6 +14,7 @@ import {
   ResultadoImpactoDataDto,
   ResultadoImpactoItemDto,
 } from '../resultadoimpacto/dto/resultado-impacto-item.dto';
+import { PaisService } from '../pais/pais.service';
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
@@ -25,6 +26,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     private readonly resultadoImpactoService: ResultadoImpactoService,
     private readonly provinciaService: ProvinciaService,
     private readonly poblacionService: PoblacionService,
+    private readonly paisService: PaisService,
   ) {
     this.openRouter = new OpenRouter();
     const reportTemplateFile = fs.readFileSync(
@@ -61,6 +63,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       tipoCultivo,
       anioCampaniaInicio,
       anioCampaniaFin,
+      idPais,
     } = filters;
 
     let locationIds: string[] = [];
@@ -92,6 +95,9 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
         ? { cultivo: { parcela: { id: { in: idsParcela } } } }
         : null,
       lat && long && range ? { id: { in: locationIds } } : null,
+      idPais
+        ? { cultivo: { parcela: { poblacion: { provincia: { idPais } } } } }
+        : null,
     ].filter((i) => i !== null);
 
     const tipoCondition = tipoCultivo
@@ -320,6 +326,20 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     };
      */
 
+    const refPaises = await this.paisService.findMany({
+      where: {
+        id: {
+          in: [
+            ...new Set<string>(
+              refResults.map(
+                (r) => r.cultivo!.parcela.poblacion!.provincia.idPais,
+              ),
+            ),
+          ],
+        },
+      },
+    });
+
     const refProvincias = await this.provinciaService.findMany({
       where: {
         id: {
@@ -358,6 +378,19 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       },
     };
 
+    const tarPaises = await this.paisService.findMany({
+      where: {
+        id: {
+          in: [
+            ...new Set<string>(
+              tarResults.map(
+                (r) => r.cultivo!.parcela.poblacion!.provincia.idPais,
+              ),
+            ),
+          ],
+        },
+      },
+    });
     const tarProvincias = await this.provinciaService.findMany({
       where: {
         id: {
@@ -411,6 +444,10 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       comparison,
       topImpacts,
       reference: {
+        paises: refPaises.map((p) => ({
+          ...p,
+          chosen: refFilters.idPais === p.id,
+        })),
         provincias: refProvincias.map((p) => ({
           ...p,
           chosen: !!refFilters.idsProvincia?.find((id) => id === p.id),
@@ -428,6 +465,10 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
         })),
       },
       target: {
+        paises: tarPaises.map((p) => ({
+          ...p,
+          chosen: tarFilters.idPais === p.id,
+        })),
         provincias: tarProvincias.map((p) => ({
           ...p,
           chosen: !!tarFilters.idsProvincia?.find((id) => id === p.id),

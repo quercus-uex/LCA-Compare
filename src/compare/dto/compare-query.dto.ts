@@ -15,6 +15,10 @@ import { Type } from 'class-transformer';
 
 export class CompareQueryItemDto {
   @IsOptional()
+  @IsUUID()
+  idPais?: string;
+
+  @IsOptional()
   @IsArray()
   @IsUUID('all', { each: true })
   idsPoblacion?: string[];

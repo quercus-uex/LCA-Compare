@@ -2,10 +2,17 @@ import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
 
+export type Pais = {
+  id: string;
+  codigo: string;
+  nombre: string;
+}
+
 export type Provincia = {
   id: string;
   nombre: string;
   idCatastro: number;
+  pais?: Pais;
 }
 
 export type Poblacion = {
@@ -13,12 +20,14 @@ export type Poblacion = {
   idProvincia: string;
   idCatastro: number;
   nombre: string;
+  provincia?: Provincia;
 }
 
 type LocationContextType = {
   getProvincias: () => Promise<Provincia[]>;
   getPoblacionesFromProvinciaId: (id: string) => Promise<Poblacion[]>;
   getPoblacionesByName: (name: string) => Promise<Poblacion[]>;
+  getPaises: () => Promise<Pais[]>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -64,7 +73,19 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     return json.data as Poblacion[];
   }
 
-  const value = useMemo(() => ({ getProvincias, getPoblacionesFromProvinciaId, getPoblacionesByName }), []);
+  const getPaises = async () => {
+    const response = await fetch(`${API_BASE_URL}/pais`, { method: 'GET' });
+
+    if (!response.ok) {
+      toast.error('Error al obtener la lista de países');
+      throw new Error();
+    }
+
+    const json = await response.json();
+    return json.data as Pais[];
+  }
+
+  const value = useMemo(() => ({ getProvincias, getPoblacionesFromProvinciaId, getPoblacionesByName, getPaises }), []);
 
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>
 }

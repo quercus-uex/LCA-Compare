@@ -2,10 +2,7 @@ select * from "Pais";
 
 -- Países
 insert into "Pais" (id, nombre, codigo) values
-                                            (gen_random_uuid(), 'España', 'ES'),
                                             (gen_random_uuid(), 'Portugal', 'PT');
-
-select * from "Provincia";
 
 -- Provincias PT
 insert into "Provincia" (id, nombre, "idCatastro", "idPais") values
@@ -39,62 +36,7 @@ insert into "Provincia" (id, nombre, "idCatastro", "idPais") values
                                                                  (gen_random_uuid(), 'Ilha das Flores', 48, (select id from "Pais" where codigo = 'PT')),
                                                                  (gen_random_uuid(), 'Ilha do Corvo', 49, (select id from "Pais" where codigo = 'PT'));
 
--- Provincias ES
-INSERT INTO "Provincia" (id, nombre, "idCatastro", "idPais") VALUES
-                                                                 (gen_random_uuid(), 'Álava', 1, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Cáceres', 10, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Cádiz', 11, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Castellón', 12, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Ciudad Real', 13, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Córdoba', 14, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'La Coruña', 15, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Cuenca', 16, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Gerona', 17, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Granada', 18, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Guadalajara', 19, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Albacete', 2, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Guipuzcoa', 20, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Huelva', 21, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Huesca', 22, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Jaén', 23, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'León', 24, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Lerida', 25, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'La Rioja', 26, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Lugo', 27, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Madrid', 28, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Málaga', 29, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Alicante', 3, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Murcia', 30, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Navarra', 31, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Ourense', 32, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Asturias', 33, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Palencia', 34, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Las Palmas', 35, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Pontevedra', 36, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Salamanca', 37, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Santa Cruz De Tenerife', 38, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Cantabria', 39, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Almería', 4, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Segovia', 40, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Sevilla', 41, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Soria', 42, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Tarragona', 43, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Teruel', 44, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Toledo', 45, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Valencia', 46, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Valladolid', 47, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Vizcaya', 48, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Zamora', 49, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Avila', 5, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Zaragoza', 50, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Badajoz', 6, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Baleares', 7, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Barcelona', 8, (select id from "Pais" where codigo = 'ES')),
-                                                                 (gen_random_uuid(), 'Burgos', 9, (select id from "Pais" where codigo = 'ES'));
-
 -- Poblaciones PT
-select * from "Poblacion";
-
 insert into "Poblacion" (id, "idProvincia", nombre, "idCatastro") values
                                                                       (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 1), 'Águeda', 1),
                                                                       (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 1), 'Albergaria-a-Velha', 2),
@@ -404,6 +346,62 @@ insert into "Poblacion" (id, "idProvincia", nombre, "idCatastro") values
                                                                       (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 48), 'Lajes das Flores', 1),
                                                                       (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 48), 'Santa Cruz das Flores', 2),
                                                                       (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 49), 'Corvo', 1);
+
+insert into "Pais" (id, nombre, codigo) values
+    (gen_random_uuid(), 'España', 'ES');
+
+-- Provincias ES
+INSERT INTO "Provincia" (id, nombre, "idCatastro", "idPais") VALUES
+                                                                 (gen_random_uuid(), 'Álava', 1, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Cáceres', 10, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Cádiz', 11, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Castellón', 12, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Ciudad Real', 13, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Córdoba', 14, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'La Coruña', 15, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Cuenca', 16, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Gerona', 17, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Granada', 18, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Guadalajara', 19, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Albacete', 2, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Guipuzcoa', 20, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Huelva', 21, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Huesca', 22, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Jaén', 23, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'León', 24, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Lerida', 25, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'La Rioja', 26, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Lugo', 27, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Madrid', 28, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Málaga', 29, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Alicante', 3, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Murcia', 30, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Navarra', 31, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Ourense', 32, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Asturias', 33, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Palencia', 34, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Las Palmas', 35, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Pontevedra', 36, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Salamanca', 37, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Santa Cruz De Tenerife', 38, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Cantabria', 39, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Almería', 4, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Segovia', 40, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Sevilla', 41, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Soria', 42, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Tarragona', 43, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Teruel', 44, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Toledo', 45, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Valencia', 46, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Valladolid', 47, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Vizcaya', 48, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Zamora', 49, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Avila', 5, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Zaragoza', 50, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Badajoz', 6, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Baleares', 7, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Barcelona', 8, (select id from "Pais" where codigo = 'ES')),
+                                                                 (gen_random_uuid(), 'Burgos', 9, (select id from "Pais" where codigo = 'ES'));
 
 -- Poblaciones ES
 INSERT INTO "Poblacion" (id, "idProvincia", nombre, "idCatastro") VALUES
@@ -8604,6 +8602,7 @@ INSERT INTO "Poblacion" (id, "idProvincia", nombre, "idCatastro") VALUES
 (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 9 and "idPais" = (select id from "Pais" where codigo = 'ES')), 'Cayuela', 96),
 (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 9 and "idPais" = (select id from "Pais" where codigo = 'ES')), 'Cebrecos', 97),
 (gen_random_uuid(), (select id from "Provincia" where "idCatastro" = 9 and "idPais" = (select id from "Pais" where codigo = 'ES')), 'Celada Del Camino', 98);
+
 
 -- Metodos de impacto
 insert into "MetodoImpacto" (id, nombre) values ('2f995579-06bd-4681-b07c-cee3b1805b0d', 'EF 3.1');

@@ -22,7 +22,7 @@ export class VentumController {
 
     const resultadoImpacto = await this.resultadoImpactoService.create({
       datos: instanceToPlain(data.resultado),
-      impacto: { connect: { id: 'prueba' } },
+      impacto: { connect: { id: process.env.DEFAULT_IMPACT_METHOD_UUID } },
     });
 
     const cultivo = await this.ventumService.checkCultivo(

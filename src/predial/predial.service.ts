@@ -35,7 +35,10 @@ export class PredialService {
       );
     return {
       type: 'Feature',
-      properties: {},
+      properties: {
+        provincia: parseInt(data.dico.slice(0, 2)),
+        poblacion: parseInt(data.dico.slice(2, 4)),
+      },
       geometry: {
         type: 'Polygon',
         coordinates: coords,

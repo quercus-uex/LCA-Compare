@@ -70,52 +70,6 @@ export const CompareRoute = () => {
                 className="btn btn-accent"
                 onClick={() =>
                   exportJSON({
-                    metadata: filtersRef,
-                    result: {
-                      impacto_total: result?.impacto_total.map((i) => ({
-                        unit: i.unit,
-                        category: i.category,
-                        amount: i.refAmount,
-                      })),
-                      impacto_fertilizantes: result?.impacto_fertilizantes.map(
-                        (i) => ({
-                          unit: i.unit,
-                          category: i.category,
-                          amount: i.refAmount,
-                        }),
-                      ),
-                      impacto_sistema_riego: result?.impacto_sistema_riego.map(
-                        (i) => ({
-                          unit: i.unit,
-                          category: i.category,
-                          amount: i.refAmount,
-                        }),
-                      ),
-                      impacto_pesticidas: result?.impacto_pesticidas.map(
-                        (i) => ({
-                          unit: i.unit,
-                          category: i.category,
-                          amount: i.refAmount,
-                        }),
-                      ),
-                      impacto_manejo_cultivo:
-                        result?.impacto_manejo_cultivo.map((i) => ({
-                          unit: i.unit,
-                          category: i.category,
-                          amount: i.refAmount,
-                        })),
-                    },
-                  })
-                }
-              >
-                Exportar referencia
-              </button>
-            )}
-            {result && (
-              <button
-                className="btn btn-accent"
-                onClick={() =>
-                  exportJSON({
                     metadata: filtersObj,
                     result: {
                       impacto_total: result?.impacto_total.map((i) => ({
@@ -149,6 +103,52 @@ export const CompareRoute = () => {
                           unit: i.unit,
                           category: i.category,
                           amount: i.tarAmount,
+                        })),
+                    },
+                  })
+                }
+              >
+                Exportar objetivo
+              </button>
+            )}
+            {result && (
+              <button
+                className="btn btn-accent"
+                onClick={() =>
+                  exportJSON({
+                    metadata: filtersRef,
+                    result: {
+                      impacto_total: result?.impacto_total.map((i) => ({
+                        unit: i.unit,
+                        category: i.category,
+                        amount: i.refAmount,
+                      })),
+                      impacto_fertilizantes: result?.impacto_fertilizantes.map(
+                        (i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.refAmount,
+                        }),
+                      ),
+                      impacto_sistema_riego: result?.impacto_sistema_riego.map(
+                        (i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.refAmount,
+                        }),
+                      ),
+                      impacto_pesticidas: result?.impacto_pesticidas.map(
+                        (i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.refAmount,
+                        }),
+                      ),
+                      impacto_manejo_cultivo:
+                        result?.impacto_manejo_cultivo.map((i) => ({
+                          unit: i.unit,
+                          category: i.category,
+                          amount: i.refAmount,
                         })),
                     },
                   })

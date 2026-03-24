@@ -56,7 +56,7 @@ export class VentumController {
     const token = (await fetchToken.json()) as { token: string };
     const cultivos: any[] = [];
 
-    for (let i = 1; i < 50; i++) {
+    for (let i = 1; i < 100; i++) {
       const fetchCultivo = await fetch(
         `https://acvapi.dtagro.es/api/cultivo/calculos/${i}`,
         {

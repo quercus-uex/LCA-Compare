@@ -28,6 +28,7 @@ export class PoblacionService {
       cursor,
       where,
       orderBy,
+      include: { provincia: { include: { pais: true } } },
     });
   }
 }

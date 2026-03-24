@@ -42,6 +42,9 @@ export class VentumService {
         where: {
           provincia: {
             idCatastro: mParcela.es_sigpac.provincia,
+            pais: {
+              codigo: 'ES',
+            },
           },
           idCatastro: mParcela.es_sigpac.municipio,
         },
@@ -55,6 +58,9 @@ export class VentumService {
         where: {
           provincia: {
             idCatastro: parseInt(mParcela.es_referencia_catastral.slice(0, 2)),
+            pais: {
+              codigo: 'ES',
+            },
           },
           idCatastro: parseInt(mParcela.es_referencia_catastral.slice(2, 5)),
         },
@@ -65,8 +71,17 @@ export class VentumService {
         mParcela.pt_id_parcela_predial,
       );
 
-      // TEMPORAL
-      const res = await this.poblacionService.findMany({ where: {} });
+      const res = await this.poblacionService.findMany({
+        where: {
+          provincia: {
+            idCatastro: polygon.properties!.provincia as number,
+            pais: {
+              codigo: 'PT',
+            },
+          },
+          idCatastro: polygon.properties!.poblacion as number,
+        },
+      });
       poblacion = res[0];
     } else {
       throw Error(

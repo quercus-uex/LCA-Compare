@@ -13,7 +13,7 @@ export class ProvinciaService {
   }
 
   async findAll(): Promise<Provincia[]> {
-    return this.prisma.provincia.findMany();
+    return this.prisma.provincia.findMany({ include: { pais: true } });
   }
 
   async findMany(params: {

@@ -1,8 +1,19 @@
+model Pais {
+  id String @id @default(uuid())
+  nombre String @unique
+  codigo String @unique
+  provincias Provincia[]
+}
+
 model Provincia {
   id          String      @id @default(uuid())
   nombre      String
   idCatastro  Int
   poblaciones Poblacion[]
+  idPais      String
+  pais        Pais @relation(fields: [idPais], references: [id])
+
+  @@index([idPais])
 }
 
 model Poblacion {

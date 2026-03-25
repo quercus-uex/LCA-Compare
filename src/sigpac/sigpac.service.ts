@@ -6,7 +6,7 @@ import { Feature, Polygon } from 'geojson';
 import { SigpacDto } from '../ventum/dto/ventum-input.dto';
 
 const SIGPAC_BASE_URL =
-  'https://desarrollo.tragsatec.es/ogc-api-feature/collections/recintos/items';
+  'https://sigpac-hubcloud.es/ogcapi/collections/recintos/items';
 
 @Injectable()
 export class SigpacService {
@@ -17,16 +17,12 @@ export class SigpacService {
 
     const url = new URL(SIGPAC_BASE_URL);
     url.searchParams.set('f', 'json');
-    url.searchParams.set(
-      'filter',
-      `provincia = ${provincia} AND` +
-        `municipio = ${municipio} AND` +
-        //`agregado = ${agregado} AND` +
-        //`zona = ${zona} AND` +
-        `poligono = ${poligono} AND` +
-        `parcela = ${parcela}`, //+
-        //`recinto = ${recinto}`,
-    );
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('provincia', provincia?.toString() ?? '');
+    url.searchParams.set('municipio', municipio?.toString() ?? '');
+    url.searchParams.set('parcela', parcela?.toString() ?? '');
+    url.searchParams.set('poligono', poligono?.toString() ?? '');
+
     const res = await firstValueFrom(this.httpService.get(url.toString()));
     const data = res.data as SigpacResponseDto;
     return data.features[0];

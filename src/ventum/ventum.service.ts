@@ -92,7 +92,7 @@ export class VentumService {
     const { provincia, parcela, municipio, poligono } = mParcela.es_sigpac;
     const newParcela = await this.parcelaService.create({
       sigpac: mParcela.es_sigpac.provincia
-        ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}`
+        ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
         : null,
       refCat: mParcela.es_referencia_catastral,
       ptIdParcela: mParcela.pt_id_parcela_predial,

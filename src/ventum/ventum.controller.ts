@@ -3,6 +3,7 @@ import { VentumInputDto } from './dto/ventum-input.dto';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { instanceToPlain } from 'class-transformer';
 import { VentumService } from './ventum.service';
+import * as fs from 'node:fs';
 
 @Controller('/ventum')
 export class VentumController {
@@ -67,7 +68,13 @@ export class VentumController {
         },
       );
       try {
-        cultivos.push(await fetchCultivo.json());
+        const json = (await fetchCultivo.json()) as object;
+        cultivos.push(json);
+        fs.writeFileSync(
+          `./output/data-${i}.json`,
+          JSON.stringify(json, null, 2),
+          'utf-8',
+        );
       } catch {
         console.log(`Error en parcela con ID ${i}`);
       }

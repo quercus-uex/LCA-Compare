@@ -19,9 +19,11 @@ export const ResultComparisonTable = ({
           <tr>
             <th>Categoría</th>
             <th>Cantidad referencia</th>
-            {result.impacto_total[0].tarAmount && <th>Cantidad objetivo</th>}
+            {result.impacto_total[0].tarAmount != null && (
+              <th>Cantidad objetivo</th>
+            )}
             <th>Unidad</th>
-            {result.impacto_total[0].tarAmount && <th>Diferencia</th>}
+            {result.impacto_total[0].tarAmount != null && <th>Diferencia</th>}
           </tr>
         </thead>
         <tbody>
@@ -29,9 +31,9 @@ export const ResultComparisonTable = ({
             <tr key={index}>
               <th>{i.category}</th>
               <th>{i.refAmount.toFixed(4)}</th>
-              {i.tarAmount && <th>{i.tarAmount.toFixed(4)}</th>}
+              {i.tarAmount != null && <th>{i.tarAmount.toFixed(4)}</th>}
               <th>{i.unit}</th>
-              {i.tarAmount && (
+              {i.tarAmount != null && (
                 <th
                   className={`${i.diff >= 0 ? 'text-red-400' : 'text-green-400'}`}
                 >

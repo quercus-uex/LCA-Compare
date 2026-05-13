@@ -4,11 +4,18 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [{
-      "include": "./templates/*.hbs",
-      "outDir": "./dist/src",
-      "watchAssets": true
-    }],
+    "assets": [
+      {
+        "include": "./templates/*.hbs",
+        "outDir": "./dist/src",
+        "watchAssets": true
+      },
+      {
+        "include": "./ai/prompts/*.hbs",
+        "outDir": "./dist/src",
+        "watchAssets": true
+      }
+    ],
     "plugins": ["@nestjs/swagger"]
   }
 }

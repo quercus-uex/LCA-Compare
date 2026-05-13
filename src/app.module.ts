@@ -7,6 +7,7 @@ import { ResultadoImpactoModule } from './resultadoimpacto/resultado-impacto.mod
 import { CompareModule } from './compare/compare.module';
 import { ProvinciaModule } from './provincia/provincia.module';
 import { PaisModule } from './pais/pais.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PaisModule } from './pais/pais.module';
     CompareModule,
     ProvinciaModule,
     PaisModule,
+    AiModule,
   ],
 })
 export class AppModule {}

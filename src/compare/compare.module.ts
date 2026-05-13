@@ -5,6 +5,7 @@ import { ResultadoImpactoModule } from '../resultadoimpacto/resultado-impacto.mo
 import { ProvinciaModule } from '../provincia/provincia.module';
 import { PoblacionModule } from '../poblacion/poblacion.module';
 import { PaisModule } from '../pais/pais.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PaisModule } from '../pais/pais.module';
     ProvinciaModule,
     PoblacionModule,
     PaisModule,
+    AiModule,
   ],
   controllers: [CompareController],
   providers: [CompareService],

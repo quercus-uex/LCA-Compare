@@ -1,9 +1,8 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
-import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
+import { ResultadoImpacto } from '../generated/prisma/client';
 import { CompareResultDto } from './dto/compare-result.dto';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
-import { OpenRouter } from '@openrouter/sdk';
 import { chromium, Browser } from 'playwright';
 import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
@@ -15,10 +14,17 @@ import {
   ResultadoImpactoItemDto,
 } from '../resultadoimpacto/dto/resultado-impacto-item.dto';
 import { PaisService } from '../pais/pais.service';
+import { AiService } from '../ai/ai.service';
+import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
+import { extractLocationData } from './compare.helpers';
+
+Handlebars.registerHelper('decimals', (value, digits: number) =>
+  Number(value).toFixed(digits),
+);
+Handlebars.registerHelper('isOdd', (value: number) => value % 2 == 0);
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
-  private openRouter: OpenRouter;
   private readonly reportTemplate: HandlebarsTemplateDelegate;
   private browser: Browser;
 
@@ -27,21 +33,13 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     private readonly provinciaService: ProvinciaService,
     private readonly poblacionService: PoblacionService,
     private readonly paisService: PaisService,
+    private readonly aiService: AiService,
   ) {
-    this.openRouter = new OpenRouter();
     const reportTemplateFile = fs.readFileSync(
       path.resolve(__dirname, '../templates/compare-report.template.hbs'),
       'utf-8',
     );
     this.reportTemplate = Handlebars.compile(reportTemplateFile);
-
-    Handlebars.registerHelper('decimals', function (value, digits: number) {
-      return Number(value).toFixed(digits);
-    });
-
-    Handlebars.registerHelper('isOdd', function (value: number) {
-      return value % 2 == 0;
-    });
   }
 
   async onModuleInit() {
@@ -52,7 +50,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     await this.browser?.close();
   }
 
-  async findResults(filters: CompareQueryItemDto) {
+  async findResults(filters: CompareQueryItemDto): Promise<ResultadoImpactoWithRelations[]> {
     const {
       idsPoblacion,
       idsProvincia,
@@ -123,21 +121,11 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
         : null,
     ].filter((i) => i !== null);
 
-    let results: Prisma.ResultadoImpactoGetPayload<{
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } };
-            };
-          };
-        };
-      };
-    }>[] = [];
+    let results: ResultadoImpactoWithRelations[] = [];
 
     if (andConditions.length > 0) {
       results = await this.resultadoImpactoService.findMany({
-        where: andConditions.length > 0 ? { AND: andConditions } : {},
+        where: { AND: andConditions },
       });
     }
 
@@ -151,22 +139,14 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     if (results.length === 1)
       return results[0].datos as ResultadoImpactoDataDto;
 
-    const keys = [
-      'impacto_fertilizantes',
-      'impacto_manejo_cultivo',
-      'impacto_pesticidas',
-      'impacto_sistema_riego',
-      'impacto_total',
-    ] as const;
+    const base = structuredClone(results[0].datos) as ResultadoImpactoDataDto;
 
-    const base = results[0].datos as ResultadoImpactoDataDto;
-
-    for (const key of keys) {
+    for (const key of IMPACT_KEYS) {
       base[key] = base[key].map((item) => ({ ...item, amount: 0, count: 0 }));
     }
 
     for (const result of results) {
-      for (const key of keys) {
+      for (const key of IMPACT_KEYS) {
         const arr = result.datos![key] as ResultadoImpactoItemDto[];
         base[key] = base[key].map((item) => {
           return {
@@ -180,7 +160,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    for (const key of keys) {
+    for (const key of IMPACT_KEYS) {
       base[key] = base[key].map((i) => ({
         ...i,
         amount: i.amount / i.count!,
@@ -199,14 +179,6 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     refResults: ResultadoImpactoDataDto,
     tarResults?: ResultadoImpactoDataDto,
   ): CompareResultDto {
-    const keys = [
-      'impacto_fertilizantes',
-      'impacto_manejo_cultivo',
-      'impacto_pesticidas',
-      'impacto_sistema_riego',
-      'impacto_total',
-    ] as const;
-
     const out: CompareResultDto = {
       impacto_total: [],
       impacto_fertilizantes: [],
@@ -220,7 +192,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       return ((val1 - val2) / val2) * 100;
     };
 
-    for (const key of keys) {
+    for (const key of IMPACT_KEYS) {
       out[key] = refResults[key].map((r) => {
         if (!tarResults) {
           return {
@@ -245,246 +217,81 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return out;
   }
 
+  private async buildReportContext(
+    results: ResultadoImpactoWithRelations[],
+    filters: CompareQueryItemDto,
+  ) {
+    const { idsPais, idsProvincia, idsPoblacion, minYear, maxYear } =
+      extractLocationData(results);
+
+    const [paises, provincias, poblaciones] = await Promise.all([
+      this.paisService.findMany({ where: { id: { in: idsPais } } }),
+      this.provinciaService.findMany({ where: { id: { in: idsProvincia } } }),
+      this.poblacionService.findMany({ where: { id: { in: idsPoblacion } } }),
+    ]);
+
+    const provinciaSet = new Set(filters.idsProvincia ?? []);
+    const poblacionSet = new Set(filters.idsPoblacion ?? []);
+
+    return {
+      paises: paises.map((p) => ({ ...p, chosen: filters.idPais === p.id })),
+      provincias: provincias.map((p) => ({
+        ...p,
+        chosen: provinciaSet.has(p.id),
+      })),
+      poblaciones: poblaciones.map((p) => ({
+        ...p,
+        chosen: poblacionSet.has(p.id),
+      })),
+      anioCampania: {
+        inicio: { data: minYear, chosen: !!filters.anioCampaniaInicio },
+        fin: { data: maxYear, chosen: !!filters.anioCampaniaFin },
+      },
+      tiposCultivo: [...new Set(results.map((r) => r.cultivo?.tipo))].map(
+        (t) => ({
+          nombre: t,
+          chosen: t === filters.tipoCultivo,
+        }),
+      ),
+      filters,
+      results,
+    };
+  }
+
   async generateReport(
     refFilters: CompareQueryItemDto,
-    refResults: Prisma.ResultadoImpactoGetPayload<{
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } };
-            };
-          };
-        };
-      };
-    }>[],
+    refResults: ResultadoImpactoWithRelations[],
     tarFilters: CompareQueryItemDto,
-    tarResults: Prisma.ResultadoImpactoGetPayload<{
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } };
-            };
-          };
-        };
-      };
-    }>[],
+    tarResults: ResultadoImpactoWithRelations[],
   ) {
-    const reference = this.getMeanOfResults(refResults);
-    const target = this.getMeanOfResults(tarResults);
-    const comparison = this.compareResults(reference!, target);
+    const comparison = this.compareResults(
+      this.getMeanOfResults(refResults)!,
+      this.getMeanOfResults(tarResults),
+    );
 
-    const overview = await this.openRouter.chat.send({
-      chatGenerationParams: {
-        messages: [
-          {
-            role: 'user',
-            content: `
-              Escribe un resumen claro y conciso tras interpretar los datos proporcionados, teniendo en cuenta que son el resultado de comparar dos conjuntos de datos en la metodología Environmental Footprint 3.1. Sigue las siguientes directrices:
-                - refAmount es la cantidad referente al conjunto de referencia.
-                - tarAmount es la cantidad referente al conjunto objetivo.
-                - diff es la diferencia porcentual del conjunto objetivo respecto al de referencia.
-                - La redacción será utilizada en un reporte, adecúate al formato de escritura.
-                - Centra tu redacción en comparar ambos resultados, más que en analizar los resultados individualmente.
-                - El resumen debe ocupar como máximo 120 palabras, pero puede (y DEBE en la mayoría de situaciones) ser considerablemente más corto.
-                - Redacta como si los datos hubieran sido interpretados por una persona y no extraídos de un JSON.
-                - Proporciona el resumen y nada más.
-                - NUNCA referencies atributos concretos del JSON como refAmount o diff, refiérete a ellos siempre por su nombre (valor de referencia, diferencia).
-                - El resumen DEBE COMENZAR POR "El conjunto de referencia...".
-                - NUNCA repitas información.
-              Datos: \`\`json ${JSON.stringify(comparison)} \`\`\`
-            `,
-          },
-        ],
-        //model: 'deepseek/deepseek-v3.2:nitro',
-        model: 'openai/gpt-oss-120b:nitro',
-      },
-    });
-
-    const recommendations = await this.openRouter.chat.send({
-      chatGenerationParams: {
-        messages: [
-          {
-            role: 'user',
-            content: `
-              En base al siguiente resumen de impactos usando la metodología Environmental Footprint 3.1, redacta un breve párrafo en estilo redactado de posibles mejoras recomendadas para el conjunto objetivo.
-              Si no existe ninguna notable, dilo. Escribe en texto plano, no Markdown. El párrafo debe ocupar a lo sumo 70 palabras.
-              Resumen: ${overview.choices[0].message.content as string}
-            `,
-          },
-        ],
-        model: 'openai/gpt-oss-120b:nitro',
-      },
-    });
-
-    /*
-    const overview = {
-      choices: [
-        { message: { content: 'Esto es una prueba para no quedarme pobre.' } },
-      ],
-    };
-     */
-
-    const refPaises = await this.paisService.findMany({
-      where: {
-        id: {
-          in: [
-            ...new Set<string>(
-              refResults.map(
-                (r) => r.cultivo!.parcela.poblacion!.provincia.idPais,
-              ),
-            ),
-          ],
-        },
-      },
-    });
-
-    const refProvincias = await this.provinciaService.findMany({
-      where: {
-        id: {
-          in: refResults.map((r) => r.cultivo!.parcela.poblacion!.idProvincia),
-        },
-      },
-    });
-    const refPoblaciones = await this.poblacionService.findMany({
-      where: {
-        id: {
-          in: refResults.map((r) => r.cultivo!.parcela.idPoblacion!),
-        },
-      },
-    });
-
-    const refAnioCampania = {
-      inicio: {
-        data: refResults
-          .sort(
-            (a, b) =>
-              a.cultivo!.fechaInicioCampania.getFullYear() -
-              b.cultivo!.fechaInicioCampania.getFullYear(),
-          )[0]
-          .cultivo!.fechaInicioCampania.getFullYear(),
-        chosen: !!refFilters.anioCampaniaInicio,
-      },
-      fin: {
-        data: refResults
-          .sort(
-            (a, b) =>
-              b.cultivo!.fechaInicioCampania.getFullYear() -
-              a.cultivo!.fechaInicioCampania.getFullYear(),
-          )[0]
-          .cultivo!.fechaInicioCampania.getFullYear(),
-        chosen: !!refFilters.anioCampaniaFin,
-      },
-    };
-
-    const tarPaises = await this.paisService.findMany({
-      where: {
-        id: {
-          in: [
-            ...new Set<string>(
-              tarResults.map(
-                (r) => r.cultivo!.parcela.poblacion!.provincia.idPais,
-              ),
-            ),
-          ],
-        },
-      },
-    });
-    const tarProvincias = await this.provinciaService.findMany({
-      where: {
-        id: {
-          in: tarResults.map((r) => r.cultivo!.parcela.poblacion!.idProvincia),
-        },
-      },
-    });
-    const tarPoblaciones = await this.poblacionService.findMany({
-      where: {
-        id: {
-          in: tarResults.map((r) => r.cultivo!.parcela.idPoblacion!),
-        },
-      },
-    });
-
-    const tarAnioCampania = {
-      inicio: {
-        data: tarResults
-          .sort(
-            (a, b) =>
-              a.cultivo!.fechaInicioCampania.getFullYear() -
-              b.cultivo!.fechaInicioCampania.getFullYear(),
-          )[0]
-          .cultivo!.fechaInicioCampania.getFullYear(),
-        chosen: !!tarFilters.anioCampaniaInicio,
-      },
-      fin: {
-        data: tarResults
-          .sort(
-            (a, b) =>
-              b.cultivo!.fechaInicioCampania.getFullYear() -
-              a.cultivo!.fechaInicioCampania.getFullYear(),
-          )[0]
-          .cultivo!.fechaInicioCampania.getFullYear(),
-        chosen: !!tarFilters.anioCampaniaFin,
-      },
-    };
+    const overview = await this.aiService.generateFromTemplate(
+      'compare-overview',
+      { data: JSON.stringify(comparison) },
+    );
+    const recommendations = await this.aiService.generateFromTemplate(
+      'compare-recommendations',
+      { data: overview },
+    );
+    const refContext = await this.buildReportContext(refResults, refFilters);
+    const tarContext = await this.buildReportContext(tarResults, tarFilters);
 
     const topImpacts = comparison.impacto_total
-      .sort((a, b) => Math.abs(a.diff!) - Math.abs(b.diff!))
-      .reverse()
+      .sort((a, b) => Math.abs(b.diff!) - Math.abs(a.diff!))
       .slice(0, 3);
-
-    const refTiposCultivo = new Set(refResults.map((r) => r.cultivo?.tipo));
-    const tarTiposCultivo = new Set(tarResults.map((r) => r.cultivo?.tipo));
 
     const html = this.reportTemplate({
       currentDate: new Date().toLocaleString('es-ES'),
-      overview: overview.choices[0].message.content as string,
-      recommendations: recommendations.choices[0].message.content as string,
+      overview,
+      recommendations,
       comparison,
       topImpacts,
-      reference: {
-        paises: refPaises.map((p) => ({
-          ...p,
-          chosen: refFilters.idPais === p.id,
-        })),
-        provincias: refProvincias.map((p) => ({
-          ...p,
-          chosen: !!refFilters.idsProvincia?.find((id) => id === p.id),
-        })),
-        poblaciones: refPoblaciones.map((p) => ({
-          ...p,
-          chosen: !!refFilters.idsPoblacion?.find((id) => id === p.id),
-        })),
-        filters: refFilters,
-        results: refResults,
-        anioCampania: refAnioCampania,
-        tiposCultivo: [...refTiposCultivo].map((r) => ({
-          nombre: r,
-          chosen: r == refFilters.tipoCultivo,
-        })),
-      },
-      target: {
-        paises: tarPaises.map((p) => ({
-          ...p,
-          chosen: tarFilters.idPais === p.id,
-        })),
-        provincias: tarProvincias.map((p) => ({
-          ...p,
-          chosen: !!tarFilters.idsProvincia?.find((id) => id === p.id),
-        })),
-        poblaciones: tarPoblaciones.map((p) => ({
-          ...p,
-          chosen: !!tarFilters.idsPoblacion?.find((id) => id === p.id),
-        })),
-        filters: tarFilters,
-        results: tarResults,
-        anioCampania: tarAnioCampania,
-        tiposCultivo: [...tarTiposCultivo].map((r) => ({
-          nombre: r,
-          chosen: r == tarFilters.tipoCultivo,
-        })),
-      },
+      reference: refContext,
+      target: tarContext,
     });
 
     const page = await this.browser.newPage();

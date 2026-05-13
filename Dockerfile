@@ -31,8 +31,8 @@ RUN apt update \
     && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
-RUN npx playwright install chromium --with-deps
 RUN npm ci --omit=dev && npx prisma generate --config prisma.config.ts
+RUN npx playwright install chromium --with-deps
 
 COPY --from=builder /app/dist ./dist
 

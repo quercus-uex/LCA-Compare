@@ -1,6 +1,7 @@
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
 import { useEffect, useState } from 'react';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const PaisFilterCollapse = (
   {
@@ -25,34 +26,19 @@ export const PaisFilterCollapse = (
   }, []);
   
   return (
-    <div
-      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
-    >
-      <div className="flex p-5">
-        <div className="flex gap-2 items-center justify-between w-full">
-          <p className="font-semibold text-lg">País</p>
-          <input
-            type="checkbox"
-            className="toggle toggle-lg"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-          />
-        </div>
+    <FilterCollapse title="País" enabled={enabled} onToggle={setEnabled}>
+      <div className="join flex">
+        {paises.map((pais) => (
+          <button
+            key={pais.id}
+            className={`btn join-item grow ${filters.pais?.id === pais.id ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setFilters({ ...filters, pais })}
+          >
+            {pais.nombre}
+          </button>
+        ))}
       </div>
-
-      <div className="collapse-content">
-        <div className="join flex">
-          {paises.map((pais) => (
-            <button
-              className={`btn join-item grow ${filters.pais?.id === pais.id ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setFilters({ ...filters, pais })}
-            >
-              {pais.nombre}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    </FilterCollapse>
   );
   
 }

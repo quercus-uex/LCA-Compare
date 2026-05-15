@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const ProvinciaFilterCollapse = (
   {
@@ -25,57 +26,42 @@ export const ProvinciaFilterCollapse = (
     if (!enabled) setFilters({ ...filters, provincias: [] });
   }, [enabled]);
 
-  return (
-    <div
-      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
-    >
-      <div className="flex p-5">
-        <div className="flex gap-2 items-center justify-between w-full">
-          <p className="font-semibold text-lg">Provincia</p>
-          <input
-            type="checkbox"
-            className="toggle toggle-lg"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-          />
-        </div>
-      </div>
-      <div className="collapse-content">
-        <div className="flex flex-col gap-5 w-full">
-          <input
-            className="input w-full"
-            placeholder="Provincia..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+  const toggleProvincia = (p: Provincia) => {
+    const selected = filters.provincias!;
+    if (selected.find((i) => i.id === p.id)) {
+      setFilters({ ...filters, provincias: selected.filter((i) => i.id !== p.id) });
+    } else {
+      setFilters({ ...filters, provincias: [...selected, p] });
+    }
+  };
 
-          <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
-            {provincias
-              .filter((p) =>
-                p.nombre.toUpperCase().match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
-              )
-              .map((p) => (
-                <li
-                  key={p.id}
-                  className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
-                  onClick={() => {
-                    if (filters.provincias!.find(i => i.id === p.id)) {
-                      setFilters({ ...filters, provincias: filters.provincias!.filter(i => i.id !== p.id) });
-                    } else {
-                      setFilters({
-                        ...filters,
-                        provincias: [...filters.provincias!, p],
-                      });
-                    }
-                  }}
-                >
-                  {p.nombre}
-                  <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
-                </li>
-              ))}
-          </ul>
-        </div>
+  return (
+    <FilterCollapse title="Provincia" enabled={enabled} onToggle={setEnabled}>
+      <div className="flex flex-col gap-5 w-full">
+        <input
+          className="input w-full"
+          placeholder="Provincia..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+
+        <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
+          {provincias
+            .filter((p) =>
+              p.nombre.toUpperCase().match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
+            )
+            .map((p) => (
+              <li
+                key={p.id}
+                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                onClick={() => toggleProvincia(p)}
+              >
+                {p.nombre}
+                <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+              </li>
+            ))}
+        </ul>
       </div>
-    </div>
+    </FilterCollapse>
   );
 }

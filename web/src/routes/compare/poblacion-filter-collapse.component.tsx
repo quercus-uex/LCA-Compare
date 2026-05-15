@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const PoblacionFilterCollapse = (
   {
@@ -25,61 +26,40 @@ export const PoblacionFilterCollapse = (
       .then(p => setPoblaciones(p))
   }, [query]);
 
+  const togglePoblacion = (p: Poblacion) => {
+    const selected = filters.poblaciones!;
+    if (selected.find((i) => i.id === p.id)) {
+      setFilters({ ...filters, poblaciones: selected.filter((i) => i.id !== p.id) });
+    } else {
+      setFilters({ ...filters, poblaciones: [...selected, p] });
+    }
+  };
+
   return (
-    <div
-      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
-    >
-      <div className="flex p-5">
-        <div className="flex gap-2 items-center justify-between w-full">
-          <p className="font-semibold text-lg">Población</p>
-          <input
-            type="checkbox"
-            className="toggle toggle-lg"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-          />
-        </div>
-      </div>
+    <FilterCollapse title="Población" enabled={enabled} onToggle={setEnabled}>
+      <div className="flex flex-col gap-5 w-full">
+        <input
+          className="input w-full"
+          placeholder="Población..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
 
-      <div className="collapse-content">
-        <div className="flex flex-col gap-5 w-full">
-          <input
-            className="input w-full"
-            placeholder="Población..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
-            {poblaciones.map((p) => (
-              <li
-                key={p.id}
-                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
-                onClick={() => {
-                  if (filters.poblaciones!.find((i) => i.id === p.id)) {
-                    setFilters({
-                      ...filters,
-                      poblaciones: filters.poblaciones!.filter(
-                        (i) => i.id !== p.id,
-                      ),
-                    });
-                  } else {
-                    setFilters({
-                      ...filters,
-                      poblaciones: [...filters.poblaciones!, p],
-                    });
-                  }
-                }}
-              >
-                {p.nombre}
-                <div className="badge badge-md badge-primary w-12">
-                  {p.provincia!.pais!.codigo}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
+          {poblaciones.map((p) => (
+            <li
+              key={p.id}
+              className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
+              onClick={() => togglePoblacion(p)}
+            >
+              {p.nombre}
+              <div className="badge badge-md badge-primary w-12">
+                {p.provincia!.pais!.codigo}
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
+    </FilterCollapse>
   );
 }

@@ -1,5 +1,6 @@
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { useEffect, useState } from 'react';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const AniocampaniaFilterCollapse = (
   {
@@ -24,65 +25,49 @@ export const AniocampaniaFilterCollapse = (
   }, [startEnabled, endEnabled])
   
   return (
-    <div
-      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
-    >
-      <div className="flex p-5">
-        <div className="flex gap-2 items-center justify-between w-full">
-          <p className="font-semibold text-lg">Fecha de campaña</p>
+    <FilterCollapse title="Fecha de campaña" enabled={enabled} onToggle={setEnabled}>
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2 items-center w-full">
           <input
             type="checkbox"
-            className="toggle toggle-lg"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
+            className="checkbox"
+            onChange={(e) => setStartEnabled(e.target.checked)}
+          />
+          <p>Desde: </p>
+          <input
+            type="number"
+            min="2020"
+            className="input"
+            onChange={(e) => {
+              if (startEnabled)
+                setFilters({
+                  ...filters,
+                  anioCampaniaInicio: parseInt(e.target.value),
+                });
+            }}
+          />
+        </div>
+        <div className="flex gap-2 items-center w-full">
+          <input
+            type="checkbox"
+            className="checkbox"
+            onChange={(e) => setEndEnabled(e.target.checked)}
+          />
+          <p>Hasta: </p>
+          <input
+            type="number"
+            min="2020"
+            className="input"
+            onChange={(e) => {
+              if (endEnabled)
+                setFilters({
+                  ...filters,
+                  anioCampaniaFin: parseInt(e.target.value),
+                });
+            }}
           />
         </div>
       </div>
-
-      <div className="collapse-content">
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2 items-center w-full">
-            <input
-              type="checkbox"
-              className="checkbox"
-              onChange={(e) => setStartEnabled(e.target.checked)}
-            />
-            <p>Desde: </p>
-            <input
-              type="number"
-              min="2020"
-              className="input"
-              onChange={(e) => {
-                if (startEnabled)
-                  setFilters({
-                    ...filters,
-                    anioCampaniaInicio: parseInt(e.target.value),
-                  });
-              }}
-            />
-          </div>
-          <div className="flex gap-2 items-center w-full">
-            <input
-              type="checkbox"
-              className="checkbox"
-              onChange={(e) => setEndEnabled(e.target.checked)}
-            />
-            <p>Hasta: </p>
-            <input
-              type="number"
-              min="2020"
-              className="input"
-              onChange={(e) => {
-                if (endEnabled)
-                  setFilters({
-                    ...filters,
-                    anioCampaniaFin: parseInt(e.target.value),
-                  });
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+    </FilterCollapse>
   );
 }

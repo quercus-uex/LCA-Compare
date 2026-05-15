@@ -2,10 +2,16 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthUser, type UserJwt } from '../auth/auth-user.decorator';
-import {ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse} from "@nestjs/swagger";
-import {ApiErrorDto} from "../common/dto/api-error.dto";
-import {ApiResponseDto} from "../common/dto/api-response.dto";
-import {UsuarioDto} from "./dto/usuario.dto";
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { ApiErrorDto } from '../common/dto/api-error.dto';
+import { ApiResponseDto } from '../common/dto/api-response.dto';
+import { UsuarioDto } from './dto/usuario.dto';
 
 @ApiTags('Usuario')
 @ApiBearerAuth()
@@ -22,10 +28,12 @@ export class UsuarioController {
   })
   @ApiOkResponse({
     description: 'Datos del usuario',
-    type: ApiResponseDto(UsuarioDto)
+    type: ApiResponseDto(UsuarioDto),
   })
   async get(@AuthUser() user: UserJwt) {
-    const usuario = await this.usuarioService.findOnePublic({ email: user.email });
+    const usuario = await this.usuarioService.findOnePublic({
+      email: user.email,
+    });
     return { data: usuario };
   }
 }

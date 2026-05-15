@@ -1,25 +1,25 @@
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CultivoDto {
-    @ApiProperty({ format: 'uuid' })
-    id: string;
+  @ApiProperty({ format: 'uuid' })
+  id: string;
 
-    @ApiProperty({ format: 'date-time' })
-    fechaInicioCampania: string;
+  @ApiProperty({ format: 'date-time' })
+  fechaInicioCampania: string;
 
-    superficieCultivada: number;
+  superficieCultivada: number;
 
-    produccion: number;
+  produccion: number;
 
-    consumoAgua: number;
+  consumoAgua: number;
 
-    ciclo: number;
+  ciclo: number;
 
-    tipo: string;
+  tipo: string;
 
-    @ApiProperty({ format: 'uuid' })
-    idParcela: string;
+  @ApiProperty({ format: 'uuid' })
+  idParcela: string;
 
-    @ApiProperty({ format: 'uuid' })
-    idResultadoImpacto: string;
+  @ApiProperty({ format: 'uuid' })
+  idResultadoImpacto: string;
 }

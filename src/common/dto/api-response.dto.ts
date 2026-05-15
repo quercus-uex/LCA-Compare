@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { mixin } from '@nestjs/common';
 
 type Constructor<T = object> = new (...args: any[]) => T;
 

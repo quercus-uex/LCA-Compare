@@ -1,28 +1,28 @@
-import {ApiProperty} from "@nestjs/swagger";
-import {Polygon} from "geojson";
-import {CultivoDto} from "../../cultivo/dto/cultivo.dto";
+import { ApiProperty } from '@nestjs/swagger';
+import { Polygon } from 'geojson';
+import { CultivoDto } from '../../cultivo/dto/cultivo.dto';
 
 export class ParcelaDto {
-    @ApiProperty({ format: 'uuid' })
-    id: string;
+  @ApiProperty({ format: 'uuid' })
+  id: string;
 
-    sigpac: string | null;
+  sigpac: string | null;
 
-    refCat: string | null;
+  refCat: string | null;
 
-    ptIdParcela: string | null;
+  ptIdParcela: string | null;
 
-    nombre: string;
+  nombre: string;
 
-    @ApiProperty({ format: 'uuid' })
-    idPropietario: string;
+  @ApiProperty({ format: 'uuid' })
+  idPropietario: string;
 
-    @ApiProperty({ format: 'uuid' })
-    idPoblacion: string;
+  @ApiProperty({ format: 'uuid' })
+  idPoblacion: string;
 }
 
 export class ParcelaWithGeomDto extends ParcelaDto {
-    cultivo: CultivoDto;
+  cultivo: CultivoDto;
 
-    geom: Polygon;
+  geom: Polygon;
 }

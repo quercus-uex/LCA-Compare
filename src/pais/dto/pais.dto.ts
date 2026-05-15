@@ -1,10 +1,10 @@
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PaisDto {
-    @ApiProperty({ format: 'uuid' })
-    id: string;
+  @ApiProperty({ format: 'uuid' })
+  id: string;
 
-    nombre: string;
+  nombre: string;
 
-    codigo: string;
+  codigo: string;
 }

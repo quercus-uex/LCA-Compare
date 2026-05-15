@@ -15,12 +15,12 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
-  ApiUnauthorizedResponse
-} from "@nestjs/swagger";
-import {ApiErrorDto} from "../common/dto/api-error.dto";
-import {ApiResponseDto} from "../common/dto/api-response.dto";
-import {ApiResponseArrayDto} from "../common/dto/api-response-array.dto";
-import {ParcelaDto, ParcelaWithGeomDto} from "./dto/parcela.dto";
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { ApiErrorDto } from '../common/dto/api-error.dto';
+import { ApiResponseDto } from '../common/dto/api-response.dto';
+import { ApiResponseArrayDto } from '../common/dto/api-response-array.dto';
+import { ParcelaDto, ParcelaWithGeomDto } from './dto/parcela.dto';
 
 @ApiTags('Parcela')
 @ApiBearerAuth()
@@ -37,7 +37,7 @@ export class ParcelaController {
   })
   @ApiOkResponse({
     description: 'Parcelas del usuario',
-    type: ApiResponseArrayDto(ParcelaDto)
+    type: ApiResponseArrayDto(ParcelaDto),
   })
   async getByAuthUser(@AuthUser() user: UserJwt) {
     return {
@@ -55,12 +55,13 @@ export class ParcelaController {
     type: ApiErrorDto,
   })
   @ApiUnauthorizedResponse({
-    description: 'Credenciales inválidas o usuario no es propietario de la parcela',
+    description:
+      'Credenciales inválidas o usuario no es propietario de la parcela',
     type: ApiErrorDto,
   })
   @ApiOkResponse({
     description: 'Parcela',
-    type: ApiResponseDto(ParcelaWithGeomDto)
+    type: ApiResponseDto(ParcelaWithGeomDto),
   })
   async getById(@AuthUser() user: UserJwt, @Param('id') id: string) {
     const parcela = await this.parcelaService.findOne({ id });

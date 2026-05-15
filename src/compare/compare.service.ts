@@ -10,13 +10,13 @@ import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
 import path from 'node:path';
 import {
-  ResultadoImpactoDataDto,
   ResultadoImpactoItemDto,
 } from '../resultadoimpacto/dto/resultado-impacto-item.dto';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
 import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
 import { extractLocationData } from './compare.helpers';
+import {ResultadoImpactoDto} from "../resultadoimpacto/dto/resultado-impacto.dto";
 
 Handlebars.registerHelper('decimals', (value, digits: number) =>
   Number(value).toFixed(digits),
@@ -134,12 +134,12 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
 
   getMeanOfResults(
     results: ResultadoImpacto[],
-  ): ResultadoImpactoDataDto | undefined {
+  ): ResultadoImpactoDto | undefined {
     if (results.length === 0) return undefined;
     if (results.length === 1)
-      return results[0].datos as ResultadoImpactoDataDto;
+      return results[0].datos as unknown as ResultadoImpactoDto;
 
-    const base = structuredClone(results[0].datos) as ResultadoImpactoDataDto;
+    const base = structuredClone(results[0].datos) as unknown as ResultadoImpactoDto;
 
     for (const key of IMPACT_KEYS) {
       base[key] = base[key].map((item) => ({ ...item, amount: 0, count: 0 }));
@@ -176,8 +176,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   }
 
   compareResults(
-    refResults: ResultadoImpactoDataDto,
-    tarResults?: ResultadoImpactoDataDto,
+    refResults: ResultadoImpactoDto,
+    tarResults?: ResultadoImpactoDto,
   ): CompareResultDto {
     const out: CompareResultDto = {
       impacto_total: [],

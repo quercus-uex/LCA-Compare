@@ -25,6 +25,7 @@ async function bootstrap() {
     .setTitle('ACV Compare API')
     .setDescription('API para el servicio ACV Compare')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

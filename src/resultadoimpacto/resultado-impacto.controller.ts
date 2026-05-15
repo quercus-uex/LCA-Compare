@@ -12,7 +12,14 @@ import { AuthGuard } from '../auth/auth.guard';
 import { AuthUser, type UserJwt } from '../auth/auth-user.decorator';
 import { ParcelaService } from '../parcela/parcela.service';
 import { CultivoService } from '../cultivo/cultivo.service';
+import {ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse} from "@nestjs/swagger";
+import {ApiErrorDto} from "../common/dto/api-error.dto";
+import {ApiResponseDto} from "../common/dto/api-response.dto";
+import {ResultadoImpactoDto} from "./dto/resultado-impacto.dto";
+import { ResultadoImpactoCompareDto } from "./dto/resultado-impacto-compare.dto";
 
+@ApiTags('Resultado de ACV')
+@ApiBearerAuth()
 @Controller('/resultado')
 export class ResultadoImpactoController {
   constructor(
@@ -23,6 +30,15 @@ export class ResultadoImpactoController {
 
   @UseGuards(AuthGuard)
   @Get(':id')
+  @ApiOperation({ summary: 'Obtener un resultado de ACV por ID' })
+  @ApiUnauthorizedResponse({
+    description: 'Usuario no autenticado o usuario no es propietario de la parcela',
+    type: ApiErrorDto,
+  })
+  @ApiOkResponse({
+    description: 'Resultado de ACV',
+    type: ApiResponseDto(ResultadoImpactoDto)
+  })
   async getById(@AuthUser() user: UserJwt, @Param('id') id: string) {
     const resultado = await this.resultadoImpactoService.findOne({ id });
     if (!resultado) throw new NotFoundException();
@@ -65,6 +81,15 @@ export class ResultadoImpactoController {
 
   @UseGuards(AuthGuard)
   @Get(':id/compare')
+  @ApiOperation({ summary: 'Comparar un resultado de ACV respecto a los disponibles en un rango desde el mismo' })
+  @ApiUnauthorizedResponse({
+    description: 'Usuario no autenticado o usuario no es propietario de la parcela',
+    type: ApiErrorDto,
+  })
+  @ApiOkResponse({
+    description: 'Comparativa de ACV',
+    type: ApiResponseDto(ResultadoImpactoCompareDto)
+  })
   async compareById(
     @AuthUser() user: UserJwt,
     @Param('id') id: string,

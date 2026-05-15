@@ -2,7 +2,6 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import {
-  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -13,7 +12,6 @@ import { ApiErrorDto } from '../common/dto/api-error.dto';
 import { ApiResponseDto } from '../common/dto/api-response.dto';
 
 @ApiTags('Autenticación')
-@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

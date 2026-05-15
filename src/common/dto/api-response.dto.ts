@@ -5,9 +5,13 @@ type Constructor<T = object> = new (...args: any[]) => T;
 
 export function ApiResponseDto<T extends Constructor>(DataClass: T) {
   class ApiResponseDtoClass {
-    @ApiProperty({ type: () => DataClass })
+    @ApiProperty({ type: DataClass })
     data: InstanceType<T>;
   }
 
-  return mixin(ApiResponseDtoClass);
+  Object.defineProperty(ApiResponseDtoClass, 'name', {
+    value: `ApiResponse${DataClass.name}`,
+  });
+
+  return ApiResponseDtoClass;
 }

@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return res.json();
       })
       .then(u => {
-        setUsuario(u);
+        setUsuario(u.data);
         setLoading(false);
       })
       .catch(() => { setLoading(false) })

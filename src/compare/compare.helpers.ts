@@ -11,7 +11,7 @@ export function extractLocationData(results: ResultadoImpactoWithRelations[]) {
   const idsProvincia = [
     ...new Set(
       results
-        .map((r) => r.cultivo?.parcela.poblacion?.idProvincia)
+        .map((r) => r.cultivo?.parcela?.poblacion?.idProvincia)
         .filter((p) => p !== undefined),
     ),
   ];

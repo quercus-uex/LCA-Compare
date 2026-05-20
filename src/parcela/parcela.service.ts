@@ -41,13 +41,16 @@ export class ParcelaService {
     return this.prisma.parcela.create({ data });
   }
 
-  async addGeom(geoJson: Polygon, id: string): Promise<Parcela | null> {
-    await this.prisma.$executeRaw`
-      UPDATE "Parcela"
-      SET "geom" = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geoJson)}), 4326)
-      WHERE "id" = ${id}
-    `;
-    return await this.findOne({ id });
+  async createWithGeom(data: Prisma.ParcelaCreateInput, geoJson: Polygon): Promise<Parcela> {
+    return this.prisma.$transaction(async (tx) => {
+      const parcela = await tx.parcela.create({ data });
+      await tx.$executeRaw`
+        UPDATE "Parcela"
+        SET "geom" = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geoJson)}), 4326)
+        WHERE "id" = ${parcela.id}
+      `;
+      return parcela;
+    })
   }
 
   async getGeom(id: string): Promise<Polygon | null> {

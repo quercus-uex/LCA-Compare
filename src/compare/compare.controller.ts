@@ -44,29 +44,17 @@ export class CompareController {
   })
   @HttpCode(HttpStatus.OK)
   async compare(@Body() body: CompareQueryDto) {
-    const { reference, target } = body;
+    const [refMean, tarMean] = await Promise.all([
+        this.compareService.getMeanByFilters(body.reference),
+        body.target ? this.compareService.getMeanByFilters(body.target) : Promise.resolve(undefined)
+    ])
 
-    if (!body.reference)
-      throw new BadRequestException(
-        'Debes especificar los filtros del conjunto objetivo.',
-      );
-
-    const arr = [reference, target];
-
-    const filtersMean = await Promise.all(
-      arr.map(async (filter) => {
-        if (!filter) return;
-        return this.compareService.getMeanByFilters(filter);
-      }),
-    );
-
-    if (!filtersMean[0] || (!filtersMean[1] && target)) {
+    if (!refMean || (!tarMean && body.target))
       throw new UnprocessableEntityException('No hay datos suficientes.');
-    }
 
     return {
-      data: this.compareService.compareResults(filtersMean[0], filtersMean[1]),
-    };
+      data: this.compareService.compareResults(refMean, tarMean),
+    }
   }
 
   @Post('/report')

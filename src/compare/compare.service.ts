@@ -135,40 +135,24 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   getMeanOfResults(
     results: ResultadoImpacto[],
   ): ResultadoImpactoDto | undefined {
-    if (results.length === 0) return undefined;
+    if (!results.length) return undefined;
     if (results.length === 1)
       return results[0].datos as unknown as ResultadoImpactoDto;
 
     const base = structuredClone(
-      results[0].datos,
+      results[0].datos
     ) as unknown as ResultadoImpactoDto;
 
     for (const key of IMPACT_KEYS) {
-      base[key] = base[key].map((item) => ({ ...item, amount: 0, count: 0 }));
+      base[key] = base[key].map((item) => {
+        const sum = results.reduce((acc, r) => {
+          const found = r.datos?.[key]?.find((i) => i.category === item.category);
+          return acc + (found?.amount ?? 0);
+        }, 0);
+        return { ...item, amount: sum / results.length };
+      });
     }
 
-    for (const result of results) {
-      for (const key of IMPACT_KEYS) {
-        const arr = result.datos![key] as ResultadoImpactoItemDto[];
-        base[key] = base[key].map((item) => {
-          return {
-            ...item,
-            count: (item.count ?? 0) + 1,
-            amount:
-              item.amount +
-              arr.find((i) => i.category == item.category)!.amount,
-          };
-        });
-      }
-    }
-
-    for (const key of IMPACT_KEYS) {
-      base[key] = base[key].map((i) => ({
-        ...i,
-        amount: i.amount / i.count!,
-        count: undefined,
-      }));
-    }
     return base;
   }
 
@@ -177,46 +161,30 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.getMeanOfResults(results);
   }
 
+  private percentageDiff = (a: number, b: number) => b === 0 ? 0 : ((a - b) / b) * 100;
+
   compareResults(
     refResults: ResultadoImpactoDto,
     tarResults?: ResultadoImpactoDto,
   ): CompareResultDto {
-    const out: CompareResultDto = {
-      impacto_total: [],
-      impacto_fertilizantes: [],
-      impacto_manejo_cultivo: [],
-      impacto_pesticidas: [],
-      impacto_sistema_riego: [],
-    };
-
-    const percentageDiff = (val1: number, val2: number) => {
-      if (val2 === 0) return 0;
-      return ((val1 - val2) / val2) * 100;
-    };
-
-    for (const key of IMPACT_KEYS) {
-      out[key] = refResults[key].map((r) => {
-        if (!tarResults) {
-          return {
-            category: r.category,
-            unit: r.unit,
-            refAmount: r.amount,
-          };
-        }
-
-        const tarAmount =
-          tarResults[key].find((i) => i.category === r.category)?.amount ?? 0;
-        return {
-          category: r.category,
-          unit: r.unit,
-          refAmount: r.amount,
-          tarAmount,
-          diff: percentageDiff(r.amount, tarAmount),
-        };
-      });
-    }
-
-    return out;
+    return Object.fromEntries(
+        IMPACT_KEYS.map((key) => [
+            key,
+            refResults[key].map((r) => {
+              const tarItem = tarResults?.[key]?.find((i) => i.category === r.category);
+              const tarAmount = tarItem?.amount ?? 0;
+              return {
+                category: r.category,
+                unit: r.unit,
+                refAmount: r.amount,
+                ...(tarResults && {
+                  tarAmount,
+                  diff: this.percentageDiff(r.amount, tarAmount)
+                })
+              }
+            })
+        ])
+    ) as unknown as CompareResultDto;
   }
 
   private async buildReportContext(

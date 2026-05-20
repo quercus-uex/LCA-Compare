@@ -90,19 +90,20 @@ export class VentumService {
     }
 
     const { provincia, parcela, municipio, poligono } = mParcela.es_sigpac;
-    const newParcela = await this.parcelaService.create({
-      sigpac: mParcela.es_sigpac.provincia
-        ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
-        : null,
-      refCat: mParcela.es_referencia_catastral,
-      ptIdParcela: mParcela.pt_id_parcela_predial,
-      nombre: mParcela.nombre,
-      propietario: { connect: { id: idPropietario } },
-      poblacion: { connect: { id: poblacion.id } },
-    });
-    await this.parcelaService.addGeom(polygon.geometry, newParcela.id);
 
-    return newParcela;
+    return this.parcelaService.createWithGeom(
+        {
+          sigpac: mParcela.es_sigpac.provincia
+              ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
+              : null,
+          refCat: mParcela.es_referencia_catastral,
+          ptIdParcela: mParcela.pt_id_parcela_predial,
+          nombre: mParcela.nombre,
+          propietario: { connect: { id: idPropietario } },
+          poblacion: { connect: { id: poblacion.id } },
+        },
+        polygon.geometry,
+    );
   }
 
   async checkParcela(
@@ -119,10 +120,10 @@ export class VentumService {
       ? mParcela.pt_id_parcela_predial
       : undefined;
 
-    const orConditions = [
+    const conditions = [
       sigpac
         ? {
-            sigpac: `${sigpac?.provincia}:${sigpac?.municipio}:0:0:${sigpac?.poligono}:${sigpac?.parcela}`,
+            sigpac: `${sigpac?.provincia}:${sigpac?.municipio}:0:0:${sigpac?.poligono}:${sigpac?.parcela}:1`,
           }
         : null,
       refCat ? { refCat } : null,
@@ -130,7 +131,10 @@ export class VentumService {
     ].filter((i) => i !== null);
 
     const parcelas = await this.parcelaService.findMany({
-      where: { OR: orConditions },
+      where: {
+        idPropietario,
+        OR: conditions
+      },
     });
 
     if (parcelas.length === 0) {

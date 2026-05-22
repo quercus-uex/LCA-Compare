@@ -8,6 +8,7 @@ import { CompareModule } from './compare/compare.module';
 import { ProvinciaModule } from './provincia/provincia.module';
 import { PaisModule } from './pais/pais.module';
 import { AiModule } from './ai/ai.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AiModule } from './ai/ai.module';
     ProvinciaModule,
     PaisModule,
     AiModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

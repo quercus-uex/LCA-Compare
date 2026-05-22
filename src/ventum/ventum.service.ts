@@ -92,17 +92,17 @@ export class VentumService {
     const { provincia, parcela, municipio, poligono } = mParcela.es_sigpac;
 
     return this.parcelaService.createWithGeom(
-        {
-          sigpac: mParcela.es_sigpac.provincia
-              ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
-              : null,
-          refCat: mParcela.es_referencia_catastral,
-          ptIdParcela: mParcela.pt_id_parcela_predial,
-          nombre: mParcela.nombre,
-          propietario: { connect: { id: idPropietario } },
-          poblacion: { connect: { id: poblacion.id } },
-        },
-        polygon.geometry,
+      {
+        sigpac: mParcela.es_sigpac.provincia
+          ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
+          : null,
+        refCat: mParcela.es_referencia_catastral,
+        ptIdParcela: mParcela.pt_id_parcela_predial,
+        nombre: mParcela.nombre,
+        propietario: { connect: { id: idPropietario } },
+        poblacion: { connect: { id: poblacion.id } },
+      },
+      polygon.geometry,
     );
   }
 
@@ -133,7 +133,7 @@ export class VentumService {
     const parcelas = await this.parcelaService.findMany({
       where: {
         idPropietario,
-        OR: conditions
+        OR: conditions,
       },
     });
 

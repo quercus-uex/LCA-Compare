@@ -57,4 +57,12 @@ export class CultivoService {
     const { where, data } = params;
     return this.prisma.cultivo.update({ data, where });
   }
+
+  async delete(where: Prisma.CultivoWhereUniqueInput): Promise<Cultivo> {
+    return this.prisma.cultivo.delete({ where });
+  }
+
+  async count(where?: Prisma.CultivoWhereInput): Promise<number> {
+    return this.prisma.cultivo.count({ where });
+  }
 }

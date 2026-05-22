@@ -68,4 +68,8 @@ export class UsuarioService {
       omit: { passwordHash: true },
     });
   }
+
+  async count(where?: Prisma.UsuarioWhereInput): Promise<number> {
+    return this.prisma.usuario.count({ where });
+  }
 }

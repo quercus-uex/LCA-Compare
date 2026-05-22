@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
 import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
 import { CompareRoute } from './routes/compare/compare.route.tsx';
+import { AdminRoute } from './routes/admin/admin.route.tsx';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<NavbarContainer />}>
           <Route path="/compare" element={<CompareRoute />} />
           <Route path="/auth/login" element={<LoginRoute />} />
+          <Route path="/admin" element={<AdminRoute />} />
           <Route path="/parcelas">
             <Route index element={<ParcelasRoute />} />
             <Route path=":id" element={<ParcelaRoute />} />

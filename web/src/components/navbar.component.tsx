@@ -54,6 +54,13 @@ export const NavBar = () => {
                     <p>Mis parcelas</p>
                   </Link>
                 </li>
+                {auth.usuario.rol === 'admin' && (
+                  <li>
+                    <Link to="/admin">
+                      <p>Administración</p>
+                    </Link>
+                  </li>
+                )}
                 <div className="divider m-0"></div>
                 <li>
                   <a className="btn btn-error" onClick={auth.logout}>

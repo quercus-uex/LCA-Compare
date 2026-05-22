@@ -140,13 +140,15 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       return results[0].datos as unknown as ResultadoImpactoDto;
 
     const base = structuredClone(
-      results[0].datos
+      results[0].datos,
     ) as unknown as ResultadoImpactoDto;
 
     for (const key of IMPACT_KEYS) {
       base[key] = base[key].map((item) => {
         const sum = results.reduce((acc, r) => {
-          const found = r.datos?.[key]?.find((i) => i.category === item.category);
+          const found = r.datos?.[key]?.find(
+            (i) => i.category === item.category,
+          );
           return acc + (found?.amount ?? 0);
         }, 0);
         return { ...item, amount: sum / results.length };
@@ -161,29 +163,32 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.getMeanOfResults(results);
   }
 
-  private percentageDiff = (a: number, b: number) => b === 0 ? 0 : ((a - b) / b) * 100;
+  private percentageDiff = (a: number, b: number) =>
+    b === 0 ? 0 : ((a - b) / b) * 100;
 
   compareResults(
     refResults: ResultadoImpactoDto,
     tarResults?: ResultadoImpactoDto,
   ): CompareResultDto {
     return Object.fromEntries(
-        IMPACT_KEYS.map((key) => [
-            key,
-            refResults[key].map((r) => {
-              const tarItem = tarResults?.[key]?.find((i) => i.category === r.category);
-              const tarAmount = tarItem?.amount ?? 0;
-              return {
-                category: r.category,
-                unit: r.unit,
-                refAmount: r.amount,
-                ...(tarResults && {
-                  tarAmount,
-                  diff: this.percentageDiff(r.amount, tarAmount)
-                })
-              }
-            })
-        ])
+      IMPACT_KEYS.map((key) => [
+        key,
+        refResults[key].map((r) => {
+          const tarItem = tarResults?.[key]?.find(
+            (i) => i.category === r.category,
+          );
+          const tarAmount = tarItem?.amount ?? 0;
+          return {
+            category: r.category,
+            unit: r.unit,
+            refAmount: r.amount,
+            ...(tarResults && {
+              tarAmount,
+              diff: this.percentageDiff(r.amount, tarAmount),
+            }),
+          };
+        }),
+      ]),
     ) as unknown as CompareResultDto;
   }
 

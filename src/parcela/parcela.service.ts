@@ -26,14 +26,16 @@ export class ParcelaService {
     cursor?: Prisma.ParcelaWhereUniqueInput;
     where?: Prisma.ParcelaWhereInput;
     orderBy?: Prisma.UsuarioOrderByWithRelationInput;
+    include?: Prisma.ParcelaInclude;
   }): Promise<Parcela[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.parcela.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 
@@ -41,7 +43,10 @@ export class ParcelaService {
     return this.prisma.parcela.create({ data });
   }
 
-  async createWithGeom(data: Prisma.ParcelaCreateInput, geoJson: Polygon): Promise<Parcela> {
+  async createWithGeom(
+    data: Prisma.ParcelaCreateInput,
+    geoJson: Polygon,
+  ): Promise<Parcela> {
     return this.prisma.$transaction(async (tx) => {
       const parcela = await tx.parcela.create({ data });
       await tx.$executeRaw`
@@ -50,7 +55,7 @@ export class ParcelaService {
         WHERE "id" = ${parcela.id}
       `;
       return parcela;
-    })
+    });
   }
 
   async getGeom(id: string): Promise<Polygon | null> {
@@ -102,5 +107,9 @@ export class ParcelaService {
 
   async delete(where: Prisma.ParcelaWhereUniqueInput): Promise<Parcela> {
     return this.prisma.parcela.delete({ where });
+  }
+
+  async count(where?: Prisma.ParcelaWhereInput): Promise<number> {
+    return this.prisma.parcela.count({ where });
   }
 }

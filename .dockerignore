@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.git
+.github
+.idea
+.devcontainer
+*.md
+!README.md
+coverage
+.prettierrc
+eslint.config.mjs
+docker-compose.yaml

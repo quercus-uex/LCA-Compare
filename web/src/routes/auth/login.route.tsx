@@ -1,6 +1,7 @@
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useNavigate } from 'react-router';
+import { API_BASE_URL } from '../../common/constants.ts';
 
 type LoginType = {
   email: string;
@@ -19,7 +20,15 @@ export const LoginRoute = () => {
   const onSubmit: SubmitHandler<LoginType> = async (data) => {
     const res = await auth.login(data.email, data.password);
     if (res) {
-      navigate('/parcelas');
+      try {
+        const userRes = await fetch(`${API_BASE_URL}/usuario`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const json = await userRes.json();
+        navigate(json.data?.rol === 'admin' ? '/admin' : '/parcelas');
+      } catch {
+        navigate('/parcelas');
+      }
       window.location.reload();
     }
   }

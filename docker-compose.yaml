@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:3000"
     environment:
-      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/postgres"
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv"
       JWT_SECRET: ${JWT_SECRET}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       VENTUM_ACV_EMAIL: ${VENTUM_ACV_EMAIL}
@@ -42,7 +42,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: acv
     volumes:
       - postgres:/var/lib/postgresql/data
     ports:

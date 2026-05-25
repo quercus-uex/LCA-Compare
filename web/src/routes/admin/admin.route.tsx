@@ -3,6 +3,8 @@ import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useNavigate } from 'react-router';
 import { API_BASE_URL } from '../../common/constants.ts';
 import { toast } from 'sonner';
+import { SmartPagination } from './smart-pagination.component.tsx';
+import { IdLookupField, type FkConfig } from './id-lookup-field.component.tsx';
 
 const PAGE_SIZE = 15;
 
@@ -118,6 +120,23 @@ const CONFIG: Record<
   },
 };
 
+const ROLES = ['admin', 'usuario'] as const;
+
+const TABLE_FK_LINKS: Record<string, Entity> = {
+  idPropietario: 'usuarios',
+  idPoblacion: 'poblaciones',
+  idPais: 'paises',
+  idProvincia: 'provincias',
+};
+
+const FK_REFERENCES: Record<string, FkConfig> = {
+  idPropietario: { entity: 'usuarios', displayFields: ['nombre', 'apellidos'], endpoint: 'usuarios' },
+  idPoblacion: { entity: 'poblaciones', displayFields: ['nombre'], endpoint: 'poblaciones' },
+  idParcela: { entity: 'parcelas', displayFields: ['nombre'], endpoint: 'parcelas' },
+  idPais: { entity: 'paises', displayFields: ['nombre'], endpoint: 'paises' },
+  idProvincia: { entity: 'provincias', displayFields: ['nombre'], endpoint: 'provincias' },
+};
+
 export const AdminRoute = () => {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -227,6 +246,22 @@ export const AdminRoute = () => {
     setForm({});
   };
 
+  const navigateToTab = (entity: Entity, query: string) => {
+    setActiveTab(entity);
+    setSearch(String(query));
+    setPage(0);
+  };
+
+  const formatCell = (field: string, raw: unknown): string | null => {
+    if (raw === null || raw === undefined || typeof raw === 'object') return null;
+    const formField = CONFIG[activeTab].formFields.find((f) => f.name === field);
+    if (formField?.type === 'datetime-local' && raw) {
+      const d = new Date(raw as string);
+      if (!isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+    return String(raw);
+  };
+
   const handleChange = (name: string, value: string) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -298,6 +333,7 @@ export const AdminRoute = () => {
   if (auth.loading) {
     return (
       <div className="w-full flex flex-col gap-4">
+        <div className="skeleton w-56 h-8" />
         <div className="skeleton w-full h-12" />
         <div className="skeleton w-full h-64" />
       </div>
@@ -310,16 +346,20 @@ export const AdminRoute = () => {
 
   return (
     <div className="w-full">
-      <div className="card bg-base-100 shadow-sm">
+      <div className="card bg-base-100 shadow-md border border-base-200">
         <div className="card-body">
           <h1 className="card-title text-xl mb-2">Panel de Administración</h1>
 
-          <div role="tablist" className="tabs tabs-bordered">
+          <div role="tablist" className="tabs tabs-lifted tabs-md gap-1">
             {ENTITIES.map((entity) => (
               <a
                 key={entity}
                 role="tab"
-                className={`tab ${activeTab === entity ? 'tab-active' : ''}`}
+                className={`tab transition-colors duration-200 ${
+                  activeTab === entity
+                    ? 'tab-active [--tab-border-color:oklch(var(--p))] [--tab-bg:oklch(var(--b2))]'
+                    : ''
+                }`}
                 onClick={() => setActiveTab(entity)}
               >
                 {LABELS[entity]}
@@ -327,15 +367,20 @@ export const AdminRoute = () => {
             ))}
           </div>
 
-          <div className="flex justify-between items-center mt-4 gap-4">
-            <h2 className="text-lg font-semibold shrink-0">
-              {LABELS[activeTab]}
-            </h2>
-            <div className="flex gap-2 flex-1 justify-end">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold shrink-0">
+                {LABELS[activeTab]}
+              </h2>
+              {initialLoadDone.current && (
+                <span className="badge badge-ghost badge-sm">{total} total</span>
+              )}
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
               <input
                 type="text"
-                className="input input-bordered input-sm w-64"
-                placeholder="Buscar..."
+                className="input input-bordered input-sm flex-1 sm:w-64"
+                placeholder={`Buscar ${LABELS[activeTab].toLowerCase()}...`}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -343,30 +388,42 @@ export const AdminRoute = () => {
                 }}
               />
               <button
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm gap-1"
                 onClick={openCreateModal}
               >
-                + Nuevo
+                <span className="text-lg leading-none">+</span> Nuevo
               </button>
             </div>
           </div>
 
-            <div className="overflow-hidden">
+            <div className="overflow-hidden rounded-box border border-base-300">
             {loading && !initialLoadDone.current ? (
-              <div className="skeleton w-full h-48" />
+              <div className="p-6 flex flex-col gap-3">
+                <div className="skeleton w-full h-8" />
+                <div className="skeleton w-full h-8" />
+                <div className="skeleton w-full h-8" />
+                <div className="skeleton w-3/4 h-8" />
+              </div>
             ) : data.length === 0 ? (
-              <p className="text-center text-base-content/50 py-8">
-                {search ? 'Sin resultados' : 'Sin registros'}
-              </p>
+              <div className="text-center py-12">
+                <p className="text-base-content/40 text-lg">
+                  {search ? 'Sin resultados' : 'Sin registros'}
+                </p>
+                <p className="text-base-content/30 text-sm mt-1">
+                  {search
+                    ? `No se encontraron ${LABELS[activeTab].toLowerCase()} con ese criterio`
+                    : `Crea el primer registro con el botón "+ Nuevo"`}
+                </p>
+              </div>
             ) : (
-              <table className={`table table-zebra table-fixed w-full ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <table className={`table table-zebra table-fixed w-full ${loading ? 'opacity-50 pointer-events-none transition-opacity' : ''}`}>
                 <thead>
-                  <tr>
+                  <tr className="bg-base-200/80 border-b border-base-300">
                     {activeTab === 'parcelas' && <th className="w-8" />}
                     {config.tableFields.map((field) => (
-                      <th key={field} className="truncate">{field}</th>
+                      <th key={field} className="truncate text-xs font-semibold uppercase tracking-wide text-base-content/60">{field}</th>
                     ))}
-                    <th className="w-36">Acciones</th>
+                    <th className="w-36 text-xs font-semibold uppercase tracking-wide text-base-content/60">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -384,7 +441,7 @@ export const AdminRoute = () => {
 
                     return (
                       <>
-                        <tr key={id} className="hover">
+                        <tr key={id} className="hover:bg-base-200/70 transition-colors duration-150">
                           {activeTab === 'parcelas' && (
                             <td className="w-8 px-0">
                               {cultivos && cultivos.length > 0 && (
@@ -398,23 +455,37 @@ export const AdminRoute = () => {
                               )}
                             </td>
                           )}
-                        {config.tableFields.map((field) => (
-                          <td key={field} className="truncate">
-                            {item[field] != null && typeof item[field] !== 'object'
-                                ? String(item[field])
-                                : '—'}
-                            </td>
-                          ))}
+                        {config.tableFields.map((field) => {
+                           const cellValue = formatCell(field, item[field]);
+                           const fkTarget = TABLE_FK_LINKS[field];
+                           return (
+                             <td key={field} className="truncate">
+                               {cellValue === null ? (
+                                 '—'
+                               ) : fkTarget ? (
+                                 <button
+                                   className="link link-hover text-primary text-xs"
+                                   title={`Ir a ${LABELS[fkTarget]}`}
+                                   onClick={() => navigateToTab(fkTarget, String(item[field]))}
+                                 >
+                                   {cellValue}
+                                 </button>
+                               ) : (
+                                 cellValue
+                               )}
+                             </td>
+                           );
+                         })}
                           <td>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1.5">
                               <button
-                                className="btn btn-ghost btn-xs"
+                                className="btn btn-xs btn-outline"
                                 onClick={() => openEditModal(item)}
                               >
                                 Editar
                               </button>
                               <button
-                                className="btn btn-ghost btn-xs text-error"
+                                className="btn btn-xs btn-ghost text-error hover:bg-error/10"
                                 onClick={() => { void handleDelete(id); }}
                               >
                                 Eliminar
@@ -448,8 +519,8 @@ export const AdminRoute = () => {
                                         <td>{c.tipo != null && typeof c.tipo !== 'object' ? String(c.tipo) : '—'}</td>
                                         <td>
                                           {c.fechaInicioCampania
-                                            ? new Date(c.fechaInicioCampania as string).toLocaleDateString()
-                                            : '—'}
+                                              ? new Date(c.fechaInicioCampania as string).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                              : '—'}
                                         </td>
                                         <td>
                                           {c.superficieCultivada != null && typeof c.superficieCultivada !== 'object'
@@ -468,15 +539,15 @@ export const AdminRoute = () => {
                                         </td>
                                         <td>{c.ciclo != null && typeof c.ciclo !== 'object' ? String(c.ciclo) : '—'}</td>
                                         <td>
-                                          <div className="flex gap-1">
+                                          <div className="flex gap-1.5">
                                             <button
-                                              className="btn btn-ghost btn-xs"
+                                              className="btn btn-xs btn-outline"
                                               onClick={() => openEditModal(c, 'cultivos')}
                                             >
                                               Editar
                                             </button>
                                             <button
-                                              className="btn btn-ghost btn-xs text-error"
+                                              className="btn btn-xs btn-ghost text-error hover:bg-error/10"
                                               onClick={() => { void handleDelete(c.id as string, 'cultivos'); }}
                                             >
                                               Eliminar
@@ -499,39 +570,12 @@ export const AdminRoute = () => {
             )}
           </div>
 
-          {/* Paginación */}
-          {total > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-base-content/60">
-                {total} resultados · Página {page + 1} de {totalPages}
-              </p>
-              <div className="join">
-                <button
-                  className="join-item btn btn-sm"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  «
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`join-item btn btn-sm ${i === page ? 'btn-active' : ''}`}
-                    onClick={() => setPage(i)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  className="join-item btn btn-sm"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  »
-                </button>
-              </div>
-            </div>
-          )}
+          <SmartPagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            onPageChange={setPage}
+          />
         </div>
       </div>
 
@@ -539,20 +583,63 @@ export const AdminRoute = () => {
             const modalCfg = CONFIG[getEntity()];
             const modalLabel = LABELS[getEntity()];
             return (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-lg">
-            <h3 className="font-bold text-lg mb-4">
+        <div className="modal modal-open backdrop:transition-opacity backdrop:duration-200">
+          <div className="modal-box max-w-lg transition-transform duration-200">
+            <h3 className="font-bold text-lg mb-1">
               {modalMode === 'create'
                 ? `Nuevo ${modalLabel.slice(0, -1)}`
                 : `Editar ${modalLabel.slice(0, -1)}`}
             </h3>
+            <p className="text-sm text-base-content/50 mb-4">
+              {modalMode === 'create'
+                ? 'Completa los campos para crear un nuevo registro'
+                : 'Modifica los campos y guarda los cambios'}
+            </p>
 
             <div className="flex flex-col gap-3">
               {modalCfg.formFields.map((field) => {
+                const fkConfig = FK_REFERENCES[field.name];
                 const isIdField =
                   field.name === 'id' && getEntity() === 'metodos-impacto';
                 const isPassword = field.name === 'passwordHash';
                 const isDisabled = isIdField && modalMode === 'edit';
+
+                if (field.name === 'rol') {
+                  return (
+                    <label key={field.name} className="form-control w-full">
+                      <div className="label py-0.5">
+                        <span className="label-text">{field.label}</span>
+                      </div>
+                      <select
+                        className="select select-bordered w-full"
+                        value={form[field.name] ?? ''}
+                        onChange={(e) => handleChange(field.name, e.target.value)}
+                      >
+                        <option value="" disabled>Seleccionar rol...</option>
+                        {ROLES.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </label>
+                  );
+                }
+
+                if (fkConfig) {
+                  return (
+                    <label key={field.name} className="form-control w-full">
+                      <div className="label py-0.5">
+                        <span className="label-text">{field.label}</span>
+                      </div>
+                      <IdLookupField
+                        name={field.name}
+                        value={form[field.name] ?? ''}
+                        onChange={handleChange}
+                        fkConfig={fkConfig}
+                        disabled={isDisabled}
+                      />
+                    </label>
+                  );
+                }
 
                 return (
                   <label key={field.name} className="form-control w-full">
@@ -583,11 +670,11 @@ export const AdminRoute = () => {
               })}
             </div>
 
-            <div className="modal-action">
-              <button className="btn btn-ghost" onClick={closeModal}>
+            <div className="modal-action mt-6 pt-3 border-t border-base-300">
+              <button className="btn btn-ghost btn-sm" onClick={closeModal}>
                 Cancelar
               </button>
-              <button className="btn btn-primary" onClick={() => { void handleSubmit(); }}>
+              <button className="btn btn-primary btn-sm" onClick={() => { void handleSubmit(); }}>
                 {modalMode === 'create' ? 'Crear' : 'Guardar'}
               </button>
             </div>

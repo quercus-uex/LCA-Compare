@@ -157,6 +157,7 @@ export const AdminRoute = () => {
   const [form, setForm] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const initialLoadDone = useRef(false);
+  const pendingSearchRef = useRef<string | null>(null);
 
   const token = `Bearer ${localStorage.getItem('token')}`;
   const getEntity = () => modalEntity ?? activeTab;
@@ -193,7 +194,12 @@ export const AdminRoute = () => {
   }, [auth.loading, auth.usuario, fetchData, navigate]);
 
   useEffect(() => {
-    setSearch('');
+    if (pendingSearchRef.current !== null) {
+      setSearch(pendingSearchRef.current);
+      pendingSearchRef.current = null;
+    } else {
+      setSearch('');
+    }
     setPage(0);
     setExpanded(new Set());
     initialLoadDone.current = false;
@@ -247,8 +253,8 @@ export const AdminRoute = () => {
   };
 
   const navigateToTab = (entity: Entity, query: string) => {
+    pendingSearchRef.current = String(query);
     setActiveTab(entity);
-    setSearch(String(query));
     setPage(0);
   };
 

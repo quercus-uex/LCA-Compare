@@ -1,5 +1,6 @@
 import { useAuth } from '../hooks/auth.hook.tsx';
 import { Link, useNavigate } from 'react-router';
+import {FiExternalLink} from "react-icons/fi";
 
 export const NavBar = () => {
   const auth = useAuth();
@@ -13,6 +14,13 @@ export const NavBar = () => {
         </div>
 
         <div className="flex gap-2">
+          <a href="https://acv-compare-docs.netlify.app" target="_blank" rel="noopener noreferrer">
+            <button className="btn btn-ghost">
+              <FiExternalLink />
+              Documentación
+            </button>
+          </a>
+
           <button className="btn" onClick={() => navigate('/compare')}>
             Comparador
           </button>

@@ -5,8 +5,44 @@ sidebar_position: 3
 
 # Uso del servicio
 
-El servicio expone un único *endpoint*, `POST /ventum-acv`, que recibirá como body el JSON de salida de un cultivo del
-servicio de Ventum ACV. Puedes probar su correcto funcionamiento con el siguiente JSON de prueba:
+## Endpoint
+
+El servicio expone un único endpoint, `POST /ventum-acv`, que recibe como cuerpo el JSON de salida de un cultivo del
+servicio de Ventum ACV, ejecuta el cálculo de ACV en openLCA y envía el resultado a ACV Compare para su persistencia.
+
+El procesamiento interno sigue el siguiente flujo:
+
+1. **`validate_parcela()`** — Valida los metadatos de la parcela (SIGPAC, referencia catastral o predial).
+2. **`get_process_class()`** — Selecciona la clase de proceso según el tipo de cultivo: `TomateProcess`, `OlivoProcess`
+   o `VinedoProcess`.
+3. **`update_processes()`** — Actualiza los procesos en openLCA a través del cliente IPC (`OLCAClient`).
+4. **`calculate_impacts()`** — Ejecuta el cálculo de impacto usando el UUID del sistema de producto como referencia.
+5. **`build_final_result()`** — Construye el resultado estructurado a partir de la salida de openLCA.
+6. **`send_result_to_app()`** — Envía el resultado a ACV Compare mediante un POST (best-effort; los errores se
+   registran en el log sin interrumpir la respuesta).
+
+## Parámetros fijos
+
+| Parámetro | Valor | Ubicación |
+|---|---|---|
+| `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | `acv_service.py` |
+| `CALCULATION_AMOUNT` | `0.001` | `acv_service.py` |
+
+## Integración con ACV Compare
+
+Cuando **ACV Compare** está desplegado en la misma red Docker (`olca`), el resultado del cálculo se transmite
+automáticamente al endpoint `POST /ventum` de ACV Compare mediante la variable de entorno `ACV_COMPARE_BASE_URL`.
+
+A su vez, el frontend de ACV Compare enruta las peticiones de cálculo a través del proxy inverso Nginx:
+
+| Ruta | Destino |
+|---|---|
+| `/calc` | `ventum-openlca-bridge:3000/ventum-acv` |
+
+## Probar el servicio
+
+Puedes probar el correcto funcionamiento del servicio a través de la interfaz **Swagger** habilitada en la ruta `/docs`,
+o mediante el siguiente JSON de prueba:
 
 ```json
 {
@@ -195,5 +231,3 @@ servicio de Ventum ACV. Puedes probar su correcto funcionamiento con el siguient
     }
 }
 ```
-
-Puedes probar el correcto funcionamiento del servicio a través de la interfaz **Swagger** habilitada (`/docs`).

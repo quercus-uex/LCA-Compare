@@ -5,37 +5,48 @@ sidebar_position: 2
 
 # Despliegue del servicio
 
-Antes de desplegar el servicio de comparativa de ACV, necesitas tener clonado el repositorio del mismo ([https://github.com/quercus-uex/Ventum-ACV-Visualizer](https://github.com/quercus-uex/Ventum-ACV-Visualizer)).
+Antes de desplegar el servicio de comparativa de ACV, necesitas tener clonado el repositorio
+([https://github.com/quercus-uex/Ventum-ACV-Visualizer](https://github.com/quercus-uex/Ventum-ACV-Visualizer)).
 
 ## Variables de entorno
-Deberás configurar las siguientes variables de entorno para el despliegue:
+
+Copia el archivo `.env.example` a `.env` y configura las siguientes variables:
 
 ```sh
-JWT_SECRET="CHANGEME" # Clave secreta para JWT (autenticación)
-OPENROUTER_API_KEY="sk-or-v1-...." # Clave de API para OpenRouter (generación de recomendaciones en informes)
+JWT_SECRET="CHANGEME"                    # Clave secreta para JWT (autenticación)
+OPENROUTER_API_KEY="sk-or-v1-...."       # Clave de API para OpenRouter (IA en informes)
 
-DB_USER="user" # Usuario de la base de datos
-DB_PASSWORD="password" # Contraseña de la base de datos
+DB_USER="user"                           # Usuario de la base de datos
+DB_PASSWORD="password"                   # Contraseña de la base de datos
 
-MAILER_EMAIL="example@example.com" # Correo electrónico para envío de notificaciones (nuevo registro)
-MAILER_PASSWORD="Password" # Contraseña del correo electrónico para envío de notificaciones (nuevo registro)
+VENTUM_ACV_EMAIL="email@example.com"     # Email para autenticación en Ventum ACV
+VENTUM_ACV_PASSWORD="P@ssw0rd"           # Contraseña para autenticación en Ventum ACV
 
-DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d" # UUID del método de impacto utilizado por defecto
+MAILER_EMAIL="example@example.com"       # Email para envío de notificaciones
+MAILER_PASSWORD="Password"               # Contraseña del email para notificaciones
+
+DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del método de impacto por defecto
+
+PORT=8000                                # Puerto del backend en desarrollo
 ```
+
+La variable `DATABASE_URL` se construye automáticamente en el Docker Compose a partir de `DB_USER` y `DB_PASSWORD`.
 
 ## Inicialización de la base de datos
-En primer lugar, es necesario desplegar la base de datos. Para ello, levantamos el Docker Compose:
+
+En primer lugar, es necesario desplegar la base de datos. Para ello, levantamos el servicio de base de datos del Docker
+Compose:
 
 ```bash
-docker compose up -d
+docker compose up -d db
 ```
 
-Tras deplegar la base de datos, tendremos que lanzar la migración inicial para crear las tablas y relaciones definidas
+Tras desplegar la base de datos, tendremos que lanzar la migración inicial para crear las tablas y relaciones definidas
 en el esquema de Prisma.
 
 :::danger[Importante]
 Al crear la migración, es normal que la primera vez lance un error, puesto que esta requiere de la extensión **PostGIS**.
-Para solucionar esto, abre el archivo .sql de la migración (`prisma/migrations/2026..../migration.sql`) y añade la
+Para solucionar esto, abre el archivo `.sql` de la migración (`prisma/migrations/2026..../migration.sql`) y añade la
 siguiente línea al principio:
 
 ```sql
@@ -49,18 +60,80 @@ Una vez hecho vuelve a lanzar la migración con el mismo nombre.
 npx prisma migrate dev --name init
 ```
 
-Por último, hay que ejecutar el archivo .sql con los datos iniciales (provincias, poblaciones...) disponible en `init/dbinit.sql`:
+Por último, hay que ejecutar el archivo SQL con los datos iniciales (países, provincias, poblaciones...) disponible en
+`init/dbinit.sql`:
 
 ```bash
-docker exec -i <id_contenedor> psql -U <usuario_db> -d <nombre_db> < init/dbinit.sql
+docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
 ```
 
+## Estructura del Docker Compose
 
-## Despliegue del servicio
+El archivo `docker-compose.yaml` define tres servicios:
 
-Una vez tengamos la base de datos preparada, para desplegar el servicio completo desplegamos el Docker Compose con el
-perfil de producción:
+| Servicio | Imagen | Puerto | Perfil |
+|---|---|---|---|
+| `db` | `postgis/postgis:17-master` | 5432 | *(siempre activo)* |
+| `acv-compare-backend` | Construida desde `Dockerfile` raíz | 8080→3000 | `prod` |
+| `acv-compare-frontend` | Construida desde `web/Dockerfile` | 80 | `prod` |
+
+### Redes
+
+El compose define dos redes:
+
+- **`acv-compare`**: red interna para la comunicación entre el backend, frontend y base de datos.
+- **`olca`**: red externa compartida con el servicio Ventum-OpenLCA Bridge. Debe crearse manualmente:
+
+```bash
+docker network create olca
+```
+
+### Proxy inverso (Nginx)
+
+El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente enrutamiento:
+
+| Ruta | Destino |
+|---|---|
+| `/api/` | `acv-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
+| `/calc` | `ventum-openlca-bridge:3000/ventum-acv` (cálculo de ACV) |
+| `/` | SPA servida estáticamente (`index.html`) |
+
+## Despliegue completo
+
+Una vez tengamos la base de datos preparada, desplegamos todos los servicios con el perfil de producción:
 
 ```bash
 docker compose --profile prod up -d --build
+```
+
+Esto construirá las imágenes del backend y frontend, y levantará los tres servicios. Tras el despliegue, ejecuta las
+migraciones de Prisma en el contenedor del backend:
+
+```bash
+docker compose exec acv-compare-backend npx prisma migrate deploy
+```
+
+## CI/CD
+
+El proyecto incluye un workflow de GitHub Actions (`.github/workflows/deploy.yml`) que se ejecuta en cada push a las
+ramas `main` y `develop`. El pipeline:
+
+1. Se conecta por SSH al servidor de despliegue.
+2. Clona o actualiza el repositorio en la rama correspondiente.
+3. Reconstruye y levanta los contenedores con `docker compose --profile prod up -d --build`.
+4. Ejecuta las migraciones pendientes con `npx prisma migrate deploy`.
+
+Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,
+`OPENROUTER_API_KEY`, etc.).
+
+## Verificación
+
+Una vez desplegado, verifica que los servicios responden correctamente:
+
+```bash
+# Frontend
+curl http://localhost/
+
+# API REST (documentación Swagger)
+curl http://localhost/api/docs/
 ```

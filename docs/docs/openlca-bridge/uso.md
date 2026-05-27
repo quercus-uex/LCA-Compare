@@ -7,8 +7,8 @@ sidebar_position: 3
 
 ## Endpoint
 
-El servicio expone un único endpoint, `POST /ventum-acv`, que recibe como cuerpo el JSON de salida de un cultivo del
-servicio de Ventum ACV, ejecuta el cálculo de ACV en openLCA y envía el resultado a ACV Compare para su persistencia.
+El servicio expone un único endpoint, `POST /capture-acv`, que recibe como cuerpo el JSON de salida de un cultivo del
+servicio de DTAgro, ejecuta el cálculo de ACV en openLCA y envía el resultado a ACV Compare para su persistencia.
 
 El procesamiento interno sigue el siguiente flujo:
 
@@ -21,40 +21,38 @@ El procesamiento interno sigue el siguiente flujo:
 6. **`send_result_to_app()`** — Envía el resultado a ACV Compare mediante un POST (best-effort; los errores se
    registran en el log sin interrumpir la respuesta).
 
-## Parámetros fijos
+## Parámetros de cálculo
 
-| Parámetro | Valor | Ubicación |
+Ambos parámetros son configurables mediante variables de entorno en el `.env` del servicio.
+
+| Parámetro | Valor por defecto | Descripción |
 |---|---|---|
-| `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | `acv_service.py` |
-| `CALCULATION_AMOUNT` | `0.001` | `acv_service.py` |
+| `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | UUID del método de impacto seleccionado para el cálculo. Por defecto se utiliza **EF 3.1** (Environmental Footprint 3.1), el método recomendado por la Comisión Europea. |
+| `CALCULATION_AMOUNT` | `0.001` | Cantidad del proceso usada como referencia. Los procesos en la base de datos están definidos para 1 tonelada (1000 kg), por lo que un valor de `0.001` calcula el impacto correspondiente a 1 kg de producción. |
 
 ## Integración con ACV Compare
 
 Cuando **ACV Compare** está desplegado en la misma red Docker (`olca`), el resultado del cálculo se transmite
-automáticamente al endpoint `POST /ventum` de ACV Compare mediante la variable de entorno `ACV_COMPARE_BASE_URL`.
+automáticamente al endpoint `POST /capture` de ACV Compare mediante la variable de entorno `ACV_COMPARE_BASE_URL`.
 
 A su vez, el frontend de ACV Compare enruta las peticiones de cálculo a través del proxy inverso Nginx:
 
 | Ruta | Destino |
 |---|---|
-| `/calc` | `ventum-openlca-bridge:3000/ventum-acv` |
+| `/calc` | `capture-acv:3000/capture-acv` |
 
-## Probar el servicio
+## Respuesta del servicio
 
-Puedes probar el correcto funcionamiento del servicio a través de la interfaz **Swagger** habilitada en la ruta `/docs`,
-o mediante el siguiente JSON de prueba:
+Tras ejecutar el cálculo de ACV en openLCA, el servicio devuelve un JSON con los metadatos originales del cultivo y el
+resultado desglosado en cinco categorías de impacto. Cada categoría contiene un array de objetos con la categoría
+ambiental (`category`), la magnitud (`amount`) y la unidad de medida (`unit`).
 
 ```json
 {
     "metadatos": {
         "parcela": {
             "id": 3,
-            "es_sigpac": {
-                "provincia": 6,
-                "municipio": 5,
-                "poligono": 1,
-                "parcela": 1
-            },
+            "es_sigpac": { "provincia": 6, "municipio": 5, "poligono": 1, "parcela": 1 },
             "es_referencia_catastral": null,
             "pt_id_parcela_predial": null,
             "nombre": "Prueba"
@@ -75,159 +73,113 @@ o mediante el siguiente JSON de prueba:
             "email": "prueba@example.com"
         }
     },
-    "riegos": {
-        "tipo": "Sistema de riego horticola",
-        "entre_arboles": 1.5,
-        "entre_calles": 2.1,
-        "n_goteros_arbol": 10,
-        "n_arboles": 3174.6031746031745,
-        "n_calles": 66.66666666666667,
-        "m_portagotero": 6666.666666666667,
-        "peso_portagoteros_16mm": 375.33333333333337,
-        "n_enganches": 66.66666666666667,
-        "peso_enganches": 0.78,
-        "metros_principal": 100,
-        "peso_principal_32mm": 21.07,
-        "peso_llaves": 0.0208,
-        "kg_PP": 10.1508,
-        "peso_tira_pollo": 78,
-        "peso_principal_17mm": 110.5,
-        "deposito_abono": 5.5,
-        "kg_PP_ha_anio": 1.26885,
-        "kg_PE_1_ha_anio": 1.1,
-        "kg_PE_2_ha_anio": 78,
-        "kg_PE_deposito_ha_anio": 0.43333333333333335,
-        "kg_PE_ha_anio": 79.53333333333333,
-        "kg_PVC_ha_anio": 13.8125,
-        "kg_PVC_produccion": 0.138125,
-        "kg_PP_produccion": 0.0126885,
-        "kg_PE_produccion": 0.7953333333333333
-    },
-    "bombeo": {
-        "cabeas": 9,
-        "potencia": 3,
-        "consumo_l_h": 2,
-        "kg_acero_ha_produccion": 0.0018
-    },
-    "fitosanitarios": {
-        "detalle": [
-            {
-                "id": 7,
-                "nombre": "Amectoctradin",
-                "clasificacion_simapro": 1,
-                "n_aplicaciones": 2,
-                "densidad": 1.04,
-                "porcentaje_ma": 20,
-                "porcentaje_ma_usado": 20,
-                "porcentaje_ma_personalizado": null,
-                "max_l_ha": 1.2,
-                "cantidad_total_ha": 0.48,
-                "cantidad_total_produccion": 0.0048
-            }
+    "resultado": {
+        "impacto_fertilizantes": [
+            { "category": "Climate change", "amount": 0.312, "unit": "kg CO2 eq" },
+            { "category": "Acidification", "amount": 0.004, "unit": "mol H+ eq" },
+            { "category": "Eutrophication, freshwater", "amount": 0.001, "unit": "kg P eq" }
         ],
-        "agrupado_por_clasificacion": [
-            {
-                "clasificacion_simapro": 1,
-                "cantidad_total_produccion": 0.245,
-                "fitosanitarios": [
-                    {
-                        "id": 7,
-                        "nombre": "Amectoctradin",
-                        "n_aplicaciones": 2,
-                        "cantidad_total_ha": 0.48,
-                        "cantidad_total_produccion": 0.0048
-                    }
-                ]
-            }
+        "impacto_manejo_cultivo": [
+            { "category": "Climate change", "amount": 0.185, "unit": "kg CO2 eq" },
+            { "category": "Ozone depletion", "amount": 0.000002, "unit": "kg CFC-11 eq" },
+            { "category": "Land use", "amount": 12.45, "unit": "No dimension" }
+        ],
+        "impacto_pesticidas": [
+            { "category": "Ecotoxicity, freshwater", "amount": 45.2, "unit": "CTUe" },
+            { "category": "Human toxicity, cancer", "amount": 0.0003, "unit": "CTUh" }
+        ],
+        "impacto_sistema_riego": [
+            { "category": "Climate change", "amount": 0.078, "unit": "kg CO2 eq" },
+            { "category": "Resource use, minerals and metals", "amount": 0.005, "unit": "kg Sb eq" },
+            { "category": "Water use", "amount": 0.52, "unit": "m3 world eq" }
+        ],
+        "impacto_total": [
+            { "category": "Climate change", "amount": 0.575, "unit": "kg CO2 eq" },
+            { "category": "Acidification", "amount": 0.004, "unit": "mol H+ eq" },
+            { "category": "Eutrophication, freshwater", "amount": 0.001, "unit": "kg P eq" },
+            { "category": "Ecotoxicity, freshwater", "amount": 45.2, "unit": "CTUe" },
+            { "category": "Water use", "amount": 0.52, "unit": "m3 world eq" }
         ]
+    }
+}
+```
+
+Las cinco categorías de impacto son:
+
+| Categoría | Descripción |
+|---|---|
+| `impacto_fertilizantes` | Impacto derivado de la fabricación y aplicación de fertilizantes, incluyendo emisiones de NH₃, N₂O, NO₃ y NOₓ. |
+| `impacto_manejo_cultivo` | Impacto de las labores agrícolas (labranza, siembra, cosecha), ocupación del suelo y uso de agua. |
+| `impacto_pesticidas` | Impacto de los productos fitosanitarios aplicados, clasificados según SimaPro. |
+| `impacto_sistema_riego` | Impacto de los materiales del sistema de riego (tuberías, goteros, bomba) y del consumo de agua y energía. |
+| `impacto_total` | Suma agregada de todas las categorías anteriores. |
+
+Este mismo JSON es el que se envía al endpoint `POST /capture` de **ACV Compare** para su persistencia y visualización.
+
+## Documentación interactiva (Swagger)
+
+Capture ACV expone una interfaz **Swagger/OpenAPI** que permite explorar y probar todos los endpoints del servicio
+directamente desde el navegador. La documentación incluye el esquema del JSON de entrada, los códigos de respuesta
+y la posibilidad de ejecutar peticiones de prueba.
+
+| Entorno | URL |
+|---|---|
+| Desarrollo local | `http://localhost:3000/docs` |
+| Producción (Docker) | `http://<host-del-servidor>:3000/docs` |
+
+:::tip
+La especificación OpenAPI en formato JSON también está disponible en `/openapi.json`, útil para generar clientes
+automáticamente o importar en herramientas como Postman o Insomnia.
+:::
+
+## Probar el servicio
+
+Puedes probar el correcto funcionamiento del servicio a través de la interfaz Swagger descrita arriba.
+
+Para ver la estructura completa del JSON de entrada con todos sus campos documentados, consulta la página
+[JSON de entrada](./json-entrada.md). A continuación se muestra un ejemplo mínimo con los campos esenciales:
+
+```json
+{
+    "metadatos": {
+        "parcela": {
+            "id": 3,
+            "es_sigpac": { "provincia": 6, "municipio": 5, "poligono": 1, "parcela": 1 },
+            "es_referencia_catastral": null,
+            "pt_id_parcela_predial": null,
+            "nombre": "Prueba"
+        },
+        "cultivo": {
+            "id": 1,
+            "tipo": "Tomate",
+            "superficie_cultivada": 100,
+            "produccion": 100,
+            "consumo_agua": 500,
+            "fecha_inicio_campania": 20240401,
+            "fecha_fin_campania": 20241120,
+            "ciclo": 200
+        },
+        "usuario": {
+            "id": 3,
+            "nombre": "Prueba",
+            "email": "prueba@example.com"
+        }
     },
-    "fertilizantes": {
-        "kg_N": 0.1,
-        "kg_K2O": 0.252,
-        "kg_P2O5": 0.9389,
-        "kg_NH3": 0.0016400000000000002,
-        "kg_N2O": 0.0005,
-        "kg_NOX": 0.004,
-        "kg_NO3": 0.03,
-        "transporte_fert_UF_1": 1.01
+    "riegos": { "tipo": "Sistema de riego horticola" },
+    "bombeo": { "cabeas": 9, "potencia": 3, "consumo_l_h": 2 },
+    "fitosanitarios": {
+        "detalle": [{ "nombre": "Amectoctradin", "clasificacion_simapro": 1, "cantidad_total_produccion": 0.0048 }],
+        "agrupado_por_clasificacion": []
     },
+    "fertilizantes": { "kg_N": 0.1, "kg_K2O": 0.252, "kg_P2O5": 0.9389 },
     "manejo_cultivo": {
-        "labores": [
-            {
-                "labor_simapro": "Application of plant protection product, by field sprayer [CH]",
-                "rendimiento_h_ha": 0.75,
-                "UF_1_ha": 0.5249999999999999,
-                "UF_1_ha_produccion": 0.0052499999999999995,
-                "fabricacion": 0.75,
-                "reparacion": 0.3375,
-                "UF_1_kg": 1.0875,
-                "UF_1_kg_produccion": 0.010875,
-                "pases": [
-                    {
-                        "id_pase_apero": null,
-                        "apero_id": 4,
-                        "apero_nombre": "Atomizador",
-                        "maquina_id": 6,
-                        "maquina_nombre": "John Deere 6M 180",
-                        "pases": 1,
-                        "tiempo_m_labor": 0.25,
-                        "rendimiento_h_ha": 0.25,
-                        "UF_1_ha": 0.175,
-                        "UF_1_ha_produccion": 0.0017499999999999998,
-                        "fabricacion": 0.25,
-                        "reparacion": 0.1125,
-                        "UF_1_kg": 0.3625,
-                        "UF_1_kg_produccion": 0.0036249999999999998
-                    }
-                ]
-            },
-            {
-                "labor_simapro": "Tillage, cultivating, chiselling [CH]",
-                "rendimiento_h_ha": 1.5,
-                "UF_1_ha": 1.7999999999999998,
-                "UF_1_ha_produccion": 0.018,
-                "fabricacion": 0.375,
-                "reparacion": 0.16875,
-                "UF_1_kg": 0.54375,
-                "UF_1_kg_produccion": 0.0054375,
-                "pases": [
-                    {
-                        "id_pase_apero": null,
-                        "apero_id": 7,
-                        "apero_nombre": "Chisel",
-                        "maquina_id": 7,
-                        "maquina_nombre": "New Holland T4 55S",
-                        "pases": 1,
-                        "tiempo_m_labor": 1.5,
-                        "rendimiento_h_ha": 1.5,
-                        "UF_1_ha": 1.7999999999999998,
-                        "UF_1_ha_produccion": 0.018,
-                        "fabricacion": 0.375,
-                        "reparacion": 0.16875,
-                        "UF_1_kg": 0.54375,
-                        "UF_1_kg_produccion": 0.0054375
-                    }
-                ]
-            }
-        ],
-        "ocupacion_suelo": 0.005479452054794521,
+        "labores": [{ "labor_simapro": "Tillage, cultivating, chiselling [CH]", "UF_1_ha_produccion": 0.018 }],
+        "ocupacion_suelo": 0.005,
         "uso_de_agua": 5
     },
     "maquinaria": {
         "cosecha_mecanizada": [],
-        "maquinas": [
-            {
-                "id": 6,
-                "nombre": "John Deere 6M 180",
-                "peso": 8500,
-                "vida_h": 14000,
-                "rendimiento_h_ha": 0.75,
-                "fabricacion_kg_ha": 0.45535714285714285,
-                "reparacion_kg_ha": 0.09107142857142858,
-                "UF_kg_reciclaje": 0.5464285714285715,
-                "UF_kg_reciclaje_produccion": 0.005464285714285715
-            }
-        ]
+        "maquinas": [{ "id": 6, "nombre": "John Deere 6M 180", "peso": 8500, "vida_h": 14000 }]
     }
 }
 ```

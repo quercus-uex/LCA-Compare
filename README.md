@@ -1,7 +1,7 @@
 # ACV Visualizer
 
 ## Introducción
-ACV Visualizer es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [Ventum-OpenLCA Bridge](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
+ACV Visualizer es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [Capture ACV](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
 
 ## Objetivo
 El objetivo final de esta app es proporcionar de una interfaz sencilla e intuitiva que permita la comparación de ACV entre cultivos con el fin de identificar puntos de mejora en esta materia. Para ello, la app permite...
@@ -24,7 +24,7 @@ API REST que expone endpoints para:
 - **Métodos de impacto** (`/predial`) - Configuración de métodos de análisis
 - **Comparador** (`/compare`) - Lógica de comparación entre cultivos
 - **SIGPAC/Catastro** (`/sigpac`, `/catastro`) - Integración con APIs externas para datos catastrales
-- **Ventum** (`/ventum`) - Comunicación con Ventum-OpenLCA Service
+- **Capture ACV** (`/capture`) - Comunicación con Capture ACV
 - **AI** (`/ai`) - Integración con OpenRouter para análisis asistido
 - **Mailer** (`/mailer`) - Servicio de envío de emails
 
@@ -62,7 +62,7 @@ A continuación se detallan las tecnologías usadas para el desarrollo de la web
 Para la localización de parcelas se ha integrado el uso de las APIs públicas tanto del SIGPAC como del Catastro. Esto permite el almacenamiento del polígono representativo de dichas parcelas para su posterior uso en el comparador.
 
 Además, el sistema se comunica con:
-- **Ventum-OpenLCA Service** para el cálculo de análisis de ciclo de vida
+- **Capture ACV** para el cálculo de análisis de ciclo de vida
 - **OpenRouter** para capacidades de IA asistida
 
 ## Variables de entorno
@@ -75,11 +75,11 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 | `DB_PASSWORD` | Contraseña de la base de datos |
 | `JWT_SECRET` | Secret para firmar tokens JWT |
 | `OPENROUTER_API_KEY` | API key para OpenRouter |
-| `VENTUM_ACV_EMAIL` | Email para autenticación en Ventum |
-| `VENTUM_ACV_PASSWORD` | Password para autenticación en Ventum |
 | `MAILER_EMAIL` | Email para envío de notificaciones |
 | `MAILER_PASSWORD` | Password del servicio de email |
-| `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto |
+| `CAPTURE_ACV_EMAIL` | Email para autenticación en DTAgro |
+| `CAPTURE_ACV_PASSWORD` | Password para autenticación en DTAgro |
+| `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto (EF 3.1) |
 | `PORT` | Puerto del backend (default: 3000) |
 
 ## Despliegue
@@ -126,7 +126,7 @@ Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible
 │   ├── compare/            # Comparador
 │   ├── sigpac/             # Integración SIGPAC
 │   ├── catastro/           # Integración Catastro
-│   ├── ventum/             # Comunicación con OpenLCA
+│   ├── capture/            # Comunicación con OpenLCA
 │   ├── ai/                 # Integración IA
 │   ├── mailer/             # Servicio de email
 │   ├── templates/          # Plantillas Handlebars

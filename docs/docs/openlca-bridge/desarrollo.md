@@ -1,6 +1,6 @@
 ---
 sidebar_label: 'Desarrollo'
-sidebar_position: 4
+sidebar_position: 6
 ---
 
 # Entorno de desarrollo
@@ -52,11 +52,11 @@ tox -e py
 pytest test_main.py
 
 # Ejecutar un test individual
-pytest test_main.py::test_ventum_acv_valid
+pytest test_main.py::test_dtagro_acv_valid
 ```
 
 :::note
-El test de entrada válida (`test_ventum_acv_valid`) espera un código **HTTP 500** en lugar de 200, porque el servidor
+El test de entrada válida (`test_dtagro_acv_valid`) espera un código **HTTP 500** en lugar de 200, porque el servidor
 de OpenLCA no está disponible en el entorno de CI.
 :::
 
@@ -64,7 +64,7 @@ No hay linter, formateador ni typechecker configurados.
 
 ## Generación de modelos
 
-El archivo `src/models/ventum_acv_output.py` se genera automáticamente a partir del esquema JSON
+El archivo `src/models/dtagro_acv_output.py` se genera automáticamente a partir del esquema JSON
 `schema/dtagro_schema_v1.json`. No debe editarse manualmente. Para regenerarlo tras modificar el esquema:
 
 ```bash
@@ -81,7 +81,7 @@ bash utils/generate_output_model.sh
 │   ├── routers/                      # Definición de endpoints
 │   ├── services/                     # OLCAClient y gestión de procesos
 │   ├── models/                       # Modelos Pydantic
-│   │   └── ventum_acv_output.py      # Autogenerado desde schema/
+│   │   └── dtagro_acv_output.py      # Autogenerado desde schema/
 │   ├── processes/                    # Procesos por tipo de cultivo
 │   │   ├── tomate_process.py         # TomateProcess
 │   │   ├── olivo_process.py          # OlivoProcess
@@ -93,7 +93,7 @@ bash utils/generate_output_model.sh
 │   └── generate_output_model.sh      # Script de regeneración de modelos
 ├── test/                             # Tests y fixtures
 ├── openlca-docker/                   # Proyecto Maven/Java del servidor IPC (independiente)
-│   └── data/databases/bafu/          # Ruta de la base de datos Ecoinvent
+│   └── data/databases/bafu/          # Ruta de la base de datos .zolca
 ├── requirements.txt                  # Dependencias de Python
 ├── Dockerfile                        # Imagen del servicio
 ├── docker-compose.yml                # Orquestación (openlca-ipc + bridge)

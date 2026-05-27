@@ -7,8 +7,8 @@ sidebar_position: 1
 
 **ACV Compare** es una aplicación web que permite la visualización, comparación y generación de informes del Análisis de
 Ciclo de Vida (ACV) de cultivos agrícolas. Los resultados de ACV son calculados por
-[Ventum-OpenLCA Bridge](https://github.com/quercus-uex/Ventum-OpenLCA-Service), un servicio puente entre la plataforma
-Ventum ACV y el motor de cálculo openLCA con base de datos Ecoinvent. Ambos servicios se comunican a través de una red
+[Capture ACV](https://github.com/quercus-uex/Ventum-OpenLCA-Service), un servicio puente entre la plataforma
+DTAgro y el motor de cálculo openLCA con base de datos en formato .zolca. Ambos servicios se comunican a través de una red
 Docker compartida.
 
 ## Funcionalidades

@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Uso
 
-Este servicio recibe los resultados de ACV calculados por **OpenLCA Bridge** siempre que ambos se estén ejecutando
+Este servicio recibe los resultados de ACV calculados por **Capture ACV** siempre que ambos se estén ejecutando
 de manera simultánea. Si es la primera vez que un usuario realiza un cálculo de ACV, se le enviará un correo con su
 contraseña de acceso.
 

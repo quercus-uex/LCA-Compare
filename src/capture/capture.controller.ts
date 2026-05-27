@@ -1,32 +1,35 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { VentumInputDto } from './dto/ventum-input.dto';
+import { CaptureInputDto } from './dto/capture-input.dto';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { instanceToPlain } from 'class-transformer';
-import { VentumService } from './ventum.service';
+import { CaptureService } from './capture.service';
 import * as fs from 'node:fs';
 
-@Controller('/ventum')
-export class VentumController {
+@Controller('/capture')
+export class CaptureController {
   constructor(
     private readonly resultadoImpactoService: ResultadoImpactoService,
-    private readonly ventumService: VentumService,
+    private readonly captureService: CaptureService,
   ) {}
 
   @Post()
-  async postVentumData(@Body() data: VentumInputDto) {
+  async postCaptureData(@Body() data: CaptureInputDto) {
     const mUsuario = data.metadatos.usuario;
     const mParcela = data.metadatos.parcela;
     const mCultivo = data.metadatos.cultivo;
 
-    const usuario = await this.ventumService.checkUsuario(mUsuario);
-    const parcela = await this.ventumService.checkParcela(usuario.id, mParcela);
+    const usuario = await this.captureService.checkUsuario(mUsuario);
+    const parcela = await this.captureService.checkParcela(
+      usuario.id,
+      mParcela,
+    );
 
     const resultadoImpacto = await this.resultadoImpactoService.create({
       datos: instanceToPlain(data.resultado),
       impacto: { connect: { id: process.env.DEFAULT_IMPACT_METHOD_UUID } },
     });
 
-    const cultivo = await this.ventumService.checkCultivo(
+    const cultivo = await this.captureService.checkCultivo(
       parcela.id,
       resultadoImpacto.id,
       mCultivo,
@@ -40,7 +43,7 @@ export class VentumController {
   }
 
   @Post('/bulk')
-  async extractVentumData() {
+  async extractCaptureData() {
     const fetchToken = await fetch(
       'https://acvapi.dtagro.es/api/usuario/login',
       {
@@ -49,8 +52,8 @@ export class VentumController {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: process.env.VENTUM_ACV_EMAIL,
-          password: process.env.VENTUM_ACV_PASSWORD,
+          email: process.env.CAPTURE_ACV_EMAIL,
+          password: process.env.CAPTURE_ACV_PASSWORD,
         }),
       },
     );

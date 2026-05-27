@@ -1,8 +1,8 @@
 {
-  "label": "OpenLCA Bridge",
-  "position": 1,
+  "label": "Capture ACV",
+  "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "Documentación sobre el servicio puente entre Ventum ACV y OpenLCA."
+    "description": "Documentación sobre Capture ACV, el servicio puente entre DTAgro y OpenLCA."
   }
 }

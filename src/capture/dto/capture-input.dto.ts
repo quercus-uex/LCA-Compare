@@ -162,7 +162,7 @@ class ResultadosDto {
   impacto_total: ImpactoDto[];
 }
 
-export class VentumInputDto {
+export class CaptureInputDto {
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => MetadatosDto)

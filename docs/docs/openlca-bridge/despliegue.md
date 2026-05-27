@@ -7,14 +7,14 @@ sidebar_position: 2
 
 ## Requisitos previos
 
-Antes de desplegar el servicio puente entre Ventum ACV y OpenLCA, necesitas tener descargado:
+Antes de desplegar el servicio puente entre DTAgro y OpenLCA, necesitas tener descargado:
 
-- el repositorio ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)).
-- la base de datos **Ecoinvent** con los procesos necesarios ya definidos.
+- el repositorio ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (Capture ACV).
+- la base de datos en formato **.zolca** con los procesos necesarios ya definidos.
 
-## Configuración de la base de datos Ecoinvent
+## Configuración de la base de datos .zolca
 
-La base de datos de OpenLCA (BAFU/ecoinvent) debe existir en la ruta `openlca-docker/data/databases/bafu` antes de
+La base de datos de OpenLCA (archivo .zolca) debe existir en la ruta `openlca-docker/data/databases/bafu` antes de
 iniciar el servicio. Modifica el fichero `docker-compose.yml` para que el volumen montado en el servicio `openlca-ipc`
 apunte a la carpeta contenedora de dicha base de datos. A continuación se muestra un gráfico aclaratorio:
 
@@ -29,13 +29,28 @@ del servidor IPC de OpenLCA. No tiene relación con el código Python del servic
 
 ## Variables de entorno
 
-Configura las siguientes variables de entorno para el despliegue:
+El servicio lee su configuración desde un archivo `.env` ubicado en la raíz del proyecto. Como punto de partida,
+copia el archivo `.env.example` incluido en el repositorio y renómbralo a `.env`:
+
+```bash
+cp .env.example .env
+```
+
+A continuación, ajusta los valores según tu entorno:
 
 ```sh
 OLCA_HOST="openlca-ipc"              # Host del servidor IPC de OpenLCA
 OLCA_PORT="8080"                     # Puerto del servidor IPC de OpenLCA
 ACV_COMPARE_BASE_URL="http://acv-compare-backend:3000"  # URL base de ACV Compare
+
+IMPACT_METHOD_UUID="20629e27-b863-4fbe-bbc2-082d3eefd1e5"  # UUID del método de impacto (por defecto, EF 3.1)
+CALCULATION_AMOUNT="0.001"           # Cantidad del proceso para el cálculo (1000 kg → 0.001 = 1 kg)
 ```
+
+:::note
+El archivo `.env.example` contiene todos los valores por defecto necesarios para un despliegue estándar. Solo es
+imprescindible modificar `ACV_COMPARE_BASE_URL` si la URL de ACV Compare difiere de la configuración por defecto.
+:::
 
 ## Red compartida con ACV Compare
 
@@ -68,7 +83,7 @@ Una vez desplegado, verifica que el servicio responde correctamente:
 curl http://localhost:3000/docs
 
 # Endpoint de cálculo
-curl -X POST http://localhost:3000/ventum-acv \
+curl -X POST http://localhost:3000/capture-acv \
   -H "Content-Type: application/json" \
   -d '{"metadatos": {...}}'
 ```

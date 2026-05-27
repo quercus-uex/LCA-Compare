@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { VentumInputDto } from './dto/ventum-input.dto';
+import { CaptureInputDto } from './dto/capture-input.dto';
 import { ParcelaService } from '../parcela/parcela.service';
 import { Parcela, Poblacion, Cultivo } from '../generated/prisma/client';
 import { Feature, Polygon } from 'geojson';
@@ -16,7 +16,7 @@ import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.s
 import { PredialService } from '../predial/predial.service';
 
 @Injectable()
-export class VentumService {
+export class CaptureService {
   constructor(
     private readonly parcelaService: ParcelaService,
     private readonly catastroService: CatastroService,
@@ -31,7 +31,7 @@ export class VentumService {
 
   private async createParcela(
     idPropietario: string,
-    mParcela: VentumInputDto['metadatos']['parcela'],
+    mParcela: CaptureInputDto['metadatos']['parcela'],
   ): Promise<Parcela> {
     let polygon: Feature<Polygon>;
     let poblacion: Poblacion | undefined;
@@ -108,7 +108,7 @@ export class VentumService {
 
   async checkParcela(
     idPropietario: string,
-    mParcela: VentumInputDto['metadatos']['parcela'],
+    mParcela: CaptureInputDto['metadatos']['parcela'],
   ) {
     const sigpac = mParcela.es_sigpac.provincia
       ? mParcela.es_sigpac
@@ -144,7 +144,7 @@ export class VentumService {
   }
 
   async checkUsuario(
-    mUsuario: VentumInputDto['metadatos']['usuario'],
+    mUsuario: CaptureInputDto['metadatos']['usuario'],
   ): Promise<UsuarioPublico> {
     let usuario = await this.usuarioService.findOnePublic({
       email: mUsuario.email,
@@ -172,7 +172,7 @@ export class VentumService {
   async checkCultivo(
     idParcela: string,
     idResultadoImpacto: string,
-    mCultivo: VentumInputDto['metadatos']['cultivo'],
+    mCultivo: CaptureInputDto['metadatos']['cultivo'],
   ): Promise<Cultivo> {
     const fechaCultivo = DateTime.fromFormat(
       mCultivo.fecha_inicio_campania.toString(),

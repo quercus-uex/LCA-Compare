@@ -10,7 +10,14 @@ Antes de desplegar el servicio de comparativa de ACV, necesitas tener clonado el
 
 ## Variables de entorno
 
-Copia el archivo `.env.example` a `.env` y configura las siguientes variables:
+El servicio lee su configuración desde un archivo `.env` ubicado en la raíz del proyecto. Como punto de partida,
+copia el archivo `.env.example` incluido en el repositorio y renómbralo a `.env`:
+
+```bash
+cp .env.example .env
+```
+
+A continuación, ajusta los valores según tu entorno:
 
 ```sh
 JWT_SECRET="CHANGEME"                    # Clave secreta para JWT (autenticación)
@@ -19,13 +26,13 @@ OPENROUTER_API_KEY="sk-or-v1-...."       # Clave de API para OpenRouter (IA en i
 DB_USER="user"                           # Usuario de la base de datos
 DB_PASSWORD="password"                   # Contraseña de la base de datos
 
-VENTUM_ACV_EMAIL="email@example.com"     # Email para autenticación en Ventum ACV
-VENTUM_ACV_PASSWORD="P@ssw0rd"           # Contraseña para autenticación en Ventum ACV
-
 MAILER_EMAIL="example@example.com"       # Email para envío de notificaciones
 MAILER_PASSWORD="Password"               # Contraseña del email para notificaciones
 
-DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del método de impacto por defecto
+CAPTURE_ACV_EMAIL="email@example.com"    # Email para autenticación en DTAgro (extracción masiva)
+CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password para autenticación en DTAgro (extracción masiva)
+
+DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del método de impacto por defecto (EF 3.1)
 
 PORT=8000                                # Puerto del backend en desarrollo
 ```
@@ -82,7 +89,7 @@ El archivo `docker-compose.yaml` define tres servicios:
 El compose define dos redes:
 
 - **`acv-compare`**: red interna para la comunicación entre el backend, frontend y base de datos.
-- **`olca`**: red externa compartida con el servicio Ventum-OpenLCA Bridge. Debe crearse manualmente:
+- **`olca`**: red externa compartida con el servicio Capture ACV. Debe crearse manualmente:
 
 ```bash
 docker network create olca
@@ -95,7 +102,7 @@ El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente e
 | Ruta | Destino |
 |---|---|
 | `/api/` | `acv-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
-| `/calc` | `ventum-openlca-bridge:3000/ventum-acv` (cálculo de ACV) |
+| `/calc` | `capture-acv:3000/capture-acv` (cálculo de ACV) |
 | `/` | SPA servida estáticamente (`index.html`) |
 
 ## Despliegue completo

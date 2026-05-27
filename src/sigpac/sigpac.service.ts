@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { SigpacResponseDto } from './dto/sigpac-response.dto';
 import { Feature, Polygon } from 'geojson';
-import { SigpacDto } from '../ventum/dto/ventum-input.dto';
+import { SigpacDto } from '../capture/dto/capture-input.dto';
 
 const SIGPAC_BASE_URL =
   'https://sigpac-hubcloud.es/ogcapi/collections/recintos/items';

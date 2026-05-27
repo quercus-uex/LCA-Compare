@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Documentación de OpenLCA Bridge y ACV Compare',
+      title: 'Documentación de Capture ACV y ACV Compare',
   tagline: '',
   favicon: 'img/icon.svg',
 
@@ -57,7 +57,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Documentación de OpenLCA Bridge y ACV Compare',
+  title: 'Documentación de Capture ACV y ACV Compare',
       logo: {
         alt: 'ACV Compare',
         src: 'img/icon.svg',
@@ -71,7 +71,7 @@ const config: Config = {
         },
         {
           href: 'https://github.com/quercus-uex/Ventum-OpenLCA-Service',
-          label: 'OpenLCA Bridge',
+          label: 'Capture ACV',
           position: 'right',
         },
         {
@@ -84,7 +84,11 @@ const config: Config = {
     footer: {
       style: 'dark',
       links: [],
-      copyright: `Documentación de OpenLCA Bridge y ACV Compare.`,
+      logo: {
+        alt: 'TID4Agro',
+        src: 'img/tid4agro-banner.png',
+      },
+      copyright: `Documentación de Capture ACV y ACV Compare.`,
     },
     prism: {
       theme: prismThemes.github,

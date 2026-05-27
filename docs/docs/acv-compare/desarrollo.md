@@ -12,7 +12,7 @@ permite tener entornos aislados para cada desarrollo. Para hacer uso del mismo s
 del servicio en uno de los IDEs con soporte habilitado para DevContainers (Visual Studio Code, WebStorm, ...).
 
 La configuración del DevContainer (`.devcontainer/devcontainer.json`) incluye el runtime de **Node.js 24**, soporte para
-**Docker-in-Docker** y se conecta a la red `openlca-bridge` con el hostname `acv-compare-service`.
+**Docker-in-Docker** y se conecta a la red `capture-acv` con el hostname `acv-compare-service`.
 
 ## Instalación de dependencias
 
@@ -110,7 +110,7 @@ automáticamente al backend mediante el proxy configurado en `web/vite.config.ts
 │   ├── resultadoimpacto/         # Almacenamiento y consulta de resultados ACV
 │   ├── compare/                  # Lógica de comparación entre conjuntos de cultivos
 │   ├── metodoimpacto/            # Configuración de métodos de impacto
-│   ├── ventum/                   # Recepción de datos desde Ventum-OpenLCA Bridge
+│   ├── capture/                  # Recepción de datos desde Capture ACV
 │   ├── ai/                       # Integración con OpenRouter para IA
 │   │   └── prompts/              # Plantillas Handlebars para prompts
 │   ├── sigpac/                   # Integración con API pública de SIGPAC

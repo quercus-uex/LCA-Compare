@@ -145,7 +145,7 @@ export class ResultadoImpactoController {
           );
 
           return mean.map((m) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
             const originalAmount = resultado.datos![i].find(
               // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               (r) => r.category === m.category,

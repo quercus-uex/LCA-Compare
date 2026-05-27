@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsuarioModule } from './usuario/usuario.module';
 import { ConfigModule } from '@nestjs/config';
-import { VentumModule } from './ventum/ventum.module';
+import { CaptureModule } from './capture/capture.module';
 import { AuthModule } from './auth/auth.module';
 import { ResultadoImpactoModule } from './resultadoimpacto/resultado-impacto.module';
 import { CompareModule } from './compare/compare.module';
@@ -14,7 +14,7 @@ import { AdminModule } from './admin/admin.module';
   imports: [
     ConfigModule.forRoot(),
     UsuarioModule,
-    VentumModule,
+    CaptureModule,
     AuthModule,
     ResultadoImpactoModule,
     CompareModule,

@@ -21,7 +21,6 @@ export const CompareFilterCard = (
   useEffect(() => {
   }, [filters]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!enabled) onSubmit(undefined);
   }, [enabled]);

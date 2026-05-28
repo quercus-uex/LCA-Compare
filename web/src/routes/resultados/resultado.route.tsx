@@ -2,17 +2,13 @@ import { useNavigate, useParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import {
   type ResultadoImpacto,
-  type ResultadoImpactoComparison,
   useResultadoImpacto,
 } from '../../hooks/resultado-impacto.hook.tsx';
 import { ResultadoTable } from './resultado-table.component.tsx';
 import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
 import type { LatLngExpression } from 'leaflet';
-import { Circle, GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
-import { centroidOfPolygon } from '../../utils/centroid-of-polygon.ts';
-import { CompareModal } from './compare-modal.component.tsx';
-import { toast } from 'sonner';
+import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
 import { exportJSON } from '../../common/utils.ts';
 
 export const ResultadoRoute = () => {
@@ -23,8 +19,6 @@ export const ResultadoRoute = () => {
 
   const [resultado, setResultado] = useState<ResultadoImpacto | undefined>();
   const [parcela, setParcela] = useState<Parcela | undefined>();
-  const [comparisonResult, setComparisonResult] = useState<ResultadoImpactoComparison | undefined>();
-  const [range, setRange] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -37,17 +31,6 @@ export const ResultadoRoute = () => {
       })
       .catch(() => navigate('/404'));
   }, [navigate, id, resultadoImpacto, p])
-
-  const compare = async () => {
-    const comparison = await resultadoImpacto.compareById(id!, range);
-    if (comparison.nearbyMean.impacto_fertilizantes.length === 0) {
-      return toast.error('No existen datos suficientes para la comparativa');
-    }
-    setComparisonResult(comparison);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    document.getElementById('compare-modal')!.showModal();
-  }
 
   if (!resultado || !parcela) return <div className="skeleton w-full h-full" />
 
@@ -101,27 +84,12 @@ export const ResultadoRoute = () => {
             </div>
           </div>
 
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <h2 className="card-title">Comparar</h2>
-              <p>Rango: {range} m</p>
-              <input
-                type="range"
-                min={10}
-                max={500000}
-                value={range}
-                className="range"
-                step={10}
-                onChange={(e) => {
-                  setRange(parseInt(e.target.value));
-                }}
-              />
-
-              <button className="btn btn-primary" onClick={compare}>
-                Comparar cultivo
-              </button>
-            </div>
-          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
+          >
+            Añadir a comparativa
+          </button>
         </div>
         <MapContainer
           className="h-full rounded-box aspect-square"
@@ -137,20 +105,10 @@ export const ResultadoRoute = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <Circle
-            center={
-              [
-                centroidOfPolygon(parcela.geom!)![1],
-                centroidOfPolygon(parcela.geom!)![0],
-              ] as LatLngExpression
-            }
-            radius={range}
-          />
           <GeoJSON data={parcela.geom!} />
         </MapContainer>
       </div>
       <ResultadoTable resultado={resultado} />
-      <CompareModal comparison={comparisonResult} />
     </div>
   );
 }

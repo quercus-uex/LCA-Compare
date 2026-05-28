@@ -1,6 +1,44 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: all;
+  themes: acv --default;
+}
+@plugin "daisyui/theme" {
+  name: "acv";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(98.71% 0.02 190);
+  --color-base-200: oklch(91.8% 0.018 190);
+  --color-base-300: oklch(84.89% 0.017 190);
+  --color-base-content: oklch(19.742% 0.004 190);
+
+  --color-primary: #57B6B2;
+  --color-primary-content: oklch(11.784% 0.039 190);
+  --color-secondary: #00586F;
+  --color-secondary-content: oklch(98% 0.01 190);
+  --color-accent: oklch(75% 0.15 210);
+  --color-accent-content: oklch(17.078% 0.04 210);
+  --color-neutral: oklch(30.98% 0.075 210);
+  --color-neutral-content: oklch(86.196% 0.015 210);
+
+  --color-info: oklch(86.19% 0.047 224.14);
+  --color-info-content: oklch(17.238% 0.009 224.14);
+  --color-success: oklch(86.19% 0.047 157.85);
+  --color-success-content: oklch(17.238% 0.009 157.85);
+  --color-warning: oklch(86.19% 0.047 102.15);
+  --color-warning-content: oklch(17.238% 0.009 102.15);
+  --color-error: oklch(86.19% 0.047 25.85);
+  --color-error-content: oklch(17.238% 0.009 25.85);
+
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 body {

@@ -1,5 +1,6 @@
 import { CompareFilterCard } from './compare-filter-card.component.tsx';
 import { useState } from 'react';
+import { useLocation } from 'react-router';
 import {
   type CompareFilterType,
   type CompareResult,
@@ -7,14 +8,21 @@ import {
 } from '../../hooks/compare.hook.tsx';
 import { exportJSON, omitNullish } from '../../common/utils.ts';
 import { CompareResultCard } from './compare-result-card.component.tsx';
+import type { Parcela } from '../../hooks/parcela.hook.tsx';
 
 export const CompareRoute = () => {
+  const location = useLocation();
+  const parcelaObjetivo = (location.state as { parcelaObjetivo?: Parcela } | null)?.parcelaObjetivo;
+  const initialObjetivoFilters: CompareFilterType | undefined = parcelaObjetivo
+    ? { parcelas: [parcelaObjetivo], provincias: [], poblaciones: [] }
+    : undefined;
+
   const [filtersRef, setFiltersRef] = useState<CompareFilterType>({
     parcelas: [],
     provincias: [],
     poblaciones: [],
   });
-  const [filtersObj, setFiltersObj] = useState<CompareFilterType | undefined>();
+  const [filtersObj, setFiltersObj] = useState<CompareFilterType | undefined>(initialObjetivoFilters);
   const [result, setResult] = useState<CompareResult | undefined>();
   const compare = useCompare();
 
@@ -164,6 +172,7 @@ export const CompareRoute = () => {
 
       <CompareFilterCard
         name="Objetivo"
+        initialFilters={initialObjetivoFilters}
         onSubmit={async (data) => {
           if (!data) return setFiltersObj(data);
           const d = omitNullish(data) as CompareFilterType;

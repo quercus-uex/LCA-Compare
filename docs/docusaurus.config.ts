@@ -35,6 +35,10 @@ const config: Config = {
     locales: ['es'],
   },
 
+  plugins: [[require.resolve('docusaurus-lunr-search'), {
+    languages: ['es'],
+  }]],
+
   presets: [
     [
       'classic',

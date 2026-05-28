@@ -1,0 +1,8 @@
+{
+  "label": "Capture ACV",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Documentación sobre Capture ACV, el servicio puente entre DTAgro y OpenLCA."
+  }
+}

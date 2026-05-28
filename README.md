@@ -1,99 +1,141 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ACV Visualizer
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Introducción
+ACV Visualizer es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [Capture ACV](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Objetivo
+El objetivo final de esta app es proporcionar de una interfaz sencilla e intuitiva que permita la comparación de ACV entre cultivos con el fin de identificar puntos de mejora en esta materia. Para ello, la app permite...
+- Analizar el resultado de impacto de un cultivo propio.
+- Comparar entre distintos grupos de cultivos según los distintos filtros disponibles.
+- Exportar de los resultados de la comparativa a **JSON**.
+- Gestionar parcelas con integración de **SIGPAC** y **Catastro** para la localización y representación geoespacial de polígonos.
+- Generar informes y reportes automatizados.
+- Integración con **IA** para análisis asistido.
 
-## Description
+## Arquitectura
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Backend (`/src`)
+API REST que expone endpoints para:
+- **Autenticación** (`/auth`) - Login, registro y gestión de sesiones con JWT
+- **Usuarios** (`/usuario`) - CRUD de usuarios con roles
+- **Parcelas** (`/parcela`) - Gestión de parcelas con datos geoespaciales
+- **Cultivos** (`/cultivo`) - Registro y gestión de cultivos
+- **Resultados de impacto** (`/resultadoimpacto`) - Almacenamiento y consulta de resultados ACV
+- **Métodos de impacto** (`/predial`) - Configuración de métodos de análisis
+- **Comparador** (`/compare`) - Lógica de comparación entre cultivos
+- **SIGPAC/Catastro** (`/sigpac`, `/catastro`) - Integración con APIs externas para datos catastrales
+- **Capture ACV** (`/capture`) - Comunicación con Capture ACV
+- **AI** (`/ai`) - Integración con OpenRouter para análisis asistido
+- **Mailer** (`/mailer`) - Servicio de envío de emails
 
-## Project setup
+La documentación OpenAPI está disponible en `/docs`.
 
+## Tecnologías
+A continuación se detallan las tecnologías usadas para el desarrollo de la webapp:
+
+### Backend
+- **Node.js 22**
+- **NestJS 11**
+- **Prisma ORM 7**
+- **PostgreSQL con PostGIS**
+- **JWT** para autenticación
+- **Swagger/OpenAPI** para documentación
+- **Playwright** para generación de reportes
+- **Handlebars** para plantillas
+- **Nodemailer** para envío de emails
+- **OpenRouter SDK** para integración IA
+- **proj4** para transformaciones de coordenadas
+- **argon2** para hash de contraseñas
+
+### Frontend
+- **React 19**
+- **TypeScript 5**
+- **Vite 7**
+- **TailwindCSS 4**
+- **DaisyUI 5**
+- **Leaflet / React-Leaflet** para mapas
+- **React Router 7**
+- **React Hook Form**
+- **Sonner** para notificaciones
+
+## Servicios externos
+Para la localización de parcelas se ha integrado el uso de las APIs públicas tanto del SIGPAC como del Catastro. Esto permite el almacenamiento del polígono representativo de dichas parcelas para su posterior uso en el comparador.
+
+Además, el sistema se comunica con:
+- **Capture ACV** para el cálculo de análisis de ciclo de vida
+- **OpenRouter** para capacidades de IA asistida
+
+## Variables de entorno
+El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | URL de conexión a PostgreSQL |
+| `DB_USER` | Usuario de la base de datos |
+| `DB_PASSWORD` | Contraseña de la base de datos |
+| `JWT_SECRET` | Secret para firmar tokens JWT |
+| `OPENROUTER_API_KEY` | API key para OpenRouter |
+| `MAILER_EMAIL` | Email para envío de notificaciones |
+| `MAILER_PASSWORD` | Password del servicio de email |
+| `CAPTURE_ACV_EMAIL` | Email para autenticación en DTAgro |
+| `CAPTURE_ACV_PASSWORD` | Password para autenticación en DTAgro |
+| `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto (EF 3.1) |
+| `PORT` | Puerto del backend (default: 3000) |
+
+## Despliegue
+Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose up -d`.
+
+El compose levanta tres servicios:
+- **acv-compare-backend** - API NestJS (puerto 8080)
+- **acv-compare-frontend** - Frontend React servido con Nginx (puerto 80)
+- **db** - PostgreSQL con PostGIS (puerto 5432)
+
+### Desarrollo
 ```bash
-$ npm install
+# Backend
+npm install
+npm run start:dev
+
+# Frontend
+cd web
+npm install
+npm run dev
 ```
 
-## Compile and run the project
+## Uso
+Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible a partir de la ruta `/api` y la documentación Swagger en `/docs`.
 
-```bash
-# development
-$ npm run start
+### Endpoints principales
+- `POST /auth/register` - Registro de usuario
+- `POST /auth/login` - Login
+- `GET /parcela` - Listar parcelas
+- `POST /parcela` - Crear parcela
+- `GET /cultivo` - Listar cultivos
+- `POST /cultivo` - Crear cultivo
+- `GET /compare` - Comparar cultivos
+- `GET /docs` - Documentación Swagger
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+## Estructura del proyecto
 ```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+├── src/                    # Backend NestJS
+│   ├── auth/               # Autenticación JWT
+│   ├── usuario/            # Gestión de usuarios
+│   ├── parcela/            # Gestión de parcelas
+│   ├── cultivo/            # Gestión de cultivos
+│   ├── resultadoimpacto/   # Resultados ACV
+│   ├── compare/            # Comparador
+│   ├── sigpac/             # Integración SIGPAC
+│   ├── catastro/           # Integración Catastro
+│   ├── capture/            # Comunicación con OpenLCA
+│   ├── ai/                 # Integración IA
+│   ├── mailer/             # Servicio de email
+│   ├── templates/          # Plantillas Handlebars
+│   └── generated/          # Prisma Client generado
+├── web/                    # Frontend React
+│   └── src/
+├── prisma/
+│   └── schema/             # Esquema Prisma
+├── init/                   # Scripts de inicialización
+├── docker-compose.yaml     # Configuración Docker
+└── Dockerfile              # Imagen backend
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-# Ventum-ACV-Visualizer

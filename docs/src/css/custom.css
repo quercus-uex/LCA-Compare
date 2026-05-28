@@ -1,0 +1,83 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #57B6B2;
+  --ifm-color-primary-dark: #4EA4A0;
+  --ifm-color-primary-darker: #4A9B97;
+  --ifm-color-primary-darkest: #3F8380;
+  --ifm-color-primary-light: #68BDBA;
+  --ifm-color-primary-lighter: #70C1BE;
+  --ifm-color-primary-lightest: #81C8C5;
+  --ifm-color-secondary: #00586F;
+  --ifm-color-secondary-dark: #004F64;
+  --ifm-color-secondary-darker: #004A5E;
+  --ifm-color-secondary-darkest: #003F50;
+  --ifm-color-secondary-light: #1A6B81;
+  --ifm-color-secondary-lighter: #267389;
+  --ifm-color-secondary-lightest: #408699;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+.hero--primary {
+  --ifm-hero-background-color: var(--ifm-color-primary);
+  --ifm-hero-text-color: #ffffff;
+}
+
+[data-theme='dark'] .hero--primary {
+  --ifm-hero-background-color: var(--ifm-color-secondary);
+  --ifm-hero-text-color: #ffffff;
+}
+
+.hero--primary .button--secondary {
+  background-color: #ffffff;
+  color: var(--ifm-color-primary);
+  border-color: #ffffff;
+}
+
+.hero--primary .button--secondary:hover {
+  background-color: #f0f0f0;
+  color: var(--ifm-color-primary-dark);
+}
+
+[data-theme='dark'] .hero--primary .button--secondary {
+  background-color: #ffffff;
+  color: var(--ifm-color-secondary);
+  border-color: #ffffff;
+}
+
+[data-theme='dark'] .hero--primary .button--secondary:hover {
+  background-color: #f0f0f0;
+  color: var(--ifm-color-secondary-dark);
+}
+
+.footer--dark {
+  --ifm-footer-background-color: #00586F;
+  --ifm-footer-color: #ffffff;
+  --ifm-footer-link-color: #81C8C5;
+  --ifm-footer-title-color: #ffffff;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #68BDBA;
+  --ifm-color-primary-dark: #63B4B1;
+  --ifm-color-primary-darker: #5EAFAC;
+  --ifm-color-primary-darkest: #53A19E;
+  --ifm-color-primary-light: #7DC9C7;
+  --ifm-color-primary-lighter: #88CFCC;
+  --ifm-color-primary-lightest: #9FDAD8;
+  --ifm-color-secondary: #1A6B81;
+  --ifm-color-secondary-dark: #156074;
+  --ifm-color-secondary-darker: #125A6E;
+  --ifm-color-secondary-darkest: #0D4A5B;
+  --ifm-color-secondary-light: #2D7A8F;
+  --ifm-color-secondary-lighter: #388296;
+  --ifm-color-secondary-lightest: #4F93A5;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

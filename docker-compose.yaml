@@ -1,0 +1,59 @@
+services:
+  acv-compare-backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8080:3000"
+    environment:
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv"
+      JWT_SECRET: ${JWT_SECRET}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      CAPTURE_ACV_EMAIL: ${CAPTURE_ACV_EMAIL}
+      CAPTURE_ACV_PASSWORD: ${CAPTURE_ACV_PASSWORD}
+      MAILER_EMAIL: ${MAILER_EMAIL}
+      MAILER_PASSWORD: ${MAILER_PASSWORD}
+      DEFAULT_IMPACT_METHOD_UUID: ${DEFAULT_IMPACT_METHOD_UUID}
+    depends_on:
+      - db
+    networks:
+      acv-compare:
+      olca:
+    profiles:
+      - prod
+
+  acv-compare-frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - acv-compare-backend
+    networks:
+      acv-compare:
+      olca:
+    profiles:
+      - prod
+
+  db:
+    container_name: db
+    image: postgis/postgis:17-master
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: acv
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      acv-compare:
+
+volumes:
+  postgres:
+
+networks:
+  acv-compare:
+  olca:
+    external: true

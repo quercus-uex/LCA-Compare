@@ -1,0 +1,67 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id                 String    @id @default(uuid())
+  nombre             String
+  apellidos          String
+  email              String    @unique
+  passwordHash       String
+  rol                String
+  fechaRegistro      DateTime  @default(now())
+  fechaActualizacion DateTime  @updatedAt
+  parcelas           Parcela[]
+}
+
+model Parcela {
+  id            String                                  @id @default(uuid())
+  sigpac        String?                                 @unique
+  refCat        String?                                 @unique
+  ptIdParcela   String?                                 @unique
+  nombre        String
+  idPropietario String
+  propietario   Usuario                                 @relation(fields: [idPropietario], references: [id])
+  idPoblacion   String?
+  poblacion     Poblacion?                              @relation(fields: [idPoblacion], references: [id])
+  cultivos      Cultivo[]
+  geom          Unsupported("geometry(Polygon, 4326)")?
+}
+
+model Cultivo {
+  id                  String   @id @default(uuid())
+  fechaInicioCampania DateTime
+  superficieCultivada Float
+  produccion          Float
+  consumoAgua         Float
+  ciclo               Int
+  tipo                String
+
+  idParcela String
+  parcela   Parcela @relation(fields: [idParcela], references: [id])
+
+  idResultadoImpacto String?           @unique
+  resultadoImpacto   ResultadoImpacto? @relation(fields: [idResultadoImpacto], references: [id])
+
+  @@unique([fechaInicioCampania, idParcela])
+}
+
+model ResultadoImpacto {
+  id        String        @id @default(uuid())
+  datos     Json
+  idImpacto String
+  impacto   MetodoImpacto @relation(fields: [idImpacto], references: [id])
+  cultivo   Cultivo?
+}
+
+model MetodoImpacto {
+  id         String             @id // id en OpenLCA
+  nombre     String
+  resultados ResultadoImpacto[]
+}

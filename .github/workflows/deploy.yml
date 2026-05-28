@@ -1,0 +1,52 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - "main"
+      - "develop"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CAPTURE_ACV_EMAIL: ${{ secrets.CAPTURE_ACV_EMAIL }}
+          CAPTURE_ACV_PASSWORD: ${{ secrets.CAPTURE_ACV_PASSWORD }}
+          MAILER_EMAIL: ${{ secrets.MAILER_EMAIL }}
+          MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
+          DEFAULT_IMPACT_METHOD_UUID: ${{ secrets.DEFAULT_IMPACT_METHOD_UUID }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY,CAPTURE_ACV_EMAIL,CAPTURE_ACV_PASSWORD,MAILER_EMAIL,MAILER_PASSWORD,DEFAULT_IMPACT_METHOD_UUID
+          script: |
+            set -euo pipefail
+            
+            REPO_URL="git@acvcompare:${{ github.repository }}.git"
+            BRANCH=${{ github.ref_name }}
+            DEPLOY_DIR="$HOME/openlca/${{ github.event.repository.name }}"
+            
+            if [ -d "${DEPLOY_DIR}/.git" ]; then
+              cd "${DEPLOY_DIR}"
+              git fetch --prune origin
+              git checkout "${BRANCH}" || git checkout -B "${BRANCH}"
+              git reset --hard "origin/${BRANCH}"
+            else
+              mkdir -p "$(dirname "${DEPLOY_DIR}")"
+              git clone --branch "${BRANCH}" --depth 1 "${REPO_URL}" "${DEPLOY_DIR}"
+              cd "${DEPLOY_DIR}"
+            fi
+            
+            cd "${DEPLOY_DIR}"
+            docker compose --profile prod up -d --build
+            docker compose exec acv-compare-backend npx prisma migrate deploy

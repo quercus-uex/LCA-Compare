@@ -16,7 +16,7 @@ export const ParcelaFilterCollapse = (
   const parcela = useParcela();
   const { usuario } = useAuth();
 
-  const [enabled, setEnabled] = useState<boolean>(filters.parcelas && filters.parcelas.length > 0);
+  const [enabled, setEnabled] = useState<boolean>(!!(filters.parcelas && filters.parcelas.length > 0));
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
   const [query, setQuery] = useState<string>('');
 

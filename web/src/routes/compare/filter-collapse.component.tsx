@@ -2,16 +2,18 @@ export const FilterCollapse = ({
   title,
   enabled,
   onToggle,
+  disabled = false,
   children,
 }: {
   title: string;
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }) => {
   return (
     <div
-      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''}`}
+      className={`collapse bg-base-100 border-base-300 border ${enabled ? 'collapse-open' : ''} ${disabled ? 'opacity-50' : ''}`}
     >
       <div className="flex p-5">
         <div className="flex gap-2 items-center justify-between w-full">
@@ -20,6 +22,7 @@ export const FilterCollapse = ({
             type="checkbox"
             className="toggle toggle-lg"
             checked={enabled}
+            disabled={disabled}
             onChange={(e) => onToggle(e.target.checked)}
           />
         </div>

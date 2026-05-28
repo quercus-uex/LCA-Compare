@@ -6,12 +6,13 @@ import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.t
 import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.component.tsx';
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
+import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
 
 export const CompareFilterCard = (
-  { name, required = false, onSubmit }: { name: string, required?: boolean, onSubmit: (data?: CompareFilterType) => void }
+  { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void }
 ) => {
-  const [enabled, setEnabled] = useState<boolean>(required);
-  const [filters, setFilters] = useState<CompareFilterType>({
+  const [enabled, setEnabled] = useState<boolean>(required || !!initialFilters);
+  const [filters, setFilters] = useState<CompareFilterType>(initialFilters ?? {
     parcelas: [],
     provincias: [],
     poblaciones: [],
@@ -20,6 +21,7 @@ export const CompareFilterCard = (
   useEffect(() => {
   }, [filters]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!enabled) onSubmit(undefined);
   }, [enabled]);
@@ -76,6 +78,22 @@ export const CompareFilterCard = (
                 {p.nombre}
               </div>
             ))}
+            {filters.parcelas!.map((p) => (
+              <div
+                key={p.id}
+                className="badge badge-primary cursor-pointer"
+                onClick={() =>
+                  setFilters({
+                    ...filters,
+                    parcelas: filters.parcelas?.filter(
+                      (i) => i.id !== p.id,
+                    ),
+                  })
+                }
+              >
+                {p.nombre}
+              </div>
+            ))}
             {filters.pais &&
               <div
                 className="badge badge-primary cursor-pointer"
@@ -90,6 +108,7 @@ export const CompareFilterCard = (
           <PaisFilterCollapse filters={filters} setFilters={setFilters} />
           <ProvinciaFilterCollapse filters={filters} setFilters={setFilters} />
           <PoblacionFilterCollapse filters={filters} setFilters={setFilters} />
+          <ParcelaFilterCollapse filters={filters} setFilters={setFilters} />
           <UbicacionFilterCollapse filters={filters} setFilters={setFilters} />
 
           <div className="flex gap-2">

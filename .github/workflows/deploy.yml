@@ -38,8 +38,8 @@ jobs:
             
             if [ -d "${DEPLOY_DIR}/.git" ]; then
               cd "${DEPLOY_DIR}"
-              git fetch --prune origin
-              git checkout "${BRANCH}" || git checkout -B "${BRANCH}"
+              git fetch --prune origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
+              git checkout "${BRANCH}" || git checkout -B "${BRANCH}" "origin/${BRANCH}"
               git reset --hard "origin/${BRANCH}"
             else
               mkdir -p "$(dirname "${DEPLOY_DIR}")"

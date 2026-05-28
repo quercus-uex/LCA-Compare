@@ -32,7 +32,7 @@ Inicia la base de datos PostgreSQL con PostGIS:
 docker compose up -d db
 ```
 
-Genera el cliente de Prisma y aplica las migraciones:
+Genera el cliente de [Prisma](https://www.prisma.io/docs/orm) y aplica las migraciones:
 
 ```bash
 npx prisma generate

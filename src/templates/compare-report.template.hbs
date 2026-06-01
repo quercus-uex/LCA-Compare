@@ -19,6 +19,9 @@
           box-sizing: border-box;
           box-shadow: 0 0 8px rgba(0,0,0,0.3);
       }
+      .avoid-break {
+          break-inside: avoid;
+      }
       @media print {
           body { background: none; }
           .page {
@@ -26,7 +29,7 @@
               box-shadow: none;
               break-after: page;
           }
-          h1, h2, h3, table, img {
+          h1, h2, h3, table, img, .avoid-break {
               break-inside: avoid;
           }
       }
@@ -260,7 +263,7 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-2 w-full items-center">
+        <div class="flex flex-col gap-2 w-full items-center avoid-break">
           <h2>RESULTADOS CLAVE</h2>
 
           <div class="flex gap-2 w-full">
@@ -271,7 +274,7 @@
                   <div class="flex flex-col gap-1">
                     <p class="text-5xl text-center">{{decimals diff 2}}%</p>
                     <p class="text-center">
-                      <span class="text-blue-600">{{decimals refAmount 6}}</span> vs. <span class="text-red-600">{{decimals tarAmount 6}}</span>
+                      <span class="text-blue-600">{{scientific refAmount 3}}</span> vs. <span class="text-red-600">{{scientific tarAmount 3}}</span>
                     </p>
                   </div>
                 </div>
@@ -280,7 +283,7 @@
           </div>
         </div>
 
-        <div class="card w-full">
+        <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -299,7 +302,7 @@
           </div>
         </div>
 
-        <div class="card w-full">
+        <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">

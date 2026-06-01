@@ -20,6 +20,17 @@ Handlebars.registerHelper('decimals', (value, digits: number) =>
   Number(value).toFixed(digits),
 );
 Handlebars.registerHelper('isOdd', (value: number) => value % 2 == 0);
+Handlebars.registerHelper('scientific', (value: number, digits: number) => {
+  const num = Number(value);
+  if (num === 0) return num.toFixed(digits);
+  const abs = Math.abs(num);
+  if (abs < 0.001) {
+    const exp = Math.floor(Math.log10(abs));
+    const mantissa = num / Math.pow(10, exp);
+    return `${mantissa.toFixed(digits)}e${exp}`;
+  }
+  return num.toFixed(digits);
+});
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {

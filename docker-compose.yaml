@@ -21,6 +21,7 @@ services:
       olca:
     profiles:
       - prod
+    restart: unless-stopped
 
   acv-compare-frontend:
     build:
@@ -35,6 +36,7 @@ services:
       olca:
     profiles:
       - prod
+    restart: unless-stopped
 
   db:
     container_name: db
@@ -49,6 +51,7 @@ services:
       - 5432:5432
     networks:
       acv-compare:
+    restart: unless-stopped
 
 volumes:
   postgres:

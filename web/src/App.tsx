@@ -8,6 +8,7 @@ import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
 import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
 import { CompareRoute } from './routes/compare/compare.route.tsx';
 import { AdminRoute } from './routes/admin/admin.route.tsx';
+import { StatsRoute } from './routes/stats/stats.route.tsx';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/compare" element={<CompareRoute />} />
           <Route path="/auth/login" element={<LoginRoute />} />
           <Route path="/admin" element={<AdminRoute />} />
+          <Route path="/estadisticas" element={<StatsRoute />} />
           <Route path="/parcelas">
             <Route index element={<ParcelasRoute />} />
             <Route path=":id" element={<ParcelaRoute />} />

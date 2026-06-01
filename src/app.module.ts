@@ -9,6 +9,7 @@ import { ProvinciaModule } from './provincia/provincia.module';
 import { PaisModule } from './pais/pais.module';
 import { AiModule } from './ai/ai.module';
 import { AdminModule } from './admin/admin.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     PaisModule,
     AiModule,
     AdminModule,
+    StatsModule,
   ],
 })
 export class AppModule {}

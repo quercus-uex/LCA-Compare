@@ -25,6 +25,10 @@ export const NavBar = () => {
             Comparador
           </button>
 
+          <button className="btn" onClick={() => navigate('/estadisticas')}>
+            Estadísticas
+          </button>
+
           {auth.loading ? (
             <div className="skeleton rounded-full w-10 h-10" />
           ) : (

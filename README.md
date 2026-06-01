@@ -139,3 +139,10 @@ Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible
 ├── docker-compose.yaml     # Configuración Docker
 └── Dockerfile              # Imagen backend
 ```
+
+## Despliegue en la máquina actual
+Para desplegar el servicio en la máquina actual, se debe lanzar de forma manual la GitHub Action
+configurada para ello (variables de entorno preconfiguradas). En caso de querer lanzarlo manualmente,
+se encuentra en la siguiente ruta: `/home/ivan/openlca/Ventum-ACV-Visualizer`.
+
+**IMPORTANTE**: el servicio de Capture ACV debe haber sido desplegado anteriormente.

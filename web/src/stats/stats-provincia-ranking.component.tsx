@@ -1,97 +1,121 @@
-import { useState } from 'react';
+import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
+  selectedCategory?: EfCategoryId;
 };
 
-type SortColumn = keyof ProvinciaRankingItemDto;
-
-const COLUMNS: { key: SortColumn; label: string }[] = [
-  { key: 'nombreProvincia', label: 'Provincia' },
-  { key: 'numParcelas', label: 'Parcelas' },
-  { key: 'numCultivos', label: 'Cultivos' },
-  { key: 'superficieTotal', label: 'Sup. Total (Ha)' },
-  { key: 'produccionMedia', label: 'Prod. Media (T/Ha)' },
-  { key: 'consumoAguaMedio', label: 'Cons. H₂O (L/Ha)' },
-  { key: 'impactoTotalMedio', label: 'Impacto Total' },
-  { key: 'eficiencia', label: 'Eficiencia' },
-];
-
-const formatter = (value: number, decimals = 0) =>
+const fmt = (v: number, d = 0) =>
   new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
+    minimumFractionDigits: d,
+    maximumFractionDigits: d,
+  }).format(v);
 
-export const StatsProvinciaRanking = ({ ranking }: Props) => {
-  const [sortColumn, setSortColumn] = useState<SortColumn>('impactoTotalMedio');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+const impFmt = (value: number) => {
+  if (value === 0) return '—';
+  if (value < 0.001) return value.toExponential(2);
+  if (value < 10) return value.toFixed(4);
+  return value.toFixed(2);
+};
 
-  const sorted = [...ranking].sort((a, b) => {
-    const aVal = a[sortColumn];
-    const bVal = b[sortColumn];
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+export const StatsProvinciaRanking = ({
+  ranking,
+  selectedCategory,
+}: Props) => {
+  const top = ranking.slice(0, 10);
+  const bottom = ranking.slice(-10).reverse();
+
+  const getValue = (item: ProvinciaRankingItemDto) => {
+    if (selectedCategory) {
+      return item.impactosPorCategoria[selectedCategory] ?? 0;
     }
-    return sortDir === 'asc'
-      ? (aVal as number) - (bVal as number)
-      : (bVal as number) - (aVal as number);
-  });
-
-  const handleSort = (col: SortColumn) => {
-    if (col === sortColumn) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortColumn(col);
-      setSortDir('asc');
-    }
+    return item.impactoTotalMedio;
   };
 
-  const getRowClass = (index: number) => {
-    if (index < 3) return 'bg-success/10';
-    if (index >= sorted.length - 3) return 'bg-error/10';
-    return '';
-  };
+  const catLabel = selectedCategory
+    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)?.spanishName
+    : undefined;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="table table-zebra table-sm">
-        <thead>
-          <tr>
-            <th>#</th>
-            {COLUMNS.map((col) => (
-              <th
-                key={col.key}
-                className="cursor-pointer hover:bg-base-200 select-none"
-                onClick={() => handleSort(col.key)}
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="card bg-base-100 shadow-sm">
+        <div className="card-body p-4">
+          <h3 className="card-title text-success text-base">
+            Top 10 — Menor Impacto
+            {catLabel && (
+              <span className="text-xs font-normal text-base-content/50">
+                ({catLabel})
+              </span>
+            )}
+          </h3>
+          <ul className="space-y-1 mt-2">
+            {top.map((item, idx) => (
+              <li
+                key={item.idProvincia}
+                className="flex items-center gap-2 p-2 rounded bg-success text-success-content"
               >
-                <span className="flex items-center gap-1">
-                  {col.label}
-                  {sortColumn === col.key && (
-                    <span className="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>
-                  )}
+                <span className="font-mono text-xs font-bold w-6">
+                  {idx + 1}
                 </span>
-              </th>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {item.nombreProvincia}
+                  </p>
+                  <p className="text-xs opacity-70">
+                    {item.numParcelas} parcelas · {fmt(item.superficieTotal, 1)} Ha
+                  </p>
+                </div>
+                <span className="text-sm font-mono font-bold">
+                  {impFmt(getValue(item))}
+                </span>
+              </li>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((item, idx) => (
-            <tr key={item.idProvincia} className={getRowClass(idx)}>
-              <td className="font-mono text-xs">{idx + 1}</td>
-              <td className="font-medium">{item.nombreProvincia}</td>
-              <td>{formatter(item.numParcelas)}</td>
-              <td>{formatter(item.numCultivos)}</td>
-              <td>{formatter(item.superficieTotal, 1)}</td>
-              <td>{formatter(item.produccionMedia, 2)}</td>
-              <td>{formatter(item.consumoAguaMedio, 1)}</td>
-              <td>{formatter(item.impactoTotalMedio, 2)}</td>
-              <td>{item.eficiencia.toFixed(4)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            {top.length === 0 && (
+              <p className="text-sm text-base-content/50 p-2">Sin datos</p>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      <div className="card bg-base-100 shadow-sm">
+        <div className="card-body p-4">
+          <h3 className="card-title text-error text-base">
+            Top 10 — Mayor Impacto
+            {catLabel && (
+              <span className="text-xs font-normal text-base-content/50">
+                ({catLabel})
+              </span>
+            )}
+          </h3>
+          <ul className="space-y-1 mt-2">
+            {bottom.map((item, idx) => (
+              <li
+                key={item.idProvincia}
+                className="flex items-center gap-2 p-2 rounded bg-error text-error-content"
+              >
+                <span className="font-mono text-xs font-bold w-6">
+                  {idx + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {item.nombreProvincia}
+                  </p>
+                  <p className="text-xs opacity-70">
+                    {item.numParcelas} parcelas · {fmt(item.superficieTotal, 1)} Ha
+                  </p>
+                </div>
+                <span className="text-sm font-mono font-bold">
+                  {impFmt(getValue(item))}
+                </span>
+              </li>
+            ))}
+            {bottom.length === 0 && (
+              <p className="text-sm text-base-content/50 p-2">Sin datos</p>
+            )}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };

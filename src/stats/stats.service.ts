@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EF_CATEGORIES, type EfCategoryId } from '../compare/compare.types';
 import {
   EvolucionTemporalItemDto,
   GlobalStatsDto,
@@ -41,11 +42,68 @@ type ImpactoRecord = {
   >;
 };
 
+function getCategoryAmounts(
+  datos: ImpactoRecord['datos'],
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  const items = datos?.impacto_total ?? [];
+  for (const cat of EF_CATEGORIES) {
+    let amount = 0;
+    for (const name of cat.englishNames) {
+      const match = items.find(
+        (item) =>
+          item.category?.trim().toLowerCase() === name.toLowerCase(),
+      );
+      if (match) {
+        amount += match.amount ?? 0;
+      }
+    }
+    result[cat.id] = amount;
+  }
+  return result;
+}
+
+function sumCategories(
+  records: Record<string, number>[],
+): Record<string, number> {
+  const sums: Record<string, number> = {};
+  for (const rec of records) {
+    for (const [key, val] of Object.entries(rec)) {
+      sums[key] = (sums[key] ?? 0) + val;
+    }
+  }
+  return sums;
+}
+
+function meanCategories(
+  records: Record<string, number>[],
+): Record<string, number> {
+  if (records.length === 0) {
+    const zero: Record<string, number> = {};
+    for (const cat of EF_CATEGORIES) zero[cat.id] = 0;
+    return zero;
+  }
+  const sums = sumCategories(records);
+  const means: Record<string, number> = {};
+  for (const [key, val] of Object.entries(sums)) {
+    means[key] = val / records.length;
+  }
+  return means;
+}
+
+function round(value: number, decimals = 2): number {
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
+}
+
 @Injectable()
 export class StatsService {
   constructor(private prisma: PrismaService) {}
 
-  async getGlobalStats(anio?: number): Promise<GlobalStatsDto> {
+  async getGlobalStats(
+    anio?: number,
+    categoria?: EfCategoryId,
+  ): Promise<GlobalStatsDto> {
     const yearFilter = anio
       ? {
           fechaInicioCampania: {
@@ -88,25 +146,24 @@ export class StatsService {
           })) as unknown as ImpactoRecord[])
         : [];
 
-    const impactoMap = new Map<string, number>();
+    const impactoCategoryMap = new Map<string, Record<string, number>>();
     for (const imp of impactos) {
-      const total = (imp.datos?.impacto_total ?? []).reduce(
-        (sum, item) => sum + (item.amount ?? 0),
-        0,
-      );
-      impactoMap.set(imp.id, total);
+      impactoCategoryMap.set(imp.id, getCategoryAmounts(imp.datos));
     }
 
-    const [
-      kpis,
-      rankingProvincias,
-      rankingPoblaciones,
-      evolucionTemporal,
-      distribucionCultivos,
-    ] = await Promise.all([
-      this.computeKPIs(cultivos, impactoMap, anio),
-      this.computeRankingProvincias(cultivos, impactoMap),
-      this.computeRankingPoblaciones(cultivos, impactoMap),
+    const rankingProvincias = this.computeRankingProvincias(
+      cultivos,
+      impactoCategoryMap,
+      categoria,
+    );
+    const rankingPoblaciones = this.computeRankingPoblaciones(
+      cultivos,
+      impactoCategoryMap,
+      categoria,
+    );
+
+    const [kpis, evolucionTemporal, distribucionCultivos] = await Promise.all([
+      this.computeKPIs(cultivos, impactoCategoryMap, anio),
       this.computeEvolucionTemporal(),
       this.computeDistribucionCultivos(yearFilter),
     ]);
@@ -130,7 +187,7 @@ export class StatsService {
 
   private async computeKPIs(
     cultivos: CultivoWithGeo[],
-    impactoMap: Map<string, number>,
+    categoryMap: Map<string, Record<string, number>>,
     anio?: number,
   ): Promise<KpiDto> {
     const totalCultivos = cultivos.length;
@@ -141,105 +198,83 @@ export class StatsService {
       (sum, c) => sum + (c.superficieCultivada ?? 0),
       0,
     );
-    const consumoAguaMedio =
-      totalCultivos > 0
-        ? cultivos.reduce((sum, c) => sum + (c.consumoAgua ?? 0), 0) /
-          totalCultivos
-        : 0;
-    const produccionMedia =
-      totalCultivos > 0
-        ? cultivos.reduce((sum, c) => sum + (c.produccion ?? 0), 0) /
-          totalCultivos
-        : 0;
 
-    const impactValues = cultivos
-      .filter(
-        (c) => c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto),
-      )
-      .map((c) => impactoMap.get(c.idResultadoImpacto!)!);
+    const categoryRecords: Record<string, number>[] = [];
+    for (const c of cultivos) {
+      if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
+        categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
+      }
+    }
 
-    const impactoTotalMedio =
-      impactValues.length > 0
-        ? impactValues.reduce((a, b) => a + b, 0) / impactValues.length
-        : 0;
+    const impactosPorCategoria = meanCategories(categoryRecords) as Record<
+      EfCategoryId,
+      number
+    >;
 
     let variacionInteranual: number | null = null;
-    if (anio && impactoTotalMedio > 0) {
-      const prevFilter = {
-        fechaInicioCampania: {
-          gte: new Date(`${anio - 1}-01-01T00:00:00.000Z`),
-          lt: new Date(`${anio}-01-01T00:00:00.000Z`),
-        },
-      };
-      const prevCultivos = (await this.prisma.cultivo.findMany({
-        where: prevFilter,
-        include: {
-          parcela: {
-            include: {
-              poblacion: { include: { provincia: true } },
-            },
-          },
-        },
-      })) as CultivoWithGeo[];
-
-      const prevImpactoIds = [
-        ...new Set(
-          prevCultivos
-            .filter((c) => c.idResultadoImpacto)
-            .map((c) => c.idResultadoImpacto!),
-        ),
-      ];
-      const prevImpactos =
-        prevImpactoIds.length > 0
-          ? ((await this.prisma.resultadoImpacto.findMany({
-              where: { id: { in: prevImpactoIds } },
-            })) as unknown as ImpactoRecord[])
-          : [];
-
-      const prevImpactoMap = new Map<string, number>();
-      for (const imp of prevImpactos) {
-        const total = (imp.datos?.impacto_total ?? []).reduce(
-          (sum, item) => sum + (item.amount ?? 0),
-          0,
-        );
-        prevImpactoMap.set(imp.id, total);
-      }
-
-      const prevValues = prevCultivos
-        .filter(
-          (c) =>
-            c.idResultadoImpacto && prevImpactoMap.has(c.idResultadoImpacto),
-        )
-        .map((c) => prevImpactoMap.get(c.idResultadoImpacto!)!);
-
-      const prevImpactoMedio =
-        prevValues.length > 0
-          ? prevValues.reduce((a, b) => a + b, 0) / prevValues.length
-          : 0;
-
-      if (prevImpactoMedio > 0) {
-        variacionInteranual =
-          ((impactoTotalMedio - prevImpactoMedio) / prevImpactoMedio) * 100;
-      }
+    if (anio && categoryRecords.length > 0) {
+      variacionInteranual = await this.computeInterannualVariation(
+        anio,
+        impactosPorCategoria.climate_change,
+      );
     }
 
     return {
       totalParcelas,
       totalCultivos,
-      superficieTotal: Math.round(superficieTotal * 100) / 100,
-      consumoAguaMedio: Math.round(consumoAguaMedio * 100) / 100,
-      produccionMedia: Math.round(produccionMedia * 100) / 100,
-      impactoTotalMedio: Math.round(impactoTotalMedio * 100) / 100,
-      variacionInteranual:
-        variacionInteranual !== null
-          ? Math.round(variacionInteranual * 100) / 100
-          : null,
+      superficieTotal: round(superficieTotal),
+      impactosPorCategoria,
+      variacionInteranual,
     };
+  }
+
+  private async computeInterannualVariation(
+    anio: number,
+    currentImpact: number,
+  ): Promise<number | null> {
+    const prevFilter = {
+      fechaInicioCampania: {
+        gte: new Date(`${anio - 1}-01-01T00:00:00.000Z`),
+        lt: new Date(`${anio}-01-01T00:00:00.000Z`),
+      },
+    };
+
+    const prevCultivos = (await this.prisma.cultivo.findMany({
+      where: prevFilter,
+    })) as { idResultadoImpacto: string | null }[];
+
+    const prevImpactoIds = [
+      ...new Set(
+        prevCultivos
+          .filter((c) => c.idResultadoImpacto)
+          .map((c) => c.idResultadoImpacto!),
+      ),
+    ];
+
+    if (prevImpactoIds.length === 0) return null;
+
+    const prevImpactos = (await this.prisma.resultadoImpacto.findMany({
+      where: { id: { in: prevImpactoIds } },
+    })) as unknown as ImpactoRecord[];
+
+    const prevRecords: Record<string, number>[] = [];
+    for (const imp of prevImpactos) {
+      prevRecords.push(getCategoryAmounts(imp.datos));
+    }
+
+    const prevMeans = meanCategories(prevRecords);
+    const prevImpact = prevMeans['climate_change'] ?? 0;
+
+    if (prevImpact > 0) {
+      return round(((currentImpact - prevImpact) / prevImpact) * 100);
+    }
+    return null;
   }
 
   private computeRankingProvincias(
     cultivos: CultivoWithGeo[],
-    impactoMap: Map<string, number>,
+    categoryMap: Map<string, Record<string, number>>,
+    categoria?: EfCategoryId,
   ): ProvinciaRankingItemDto[] {
     const grouped = new Map<
       string,
@@ -247,7 +282,7 @@ export class StatsService {
         nombreProvincia: string;
         parcelaIds: Set<string>;
         cultivos: CultivoWithGeo[];
-        impactValues: number[];
+        categoryRecords: Record<string, number>[];
       }
     >();
 
@@ -261,7 +296,7 @@ export class StatsService {
           nombreProvincia: provincia.nombre,
           parcelaIds: new Set(),
           cultivos: [],
-          impactValues: [],
+          categoryRecords: [],
         };
         grouped.set(provincia.id, entry);
       }
@@ -269,8 +304,8 @@ export class StatsService {
       entry.parcelaIds.add(c.idParcela);
       entry.cultivos.push(c);
 
-      if (c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto)) {
-        entry.impactValues.push(impactoMap.get(c.idResultadoImpacto)!);
+      if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
+        entry.categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
       }
     }
 
@@ -292,11 +327,15 @@ export class StatsService {
           ? entry.cultivos.reduce((sum, c) => sum + (c.consumoAgua ?? 0), 0) /
             numCultivos
           : 0;
-      const impactoTotalMedio =
-        entry.impactValues.length > 0
-          ? entry.impactValues.reduce((a, b) => a + b, 0) /
-            entry.impactValues.length
-          : 0;
+
+      const impactosPorCategoria = meanCategories(
+        entry.categoryRecords,
+      ) as Record<EfCategoryId, number>;
+
+      const impactoTotalMedio = round(
+        Object.values(impactosPorCategoria).reduce((a, b) => a + b, 0),
+      );
+
       const eficiencia =
         consumoAguaMedio > 0 ? produccionMedia / consumoAguaMedio : 0;
 
@@ -305,20 +344,29 @@ export class StatsService {
         nombreProvincia: entry.nombreProvincia,
         numParcelas: entry.parcelaIds.size,
         numCultivos,
-        superficieTotal: Math.round(superficieTotal * 100) / 100,
-        produccionMedia: Math.round(produccionMedia * 100) / 100,
-        consumoAguaMedio: Math.round(consumoAguaMedio * 100) / 100,
-        impactoTotalMedio: Math.round(impactoTotalMedio * 100) / 100,
-        eficiencia: Math.round(eficiencia * 10000) / 10000,
+        superficieTotal: round(superficieTotal),
+        produccionMedia: round(produccionMedia),
+        consumoAguaMedio: round(consumoAguaMedio),
+        impactoTotalMedio,
+        impactosPorCategoria,
+        eficiencia: round(eficiencia * 100) / 100,
       });
     }
 
+    if (categoria) {
+      return result.sort(
+        (a, b) =>
+          (a.impactosPorCategoria[categoria] ?? 0) -
+          (b.impactosPorCategoria[categoria] ?? 0),
+      );
+    }
     return result.sort((a, b) => a.impactoTotalMedio - b.impactoTotalMedio);
   }
 
   private computeRankingPoblaciones(
     cultivos: CultivoWithGeo[],
-    impactoMap: Map<string, number>,
+    categoryMap: Map<string, Record<string, number>>,
+    categoria?: EfCategoryId,
   ): PoblacionRankingItemDto[] {
     const grouped = new Map<
       string,
@@ -326,7 +374,7 @@ export class StatsService {
         nombrePoblacion: string;
         nombreProvincia: string;
         parcelaIds: Set<string>;
-        impactValues: number[];
+        categoryRecords: Record<string, number>[];
       }
     >();
 
@@ -340,51 +388,56 @@ export class StatsService {
           nombrePoblacion: poblacion.nombre,
           nombreProvincia: poblacion.provincia?.nombre ?? '',
           parcelaIds: new Set(),
-          impactValues: [],
+          categoryRecords: [],
         };
         grouped.set(poblacion.id, entry);
       }
 
       entry.parcelaIds.add(c.idParcela);
 
-      if (c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto)) {
-        entry.impactValues.push(impactoMap.get(c.idResultadoImpacto)!);
+      if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
+        entry.categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
       }
     }
 
     const result: PoblacionRankingItemDto[] = [];
 
     for (const [idPoblacion, entry] of grouped) {
-      const impactoTotalMedio =
-        entry.impactValues.length > 0
-          ? entry.impactValues.reduce((a, b) => a + b, 0) /
-            entry.impactValues.length
-          : 0;
+      const impactosPorCategoria = meanCategories(
+        entry.categoryRecords,
+      ) as Record<EfCategoryId, number>;
+
+      const impactoTotalMedio = round(
+        Object.values(impactosPorCategoria).reduce((a, b) => a + b, 0),
+      );
 
       result.push({
         idPoblacion,
         nombrePoblacion: entry.nombrePoblacion,
         nombreProvincia: entry.nombreProvincia,
         numParcelas: entry.parcelaIds.size,
-        impactoTotalMedio: Math.round(impactoTotalMedio * 100) / 100,
+        impactoTotalMedio,
+        impactosPorCategoria,
       });
     }
 
+    if (categoria) {
+      return result.sort(
+        (a, b) =>
+          (a.impactosPorCategoria[categoria] ?? 0) -
+          (b.impactosPorCategoria[categoria] ?? 0),
+      );
+    }
     return result.sort((a, b) => a.impactoTotalMedio - b.impactoTotalMedio);
   }
 
   private async computeEvolucionTemporal(): Promise<
     EvolucionTemporalItemDto[]
   > {
-    const allCultivos = (await this.prisma.cultivo.findMany({
-      include: {
-        parcela: {
-          include: {
-            poblacion: { include: { provincia: true } },
-          },
-        },
-      },
-    })) as CultivoWithGeo[];
+    const allCultivos = (await this.prisma.cultivo.findMany({})) as {
+      idResultadoImpacto: string | null;
+      fechaInicioCampania: Date;
+    }[];
 
     const allImpactoIds = [
       ...new Set(
@@ -401,64 +454,45 @@ export class StatsService {
           })) as unknown as ImpactoRecord[])
         : [];
 
-    const impactoMap = new Map<
-      string,
-      Record<
-        string,
-        Array<{ category: string; amount: number; unit: string }>
-      >[]
-    >();
-
-    for (const c of allCultivos) {
-      if (!c.idResultadoImpacto) continue;
-      const imp = allImpactos.find((i) => i.id === c.idResultadoImpacto);
-      if (!imp) continue;
-
-      const year = c.fechaInicioCampania.getFullYear();
-      const key = year.toString();
-      if (!impactoMap.has(key)) {
-        impactoMap.set(key, []);
-      }
-      impactoMap.get(key)!.push(imp.datos);
+    const impactoMap = new Map<string, ImpactoRecord['datos']>();
+    for (const imp of allImpactos) {
+      impactoMap.set(imp.id, imp.datos);
     }
 
     const cultivosByYear = new Map<number, number>();
+    const categoriesByYear = new Map<number, Record<string, number>[]>();
+
     for (const c of allCultivos) {
       const year = c.fechaInicioCampania.getFullYear();
       cultivosByYear.set(year, (cultivosByYear.get(year) ?? 0) + 1);
+
+      if (c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto)) {
+        const catAmounts = getCategoryAmounts(
+          impactoMap.get(c.idResultadoImpacto)!,
+        );
+        if (!categoriesByYear.has(year)) {
+          categoriesByYear.set(year, []);
+        }
+        categoriesByYear.get(year)!.push(catAmounts);
+      }
     }
 
     const result: EvolucionTemporalItemDto[] = [];
 
-    for (const [yearStr, impactos] of impactoMap) {
-      const anio = parseInt(yearStr);
-
-      const meanForKey = (key: string): number => {
-        const allValues: number[] = [];
-        for (const datos of impactos) {
-          const items = datos?.[key];
-          if (!items) continue;
-          for (const item of items) {
-            allValues.push(item.amount ?? 0);
-          }
-        }
-        if (allValues.length === 0) return 0;
-        const sum = allValues.reduce((a, b) => a + b, 0);
-        return sum / allValues.length;
-      };
+    for (const [year, records] of categoriesByYear) {
+      const categorias = meanCategories(records) as Record<
+        EfCategoryId,
+        number
+      >;
+      const totalImpacto = round(
+        Object.values(categorias).reduce((a, b) => a + b, 0),
+      );
 
       result.push({
-        anio,
-        impactoFertilizantes:
-          Math.round(meanForKey('impacto_fertilizantes') * 100) / 100,
-        impactoManejoCultivo:
-          Math.round(meanForKey('impacto_manejo_cultivo') * 100) / 100,
-        impactoPesticidas:
-          Math.round(meanForKey('impacto_pesticidas') * 100) / 100,
-        impactoSistemaRiego:
-          Math.round(meanForKey('impacto_sistema_riego') * 100) / 100,
-        impactoTotal: Math.round(meanForKey('impacto_total') * 100) / 100,
-        numCultivos: cultivosByYear.get(anio) ?? 0,
+        anio: year,
+        numCultivos: cultivosByYear.get(year) ?? 0,
+        categorias,
+        totalImpacto,
       });
     }
 
@@ -468,18 +502,17 @@ export class StatsService {
   private async computeDistribucionCultivos(
     yearFilter: Record<string, unknown>,
   ): Promise<DistribucionCultivoItemDto[]> {
-    const result = await this.prisma.cultivo.groupBy({
+    const queryResult = await this.prisma.cultivo.groupBy({
       by: ['tipo'],
       where: Object.keys(yearFilter).length > 0 ? yearFilter : undefined,
       _count: { id: true },
       _sum: { superficieCultivada: true },
     });
 
-    return result.map((r) => ({
+    return queryResult.map((r) => ({
       tipo: r.tipo,
       count: r._count.id,
-      superficieTotal:
-        Math.round((r._sum.superficieCultivada ?? 0) * 100) / 100,
+      superficieTotal: round(r._sum.superficieCultivada ?? 0),
     }));
   }
 }

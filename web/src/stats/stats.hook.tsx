@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
+import { API_BASE_URL, type EfCategoryId } from '../common/constants.ts';
 
 export type KpiDto = {
   totalParcelas: number;
   totalCultivos: number;
   superficieTotal: number;
-  consumoAguaMedio: number;
-  produccionMedia: number;
-  impactoTotalMedio: number;
+  impactosPorCategoria: Record<EfCategoryId, number>;
   variacionInteranual: number | null;
 };
 
@@ -20,6 +18,7 @@ export type ProvinciaRankingItemDto = {
   produccionMedia: number;
   consumoAguaMedio: number;
   impactoTotalMedio: number;
+  impactosPorCategoria: Record<EfCategoryId, number>;
   eficiencia: number;
 };
 
@@ -29,16 +28,14 @@ export type PoblacionRankingItemDto = {
   nombreProvincia: string;
   numParcelas: number;
   impactoTotalMedio: number;
+  impactosPorCategoria: Record<EfCategoryId, number>;
 };
 
 export type EvolucionTemporalItemDto = {
   anio: number;
-  impactoFertilizantes: number;
-  impactoManejoCultivo: number;
-  impactoPesticidas: number;
-  impactoSistemaRiego: number;
-  impactoTotal: number;
   numCultivos: number;
+  categorias: Record<EfCategoryId, number>;
+  totalImpacto: number;
 };
 
 export type DistribucionCultivoItemDto = {
@@ -56,7 +53,7 @@ export type GlobalStatsDto = {
   aniosDisponibles: number[];
 };
 
-export function useStats(anio?: number) {
+export function useStats(anio?: number, categoria?: EfCategoryId) {
   const [data, setData] = useState<GlobalStatsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,8 +62,11 @@ export function useStats(anio?: number) {
     setLoading(true);
     setError(null);
     try {
-      const params = anio ? `?anio=${anio}` : '';
-      const response = await fetch(`${API_BASE_URL}/stats/global${params}`);
+      const params = new URLSearchParams();
+      if (anio) params.set('anio', String(anio));
+      if (categoria) params.set('categoria', categoria);
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const response = await fetch(`${API_BASE_URL}/stats/global${qs}`);
       if (!response.ok) {
         throw new Error('Error al cargar estadísticas');
       }
@@ -77,7 +77,7 @@ export function useStats(anio?: number) {
     } finally {
       setLoading(false);
     }
-  }, [anio]);
+  }, [anio, categoria]);
 
   useEffect(() => {
     fetchData();

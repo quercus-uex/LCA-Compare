@@ -1,87 +1,112 @@
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
+  LineChart,
+  Line,
 } from 'recharts';
+import { EF_CATEGORIES } from '../common/constants.ts';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 
 type Props = {
   data: EvolucionTemporalItemDto[];
 };
 
-const COLORS = {
-  impactoFertilizantes: '#f59e0b',
-  impactoManejoCultivo: '#3b82f6',
-  impactoPesticidas: '#ef4444',
-  impactoSistemaRiego: '#06b6d4',
-  impactoTotal: '#6b7280',
-};
-
 export const StatsTimeline = ({ data }: Props) => {
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-80 text-base-content/50">
+        No hay datos de evolución temporal
+      </div>
+    );
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--bc) / 0.1)" />
-        <XAxis
-          dataKey="anio"
-          tick={{ fontSize: 12 }}
-          tickFormatter={(v) => v.toString()}
-        />
-        <YAxis tick={{ fontSize: 12 }} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'hsl(var(--b1))',
-            border: '1px solid hsl(var(--bc) / 0.1)',
-            borderRadius: '0.5rem',
-          }}
-        />
-        <Legend />
-        <Line
-          name="Fertilizantes"
-          type="monotone"
-          dataKey="impactoFertilizantes"
-          stroke={COLORS.impactoFertilizantes}
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
-        <Line
-          name="Manejo Cultivo"
-          type="monotone"
-          dataKey="impactoManejoCultivo"
-          stroke={COLORS.impactoManejoCultivo}
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
-        <Line
-          name="Pesticidas"
-          type="monotone"
-          dataKey="impactoPesticidas"
-          stroke={COLORS.impactoPesticidas}
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
-        <Line
-          name="Sistema Riego"
-          type="monotone"
-          dataKey="impactoSistemaRiego"
-          stroke={COLORS.impactoSistemaRiego}
-          strokeWidth={2}
-          dot={{ r: 3 }}
-        />
-        <Line
-          name="Impacto Total"
-          type="monotone"
-          dataKey="impactoTotal"
-          stroke={COLORS.impactoTotal}
-          strokeWidth={3}
-          dot={{ r: 4 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="space-y-4">
+      <ResponsiveContainer width="100%" height={350}>
+        <AreaChart
+          data={data}
+          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="hsl(var(--bc) / 0.1)"
+          />
+          <XAxis
+            dataKey="anio"
+            tick={{ fontSize: 12 }}
+            tickFormatter={(v) => v.toString()}
+          />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'oklch(0.21 0.006 285.885)',
+              border: '1px solid oklch(0.3 0.01 285.885)',
+              borderRadius: '0.5rem',
+              fontSize: '12px',
+              color: 'oklch(0.9 0.01 285.885)',
+            }}
+            formatter={(value: number, name: string) => {
+              const cat = EF_CATEGORIES.find((c) => c.id === name);
+              return [
+                value.toFixed(4),
+                cat ? `${cat.spanishName} (${cat.unit})` : name,
+              ];
+            }}
+          />
+          {EF_CATEGORIES.map((cat) => (
+            <Area
+              key={cat.id}
+              dataKey={(entry: EvolucionTemporalItemDto) =>
+                entry.categorias[cat.id] ?? 0
+              }
+              name={cat.spanishName}
+              stackId="1"
+              stroke={cat.color}
+              fill={cat.color}
+              fillOpacity={0.6}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {EF_CATEGORIES.map((cat) => (
+          <div key={cat.id} className="card bg-base-100 shadow-sm">
+            <div className="card-body p-2">
+              <div
+                className="text-[11px] font-semibold truncate"
+                style={{ color: cat.color }}
+              >
+                {cat.spanishName}
+              </div>
+              <ResponsiveContainer width="100%" height={60}>
+                <LineChart data={data}>
+                  <Line
+                    type="monotone"
+                    dataKey={(entry: EvolucionTemporalItemDto) =>
+                      entry.categorias[cat.id] ?? 0
+                    }
+                    stroke={cat.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="text-[10px] text-base-content/50 text-right">
+                {data.length > 0
+                  ? (data[data.length - 1].categorias[cat.id] ?? 0).toFixed(2)
+                  : '—'}{' '}
+                {cat.unit.split(' ')[0]}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };

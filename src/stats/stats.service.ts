@@ -1,6 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { EF_CATEGORIES, type EfCategoryId } from '../compare/compare.types';
+import { type EfCategoryId } from '../compare/compare.types';
+import {
+  buildCampaignYearFilter,
+  buildEfCategoryLookup,
+  collectImpactoIds,
+  getCategoryAmounts,
+  meanCategories,
+  sortByImpact,
+  totalImpact,
+  type CategoryAmountRecord,
+  type ImpactoDatos,
+} from './stats-aggregation.helpers';
 import {
   EvolucionTemporalItemDto,
   GlobalStatsDto,
@@ -36,60 +47,8 @@ type CultivoWithGeo = {
 
 type ImpactoRecord = {
   id: string;
-  datos: Record<
-    string,
-    Array<{ category: string; amount: number; unit: string }>
-  >;
+  datos: ImpactoDatos;
 };
-
-function getCategoryAmounts(
-  datos: ImpactoRecord['datos'],
-): Record<string, number> {
-  const result: Record<string, number> = {};
-  const items = datos?.impacto_total ?? [];
-  for (const cat of EF_CATEGORIES) {
-    let amount = 0;
-    for (const name of cat.englishNames) {
-      const match = items.find(
-        (item) =>
-          item.category?.trim().toLowerCase() === name.toLowerCase(),
-      );
-      if (match) {
-        amount += match.amount ?? 0;
-      }
-    }
-    result[cat.id] = amount;
-  }
-  return result;
-}
-
-function sumCategories(
-  records: Record<string, number>[],
-): Record<string, number> {
-  const sums: Record<string, number> = {};
-  for (const rec of records) {
-    for (const [key, val] of Object.entries(rec)) {
-      sums[key] = (sums[key] ?? 0) + val;
-    }
-  }
-  return sums;
-}
-
-function meanCategories(
-  records: Record<string, number>[],
-): Record<string, number> {
-  if (records.length === 0) {
-    const zero: Record<string, number> = {};
-    for (const cat of EF_CATEGORIES) zero[cat.id] = 0;
-    return zero;
-  }
-  const sums = sumCategories(records);
-  const means: Record<string, number> = {};
-  for (const [key, val] of Object.entries(sums)) {
-    means[key] = val / records.length;
-  }
-  return means;
-}
 
 function round(value: number, decimals = 2): number {
   const factor = Math.pow(10, decimals);
@@ -103,19 +62,19 @@ export class StatsService {
   async getGlobalStats(
     anio?: number,
     categoria?: EfCategoryId,
+    tipoCultivo?: string,
+    idProvinciaPoblacion?: string,
   ): Promise<GlobalStatsDto> {
-    const yearFilter = anio
-      ? {
-          fechaInicioCampania: {
-            gte: new Date(`${anio}-01-01T00:00:00.000Z`),
-            lt: new Date(`${anio + 1}-01-01T00:00:00.000Z`),
-          },
-        }
-      : {};
+    const yearFilter = buildCampaignYearFilter(anio);
+
+    const mainWhere: Record<string, unknown> = { ...yearFilter };
+    if (tipoCultivo) {
+      mainWhere.tipo = tipoCultivo;
+    }
 
     const [cultivos, aniosDisponibles] = await Promise.all([
       this.prisma.cultivo.findMany({
-        where: yearFilter,
+        where: mainWhere,
         include: {
           parcela: {
             include: {
@@ -128,16 +87,10 @@ export class StatsService {
           },
         },
       }) as Promise<CultivoWithGeo[]>,
-      this.getAniosDisponibles(),
+      this.getAniosDisponibles(tipoCultivo),
     ]);
 
-    const impactoIds = [
-      ...new Set(
-        cultivos
-          .filter((c) => c.idResultadoImpacto)
-          .map((c) => c.idResultadoImpacto!),
-      ),
-    ];
+    const impactoIds = collectImpactoIds(cultivos);
 
     const impactos =
       impactoIds.length > 0
@@ -146,9 +99,13 @@ export class StatsService {
           })) as unknown as ImpactoRecord[])
         : [];
 
-    const impactoCategoryMap = new Map<string, Record<string, number>>();
+    const categoryLookup = buildEfCategoryLookup();
+    const impactoCategoryMap = new Map<string, CategoryAmountRecord>();
     for (const imp of impactos) {
-      impactoCategoryMap.set(imp.id, getCategoryAmounts(imp.datos));
+      impactoCategoryMap.set(
+        imp.id,
+        getCategoryAmounts(imp.datos, categoryLookup),
+      );
     }
 
     const rankingProvincias = this.computeRankingProvincias(
@@ -160,10 +117,11 @@ export class StatsService {
       cultivos,
       impactoCategoryMap,
       categoria,
+      idProvinciaPoblacion,
     );
 
     const [kpis, evolucionTemporal, distribucionCultivos] = await Promise.all([
-      this.computeKPIs(cultivos, impactoCategoryMap, anio),
+      this.computeKPIs(cultivos, impactoCategoryMap, anio, tipoCultivo),
       this.computeEvolucionTemporal(),
       this.computeDistribucionCultivos(yearFilter),
     ]);
@@ -178,17 +136,25 @@ export class StatsService {
     };
   }
 
-  private async getAniosDisponibles(): Promise<number[]> {
-    const result = await this.prisma.$queryRawUnsafe<Array<{ anio: number }>>(
-      'SELECT DISTINCT EXTRACT(YEAR FROM "fechaInicioCampania")::int AS "anio" FROM "Cultivo" ORDER BY "anio"',
-    );
-    return result.map((r) => r.anio);
+  private async getAniosDisponibles(tipoCultivo?: string): Promise<number[]> {
+    const cultivos = await this.prisma.cultivo.findMany({
+      where: tipoCultivo ? { tipo: tipoCultivo } : undefined,
+      select: { fechaInicioCampania: true },
+      orderBy: { fechaInicioCampania: 'asc' },
+    });
+
+    return [
+      ...new Set(
+        cultivos.map((cultivo) => cultivo.fechaInicioCampania.getFullYear()),
+      ),
+    ];
   }
 
   private async computeKPIs(
     cultivos: CultivoWithGeo[],
-    categoryMap: Map<string, Record<string, number>>,
+    categoryMap: Map<string, CategoryAmountRecord>,
     anio?: number,
+    tipoCultivo?: string,
   ): Promise<KpiDto> {
     const totalCultivos = cultivos.length;
     const parcelaIds = [...new Set(cultivos.map((c) => c.idParcela))];
@@ -199,23 +165,21 @@ export class StatsService {
       0,
     );
 
-    const categoryRecords: Record<string, number>[] = [];
+    const categoryRecords: CategoryAmountRecord[] = [];
     for (const c of cultivos) {
       if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
         categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
       }
     }
 
-    const impactosPorCategoria = meanCategories(categoryRecords) as Record<
-      EfCategoryId,
-      number
-    >;
+    const impactosPorCategoria = meanCategories(categoryRecords);
 
     let variacionInteranual: number | null = null;
     if (anio && categoryRecords.length > 0) {
       variacionInteranual = await this.computeInterannualVariation(
         anio,
         impactosPorCategoria.climate_change,
+        tipoCultivo,
       );
     }
 
@@ -231,25 +195,18 @@ export class StatsService {
   private async computeInterannualVariation(
     anio: number,
     currentImpact: number,
+    tipoCultivo?: string,
   ): Promise<number | null> {
-    const prevFilter = {
-      fechaInicioCampania: {
-        gte: new Date(`${anio - 1}-01-01T00:00:00.000Z`),
-        lt: new Date(`${anio}-01-01T00:00:00.000Z`),
-      },
-    };
+    const prevFilter = buildCampaignYearFilter(anio - 1);
+    if (tipoCultivo) {
+      prevFilter.tipo = tipoCultivo;
+    }
 
     const prevCultivos = (await this.prisma.cultivo.findMany({
       where: prevFilter,
     })) as { idResultadoImpacto: string | null }[];
 
-    const prevImpactoIds = [
-      ...new Set(
-        prevCultivos
-          .filter((c) => c.idResultadoImpacto)
-          .map((c) => c.idResultadoImpacto!),
-      ),
-    ];
+    const prevImpactoIds = collectImpactoIds(prevCultivos);
 
     if (prevImpactoIds.length === 0) return null;
 
@@ -257,9 +214,10 @@ export class StatsService {
       where: { id: { in: prevImpactoIds } },
     })) as unknown as ImpactoRecord[];
 
-    const prevRecords: Record<string, number>[] = [];
+    const categoryLookup = buildEfCategoryLookup();
+    const prevRecords: CategoryAmountRecord[] = [];
     for (const imp of prevImpactos) {
-      prevRecords.push(getCategoryAmounts(imp.datos));
+      prevRecords.push(getCategoryAmounts(imp.datos, categoryLookup));
     }
 
     const prevMeans = meanCategories(prevRecords);
@@ -273,7 +231,7 @@ export class StatsService {
 
   private computeRankingProvincias(
     cultivos: CultivoWithGeo[],
-    categoryMap: Map<string, Record<string, number>>,
+    categoryMap: Map<string, CategoryAmountRecord>,
     categoria?: EfCategoryId,
   ): ProvinciaRankingItemDto[] {
     const grouped = new Map<
@@ -282,7 +240,7 @@ export class StatsService {
         nombreProvincia: string;
         parcelaIds: Set<string>;
         cultivos: CultivoWithGeo[];
-        categoryRecords: Record<string, number>[];
+        categoryRecords: CategoryAmountRecord[];
       }
     >();
 
@@ -328,13 +286,9 @@ export class StatsService {
             numCultivos
           : 0;
 
-      const impactosPorCategoria = meanCategories(
-        entry.categoryRecords,
-      ) as Record<EfCategoryId, number>;
+      const impactosPorCategoria = meanCategories(entry.categoryRecords);
 
-      const impactoTotalMedio = round(
-        Object.values(impactosPorCategoria).reduce((a, b) => a + b, 0),
-      );
+      const impactoTotalMedio = round(totalImpact(impactosPorCategoria));
 
       const eficiencia =
         consumoAguaMedio > 0 ? produccionMedia / consumoAguaMedio : 0;
@@ -353,20 +307,14 @@ export class StatsService {
       });
     }
 
-    if (categoria) {
-      return result.sort(
-        (a, b) =>
-          (a.impactosPorCategoria[categoria] ?? 0) -
-          (b.impactosPorCategoria[categoria] ?? 0),
-      );
-    }
-    return result.sort((a, b) => a.impactoTotalMedio - b.impactoTotalMedio);
+    return sortByImpact(result, categoria);
   }
 
   private computeRankingPoblaciones(
     cultivos: CultivoWithGeo[],
-    categoryMap: Map<string, Record<string, number>>,
+    categoryMap: Map<string, CategoryAmountRecord>,
     categoria?: EfCategoryId,
+    idProvinciaPoblacion?: string,
   ): PoblacionRankingItemDto[] {
     const grouped = new Map<
       string,
@@ -374,13 +322,20 @@ export class StatsService {
         nombrePoblacion: string;
         nombreProvincia: string;
         parcelaIds: Set<string>;
-        categoryRecords: Record<string, number>[];
+        categoryRecords: CategoryAmountRecord[];
       }
     >();
 
     for (const c of cultivos) {
       const poblacion = c.parcela?.poblacion;
       if (!poblacion) continue;
+
+      if (
+        idProvinciaPoblacion &&
+        poblacion.provincia?.id !== idProvinciaPoblacion
+      ) {
+        continue;
+      }
 
       let entry = grouped.get(poblacion.id);
       if (!entry) {
@@ -403,13 +358,9 @@ export class StatsService {
     const result: PoblacionRankingItemDto[] = [];
 
     for (const [idPoblacion, entry] of grouped) {
-      const impactosPorCategoria = meanCategories(
-        entry.categoryRecords,
-      ) as Record<EfCategoryId, number>;
+      const impactosPorCategoria = meanCategories(entry.categoryRecords);
 
-      const impactoTotalMedio = round(
-        Object.values(impactosPorCategoria).reduce((a, b) => a + b, 0),
-      );
+      const impactoTotalMedio = round(totalImpact(impactosPorCategoria));
 
       result.push({
         idPoblacion,
@@ -421,14 +372,7 @@ export class StatsService {
       });
     }
 
-    if (categoria) {
-      return result.sort(
-        (a, b) =>
-          (a.impactosPorCategoria[categoria] ?? 0) -
-          (b.impactosPorCategoria[categoria] ?? 0),
-      );
-    }
-    return result.sort((a, b) => a.impactoTotalMedio - b.impactoTotalMedio);
+    return sortByImpact(result, categoria);
   }
 
   private async computeEvolucionTemporal(): Promise<
@@ -439,13 +383,7 @@ export class StatsService {
       fechaInicioCampania: Date;
     }[];
 
-    const allImpactoIds = [
-      ...new Set(
-        allCultivos
-          .filter((c) => c.idResultadoImpacto)
-          .map((c) => c.idResultadoImpacto!),
-      ),
-    ];
+    const allImpactoIds = collectImpactoIds(allCultivos);
 
     const allImpactos =
       allImpactoIds.length > 0
@@ -454,13 +392,14 @@ export class StatsService {
           })) as unknown as ImpactoRecord[])
         : [];
 
-    const impactoMap = new Map<string, ImpactoRecord['datos']>();
+    const impactoMap = new Map<string, ImpactoDatos>();
     for (const imp of allImpactos) {
       impactoMap.set(imp.id, imp.datos);
     }
 
     const cultivosByYear = new Map<number, number>();
-    const categoriesByYear = new Map<number, Record<string, number>[]>();
+    const categoriesByYear = new Map<number, CategoryAmountRecord[]>();
+    const categoryLookup = buildEfCategoryLookup();
 
     for (const c of allCultivos) {
       const year = c.fechaInicioCampania.getFullYear();
@@ -468,7 +407,8 @@ export class StatsService {
 
       if (c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto)) {
         const catAmounts = getCategoryAmounts(
-          impactoMap.get(c.idResultadoImpacto)!,
+          impactoMap.get(c.idResultadoImpacto),
+          categoryLookup,
         );
         if (!categoriesByYear.has(year)) {
           categoriesByYear.set(year, []);
@@ -480,13 +420,8 @@ export class StatsService {
     const result: EvolucionTemporalItemDto[] = [];
 
     for (const [year, records] of categoriesByYear) {
-      const categorias = meanCategories(records) as Record<
-        EfCategoryId,
-        number
-      >;
-      const totalImpacto = round(
-        Object.values(categorias).reduce((a, b) => a + b, 0),
-      );
+      const categorias = meanCategories(records);
+      const totalImpacto = round(totalImpact(categorias));
 
       result.push({
         anio: year,

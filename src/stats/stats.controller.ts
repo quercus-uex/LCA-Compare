@@ -5,6 +5,36 @@ import { ApiTags } from '@nestjs/swagger';
 import { EF_CATEGORIES, type EfCategoryId } from '../compare/compare.types';
 
 const VALID_CATEGORY_IDS = EF_CATEGORIES.map((c) => c.id);
+const MIN_SUPPORTED_YEAR = 1900;
+const MAX_SUPPORTED_YEAR = 2100;
+
+function normalizeOptionalString(value?: string): string | undefined {
+  if (value === undefined || value.trim() === '') {
+    return undefined;
+  }
+  return value;
+}
+
+function parseOptionalYear(value?: string): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!/^\d+$/.test(value)) {
+    throw new BadRequestException(
+      'anio debe ser un año entero válido en formato numérico',
+    );
+  }
+
+  const parsed = Number(value);
+  if (parsed < MIN_SUPPORTED_YEAR || parsed > MAX_SUPPORTED_YEAR) {
+    throw new BadRequestException(
+      `anio está fuera del rango soportado (${MIN_SUPPORTED_YEAR}-${MAX_SUPPORTED_YEAR})`,
+    );
+  }
+
+  return parsed;
+}
 
 @ApiTags('stats')
 @Controller('stats')
@@ -13,20 +43,31 @@ export class StatsController {
 
   @Get('global')
   getGlobalStats(
-    @Query('anio') anio?: number,
+    @Query('anio') anio?: string,
     @Query('categoria') categoria?: string,
+    @Query('tipoCultivo') tipoCultivo?: string,
+    @Query('idProvinciaPoblacion') idProvinciaPoblacion?: string,
   ): Promise<GlobalStatsDto> {
-    if (categoria !== undefined) {
-      if (!VALID_CATEGORY_IDS.includes(categoria as EfCategoryId)) {
+    const parsedAnio = parseOptionalYear(anio);
+    const normalizedCategoria = normalizeOptionalString(categoria);
+    const normalizedTipoCultivo = normalizeOptionalString(tipoCultivo);
+    const normalizedIdProvinciaPoblacion =
+      normalizeOptionalString(idProvinciaPoblacion);
+
+    if (normalizedCategoria !== undefined) {
+      if (!VALID_CATEGORY_IDS.includes(normalizedCategoria as EfCategoryId)) {
         throw new BadRequestException({
           message: 'Categoría no válida',
           categoriasValidas: VALID_CATEGORY_IDS,
         });
       }
     }
+
     return this.statsService.getGlobalStats(
-      anio ? Number(anio) : undefined,
-      categoria as EfCategoryId | undefined,
+      parsedAnio,
+      normalizedCategoria as EfCategoryId | undefined,
+      normalizedTipoCultivo,
+      normalizedIdProvinciaPoblacion,
     );
   }
 }

@@ -10,6 +10,7 @@ import {
   ZAxis,
 } from 'recharts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
+import { formatNumber } from './stats-formatters.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -27,10 +28,10 @@ const CustomTooltip = ({
   return (
     <div className="card bg-base-100 shadow-lg p-3 text-sm">
       <p className="font-bold">{d.nombreProvincia}</p>
-      <p>Producción: {d.produccionMedia.toFixed(2)} T/Ha</p>
-      <p>Consumo H₂O: {d.consumoAguaMedio.toFixed(1)} L/Ha</p>
-      <p>Superficie: {d.superficieTotal.toFixed(1)} Ha</p>
-      <p>Eficiencia: {d.eficiencia.toFixed(4)}</p>
+      <p>Producción: {formatNumber(d.produccionMedia, 2)} T/Ha</p>
+      <p>Consumo H₂O: {formatNumber(d.consumoAguaMedio, 1)} L/Ha</p>
+      <p>Superficie: {formatNumber(d.superficieTotal, 1)} Ha</p>
+      <p>Eficiencia: {formatNumber(d.eficiencia, 4)}</p>
     </div>
   );
 };

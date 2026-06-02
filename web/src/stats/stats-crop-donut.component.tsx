@@ -1,11 +1,32 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
+import {
+  formatInteger,
+  formatNumber,
+  formatPercent,
+} from './stats-formatters.ts';
 
 type Props = {
   data: DistribucionCultivoItemDto[];
 };
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = [
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#84cc16',
+];
 
 export const StatsCropDonut = ({ data }: Props) => {
   const total = data.reduce((sum, d) => sum + d.count, 0);
@@ -30,16 +51,23 @@ export const StatsCropDonut = ({ data }: Props) => {
         <Tooltip
           content={
             (({ active, payload }: Record<string, unknown>) => {
-              if (!active || !payload || !Array.isArray(payload) || !payload.length) return null;
+              if (
+                !active ||
+                !payload ||
+                !Array.isArray(payload) ||
+                !payload.length
+              ) {
+                return null;
+              }
               const entry = payload[0] as Record<string, unknown>;
               const item = entry.payload as DistribucionCultivoItemDto;
               const value = (entry.value as number) || 0;
-              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+              const pct = total > 0 ? formatPercent((value / total) * 100) : '0%';
               return (
                 <div className="card bg-base-100 shadow-lg p-3 text-sm">
                   <p className="font-bold">{item.tipo}</p>
-                  <p>{value} cultivos ({pct}%)</p>
-                  <p>{item.superficieTotal.toFixed(1)} Ha</p>
+                  <p>{formatInteger(value)} cultivos ({pct})</p>
+                  <p>{formatNumber(item.superficieTotal, 1)} Ha</p>
                 </div>
               );
             }) as React.ComponentProps<typeof Tooltip>['content']
@@ -53,8 +81,11 @@ export const StatsCropDonut = ({ data }: Props) => {
         <Legend
           formatter={(value: string) => {
             const item = data.find((d) => d.tipo === value);
-            const pct = item && total > 0 ? ((item.count / total) * 100).toFixed(0) : '0';
-            return `${value} (${pct}%)`;
+            const pct =
+              item && total > 0
+                ? formatPercent((item.count / total) * 100, 0)
+                : '0%';
+            return `${value} (${pct})`;
           }}
         />
       </PieChart>

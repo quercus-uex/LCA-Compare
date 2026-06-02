@@ -1,7 +1,8 @@
-## ADDED Requirements
-
+## Purpose
+Public REST API endpoint for aggregated platform-wide statistics: KPIs, province and population rankings, temporal evolution, and crop distribution.
+## Requirements
 ### Requirement: Global statistics endpoint
-The system SHALL expose a public REST endpoint `GET /stats/global` that returns aggregated statistics for the entire platform, optionally filtered by campaign year and EF 3.1 category.
+The system SHALL expose a public REST endpoint `GET /stats/global` that returns aggregated statistics for the entire platform, optionally filtered by campaign year, EF 3.1 category, crop type, and province (for population ranking).
 
 #### Scenario: Request global statistics for a specific year
 - **WHEN** client sends `GET /stats/global?anio=2024`
@@ -14,6 +15,25 @@ The system SHALL expose a public REST endpoint `GET /stats/global` that returns 
 #### Scenario: No data available
 - **WHEN** client requests statistics for a year with zero cultivations
 - **THEN** system returns KPIs with zero values, empty arrays for rankings and distributions, and HTTP 200
+
+### Requirement: Global stats query validation
+The system SHALL validate `GET /stats/global` query parameters before executing statistics queries.
+
+#### Scenario: Invalid year parameter
+- **WHEN** client sends `GET /stats/global?anio=abc`
+- **THEN** the system SHALL respond with HTTP 400 and an error message indicating that `anio` must be a valid integer year
+
+#### Scenario: Out-of-range year parameter
+- **WHEN** client sends `GET /stats/global?anio=0`
+- **THEN** the system SHALL respond with HTTP 400 and an error message indicating that `anio` is outside the supported year range
+
+#### Scenario: Empty optional string filters
+- **WHEN** client sends `GET /stats/global?tipoCultivo=&idProvinciaPoblacion=`
+- **THEN** the system SHALL treat the empty optional filters as absent rather than applying empty-string filters
+
+#### Scenario: Valid query parameters preserved
+- **WHEN** client sends `GET /stats/global?anio=2024&categoria=water_use&tipoCultivo=Tomate&idProvinciaPoblacion=<provinciaId>`
+- **THEN** the system SHALL accept the request and compute statistics using those filters
 
 ### Requirement: KPIs aggregation
 The system SHALL compute key performance indicators from the `Cultivo` and `ResultadoImpacto` tables, including operational metrics (total parcels, total cultivations, total cultivated surface) and environmental metrics (one mean impact value per EF 3.1 category across all impact results). The response SHALL include 8 per-category mean values instead of a single `impactoTotalMedio`.
@@ -88,7 +108,7 @@ The endpoint `GET /stats/global` SHALL accept an optional query parameter `categ
 
 #### Scenario: Request with invalid category
 - **WHEN** client sends `GET /stats/global?categoria=invalid`
-- **THEN** the system SHALL respond with HTTP 400 and a JSON body `{ "message": "Categoria no valida", "categoriasValidas": ["climate_change", "eutrophication", ...] }`
+- **THEN** the system SHALL respond with HTTP 400 and a JSON body listing valid category identifiers
 
 ### Requirement: Crop type distribution
 The system SHALL compute the distribution of crop types by count and total cultivated surface.
@@ -104,9 +124,62 @@ The system SHALL return the list of years that have cultivation data.
 - **WHEN** client requests global statistics
 - **THEN** the response SHALL include a field `aniosDisponibles: number[]` with all distinct campaign years sorted ascending
 
+### Requirement: Safe statistics query execution
+The system SHALL execute statistics database queries without constructing SQL through unsafe string interpolation of user-controlled values.
+
+#### Scenario: Available years with crop type filter
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Tomate`
+- **THEN** the system SHALL compute `aniosDisponibles` using Prisma APIs or parameterized SQL rather than unsafe raw SQL interpolation
+
+#### Scenario: Crop type contains quote characters
+- **WHEN** client sends a `tipoCultivo` value containing quote characters
+- **THEN** the system SHALL treat the value as data and SHALL NOT alter the SQL query structure
+
 ### Requirement: Public access
 The endpoint SHALL NOT require authentication.
 
 #### Scenario: Unauthenticated access
 - **WHEN** a client without a JWT token requests `GET /stats/global`
 - **THEN** the system SHALL respond with HTTP 200 and the full statistics payload
+
+### Requirement: Cultivo type filter parameter
+The endpoint `GET /stats/global` SHALL accept an optional query parameter `tipoCultivo` that filters all computations (KPIs, rankings, temporal evolution, and crop distribution) to only include cultivations of the specified type.
+
+#### Scenario: Request with valid crop type
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Tomate&anio=2024`
+- **THEN** the system SHALL filter all `Cultivo` queries by `tipo = "Tomate"` and compute KPIs, province rankings, population rankings, and temporal evolution using only Tomate cultivations from 2024
+
+#### Scenario: Request without crop type filter
+- **WHEN** client sends `GET /stats/global` without the `tipoCultivo` parameter
+- **THEN** the system SHALL include all crop types in computations (backward compatible behavior)
+
+#### Scenario: Crop type filter combined with category filter
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Olivo&categoria=water_use`
+- **THEN** the system SHALL filter to Olivo cultivations and rank/sort by water_use category impact
+
+#### Scenario: Crop type with no data for selected year
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Trigo&anio=2024` and there are no Trigo cultivations in 2024
+- **THEN** the system SHALL return KPIs with zero values, empty arrays for rankings and distributions, and HTTP 200
+
+#### Scenario: Crop distribution still shows all types regardless of filter
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Tomate`
+- **THEN** the `distribucionCultivos` field SHALL still return the distribution of ALL crop types (unaffected by the `tipoCultivo` filter), to preserve the donut chart's informational value
+
+### Requirement: Province filter for population ranking parameter
+The endpoint `GET /stats/global` SHALL accept an optional query parameter `idProvinciaPoblacion` that filters the population ranking to only include populations belonging to the specified province.
+
+#### Scenario: Request with province filter for populations
+- **WHEN** client sends `GET /stats/global?idProvinciaPoblacion=<provinciaId>`
+- **THEN** the `rankingPoblaciones` array SHALL contain only populations whose province matches `<provinciaId>`, sorted by impact ascending
+
+#### Scenario: Province filter does not affect other sections
+- **WHEN** client sends `GET /stats/global?idProvinciaPoblacion=<provinciaId>`
+- **THEN** the `rankingProvincias`, KPIs, `evolucionTemporal`, and `distribucionCultivos` SHALL be unaffected by the province filter and include data from all provinces
+
+#### Scenario: Province filter combined with crop and category filters
+- **WHEN** client sends `GET /stats/global?tipoCultivo=Tomate&idProvinciaPoblacion=<provinciaId>&categoria=climate_change`
+- **THEN** the population ranking SHALL contain only populations from `<provinciaId>` with Tomate cultivations, sorted by climate_change impact
+
+#### Scenario: Request with non-existent province
+- **WHEN** client sends `GET /stats/global?idProvinciaPoblacion=invalid-id`
+- **THEN** the `rankingPoblaciones` array SHALL be empty (no populations match)

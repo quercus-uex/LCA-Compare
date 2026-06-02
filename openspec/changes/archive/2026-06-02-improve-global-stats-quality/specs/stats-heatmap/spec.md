@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Heatmap of provinces vs EF 3.1 categories
 The dashboard SHALL display a heatmap where rows are provinces and columns are the 8 EF 3.1 categories, with cell color intensity proportional to the impact value, stable React list rendering, and fluid sizing within its card.
@@ -27,6 +27,10 @@ The dashboard SHALL display a heatmap where rows are provinces and columns are t
 - **WHEN** the heatmap renders inside the dashboard card
 - **THEN** the heatmap SHALL adapt to the available card width without overflowing the page horizontally
 
+#### Scenario: Category headers use two lines
+- **WHEN** EF 3.1 category names are displayed in the heatmap header row
+- **THEN** each category header SHALL be allowed to wrap to up to two lines before being clipped
+
 #### Scenario: Stable row rendering
 - **WHEN** the heatmap renders province rows and category cells
 - **THEN** each rendered row group SHALL have a stable key based on the province identifier so React does not emit list-key warnings
@@ -34,7 +38,3 @@ The dashboard SHALL display a heatmap where rows are provinces and columns are t
 #### Scenario: Heatmap helper maintainability
 - **WHEN** heatmap numeric formatting or cell color calculation is changed
 - **THEN** the implementation SHALL keep those helper concerns isolated from the row rendering markup
-
-#### Scenario: Category headers use two lines
-- **WHEN** EF 3.1 category names are displayed in the heatmap header row
-- **THEN** each category header SHALL be allowed to wrap to up to two lines before being clipped

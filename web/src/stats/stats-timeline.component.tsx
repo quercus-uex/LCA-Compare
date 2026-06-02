@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { EF_CATEGORIES } from '../common/constants.ts';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
+import { formatImpactValue } from './stats-formatters.ts';
 
 type Props = {
   data: EvolucionTemporalItemDto[];
@@ -55,7 +56,7 @@ export const StatsTimeline = ({ data }: Props) => {
               const n = String(name);
               const cat = EF_CATEGORIES.find((c) => c.id === n);
               return [
-                v.toFixed(4),
+                formatImpactValue(v, '0'),
                 cat ? `${cat.spanishName} (${cat.unit})` : n,
               ];
             }}
@@ -101,7 +102,10 @@ export const StatsTimeline = ({ data }: Props) => {
               </ResponsiveContainer>
               <div className="text-[10px] text-base-content/50 text-right">
                 {data.length > 0
-                  ? (data[data.length - 1].categorias[cat.id] ?? 0).toFixed(2)
+                  ? formatImpactValue(
+                      data[data.length - 1].categorias[cat.id] ?? 0,
+                      '0',
+                    )
                   : '—'}{' '}
                 {cat.unit.split(' ')[0]}
               </div>

@@ -1,11 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+jest.mock('../prisma/prisma.service', () => ({
+  PrismaService: class PrismaService {},
+}));
+
 import { StatsService } from './stats.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { EF_CATEGORIES } from '../compare/compare.types';
 
 describe('StatsService', () => {
   let service: StatsService;
-  let prisma: PrismaService;
 
   const mockPrisma = {
     cultivo: {
@@ -15,10 +19,13 @@ describe('StatsService', () => {
     resultadoImpacto: {
       findMany: jest.fn().mockResolvedValue([]),
     },
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
   };
 
   beforeEach(async () => {
+    mockPrisma.cultivo.findMany.mockReset().mockResolvedValue([]);
+    mockPrisma.cultivo.groupBy.mockReset().mockResolvedValue([]);
+    mockPrisma.resultadoImpacto.findMany.mockReset().mockResolvedValue([]);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StatsService,
@@ -27,12 +34,13 @@ describe('StatsService', () => {
     }).compile();
 
     service = module.get<StatsService>(StatsService);
-    prisma = module.get<PrismaService>(PrismaService);
-    jest.clearAllMocks();
   });
 
   const makeImpacto = (overrides?: Record<string, number>) => {
-    const datos: Record<string, Array<{ category: string; amount: number; unit: string }>> = {};
+    const datos: Record<
+      string,
+      Array<{ category: string; amount: number; unit: string }>
+    > = {};
     const totalItems = EF_CATEGORIES.map((cat) => ({
       category: cat.englishNames[0],
       amount: overrides?.[cat.id] ?? 10,
@@ -52,6 +60,8 @@ describe('StatsService', () => {
       consumoAgua: number;
       fecha: Date;
       provinciaNombre: string;
+      provinciaId: string;
+      poblacionId: string;
     }>,
   ) => ({
     id: overrides?.id ?? `cultivo-${Math.random()}`,
@@ -66,12 +76,12 @@ describe('StatsService', () => {
       overrides?.fecha ?? new Date('2024-01-15T00:00:00.000Z'),
     parcela: {
       id: overrides?.idParcela ?? 'parcela-1',
-      idPoblacion: 'poblacion-1',
+      idPoblacion: overrides?.poblacionId ?? 'poblacion-1',
       poblacion: {
-        id: 'poblacion-1',
+        id: overrides?.poblacionId ?? 'poblacion-1',
         nombre: 'Poblacion Test',
         provincia: {
-          id: 'provincia-1',
+          id: overrides?.provinciaId ?? 'provincia-1',
           nombre: overrides?.provinciaNombre ?? 'Provincia Test',
         },
       },
@@ -81,7 +91,6 @@ describe('StatsService', () => {
   describe('getGlobalStats', () => {
     it('should return zero KPIs when no data exists', async () => {
       mockPrisma.cultivo.findMany.mockResolvedValue([]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
 
       const result = await service.getGlobalStats();
       expect(result.kpis.totalCultivos).toBe(0);
@@ -100,7 +109,6 @@ describe('StatsService', () => {
 
       mockPrisma.cultivo.findMany.mockResolvedValue([cultivo]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([impacto]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024);
       expect(result.kpis.impactosPorCategoria.climate_change).toBe(100);
@@ -116,7 +124,6 @@ describe('StatsService', () => {
 
       mockPrisma.cultivo.findMany.mockResolvedValue([c1, c2]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([imp1, imp2]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024);
       expect(result.kpis.impactosPorCategoria.climate_change).toBe(150);
@@ -133,18 +140,24 @@ describe('StatsService', () => {
       });
       const c2 = makeCultivo({
         id: 'c2',
+        idParcela: 'parcela-2',
         idResultadoImpacto: imp2.id,
         provinciaNombre: 'Provincia Alta',
+        provinciaId: 'provincia-2',
+        poblacionId: 'poblacion-2',
       });
 
       mockPrisma.cultivo.findMany.mockResolvedValue([c1, c2]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([imp1, imp2]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024);
       expect(result.rankingProvincias).toHaveLength(2);
-      expect(result.rankingProvincias[0].nombreProvincia).toBe('Provincia Baja');
-      expect(result.rankingProvincias[1].nombreProvincia).toBe('Provincia Alta');
+      expect(result.rankingProvincias[0].nombreProvincia).toBe(
+        'Provincia Baja',
+      );
+      expect(result.rankingProvincias[1].nombreProvincia).toBe(
+        'Provincia Alta',
+      );
     });
 
     it('should rank provincias by selected EF category', async () => {
@@ -158,13 +171,15 @@ describe('StatsService', () => {
       });
       const c2 = makeCultivo({
         id: 'c2',
+        idParcela: 'parcela-2',
         idResultadoImpacto: imp2.id,
         provinciaNombre: 'Provincia B',
+        provinciaId: 'provincia-2',
+        poblacionId: 'poblacion-2',
       });
 
       mockPrisma.cultivo.findMany.mockResolvedValue([c1, c2]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([imp1, imp2]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024, 'water_use');
       expect(result.rankingProvincias[0].nombreProvincia).toBe('Provincia B');
@@ -188,13 +203,13 @@ describe('StatsService', () => {
 
       mockPrisma.cultivo.findMany
         .mockResolvedValueOnce([]) // main query — empty for KPIs
+        .mockResolvedValueOnce([]) // available years
         .mockResolvedValueOnce([c2023, c2024]); // evolucionTemporal loads all
 
-      mockPrisma.resultadoImpacto.findMany
-        .mockResolvedValueOnce([]) // main
-        .mockResolvedValueOnce([imp2023, imp2024]); // evolucion
-
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2023 }, { anio: 2024 }]);
+      mockPrisma.resultadoImpacto.findMany.mockResolvedValueOnce([
+        imp2023,
+        imp2024,
+      ]);
 
       const result = await service.getGlobalStats();
       expect(result.evolucionTemporal).toHaveLength(2);
@@ -217,7 +232,6 @@ describe('StatsService', () => {
 
       mockPrisma.cultivo.findMany.mockResolvedValue([cultivo]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([impacto]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024);
       expect(result.kpis.impactosPorCategoria.climate_change).toBe(0);
@@ -229,12 +243,51 @@ describe('StatsService', () => {
 
       mockPrisma.cultivo.findMany.mockResolvedValue([cultivo]);
       mockPrisma.resultadoImpacto.findMany.mockResolvedValue([impacto]);
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ anio: 2024 }]);
 
       const result = await service.getGlobalStats(2024);
       for (const cat of EF_CATEGORIES) {
         expect(result.kpis.impactosPorCategoria[cat.id]).toBe(0);
       }
+    });
+
+    it('should compute available years with Prisma findMany', async () => {
+      mockPrisma.cultivo.findMany
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { fechaInicioCampania: new Date('2023-01-01T00:00:00.000Z') },
+          { fechaInicioCampania: new Date('2024-01-01T00:00:00.000Z') },
+          { fechaInicioCampania: new Date('2024-06-01T00:00:00.000Z') },
+        ]);
+
+      const result = await service.getGlobalStats(
+        undefined,
+        undefined,
+        'tomate',
+      );
+
+      expect(result.aniosDisponibles).toEqual([2023, 2024]);
+      expect(mockPrisma.cultivo.findMany).toHaveBeenNthCalledWith(2, {
+        where: { tipo: 'tomate' },
+        select: { fechaInicioCampania: true },
+        orderBy: { fechaInicioCampania: 'asc' },
+      });
+    });
+
+    it('should treat quote-containing crop types as Prisma filter values', async () => {
+      const tipoCultivo = "tomate 'raf'";
+      mockPrisma.cultivo.findMany.mockResolvedValue([]);
+
+      await service.getGlobalStats(undefined, undefined, tipoCultivo);
+
+      expect(mockPrisma.cultivo.findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ where: { tipo: tipoCultivo } }),
+      );
+      expect(mockPrisma.cultivo.findMany).toHaveBeenNthCalledWith(2, {
+        where: { tipo: tipoCultivo },
+        select: { fechaInicioCampania: true },
+        orderBy: { fechaInicioCampania: 'asc' },
+      });
     });
   });
 });

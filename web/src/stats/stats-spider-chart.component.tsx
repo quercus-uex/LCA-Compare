@@ -15,6 +15,7 @@ import type {
   PoblacionRankingItemDto,
 } from './stats.hook.tsx';
 import { SearchableLocationSelect } from './searchable-location-select.component.tsx';
+import { formatImpactValue } from './stats-formatters.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -31,13 +32,6 @@ type UnifiedEntity = {
 const COLORS = ['#ef4444', '#3b82f6'];
 const MODE_LABELS = ['Provincia', 'Población'] as const;
 type Mode = (typeof MODE_LABELS)[number];
-
-const fmtRaw = (v: number) => {
-  if (v === 0) return '0';
-  if (v < 0.0001) return v.toExponential(3);
-  if (v < 10) return v.toFixed(4);
-  return v.toFixed(2);
-};
 
 const toUnified = (
   p: ProvinciaRankingItemDto | PoblacionRankingItemDto,
@@ -257,7 +251,7 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
               const rawKey = dk === 'prov1' ? 'prov1_raw' : 'prov2_raw';
               const rawVal = entry?.payload?.[rawKey] as number;
               return [
-                rawVal !== undefined ? fmtRaw(rawVal) : '—',
+                rawVal !== undefined ? formatImpactValue(rawVal, '0') : '—',
                 dk === 'prov1'
                   ? entity1.nombre
                   : entity2?.nombre ?? '',

@@ -53,7 +53,12 @@ export type GlobalStatsDto = {
   aniosDisponibles: number[];
 };
 
-export function useStats(anio?: number, categoria?: EfCategoryId) {
+export function useStats(
+  anio?: number,
+  categoria?: EfCategoryId,
+  tipoCultivo?: string,
+  idProvinciaPoblacion?: string,
+) {
   const [data, setData] = useState<GlobalStatsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +70,8 @@ export function useStats(anio?: number, categoria?: EfCategoryId) {
       const params = new URLSearchParams();
       if (anio) params.set('anio', String(anio));
       if (categoria) params.set('categoria', categoria);
+      if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
+      if (idProvinciaPoblacion) params.set('idProvinciaPoblacion', idProvinciaPoblacion);
       const qs = params.toString() ? `?${params.toString()}` : '';
       const response = await fetch(`${API_BASE_URL}/stats/global${qs}`);
       if (!response.ok) {
@@ -77,7 +84,7 @@ export function useStats(anio?: number, categoria?: EfCategoryId) {
     } finally {
       setLoading(false);
     }
-  }, [anio, categoria]);
+  }, [anio, categoria, tipoCultivo, idProvinciaPoblacion]);
 
   useEffect(() => {
     fetchData();

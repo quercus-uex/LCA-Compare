@@ -1,15 +1,4 @@
-## ADDED Requirements
-
-### Requirement: EF 3.1 category constants
-The system SHALL define a constant array `EF_CATEGORIES` containing the 8 Environmental Footprint 3.1 impact category identifiers used for aggregation and display, with one entry per category including its English name, Spanish display name, and semantic color.
-
-#### Scenario: Categories include all 8 EF 3.1 impacts
-- **WHEN** the constant is referenced
-- **THEN** it SHALL include entries for: climate_change, eutrophication, acidification, water_use, land_use, particulate_matter, ecotoxicity, and human_toxicity
-
-#### Scenario: Each category has a Spanish display name
-- **WHEN** category "climate_change" is used in UI
-- **THEN** its Spanish display name SHALL be "Cambio Climático"
+## MODIFIED Requirements
 
 ### Requirement: Per-category impact aggregation
 The system SHALL compute platform-wide mean impact values for each of the 8 EF 3.1 categories by extracting `amount` values from the `impacto_total` key of each `ResultadoImpacto.datos` JSON, matching by normalized category name, and computing the arithmetic mean across all `ResultadoImpacto` records.
@@ -48,18 +37,3 @@ The system SHALL support an optional `?categoria=` query parameter on `GET /stat
 #### Scenario: Ranking sort helper consistency
 - **WHEN** province and population rankings are sorted for the same selected EF 3.1 category
 - **THEN** both rankings SHALL use the same category value selection rules and ascending impact order
-
-### Requirement: Per-category temporal evolution with sparklines
-The system SHALL compute year-over-year aggregated impact data for each of the 8 EF 3.1 categories and expose it as a stacked time series for the area chart and per-category arrays for sparklines.
-
-#### Scenario: Temporal evolution returns per-category data
-- **WHEN** client requests global statistics
-- **THEN** the response `evolucionTemporal` array SHALL contain one entry per year, each with fields: `anio`, `numCultivos`, and an object `categorias` mapping each EF 3.1 category identifier to its mean amount for that year
-
-#### Scenario: Stacked total for area chart
-- **WHEN** computing temporal evolution for year Y
-- **THEN** each year entry SHALL also include `totalImpacto` which is the sum of all 8 category means, used as the area chart's total height
-
-#### Scenario: Temporal evolution ignores the year filter
-- **WHEN** client requests statistics filtered by a specific year
-- **THEN** the temporal evolution array SHALL still contain data for ALL years

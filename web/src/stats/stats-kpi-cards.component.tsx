@@ -1,16 +1,11 @@
 import type { KpiDto } from './stats.hook.tsx';
 import { EF_CATEGORIES } from '../common/constants.ts';
 import { FiBox, FiGrid, FiActivity } from 'react-icons/fi';
+import { formatInteger, formatNumber } from './stats-formatters.ts';
 
 type Props = {
   kpis: KpiDto;
 };
-
-const formatter = (value: number) =>
-  new Intl.NumberFormat('es-ES', { maximumFractionDigits: 4 }).format(value);
-
-const shortFormatter = (value: number) =>
-  new Intl.NumberFormat('es-ES').format(value);
 
 export const StatsKPICards = ({ kpis }: Props) => {
   return (
@@ -34,7 +29,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
                 </div>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="text-lg font-bold truncate">
-                    {formatter(value)}
+                    {formatNumber(value, 4)}
                   </span>
                 </div>
                 <div className="text-[10px] text-base-content/50 truncate">
@@ -53,7 +48,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
             Parcelas
           </div>
           <div className="stat-value text-lg">
-            {shortFormatter(kpis.totalParcelas)}
+            {formatInteger(kpis.totalParcelas)}
           </div>
         </div>
         <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
@@ -62,7 +57,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
             Cultivos
           </div>
           <div className="stat-value text-lg">
-            {shortFormatter(kpis.totalCultivos)}
+            {formatInteger(kpis.totalCultivos)}
           </div>
         </div>
         <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
@@ -71,7 +66,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
             Superficie
           </div>
           <div className="stat-value text-lg">
-            {shortFormatter(kpis.superficieTotal)}{' '}
+            {formatInteger(kpis.superficieTotal)}{' '}
             <span className="text-sm font-normal text-base-content/50">Ha</span>
           </div>
         </div>

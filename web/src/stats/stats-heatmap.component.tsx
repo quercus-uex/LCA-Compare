@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
+import { formatImpactValue } from './stats-formatters.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -19,13 +20,6 @@ const cellColor = (value: number, max: number, hex: string) => {
   const ratio = value / max;
   const rgb = hexToRgb(hex);
   return `rgba(${rgb.r},${rgb.g},${rgb.b},${Math.max(0.06, ratio * 0.75)})`;
-};
-
-const cellFmt = (v: number) => {
-  if (v === 0) return '—';
-  if (v < 0.001) return v.toExponential(2);
-  if (v < 10) return v.toFixed(4);
-  return v.toFixed(2);
 };
 
 export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
@@ -59,22 +53,34 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
   }
 
   return (
-    <div>
-      <div className="grid" style={{ gridTemplateColumns: `72px repeat(${EF_CATEGORIES.length}, 1fr)` }}>
+    <div className="w-full min-w-0 overflow-hidden">
+      <div
+        className="grid w-full min-w-0"
+        style={{
+          gridTemplateColumns: `72px repeat(${EF_CATEGORIES.length}, minmax(0, 1fr))`,
+        }}
+      >
           <div className="font-semibold text-xs px-1 py-2 bg-base-200 flex items-end">
             Provincia
           </div>
           {EF_CATEGORIES.map((cat) => (
             <div
               key={cat.id}
-              className="cursor-pointer px-1 py-2 bg-base-200 text-center flex items-end justify-center"
+              className="cursor-pointer min-w-0 px-1 py-2 bg-base-200 text-center flex items-end justify-center"
               style={{ color: cat.color }}
               onClick={() =>
                 setSortCategory(sortCategory === cat.id ? null : cat.id)
               }
               title={`${cat.spanishName} (${cat.unit})`}
             >
-              <div className="text-xs font-semibold leading-tight whitespace-normal">
+              <div
+                className="text-[10px] xl:text-xs font-semibold leading-tight w-full overflow-hidden"
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
                 {cat.spanishName}
                 {sortCategory === cat.id ? ' ▾' : ''}
               </div>
@@ -82,9 +88,8 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
           ))}
 
           {sorted.map((prov) => (
-            <>
+            <Fragment key={prov.idProvincia}>
               <div
-                key={`label-${prov.idProvincia}`}
                 className="text-xs font-medium px-1 py-2 truncate cursor-pointer hover:underline bg-base-100 border-t border-base-200 flex items-center"
                 onClick={() => onProvinceClick?.(prov.idProvincia)}
               >
@@ -96,15 +101,15 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
                 return (
                   <div
                     key={`${prov.idProvincia}-${cat.id}`}
-                    className="text-center px-1 py-2 text-xs font-mono border-t border-base-200 flex items-center justify-center"
+                    className="min-w-0 text-center px-1 py-2 text-[10px] xl:text-xs font-mono border-t border-base-200 flex items-center justify-center truncate"
                     style={{ backgroundColor: bg }}
-                    title={`${prov.nombreProvincia} · ${cat.spanishName}: ${cellFmt(value)} ${cat.unit}`}
+                    title={`${prov.nombreProvincia} · ${cat.spanishName}: ${formatImpactValue(value)} ${cat.unit}`}
                   >
-                    {cellFmt(value)}
+                    <span className="truncate">{formatImpactValue(value)}</span>
                   </div>
                 );
               })}
-            </>
+            </Fragment>
           ))}
         </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { EF_CATEGORIES } from '../common/constants.ts';
+import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 
 type Props = {
@@ -46,8 +46,8 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
   const sorted = sortCategory
     ? [...top15].sort(
         (a, b) =>
-          (b.impactosPorCategoria[sortCategory] ?? 0) -
-          (a.impactosPorCategoria[sortCategory] ?? 0),
+          (b.impactosPorCategoria[sortCategory as EfCategoryId] ?? 0) -
+          (a.impactosPorCategoria[sortCategory as EfCategoryId] ?? 0),
       )
     : top15;
 

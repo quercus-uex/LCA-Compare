@@ -50,11 +50,13 @@ export const StatsTimeline = ({ data }: Props) => {
               fontSize: '12px',
               color: 'oklch(0.9 0.01 285.885)',
             }}
-            formatter={(value: number, name: string) => {
-              const cat = EF_CATEGORIES.find((c) => c.id === name);
+            formatter={(value, name) => {
+              const v = typeof value === 'number' ? value : 0;
+              const n = String(name);
+              const cat = EF_CATEGORIES.find((c) => c.id === n);
               return [
-                value.toFixed(4),
-                cat ? `${cat.spanishName} (${cat.unit})` : name,
+                v.toFixed(4),
+                cat ? `${cat.spanishName} (${cat.unit})` : n,
               ];
             }}
           />

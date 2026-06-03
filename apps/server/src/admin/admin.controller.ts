@@ -137,7 +137,7 @@ export class AdminController {
     return {
       data: await this.usuarioService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }
@@ -209,7 +209,7 @@ export class AdminController {
     return {
       data: await this.parcelaService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }
@@ -277,7 +277,7 @@ export class AdminController {
     return {
       data: await this.cultivoService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }
@@ -347,7 +347,7 @@ export class AdminController {
     return {
       data: await this.metodoImpactoService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }
@@ -413,7 +413,7 @@ export class AdminController {
     @Body() body: Record<string, unknown>,
   ) {
     return {
-      data: await this.paisService.update({ where: { id }, data: body as any }),
+      data: await this.paisService.update({ where: { id }, data: body }),
     };
   }
 
@@ -480,7 +480,7 @@ export class AdminController {
     return {
       data: await this.provinciaService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }
@@ -548,7 +548,7 @@ export class AdminController {
     return {
       data: await this.poblacionService.update({
         where: { id },
-        data: body as any,
+        data: body,
       }),
     };
   }

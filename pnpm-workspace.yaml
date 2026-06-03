@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - "@nestjs/core"
+  - "@openrouter/sdk"
+  - "@prisma/engines"
+  - "@scarf/scarf"
+  - "@swc/core"
+  - "argon2"
+  - "core-js"
+  - "esbuild"
+  - "prisma"

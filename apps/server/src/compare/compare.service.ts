@@ -9,7 +9,6 @@ import Handlebars from 'handlebars';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
 import path from 'node:path';
-import { ResultadoImpactoItemDto } from '../resultadoimpacto/dto/resultado-impacto-item.dto';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
 import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
@@ -157,9 +156,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     for (const key of IMPACT_KEYS) {
       base[key] = base[key].map((item) => {
         const sum = results.reduce((acc, r) => {
-          const found = r.datos?.[key]?.find(
-            (i) => i.category === item.category,
-          );
+          const data = r.datos as unknown as ResultadoImpactoDto;
+          const found = data[key]?.find((i) => i.category === item.category);
           return acc + (found?.amount ?? 0);
         }, 0);
         return { ...item, amount: sum / results.length };

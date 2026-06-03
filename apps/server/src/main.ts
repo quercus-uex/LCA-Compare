@@ -43,4 +43,4 @@ async function bootstrap() {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   process.on('SIGINT', shutdown);
 }
-bootstrap();
+void bootstrap();

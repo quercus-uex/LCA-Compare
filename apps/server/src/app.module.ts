@@ -13,7 +13,9 @@ import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: ['../../.env', '.env'],
+    }),
     UsuarioModule,
     CaptureModule,
     AuthModule,

@@ -2,7 +2,7 @@ export const EF_CATEGORIES = [
   {
     id: 'climate_change',
     englishNames: ['Climate change'],
-    spanishName: 'Cambio Clim\u00f3tico',
+    spanishName: 'Cambio Clim\u00e1tico',
     unit: 'kg CO2 eq',
     color: '#ef4444',
   },

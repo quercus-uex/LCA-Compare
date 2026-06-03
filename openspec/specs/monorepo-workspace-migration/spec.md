@@ -8,9 +8,13 @@ The repository SHALL be organized as a pnpm workspace with deployable applicatio
 - **WHEN** the migration is applied
 - **THEN** the existing frontend code is located under `apps/web`, the existing backend code is located under `apps/server`, and the existing docs code is located under `apps/docs`
 
-#### Scenario: Common package exists without extracted code
-- **WHEN** the migration is applied
-- **THEN** `packages/common` exists as a workspace package and does not contain abstractions extracted from the existing apps
+#### Scenario: Common package provides extracted contracts
+- **WHEN** the shared-code extraction is applied
+- **THEN** `packages/common` exists as a workspace package containing shared contracts and constants extracted from the existing apps
+
+#### Scenario: Apps depend on common package
+- **WHEN** the server or web package builds
+- **THEN** each app SHALL resolve shared imports through the `common` workspace package
 
 ### Requirement: pnpm Package Management
 The repository SHALL use pnpm workspaces with a single root lockfile for backend, frontend, docs, and common package dependency management.

@@ -17,7 +17,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     && pnpm install --filter server... --frozen-lockfile
 
 COPY apps/server ./apps/server
+COPY packages/common ./packages/common
 
+RUN pnpm --filter common build
 RUN pnpm --filter server prisma:generate
 RUN pnpm --filter server build
 
@@ -48,5 +50,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 RUN pnpm --filter server exec playwright install chromium --with-deps
 
 COPY --from=builder /workspace/apps/server/dist ./apps/server/dist
+COPY --from=builder /workspace/packages/common/dist ./packages/common/dist
 
 CMD ["node", "apps/server/dist/src/main"]

@@ -17,6 +17,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     && pnpm install --filter web... --frozen-lockfile
 
 COPY apps/web ./apps/web
+COPY packages/common ./packages/common
+RUN pnpm --filter common build
 RUN pnpm --filter web build
 
 FROM nginx:alpine AS prod

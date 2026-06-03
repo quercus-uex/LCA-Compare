@@ -12,8 +12,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import type { CompareQueryItemDto as CompareQueryItemShape } from 'common/compare';
 
-export class CompareQueryItemDto {
+export class CompareQueryItemDto implements CompareQueryItemShape {
   @IsOptional()
   @IsUUID()
   idPais?: string;

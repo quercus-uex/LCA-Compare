@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Polygon } from 'geojson';
 import { CultivoDto } from '../../cultivo/dto/cultivo.dto';
+import type { Parcela } from 'common/parcela';
 
-export class ParcelaDto {
+export class ParcelaDto implements Parcela {
   @ApiProperty({ format: 'uuid' })
   id: string;
 

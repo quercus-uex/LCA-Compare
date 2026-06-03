@@ -2,7 +2,7 @@ import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { StatsService } from './stats.service';
 import { GlobalStatsDto } from './dto/global-stats.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { EF_CATEGORIES, type EfCategoryId } from '../compare/compare.types';
+import { EF_CATEGORIES, type EfCategoryId } from 'common/impact';
 
 const VALID_CATEGORY_IDS = EF_CATEGORIES.map((c) => c.id);
 const MIN_SUPPORTED_YEAR = 1900;

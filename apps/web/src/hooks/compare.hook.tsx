@@ -1,8 +1,13 @@
-import type { Pais, Poblacion, Provincia } from './location.hook.tsx';
-import type { Parcela } from './parcela.hook.tsx';
+import type { Pais, Poblacion, Provincia } from 'common/location';
+import type { Parcela } from 'common/parcela';
+import type { CompareFilterDto, CompareResultDto } from 'common/compare';
 import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
+
+export type { CompareFilterDto, CompareResultDto } from 'common/compare';
+export type { CompareResultItemDto } from 'common/compare';
+export type CompareResult = CompareResultDto;
 
 export type CompareFilterType = {
   pais?: Pais;
@@ -17,32 +22,16 @@ export type CompareFilterType = {
   anioCampaniaFin?: number;
 };
 
-export type CompareResultItem = {
-  category: string;
-  unit: string;
-  refAmount: number;
-  tarAmount?: number;
-  diff: number;
-}
-
-export type CompareResult = {
-  impacto_total: CompareResultItem[];
-  impacto_fertilizantes: CompareResultItem[];
-  impacto_sistema_riego: CompareResultItem[];
-  impacto_manejo_cultivo: CompareResultItem[];
-  impacto_pesticidas: CompareResultItem[];
-}
-
 type CompareContextType = {
-  compareSingle: (filters: CompareFilterType) => Promise<CompareResult>;
-  compare: (left: CompareFilterType, right: CompareFilterType) => Promise<CompareResult>;
+  compareSingle: (filters: CompareFilterType) => Promise<CompareResultDto>;
+  compare: (left: CompareFilterType, right: CompareFilterType) => Promise<CompareResultDto>;
   generateReport: (left: CompareFilterType, right: CompareFilterType) => Promise<void>;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {
-  const transformFilters = (filters: CompareFilterType) => {
+  const transformFilters = (filters: CompareFilterType): CompareFilterDto => {
     return {
       idsProvincia: filters.provincias?.map(p => p.id),
       idsPoblacion: filters.poblaciones?.map(p => p.id),
@@ -75,7 +64,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     }
 
     const json = await response.json();
-    return json.data as CompareResult;
+    return json.data as CompareResultDto;
 
   }
 
@@ -98,7 +87,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     }
 
     const json = await response.json();
-    return json.data as CompareResult;
+    return json.data as CompareResultDto;
   }
 
   const generateReport = async (reference: CompareFilterType, target: CompareFilterType) => {

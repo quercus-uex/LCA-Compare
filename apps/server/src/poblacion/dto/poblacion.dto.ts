@@ -1,7 +1,8 @@
 import { ProvinciaDto } from '../../provincia/provincia.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import type { Poblacion } from 'common/location';
 
-export class PoblacionDto {
+export class PoblacionDto implements Poblacion {
   @ApiProperty({ format: 'uuid' })
   id: string;
 

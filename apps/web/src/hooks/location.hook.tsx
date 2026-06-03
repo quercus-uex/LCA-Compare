@@ -1,27 +1,9 @@
 import { createContext, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
+import type { Pais, Provincia, Poblacion } from 'common/location';
 
-export type Pais = {
-  id: string;
-  codigo: string;
-  nombre: string;
-}
-
-export type Provincia = {
-  id: string;
-  nombre: string;
-  idCatastro: number;
-  pais?: Pais;
-}
-
-export type Poblacion = {
-  id: string;
-  idProvincia: string;
-  idCatastro: number;
-  nombre: string;
-  provincia?: Provincia;
-}
+export type { Pais, Provincia, Poblacion } from 'common/location';
 
 type LocationContextType = {
   getProvincias: () => Promise<Provincia[]>;

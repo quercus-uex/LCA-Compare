@@ -1,6 +1,7 @@
-import { ResultadoImpactoDto } from './resultado-impacto.dto';
+import { ResultadoImpactoDtoClass } from './resultado-impacto-item.dto';
+import type { ResultadoImpactoCompareDto as ResultadoImpactoCompareShape } from 'common/api';
 
-export class ResultadoImpactoCompareDto {
-  resultado: ResultadoImpactoDto;
-  nearbyMean: ResultadoImpactoDto;
+export class ResultadoImpactoCompareDto implements ResultadoImpactoCompareShape {
+  resultado: ResultadoImpactoDtoClass;
+  nearbyMean: ResultadoImpactoDtoClass;
 }

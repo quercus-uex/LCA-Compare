@@ -23,7 +23,7 @@ export const ResultComparisonTable = ({
               <th>Cantidad objetivo</th>
             )}
             <th>Unidad</th>
-            {result.impacto_total[0].tarAmount != null && <th>Diferencia</th>}
+            {result.impacto_total[0].tarAmount != null && result.impacto_total[0].diff != null && <th>Diferencia</th>}
           </tr>
         </thead>
         <tbody>
@@ -33,7 +33,7 @@ export const ResultComparisonTable = ({
               <th>{i.refAmount.toFixed(4)}</th>
               {i.tarAmount != null && <th>{i.tarAmount.toFixed(4)}</th>}
               <th>{i.unit}</th>
-              {i.tarAmount != null && (
+              {i.tarAmount != null && i.diff != null && (
                 <th
                   className={`${i.diff >= 0 ? 'text-red-400' : 'text-green-400'}`}
                 >

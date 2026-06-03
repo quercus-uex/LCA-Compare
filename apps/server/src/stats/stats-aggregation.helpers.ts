@@ -1,4 +1,4 @@
-import { EF_CATEGORIES, type EfCategoryId } from '../compare/compare.types';
+import { EF_CATEGORIES, type EfCategoryId } from 'common/impact';
 
 export type CategoryAmountRecord = Record<EfCategoryId, number>;
 

@@ -36,21 +36,21 @@ export const ParcelaRoute = () => {
             <div className="flex gap-2 items-center">
               <p>
                 <span className="font-bold">SIGPAC: </span>
-                {parcela.sigpac}
+                {parcela.sigpac ?? '-'}
               </p>
               <CopyToClipboardBtn text={parcela.sigpac} />
             </div>
             <div className="flex gap-2 items-center">
               <p>
                 <span className="font-bold">Referencia catastral: </span>
-                {parcela.refCat}
+                {parcela.refCat ?? '-'}
               </p>
               <CopyToClipboardBtn text={parcela.refCat} />
             </div>
             <div className="flex gap-2 items-center">
               <p>
                 <span className="font-bold">ID Portugal: </span>
-                {parcela.ptIdParcela}
+                {parcela.ptIdParcela ?? '-'}
               </p>
               <CopyToClipboardBtn text={parcela.ptIdParcela} />
             </div>

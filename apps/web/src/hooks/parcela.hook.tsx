@@ -2,29 +2,18 @@ import { createContext, useContext, useMemo } from 'react';
 import * as React from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import type { Polygon } from 'geojson';
+import type { Cultivo as CultivoBase, Parcela as ParcelaBase } from 'common/parcela';
 
-export type Cultivo = {
-  id: string;
-  fechaInicioCampania: string;
-  superficieCultivada: number;
-  produccion: number;
-  consumoAgua: number;
-  ciclo: number;
-  tipo: string;
-  idResultadoImpacto: string;
-  parcela?: Parcela;
-}
+export type { CultivoBase };
 
-export type Parcela = {
-  id: string;
-  sigpac: string;
-  refCat: string;
-  ptIdParcela: string;
-  nombre: string;
-  idPropietario: string;
+export type Parcela = ParcelaBase & {
   geom?: Polygon;
   cultivos?: Cultivo[];
-}
+};
+
+export type Cultivo = CultivoBase & {
+  parcela?: Parcela;
+};
 
 type ParcelaContextType = {
   getFromToken: () => Promise<Parcela[]>;

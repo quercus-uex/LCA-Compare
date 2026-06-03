@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { Cultivo } from 'common/parcela';
 
-export class CultivoDto {
+export class CultivoDto implements Cultivo {
   @ApiProperty({ format: 'uuid' })
   id: string;
 

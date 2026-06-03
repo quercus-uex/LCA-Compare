@@ -78,9 +78,9 @@ export const ResultadoRoute = () => {
           <div className="card bg-base-100 shadow-sm grow">
             <div className="card-body">
               <h2 className="card-title">{parcela.nombre}</h2>
-              <p>SIGPAC: {parcela.sigpac}</p>
-              <p>Referencia catastral: {parcela.refCat}</p>
-              <p>ID Portugal: {parcela.ptIdParcela}</p>
+              <p>SIGPAC: {parcela.sigpac ?? '-'}</p>
+              <p>Referencia catastral: {parcela.refCat ?? '-'}</p>
+              <p>ID Portugal: {parcela.ptIdParcela ?? '-'}</p>
             </div>
           </div>
 

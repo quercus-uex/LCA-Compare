@@ -1,14 +1,14 @@
-import type { EfCategoryId } from 'common/impact';
+import type { EfCategoryId } from './impact.js';
 
-export class KpiDto {
+export type KpiDto = {
   totalParcelas: number;
   totalCultivos: number;
   superficieTotal: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
   variacionInteranual: number | null;
-}
+};
 
-export class ProvinciaRankingItemDto {
+export type ProvinciaRankingItemDto = {
   idProvincia: string;
   nombreProvincia: string;
   numParcelas: number;
@@ -19,35 +19,35 @@ export class ProvinciaRankingItemDto {
   impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
   eficiencia: number;
-}
+};
 
-export class PoblacionRankingItemDto {
+export type PoblacionRankingItemDto = {
   idPoblacion: string;
   nombrePoblacion: string;
   nombreProvincia: string;
   numParcelas: number;
   impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
-}
+};
 
-export class EvolucionTemporalItemDto {
+export type EvolucionTemporalItemDto = {
   anio: number;
   numCultivos: number;
   categorias: Record<EfCategoryId, number>;
   totalImpacto: number;
-}
+};
 
-export class DistribucionCultivoItemDto {
+export type DistribucionCultivoItemDto = {
   tipo: string;
   count: number;
   superficieTotal: number;
-}
+};
 
-export class GlobalStatsDto {
+export type GlobalStatsDto = {
   kpis: KpiDto;
   rankingProvincias: ProvinciaRankingItemDto[];
   rankingPoblaciones: PoblacionRankingItemDto[];
   evolucionTemporal: EvolucionTemporalItemDto[];
   distribucionCultivos: DistribucionCultivoItemDto[];
   aniosDisponibles: number[];
-}
+};

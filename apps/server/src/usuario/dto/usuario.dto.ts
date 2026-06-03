@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { Usuario } from 'common/usuario';
 
-export class UsuarioDto {
+export class UsuarioDto implements Usuario {
   @ApiProperty({ format: 'uuid' })
   id: string;
 

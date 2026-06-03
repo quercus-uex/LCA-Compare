@@ -8,9 +8,9 @@ export const ParcelasItem = ({ parcela }: { parcela: Parcela }) => {
     <div className="card bg-base-100 w-96 shadow-sm">
       <div className="card-body">
         <h2 className="card-title">{parcela.nombre}</h2>
-        <p>SIGPAC: {parcela.sigpac}</p>
-        <p>Referencia catastral: {parcela.refCat}</p>
-        <p>ID Portugal: {parcela.ptIdParcela}</p>
+        <p>SIGPAC: {parcela.sigpac ?? '-'}</p>
+        <p>Referencia catastral: {parcela.refCat ?? '-'}</p>
+        <p>ID Portugal: {parcela.ptIdParcela ?? '-'}</p>
         <div className="card-actions justify-end">
           <button
             className="btn btn-primary btn-circle"

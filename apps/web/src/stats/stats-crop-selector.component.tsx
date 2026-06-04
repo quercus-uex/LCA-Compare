@@ -1,4 +1,5 @@
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   selected?: string;
@@ -11,6 +12,8 @@ export const StatsCropSelector = ({
   onChange,
   distribucionCultivos,
 }: Props) => {
+  const { t } = useTranslation();
+
   return (
     <select
       className="select select-bordered select-sm min-w-40"
@@ -19,7 +22,7 @@ export const StatsCropSelector = ({
         onChange(e.target.value ? e.target.value : undefined)
       }
     >
-      <option value="">Todos los cultivos</option>
+      <option value="">{t('stats.filters.allCrops')}</option>
       {distribucionCultivos.map((d) => (
         <option key={d.tipo} value={d.tipo}>
           {d.tipo}

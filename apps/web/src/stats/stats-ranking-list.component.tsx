@@ -3,6 +3,7 @@ import {
   deriveRankingLists,
   type RankedEntry,
 } from './stats-ranking.helpers.ts';
+import { useTranslation } from 'react-i18next';
 
 type RankingPanelsProps<T> = {
   ranking: T[];
@@ -59,13 +60,14 @@ function RankingCard<T>({
   renderSecondary,
   categoryLabel,
   impactUnit,
-  emptyLabel = 'Sin datos',
+  emptyLabel,
   onActivate,
 }: RankingPanelsProps<T> & {
   title: string;
   tone: 'success' | 'error' | 'neutral';
   entries: RankedEntry<T>[];
 }) {
+  const { t } = useTranslation();
   const toneClasses =
     tone === 'success'
       ? 'bg-success text-success-content'
@@ -127,7 +129,7 @@ function RankingCard<T>({
             );
           })}
           {entries.length === 0 && (
-            <p className="text-sm text-base-content/50 p-2">{emptyLabel}</p>
+            <p className="text-sm text-base-content/50 p-2">{emptyLabel ?? t('common.empty.noData')}</p>
           )}
         </ul>
       </div>
@@ -147,11 +149,12 @@ export function StatsRankingPanels<T>({
   onActivate,
 }: RankingPanelsProps<T>) {
   const { best, worst } = deriveRankingLists(ranking);
+  const { t } = useTranslation();
 
   if (ranking.length < 20) {
     return (
       <RankingCard
-        title="Top 10"
+        title={t('stats.ranking.top10')}
         tone="neutral"
         entries={best}
         ranking={ranking}
@@ -170,7 +173,7 @@ export function StatsRankingPanels<T>({
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <RankingCard
-        title="Top 10 - Menor Impacto"
+        title={t('stats.ranking.lowerImpact')}
         tone="success"
         entries={best}
         ranking={ranking}
@@ -184,7 +187,7 @@ export function StatsRankingPanels<T>({
         onActivate={onActivate}
       />
       <RankingCard
-        title="Top 10 - Mayor Impacto"
+        title={t('stats.ranking.higherImpact')}
         tone="error"
         entries={worst}
         ranking={ranking}
@@ -196,7 +199,7 @@ export function StatsRankingPanels<T>({
         impactUnit={impactUnit}
         emptyLabel={
           ranking.length > 0
-            ? 'No hay suficientes datos para una lista distinta'
+            ? t('stats.ranking.notEnoughData')
             : emptyLabel
         }
         onActivate={onActivate}

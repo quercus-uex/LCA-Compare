@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ProvinciaFilterCollapse } from './provincia-filter-collapse.component.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
@@ -7,6 +7,7 @@ import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.compone
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const CompareFilterCard = (
   { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void }
@@ -17,13 +18,7 @@ export const CompareFilterCard = (
     provincias: [],
     poblaciones: [],
   });
-
-  useEffect(() => {
-  }, [filters]);
-
-  useEffect(() => {
-    if (!enabled) onSubmit(undefined);
-  }, [enabled]);
+  const { t } = useTranslation();
 
   return (
     <div className="collapse max-xl:collapse-close xl:collapse-open xl:card bg-base-100 xl:min-w-72 xl:w-1/5 h-fit xl:flex-1">
@@ -39,7 +34,10 @@ export const CompareFilterCard = (
               type="checkbox"
               className="toggle toggle-lg"
               checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
+              onChange={(e) => {
+                setEnabled(e.target.checked);
+                if (!e.target.checked) onSubmit(undefined);
+              }}
             />
           )}
         </div>
@@ -112,7 +110,7 @@ export const CompareFilterCard = (
 
           <div className="flex gap-2">
             <div className="divider w-full p-0 m-0" />
-            Y
+            {t('compare.filters.and')}
             <div className="divider w-full p-0 m-0" />
           </div>
 
@@ -129,7 +127,7 @@ export const CompareFilterCard = (
             className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}
             onClick={() => onSubmit(filters)}
           >
-            Aplicar filtros
+            {t('common.actions.applyFilters')}
           </button>
         </div>
       </div>

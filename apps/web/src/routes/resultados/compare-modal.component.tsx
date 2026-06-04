@@ -1,6 +1,8 @@
 import type { ResultadoImpactoComparison } from '../../hooks/resultado-impacto.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const CompareModal = ({ comparison }: { comparison?: ResultadoImpactoComparison }) => {
+  const { t } = useTranslation();
 
   if (!comparison) return <dialog id="compare-modal" className="modal" />;
   const impactos = comparison.resultado.datos.impacto_total.map((i) => i.category);
@@ -24,7 +26,7 @@ export const CompareModal = ({ comparison }: { comparison?: ResultadoImpactoComp
       <div className="modal-box h-11/12 w-11/12 max-w-6xl overflow-hidden">
         <form method="dialog">
           <button className="btn btn-sm btn-circle btn-ghost absolute top-2 right-2">
-            ✕
+            {t('common.actions.close')}
           </button>
         </form>
 
@@ -32,13 +34,13 @@ export const CompareModal = ({ comparison }: { comparison?: ResultadoImpactoComp
           <table className="table">
             <thead>
               <tr>
-                <th>Categoría</th>
-                <th>Pesticidas</th>
-                <th>Fertilizantes</th>
-                <th>Sistema de riego</th>
-                <th>Manejo de cultivo</th>
-                <th>Total</th>
-                <th>Unidad</th>
+                <th>{t('common.fields.category')}</th>
+                <th>{t('common.fields.pesticides')}</th>
+                <th>{t('common.fields.fertilizers')}</th>
+                <th>{t('common.fields.irrigationSystem')}</th>
+                <th>{t('common.fields.cropManagement')}</th>
+                <th>{t('common.fields.total')}</th>
+                <th>{t('common.fields.unit')}</th>
               </tr>
             </thead>
             <tbody>

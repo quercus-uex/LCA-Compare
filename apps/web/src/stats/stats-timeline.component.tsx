@@ -12,16 +12,21 @@ import {
 import { EF_CATEGORIES } from '../common/constants.ts';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   data: EvolucionTemporalItemDto[];
 };
 
 export const StatsTimeline = ({ data }: Props) => {
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
+
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-80 text-base-content/50">
-        No hay datos de evolución temporal
+        {t('stats.chart.noTimelineData')}
       </div>
     );
   }
@@ -57,7 +62,7 @@ export const StatsTimeline = ({ data }: Props) => {
               const cat = EF_CATEGORIES.find((c) => c.id === n);
               return [
                 formatImpactValue(v, '0'),
-                cat ? `${cat.spanishName} (${cat.unit})` : n,
+                cat ? `${getCategoryLabel(cat.id)} (${cat.unit})` : n,
               ];
             }}
           />
@@ -67,7 +72,7 @@ export const StatsTimeline = ({ data }: Props) => {
               dataKey={(entry: EvolucionTemporalItemDto) =>
                 entry.categorias[cat.id] ?? 0
               }
-              name={cat.spanishName}
+              name={getCategoryLabel(cat.id)}
               stackId="1"
               stroke={cat.color}
               fill={cat.color}
@@ -85,7 +90,7 @@ export const StatsTimeline = ({ data }: Props) => {
                 className="text-[11px] font-semibold truncate"
                 style={{ color: cat.color }}
               >
-                {cat.spanishName}
+                {getCategoryLabel(cat.id)}
               </div>
               <ResponsiveContainer width="100%" height={60}>
                 <LineChart data={data}>

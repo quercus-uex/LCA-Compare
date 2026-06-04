@@ -4,12 +4,14 @@ import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { MapPreview } from '../../components/map-preview.component.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const ParcelaRoute = () => {
   const [parcela, setParcela] = useState<Parcela | undefined>(undefined);
   const p = useParcela();
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!id) return;
@@ -42,14 +44,14 @@ export const ParcelaRoute = () => {
             </div>
             <div className="flex gap-2 items-center">
               <p>
-                <span className="font-bold">Referencia catastral: </span>
+                <span className="font-bold">{t('common.fields.cadastralReference')}: </span>
                 {parcela.refCat ?? '-'}
               </p>
               <CopyToClipboardBtn text={parcela.refCat} />
             </div>
             <div className="flex gap-2 items-center">
               <p>
-                <span className="font-bold">ID Portugal: </span>
+                <span className="font-bold">{t('common.fields.portugalId')}: </span>
                 {parcela.ptIdParcela ?? '-'}
               </p>
               <CopyToClipboardBtn text={parcela.ptIdParcela} />
@@ -57,14 +59,14 @@ export const ParcelaRoute = () => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h2 className="text-xl ">Cultivo actual</h2>
+            <h2 className="text-xl ">{t('parcelas.currentCrop')}</h2>
             <CultivoCard cultivo={parcela.cultivos[0]} />
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-5">
-        <h2 className="text-2xl font-bold">Cultivos anteriores</h2>
+        <h2 className="text-2xl font-bold">{t('parcelas.previousCrops')}</h2>
         <div className="flex gap-5 flex-wrap ">
           {parcela.cultivos.slice(1).map((c) => (
             <CultivoCard key={c.id} cultivo={c} />

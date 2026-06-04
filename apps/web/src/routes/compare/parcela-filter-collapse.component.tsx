@@ -3,6 +3,7 @@ import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
 import { useAuth } from '../../hooks/auth.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const ParcelaFilterCollapse = (
   {
@@ -15,6 +16,7 @@ export const ParcelaFilterCollapse = (
 ) => {
   const parcela = useParcela();
   const { usuario } = useAuth();
+  const { t } = useTranslation();
 
   const [enabled, setEnabled] = useState<boolean>(!!(filters.parcelas && filters.parcelas.length > 0));
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
@@ -23,10 +25,6 @@ export const ParcelaFilterCollapse = (
   useEffect(() => {
     if (usuario) parcela.getFromToken().then((p) => setParcelas(p));
   }, [parcela, usuario]);
-
-  useEffect(() => {
-    if (!enabled) setFilters({ ...filters, parcelas: [] });
-  }, [enabled]);
 
   const toggleParcela = (p: Parcela) => {
     const selected = filters.parcelas!;
@@ -38,11 +36,19 @@ export const ParcelaFilterCollapse = (
   };
 
   return (
-    <FilterCollapse title="Parcelas" enabled={enabled} onToggle={setEnabled} disabled={!usuario}>
+    <FilterCollapse
+      title={t('compare.filters.plots')}
+      enabled={enabled}
+      onToggle={(isEnabled) => {
+        setEnabled(isEnabled);
+        if (!isEnabled) setFilters({ ...filters, parcelas: [] });
+      }}
+      disabled={!usuario}
+    >
       <div className="flex flex-col gap-5 w-full">
         <input
           className="input w-full"
-          placeholder="Parcela..."
+          placeholder={t('compare.filters.placeholders.plot')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

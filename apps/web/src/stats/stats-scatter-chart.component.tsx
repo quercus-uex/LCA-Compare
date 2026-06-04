@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { formatNumber } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -23,20 +24,23 @@ const CustomTooltip = ({
   active?: boolean;
   payload?: Array<{ payload: ProvinciaRankingItemDto & { z: number } }>;
 }) => {
+  const { t } = useTranslation();
+
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
     <div className="card bg-base-100 shadow-lg p-3 text-sm">
       <p className="font-bold">{d.nombreProvincia}</p>
-      <p>Producción: {formatNumber(d.produccionMedia, 2)} T/Ha</p>
-      <p>Consumo H₂O: {formatNumber(d.consumoAguaMedio, 1)} L/Ha</p>
-      <p>Superficie: {formatNumber(d.superficieTotal, 1)} Ha</p>
-      <p>Eficiencia: {formatNumber(d.eficiencia, 4)}</p>
+      <p>{t('common.fields.production')}: {formatNumber(d.produccionMedia, 2)} T/Ha</p>
+      <p>{t('stats.chart.h2oConsumption')}: {formatNumber(d.consumoAguaMedio, 1)} L/Ha</p>
+      <p>{t('stats.kpis.area')}: {formatNumber(d.superficieTotal, 1)} Ha</p>
+      <p>{t('stats.chart.efficiency')}: {formatNumber(d.eficiencia, 4)}</p>
     </div>
   );
 };
 
 export const StatsScatterChart = ({ ranking }: Props) => {
+  const { t } = useTranslation();
   const consumoValues = ranking.map((r) => r.consumoAguaMedio).sort((a, b) => a - b);
   const prodValues = ranking.map((r) => r.produccionMedia).sort((a, b) => a - b);
   const medianConsumo = consumoValues[Math.floor(consumoValues.length / 2)] ?? 0;
@@ -56,11 +60,11 @@ export const StatsScatterChart = ({ ranking }: Props) => {
         <XAxis
           type="number"
           dataKey="consumoAguaMedio"
-          name="Consumo H₂O"
+          name={t('stats.chart.h2oConsumption')}
           unit=" L/Ha"
           tick={{ fontSize: 12 }}
           label={{
-            value: 'Consumo H₂O (L/Ha)',
+            value: t('stats.chart.h2oConsumptionAxis'),
             position: 'bottom',
             offset: -5,
             style: { fontSize: 12 },
@@ -69,11 +73,11 @@ export const StatsScatterChart = ({ ranking }: Props) => {
         <YAxis
           type="number"
           dataKey="produccionMedia"
-          name="Producción"
+          name={t('common.fields.production')}
           unit=" T/Ha"
           tick={{ fontSize: 12 }}
           label={{
-            value: 'Producción (T/Ha)',
+            value: t('stats.chart.productionAxis'),
             angle: -90,
             position: 'insideLeft',
             style: { fontSize: 12 },

@@ -1,4 +1,6 @@
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   selected?: EfCategoryId;
@@ -6,6 +8,9 @@ type Props = {
 };
 
 export const StatsCategorySelector = ({ selected, onChange }: Props) => {
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
+
   return (
     <select
       className="select select-bordered select-sm min-w-52"
@@ -16,10 +21,10 @@ export const StatsCategorySelector = ({ selected, onChange }: Props) => {
         )
       }
     >
-      <option value="">Todas las categorías</option>
+      <option value="">{t('stats.filters.allCategories')}</option>
       {EF_CATEGORIES.map((cat) => (
         <option key={cat.id} value={cat.id}>
-          {cat.spanishName}
+          {getCategoryLabel(cat.id)}
         </option>
       ))}
     </select>

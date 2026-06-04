@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../common/constants.ts';
 import { toast } from 'sonner';
 import { SmartPagination } from './smart-pagination.component.tsx';
 import { IdLookupField, type FkConfig } from './id-lookup-field.component.tsx';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 15;
 
@@ -20,19 +21,19 @@ const ENTITIES = [
 
 type Entity = (typeof ENTITIES)[number];
 
-const LABELS: Record<Entity, string> = {
-  usuarios: 'Usuarios',
-  parcelas: 'Parcelas',
-  cultivos: 'Cultivos',
-  'metodos-impacto': 'Met. Impacto',
-  paises: 'Países',
-  provincias: 'Provincias',
-  poblaciones: 'Poblaciones',
+const ENTITY_LABEL_KEYS: Record<Entity, string> = {
+  usuarios: 'admin.entities.usuarios',
+  parcelas: 'admin.entities.parcelas',
+  cultivos: 'admin.entities.cultivos',
+  'metodos-impacto': 'admin.entities.metodosImpacto',
+  paises: 'admin.entities.paises',
+  provincias: 'admin.entities.provincias',
+  poblaciones: 'admin.entities.poblaciones',
 };
 
 type FieldConfig = {
   name: string;
-  label: string;
+  labelKey: string;
   type: 'text' | 'email' | 'password' | 'number' | 'datetime-local';
   optional?: boolean;
 };
@@ -44,27 +45,27 @@ const CONFIG: Record<
   usuarios: {
     tableFields: ['nombre', 'apellidos', 'email', 'rol'],
     formFields: [
-      { name: 'nombre', label: 'Nombre', type: 'text' },
-      { name: 'apellidos', label: 'Apellidos', type: 'text' },
-      { name: 'email', label: 'Email', type: 'email' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
+      { name: 'apellidos', labelKey: 'admin.fields.apellidos', type: 'text' },
+      { name: 'email', labelKey: 'admin.fields.email', type: 'email' },
       {
         name: 'passwordHash',
-        label: 'Contraseña',
+        labelKey: 'admin.fields.passwordHash',
         type: 'password',
         optional: true,
       },
-      { name: 'rol', label: 'Rol', type: 'text' },
+      { name: 'rol', labelKey: 'admin.fields.rol', type: 'text' },
     ],
   },
   parcelas: {
     tableFields: ['nombre', 'sigpac', 'refCat', 'idPropietario'],
     formFields: [
-      { name: 'nombre', label: 'Nombre', type: 'text' },
-      { name: 'sigpac', label: 'SIGPAC', type: 'text' },
-      { name: 'refCat', label: 'Ref. Catastral', type: 'text' },
-      { name: 'ptIdParcela', label: 'PT ID', type: 'text' },
-      { name: 'idPropietario', label: 'ID Propietario', type: 'text' },
-      { name: 'idPoblacion', label: 'ID Población', type: 'text' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
+      { name: 'sigpac', labelKey: 'admin.fields.sigpac', type: 'text' },
+      { name: 'refCat', labelKey: 'admin.fields.refCat', type: 'text' },
+      { name: 'ptIdParcela', labelKey: 'admin.fields.ptIdParcela', type: 'text' },
+      { name: 'idPropietario', labelKey: 'admin.fields.idPropietario', type: 'text' },
+      { name: 'idPoblacion', labelKey: 'admin.fields.idPoblacion', type: 'text' },
     ],
   },
   cultivos: {
@@ -75,47 +76,47 @@ const CONFIG: Record<
       'produccion',
     ],
     formFields: [
-      { name: 'tipo', label: 'Tipo', type: 'text' },
+      { name: 'tipo', labelKey: 'admin.fields.tipo', type: 'text' },
       {
         name: 'fechaInicioCampania',
-        label: 'Fecha Inicio Campaña',
+        labelKey: 'admin.fields.fechaInicioCampania',
         type: 'datetime-local',
       },
-      { name: 'superficieCultivada', label: 'Superficie (ha)', type: 'number' },
-      { name: 'produccion', label: 'Producción (kg)', type: 'number' },
-      { name: 'consumoAgua', label: 'Consumo Agua (m³)', type: 'number' },
-      { name: 'ciclo', label: 'Ciclo', type: 'number' },
-      { name: 'idParcela', label: 'ID Parcela', type: 'text' },
+      { name: 'superficieCultivada', labelKey: 'admin.fields.superficieCultivada', type: 'number' },
+      { name: 'produccion', labelKey: 'admin.fields.produccion', type: 'number' },
+      { name: 'consumoAgua', labelKey: 'admin.fields.consumoAgua', type: 'number' },
+      { name: 'ciclo', labelKey: 'admin.fields.ciclo', type: 'number' },
+      { name: 'idParcela', labelKey: 'admin.fields.idParcela', type: 'text' },
     ],
   },
   'metodos-impacto': {
     tableFields: ['id', 'nombre'],
     formFields: [
-      { name: 'id', label: 'ID', type: 'text' },
-      { name: 'nombre', label: 'Nombre', type: 'text' },
+      { name: 'id', labelKey: 'admin.fields.id', type: 'text' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
     ],
   },
   paises: {
     tableFields: ['nombre', 'codigo'],
     formFields: [
-      { name: 'nombre', label: 'Nombre', type: 'text' },
-      { name: 'codigo', label: 'Código', type: 'text' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
+      { name: 'codigo', labelKey: 'admin.fields.codigo', type: 'text' },
     ],
   },
   provincias: {
     tableFields: ['nombre', 'idCatastro', 'idPais'],
     formFields: [
-      { name: 'nombre', label: 'Nombre', type: 'text' },
-      { name: 'idCatastro', label: 'ID Catastro', type: 'number' },
-      { name: 'idPais', label: 'ID País', type: 'text' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
+      { name: 'idCatastro', labelKey: 'admin.fields.idCatastro', type: 'number' },
+      { name: 'idPais', labelKey: 'admin.fields.idPais', type: 'text' },
     ],
   },
   poblaciones: {
     tableFields: ['nombre', 'idCatastro', 'idProvincia'],
     formFields: [
-      { name: 'nombre', label: 'Nombre', type: 'text' },
-      { name: 'idCatastro', label: 'ID Catastro', type: 'number' },
-      { name: 'idProvincia', label: 'ID Provincia', type: 'text' },
+      { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
+      { name: 'idCatastro', labelKey: 'admin.fields.idCatastro', type: 'number' },
+      { name: 'idProvincia', labelKey: 'admin.fields.idProvincia', type: 'text' },
     ],
   },
 };
@@ -140,6 +141,7 @@ const FK_REFERENCES: Record<string, FkConfig> = {
 export const AdminRoute = () => {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<Entity>('usuarios');
   const [data, setData] = useState<Record<string, unknown>[]>([]);
@@ -161,6 +163,8 @@ export const AdminRoute = () => {
 
   const token = `Bearer ${localStorage.getItem('token')}`;
   const getEntity = () => modalEntity ?? activeTab;
+  const getEntityLabel = (entity: Entity) => t(ENTITY_LABEL_KEYS[entity]);
+  const getFieldLabel = (field: FieldConfig) => t(field.labelKey);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -178,10 +182,10 @@ export const AdminRoute = () => {
       setTotal(json.total ?? 0);
       initialLoadDone.current = true;
     } catch {
-      toast.error('Error al cargar datos');
+      toast.error(t('admin.messages.loadError'));
     }
     setLoading(false);
-  }, [activeTab, search, page, token]);
+  }, [activeTab, search, page, token, t]);
 
   useEffect(() => {
     if (!auth.loading && (!auth.usuario || auth.usuario.rol !== 'admin')) {
@@ -301,7 +305,7 @@ export const AdminRoute = () => {
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
-        toast.success('Creado correctamente');
+        toast.success(t('admin.messages.created'));
       } else {
         const id = currentItem?.id as string;
         const res = await fetch(`${API_BASE_URL}/admin/${entity}/${id}`, {
@@ -310,29 +314,29 @@ export const AdminRoute = () => {
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
-        toast.success('Actualizado correctamente');
+        toast.success(t('admin.messages.updated'));
       }
       closeModal();
       void fetchData();
     } catch {
-      toast.error('Error al guardar');
+      toast.error(t('admin.messages.saveError'));
     }
   };
 
   const handleDelete = async (id: string, entity?: Entity) => {
     const e = entity ?? getEntity();
-    if (!window.confirm('¿Eliminar este registro?')) return;
+    if (!window.confirm(t('admin.deleteConfirm'))) return;
     try {
       const res = await fetch(`${API_BASE_URL}/admin/${e}/${id}`, {
         method: 'DELETE',
         headers: { Authorization: token },
       });
       if (!res.ok) throw new Error();
-      toast.success('Eliminado correctamente');
+      toast.success(t('admin.messages.deleted'));
       if (data.length === 1 && page > 0) setPage((p) => p - 1);
       else void fetchData();
     } catch {
-      toast.error('Error al eliminar');
+      toast.error(t('admin.messages.deleteError'));
     }
   };
 
@@ -354,7 +358,7 @@ export const AdminRoute = () => {
     <div className="w-full">
       <div className="card bg-base-100 shadow-md border border-base-200">
         <div className="card-body">
-          <h1 className="card-title text-xl mb-2">Panel de Administración</h1>
+          <h1 className="card-title text-xl mb-2">{t('admin.title')}</h1>
 
           <div role="tablist" className="tabs tabs-lifted tabs-md gap-1">
             {ENTITIES.map((entity) => (
@@ -368,7 +372,7 @@ export const AdminRoute = () => {
                 }`}
                 onClick={() => setActiveTab(entity)}
               >
-                {LABELS[entity]}
+                {getEntityLabel(entity)}
               </a>
             ))}
           </div>
@@ -376,17 +380,17 @@ export const AdminRoute = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-3">
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold shrink-0">
-                {LABELS[activeTab]}
+                {getEntityLabel(activeTab)}
               </h2>
               {initialLoadDone.current && (
-                <span className="badge badge-ghost badge-sm">{total} total</span>
+                <span className="badge badge-ghost badge-sm">{t('admin.total', { total })}</span>
               )}
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               <input
                 type="text"
                 className="input input-bordered input-sm flex-1 sm:w-64"
-                placeholder={`Buscar ${LABELS[activeTab].toLowerCase()}...`}
+                placeholder={t('admin.searchPlaceholder', { entity: getEntityLabel(activeTab).toLowerCase() })}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -397,7 +401,7 @@ export const AdminRoute = () => {
                 className="btn btn-primary btn-sm gap-1"
                 onClick={openCreateModal}
               >
-                <span className="text-lg leading-none">+</span> Nuevo
+                <span className="text-lg leading-none">+</span> {t('admin.new')}
               </button>
             </div>
           </div>
@@ -413,12 +417,12 @@ export const AdminRoute = () => {
             ) : data.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-base-content/40 text-lg">
-                  {search ? 'Sin resultados' : 'Sin registros'}
+                  {search ? t('common.empty.noResults') : t('common.empty.noData')}
                 </p>
                 <p className="text-base-content/30 text-sm mt-1">
                   {search
-                    ? `No se encontraron ${LABELS[activeTab].toLowerCase()} con ese criterio`
-                    : `Crea el primer registro con el botón "+ Nuevo"`}
+                    ? t('admin.emptySearch', { entity: getEntityLabel(activeTab).toLowerCase() })
+                    : t('admin.emptyCreate')}
                 </p>
               </div>
             ) : (
@@ -429,7 +433,7 @@ export const AdminRoute = () => {
                     {config.tableFields.map((field) => (
                       <th key={field} className="truncate text-xs font-semibold uppercase tracking-wide text-base-content/60">{field}</th>
                     ))}
-                    <th className="w-36 text-xs font-semibold uppercase tracking-wide text-base-content/60">Acciones</th>
+                    <th className="w-36 text-xs font-semibold uppercase tracking-wide text-base-content/60">{t('common.fields.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -454,7 +458,7 @@ export const AdminRoute = () => {
                                 <button
                                   className="btn btn-ghost btn-xs btn-circle"
                                   onClick={() => toggleExpand(id)}
-                                  title="Ver cultivos"
+                                  title={t('admin.viewCrops')}
                                 >
                                   {isExpanded ? '▾' : '▸'}
                                 </button>
@@ -471,7 +475,7 @@ export const AdminRoute = () => {
                                ) : fkTarget ? (
                                  <button
                                    className="link link-hover text-primary text-xs"
-                                   title={`Ir a ${LABELS[fkTarget]}`}
+                                    title={t('admin.goTo', { entity: getEntityLabel(fkTarget) })}
                                    onClick={() => navigateToTab(fkTarget, String(item[field]))}
                                  >
                                    {cellValue}
@@ -488,13 +492,13 @@ export const AdminRoute = () => {
                                 className="btn btn-xs btn-outline"
                                 onClick={() => openEditModal(item)}
                               >
-                                Editar
+                                {t('common.actions.edit')}
                               </button>
                               <button
                                 className="btn btn-xs btn-ghost text-error hover:bg-error/10"
                                 onClick={() => { void handleDelete(id); }}
                               >
-                                Eliminar
+                                {t('common.actions.delete')}
                               </button>
                             </div>
                           </td>
@@ -505,18 +509,18 @@ export const AdminRoute = () => {
                             <td colSpan={colSpan} className="p-0">
                               <div className="bg-base-200 rounded-box p-3 m-1">
                                 <h4 className="text-sm font-semibold mb-2">
-                                  Cultivos de {(item.nombre as string) ?? id}
+                                  {t('admin.cropsOf', { name: (item.nombre as string) ?? id })}
                                 </h4>
                                 <table className="table table-xs table-fixed w-full">
                                   <thead>
                                     <tr>
-                                      <th>Tipo</th>
-                                      <th>Inicio Campaña</th>
-                                      <th>Superficie (ha)</th>
-                                      <th>Producción (kg)</th>
-                                      <th>Consumo Agua (m³)</th>
-                                      <th>Ciclo</th>
-                                      <th className="w-36">Acciones</th>
+                                      <th>{t('admin.fields.tipo')}</th>
+                                      <th>{t('admin.fields.inicioCampania')}</th>
+                                      <th>{t('admin.fields.superficieCultivada')}</th>
+                                      <th>{t('admin.fields.produccion')}</th>
+                                      <th>{t('admin.fields.consumoAgua')}</th>
+                                      <th>{t('admin.fields.ciclo')}</th>
+                                      <th className="w-36">{t('common.fields.actions')}</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -550,13 +554,13 @@ export const AdminRoute = () => {
                                               className="btn btn-xs btn-outline"
                                               onClick={() => openEditModal(c, 'cultivos')}
                                             >
-                                              Editar
+                                              {t('common.actions.edit')}
                                             </button>
                                             <button
                                               className="btn btn-xs btn-ghost text-error hover:bg-error/10"
                                               onClick={() => { void handleDelete(c.id as string, 'cultivos'); }}
                                             >
-                                              Eliminar
+                                              {t('common.actions.delete')}
                                             </button>
                                           </div>
                                         </td>
@@ -587,19 +591,19 @@ export const AdminRoute = () => {
 
       {modalOpen && (() => {
             const modalCfg = CONFIG[getEntity()];
-            const modalLabel = LABELS[getEntity()];
+            const modalLabel = getEntityLabel(getEntity());
             return (
         <div className="modal modal-open backdrop:transition-opacity backdrop:duration-200">
           <div className="modal-box max-w-lg transition-transform duration-200">
             <h3 className="font-bold text-lg mb-1">
               {modalMode === 'create'
-                ? `Nuevo ${modalLabel.slice(0, -1)}`
-                : `Editar ${modalLabel.slice(0, -1)}`}
+                ? t('admin.newEntity', { entity: modalLabel.slice(0, -1).toLowerCase() })
+                : t('admin.editEntity', { entity: modalLabel.slice(0, -1).toLowerCase() })}
             </h3>
             <p className="text-sm text-base-content/50 mb-4">
               {modalMode === 'create'
-                ? 'Completa los campos para crear un nuevo registro'
-                : 'Modifica los campos y guarda los cambios'}
+                ? t('admin.createHelp')
+                : t('admin.editHelp')}
             </p>
 
             <div className="flex flex-col gap-3">
@@ -614,14 +618,14 @@ export const AdminRoute = () => {
                   return (
                     <label key={field.name} className="form-control w-full">
                       <div className="label py-0.5">
-                        <span className="label-text">{field.label}</span>
+                        <span className="label-text">{getFieldLabel(field)}</span>
                       </div>
                       <select
                         className="select select-bordered w-full"
                         value={form[field.name] ?? ''}
                         onChange={(e) => handleChange(field.name, e.target.value)}
                       >
-                        <option value="" disabled>Seleccionar rol...</option>
+                        <option value="" disabled>{t('admin.selectRole')}</option>
                         {ROLES.map((r) => (
                           <option key={r} value={r}>{r}</option>
                         ))}
@@ -634,7 +638,7 @@ export const AdminRoute = () => {
                   return (
                     <label key={field.name} className="form-control w-full">
                       <div className="label py-0.5">
-                        <span className="label-text">{field.label}</span>
+                        <span className="label-text">{getFieldLabel(field)}</span>
                       </div>
                       <IdLookupField
                         name={field.name}
@@ -651,9 +655,9 @@ export const AdminRoute = () => {
                   <label key={field.name} className="form-control w-full">
                     <div className="label py-0.5">
                       <span className="label-text">
-                        {field.label}
+                        {getFieldLabel(field)}
                         {field.optional && modalMode === 'edit'
-                          ? ' (opcional)'
+                          ? ` (${t('admin.optional')})`
                           : ''}
                       </span>
                     </div>
@@ -666,7 +670,7 @@ export const AdminRoute = () => {
                             : field.type
                       }
                       className="input input-bordered w-full"
-                      placeholder={field.label}
+                      placeholder={getFieldLabel(field)}
                       value={form[field.name] ?? ''}
                       disabled={isDisabled}
                       onChange={(e) => handleChange(field.name, e.target.value)}
@@ -678,10 +682,10 @@ export const AdminRoute = () => {
 
             <div className="modal-action mt-6 pt-3 border-t border-base-300">
               <button className="btn btn-ghost btn-sm" onClick={closeModal}>
-                Cancelar
+                {t('common.actions.cancel')}
               </button>
               <button className="btn btn-primary btn-sm" onClick={() => { void handleSubmit(); }}>
-                {modalMode === 'create' ? 'Crear' : 'Guardar'}
+                {modalMode === 'create' ? t('common.actions.create') : t('common.actions.save')}
               </button>
             </div>
           </div>

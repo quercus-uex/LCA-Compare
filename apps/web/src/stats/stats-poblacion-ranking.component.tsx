@@ -5,6 +5,8 @@ import { type Provincia, useLocation } from '../hooks/location.hook.tsx';
 import type { PoblacionRankingItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: PoblacionRankingItemDto[];
@@ -23,6 +25,8 @@ export const StatsPoblacionRanking = ({
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
 
   useEffect(() => {
     location.getProvincias().then((p) => setProvincias(p));
@@ -81,7 +85,7 @@ export const StatsPoblacionRanking = ({
             )
           }
         >
-          <option value="">Todas las provincias</option>
+          <option value="">{t('stats.filters.allProvinces')}</option>
           {provincias.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nombre}
@@ -90,7 +94,7 @@ export const StatsPoblacionRanking = ({
         </select>
         <input
           className="input input-bordered input-sm w-full"
-          placeholder="Buscar población..."
+          placeholder={t('stats.filters.searchTown')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -100,11 +104,11 @@ export const StatsPoblacionRanking = ({
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body p-4">
             <h3 className="card-title text-base">
-              Resultados de búsqueda ({searchResults.length})
+              {t('stats.ranking.searchResults', { count: searchResults.length })}
             </h3>
             {searchResults.length === 0 ? (
               <p className="text-sm text-base-content/50 p-2">
-                Sin resultados
+                {t('common.empty.noResults')}
               </p>
             ) : (
               <ul className="space-y-1 mt-2">
@@ -123,7 +127,7 @@ export const StatsPoblacionRanking = ({
                           {item.nombrePoblacion}
                         </p>
                         <p className="text-xs opacity-70">
-                          {item.nombreProvincia} · {item.numParcelas} parcelas
+                          {item.nombreProvincia} - {t('stats.ranking.plotsCount', { count: item.numParcelas })}
                         </p>
                       </div>
                       <span className="text-sm font-mono font-bold whitespace-nowrap">
@@ -149,11 +153,11 @@ export const StatsPoblacionRanking = ({
         getValue={getValue}
         renderPrimary={(item) => item.nombrePoblacion}
         renderSecondary={(item) =>
-          `${item.nombreProvincia} · ${item.numParcelas} parcelas`
+          `${item.nombreProvincia} - ${t('stats.ranking.plotsCount', { count: item.numParcelas })}`
         }
-        categoryLabel={selectedCategoryData?.spanishName}
+        categoryLabel={selectedCategoryData ? getCategoryLabel(selectedCategoryData.id) : undefined}
         impactUnit={selectedCategoryData?.unit}
-        emptyLabel="Sin datos"
+        emptyLabel={t('common.empty.noData')}
         onActivate={handleActivate}
       />
     </div>

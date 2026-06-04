@@ -1,6 +1,7 @@
-import { useMemo, createContext, useEffect, useState, useContext } from 'react';
+import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 type Usuario = {
   id: string;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [loading, setLoading] = useState(true);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -52,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => { setLoading(false) })
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -62,21 +64,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     if (!response.ok) {
-      toast.error("Email o contraseña incorrectos");
+      toast.error(t('auth.login.invalidCredentials'));
       return false;
     }
 
     const json = await response.json();
     localStorage.setItem('token', json.data.accessToken);
     return true;
-  }
+  }, [t]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     window.location.reload();
-  }
+  }, []);
 
-  const value = useMemo(() => ({ usuario, loading, login, logout }), [usuario, loading]);
+  const value = useMemo(() => ({ usuario, loading, login, logout }), [usuario, loading, login, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

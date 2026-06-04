@@ -1,32 +1,37 @@
 import { useAuth } from '../hooks/auth.hook.tsx';
 import { Link, useNavigate } from 'react-router';
 import {FiExternalLink} from "react-icons/fi";
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from './language-selector.component.tsx';
 
 export const NavBar = () => {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   return (
     <div className="w-full">
-      <div className="w-full h-16 bg-white flex items-center p-3 rounded-xl">
+      <div className="w-full min-h-16 bg-white flex items-center p-3 rounded-xl gap-3 flex-wrap">
         <div className="flex-1">
-          <p>Comparador ACV</p>
+          <p>{t('nav.appName')}</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
+          <LanguageSelector />
+
           <a href="https://acv-compare-docs.netlify.app" target="_blank" rel="noopener noreferrer">
             <button className="btn btn-ghost">
               <FiExternalLink />
-              Documentación
+              {t('nav.documentation')}
             </button>
           </a>
 
           <button className="btn" onClick={() => navigate('/compare')}>
-            Comparador
+            {t('nav.compare')}
           </button>
 
           <button className="btn" onClick={() => navigate('/estadisticas')}>
-            Estadísticas
+            {t('nav.statistics')}
           </button>
 
           {auth.loading ? (
@@ -37,7 +42,7 @@ export const NavBar = () => {
                 className="btn btn-md btn-primary"
                 onClick={() => navigate('/auth/login')}
               >
-                Iniciar sesión
+                {t('nav.login')}
               </button>
             )
           )}
@@ -52,7 +57,7 @@ export const NavBar = () => {
                 <div className="w-10 rounded-full">
                   <img
                     src="https://cdn-icons-png.freepik.com/512/12225/12225935.png"
-                    alt="Imagen de perfil"
+                    alt={t('nav.profileImageAlt')}
                   />
                 </div>
               </div>
@@ -63,20 +68,20 @@ export const NavBar = () => {
               >
                 <li>
                   <Link to="/parcelas">
-                    <p>Mis parcelas</p>
+                    <p>{t('nav.myPlots')}</p>
                   </Link>
                 </li>
                 {auth.usuario.rol === 'admin' && (
                   <li>
                     <Link to="/admin">
-                      <p>Administración</p>
+                      <p>{t('nav.admin')}</p>
                     </Link>
                   </li>
                 )}
                 <div className="divider m-0"></div>
                 <li>
                   <a className="btn btn-error" onClick={auth.logout}>
-                    Cerrar sesión
+                    {t('nav.logout')}
                   </a>
                 </li>
               </ul>

@@ -1,11 +1,13 @@
 import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { useEffect, useState } from 'react';
 import { ParcelasItem } from './parcelas-item.component.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const ParcelasRoute = () => {
   const [parcelas, setParcelas] = useState<Parcela[] | undefined>(undefined);
   const [query, setQuery] = useState<string>('');
   const parcela = useParcela();
+  const { t } = useTranslation();
 
   useEffect(() => {
     parcela.getFromToken()
@@ -16,7 +18,7 @@ export const ParcelasRoute = () => {
 
   return (
     <div className="flex flex-col gap-5 items-center">
-      <h1 className="text-3xl font-bold">Mis parcelas</h1>
+      <h1 className="text-3xl font-bold">{t('parcelas.title')}</h1>
 
       {!parcelas &&
         <div className="skeleton w-full h-full" />}
@@ -25,7 +27,7 @@ export const ParcelasRoute = () => {
           <input
               type="text"
               className="input"
-              placeholder="Buscar..."
+               placeholder={t('parcelas.searchPlaceholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
           />

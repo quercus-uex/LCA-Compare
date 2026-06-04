@@ -1,4 +1,5 @@
 import type { CompareResult } from '../hooks/compare.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const ResultComparisonTable = ({
   result,
@@ -12,18 +13,20 @@ export const ResultComparisonTable = ({
     | 'impacto_fertilizantes'
     | 'impacto_manejo_cultivo';
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="overflow-x-auto">
       <table className="table table-md">
         <thead>
           <tr>
-            <th>Categoría</th>
-            <th>Cantidad referencia</th>
+            <th>{t('common.fields.category')}</th>
+            <th>{t('common.fields.referenceAmount')}</th>
             {result.impacto_total[0].tarAmount != null && (
-              <th>Cantidad objetivo</th>
+              <th>{t('common.fields.targetAmount')}</th>
             )}
-            <th>Unidad</th>
-            {result.impacto_total[0].tarAmount != null && result.impacto_total[0].diff != null && <th>Diferencia</th>}
+            <th>{t('common.fields.unit')}</th>
+            {result.impacto_total[0].tarAmount != null && result.impacto_total[0].diff != null && <th>{t('common.fields.difference')}</th>}
           </tr>
         </thead>
         <tbody>

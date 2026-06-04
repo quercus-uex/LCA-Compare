@@ -2,6 +2,7 @@ import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
 import { useEffect, useState } from 'react';
 import { FilterCollapse } from './filter-collapse.component';
+import { useTranslation } from 'react-i18next';
 
 export const PaisFilterCollapse = (
   {
@@ -13,20 +14,24 @@ export const PaisFilterCollapse = (
   }
 ) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const [paises, setPaises] = useState<Pais[]>([]);
   const [enabled, setEnabled] = useState<boolean>(false);
   
   useEffect(() => {
-    if (!enabled) setFilters({ ...filters, pais: undefined });
-  }, [enabled]);
-  
-  useEffect(() => {
     location.getPaises()
       .then(p => setPaises(p))
-  }, []);
+  }, [location]);
   
   return (
-    <FilterCollapse title="País" enabled={enabled} onToggle={setEnabled}>
+    <FilterCollapse
+      title={t('compare.filters.country')}
+      enabled={enabled}
+      onToggle={(isEnabled) => {
+        setEnabled(isEnabled);
+        if (!isEnabled) setFilters({ ...filters, pais: undefined });
+      }}
+    >
       <div className="join flex">
         {paises.map((pais) => (
           <button

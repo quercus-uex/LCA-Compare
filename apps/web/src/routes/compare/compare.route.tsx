@@ -10,6 +10,7 @@ import { exportJSON, omitNullish } from '../../common/utils.ts';
 import { CompareResultCard } from './compare-result-card.component.tsx';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
 import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 type CompareRouteState = {
   parcelaObjetivo?: Parcela;
@@ -36,11 +37,12 @@ export const CompareRoute = () => {
   const [filtersObj, setFiltersObj] = useState<CompareFilterType | undefined>(initialObjetivoFilters);
   const [result, setResult] = useState<CompareResult | undefined>();
   const compare = useCompare();
+  const { t } = useTranslation();
 
   return (
     <div className="flex gap-5 w-full justify-center min-w-0 max-xl:flex-col">
       <CompareFilterCard
-        name="Referencia"
+        name={t('compare.filters.reference')}
         required
         initialFilters={initialReferenciaFilters}
         onSubmit={async (data) => {
@@ -66,7 +68,7 @@ export const CompareRoute = () => {
                     await compare.generateReport(filtersRef, filtersObj!);
                   }}
                 >
-                  Generar informe
+                  {t('compare.actions.generateReport')}
                 </button>
 
                 <button
@@ -81,7 +83,7 @@ export const CompareRoute = () => {
                     })
                   }
                 >
-                  Exportar comparativa
+                  {t('compare.actions.exportComparison')}
                 </button>
               </>
             )}
@@ -128,7 +130,7 @@ export const CompareRoute = () => {
                   })
                 }
               >
-                Exportar objetivo
+                {t('compare.actions.exportTarget')}
               </button>
             )}
             {result && (
@@ -174,7 +176,7 @@ export const CompareRoute = () => {
                   })
                 }
               >
-                Exportar objetivo
+                {t('compare.actions.exportReference')}
               </button>
             )}
           </div>
@@ -183,7 +185,7 @@ export const CompareRoute = () => {
       </div>
 
       <CompareFilterCard
-        name="Objetivo"
+        name={t('compare.filters.target')}
         initialFilters={initialObjetivoFilters}
         onSubmit={async (data) => {
           if (!data) return setFiltersObj(data);

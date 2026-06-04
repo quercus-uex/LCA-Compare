@@ -1,6 +1,7 @@
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FilterCollapse } from './filter-collapse.component';
+import { useTranslation } from 'react-i18next';
 
 export const AniocampaniaFilterCollapse = (
   {
@@ -14,26 +15,28 @@ export const AniocampaniaFilterCollapse = (
   const [enabled, setEnabled] = useState<boolean>(false);
   const [startEnabled, setStartEnabled] = useState<boolean>(false);
   const [endEnabled, setEndEnabled] = useState<boolean>(false);
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!enabled) setFilters({ ...filters, anioCampaniaInicio: undefined, anioCampaniaFin: undefined });
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!startEnabled) setFilters({ ...filters, anioCampaniaInicio: undefined });
-    if (!endEnabled) setFilters({ ...filters, anioCampaniaFin: undefined });
-  }, [startEnabled, endEnabled])
-  
   return (
-    <FilterCollapse title="Fecha de campaña" enabled={enabled} onToggle={setEnabled}>
+    <FilterCollapse
+      title={t('compare.filters.campaignDate')}
+      enabled={enabled}
+      onToggle={(isEnabled) => {
+        setEnabled(isEnabled);
+        if (!isEnabled) setFilters({ ...filters, anioCampaniaInicio: undefined, anioCampaniaFin: undefined });
+      }}
+    >
       <div className="flex flex-col gap-2">
         <div className="flex gap-2 items-center w-full">
           <input
             type="checkbox"
             className="checkbox"
-            onChange={(e) => setStartEnabled(e.target.checked)}
+            onChange={(e) => {
+              setStartEnabled(e.target.checked);
+              if (!e.target.checked) setFilters({ ...filters, anioCampaniaInicio: undefined });
+            }}
           />
-          <p>Desde: </p>
+          <p>{t('common.fields.start')} </p>
           <input
             type="number"
             min="2020"
@@ -51,9 +54,12 @@ export const AniocampaniaFilterCollapse = (
           <input
             type="checkbox"
             className="checkbox"
-            onChange={(e) => setEndEnabled(e.target.checked)}
+            onChange={(e) => {
+              setEndEnabled(e.target.checked);
+              if (!e.target.checked) setFilters({ ...filters, anioCampaniaFin: undefined });
+            }}
           />
-          <p>Hasta: </p>
+          <p>{t('common.fields.end')} </p>
           <input
             type="number"
             min="2020"

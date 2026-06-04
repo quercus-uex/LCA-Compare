@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SmartPaginationProps {
   page: number;
@@ -9,6 +10,7 @@ interface SmartPaginationProps {
 
 export const SmartPagination = ({ page, totalPages, total, onPageChange }: SmartPaginationProps) => {
   const [jumpValue, setJumpValue] = useState('');
+  const { t } = useTranslation();
 
   if (totalPages <= 1) return null;
 
@@ -51,7 +53,7 @@ export const SmartPagination = ({ page, totalPages, total, onPageChange }: Smart
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3">
       <p className="text-sm text-base-content/60">
-        {total} resultados · Página {page + 1} de {totalPages}
+        {t('admin.pagination.summary', { total, page: page + 1, totalPages })}
       </p>
 
       <div className="flex items-center gap-2">
@@ -60,7 +62,7 @@ export const SmartPagination = ({ page, totalPages, total, onPageChange }: Smart
             className="join-item btn btn-sm"
             disabled={page === 0}
             onClick={() => onPageChange(0)}
-            title="Primera página"
+            title={t('admin.pagination.first')}
           >
             «
           </button>
@@ -102,18 +104,18 @@ export const SmartPagination = ({ page, totalPages, total, onPageChange }: Smart
             className="join-item btn btn-sm"
             disabled={page >= totalPages - 1}
             onClick={() => onPageChange(totalPages - 1)}
-            title="Última página"
+            title={t('admin.pagination.last')}
           >
             »
           </button>
         </div>
 
         <div className="flex items-center gap-1">
-          <span className="text-xs text-base-content/60 hidden sm:inline">Ir a</span>
+          <span className="text-xs text-base-content/60 hidden sm:inline">{t('admin.pagination.jump')}</span>
           <input
             type="number"
             className="input input-bordered input-xs w-16"
-            placeholder="pág."
+            placeholder={t('admin.pagination.pagePlaceholder')}
             min={1}
             max={totalPages}
             value={jumpValue}

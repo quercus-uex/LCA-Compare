@@ -10,12 +10,14 @@ import { DateTime } from 'luxon';
 import type { LatLngExpression } from 'leaflet';
 import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
 import { exportJSON } from '../../common/utils.ts';
+import { useTranslation } from 'react-i18next';
 
 export const ResultadoRoute = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const resultadoImpacto = useResultadoImpacto();
   const p = useParcela();
+  const { t } = useTranslation();
 
   const [resultado, setResultado] = useState<ResultadoImpacto | undefined>();
   const [parcela, setParcela] = useState<Parcela | undefined>();
@@ -36,13 +38,13 @@ export const ResultadoRoute = () => {
 
   return (
     <div className="flex flex-col items-center gap-2 flex-wrap">
-      <h1 className="text-3xl font-bold">Resultado de impacto</h1>
+      <h1 className="text-3xl font-bold">{t('resultados.title')}</h1>
 
       <div className="flex gap-2 h-96 flex-wrap w-full">
         <div className="flex flex-col gap-2 grow">
           <div className="card bg-base-100 shadow-sm">
             <div className="card-body">
-              <h2 className="card-title">Método utilizado</h2>
+              <h2 className="card-title">{t('resultados.method')}</h2>
               <p className="text-xl">{resultado.impacto.nombre}</p>
             </div>
           </div>
@@ -51,18 +53,18 @@ export const ResultadoRoute = () => {
               <h2 className="card-title">{resultado.cultivo.tipo}</h2>
               <div className="flex flex-col gap-1">
                 <p>
-                  Fecha de inicio de campaña:{' '}
+                  {t('common.fields.campaignStartDate')}:{' '}
                   {DateTime.fromISO(resultado.cultivo.fechaInicioCampania, {
                     zone: 'utc',
                   }).toFormat('dd/LL/yyyy')}
                 </p>
                 <p>
-                  Superficie cultivada: {resultado.cultivo.superficieCultivada}{' '}
-                  ha
+                  {t('common.fields.cultivatedArea')}: {resultado.cultivo.superficieCultivada}{' '}
+                  {t('common.units.hectares')}
                 </p>
-                <p>Producción: {resultado.cultivo.produccion} T/ha</p>
-                <p>Consumo de agua: {resultado.cultivo.consumoAgua} L/ha</p>
-                <p>Ciclo de cultivo: {resultado.cultivo.ciclo} días</p>
+                <p>{t('common.fields.production')}: {resultado.cultivo.produccion} {t('common.units.tonsPerHectare')}</p>
+                <p>{t('common.fields.waterConsumption')}: {resultado.cultivo.consumoAgua} {t('common.units.litersPerHectare')}</p>
+                <p>{t('common.fields.cropCycle')}: {resultado.cultivo.ciclo} {t('common.units.days')}</p>
               </div>
             </div>
           </div>
@@ -70,7 +72,7 @@ export const ResultadoRoute = () => {
             className="btn btn-secondary"
             onClick={() => exportJSON(resultado.datos)}
           >
-            Exportar
+            {t('common.actions.export')}
           </button>
         </div>
 
@@ -79,8 +81,8 @@ export const ResultadoRoute = () => {
             <div className="card-body">
               <h2 className="card-title">{parcela.nombre}</h2>
               <p>SIGPAC: {parcela.sigpac ?? '-'}</p>
-              <p>Referencia catastral: {parcela.refCat ?? '-'}</p>
-              <p>ID Portugal: {parcela.ptIdParcela ?? '-'}</p>
+              <p>{t('common.fields.cadastralReference')}: {parcela.refCat ?? '-'}</p>
+              <p>{t('common.fields.portugalId')}: {parcela.ptIdParcela ?? '-'}</p>
             </div>
           </div>
 
@@ -88,7 +90,7 @@ export const ResultadoRoute = () => {
             className="btn btn-primary"
             onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
           >
-            Añadir a comparativa
+            {t('resultados.addToComparison')}
           </button>
         </div>
         <MapContainer

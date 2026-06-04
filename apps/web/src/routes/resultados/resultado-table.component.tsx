@@ -1,6 +1,8 @@
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
+import { useTranslation } from 'react-i18next';
 
 export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) => {
+  const { t } = useTranslation();
   const impactos = resultado.datos.impacto_total.map(i => i.category);
   const pesticidas = resultado.datos.impacto_pesticidas;
   const fertilizantes = resultado.datos.impacto_fertilizantes;
@@ -13,13 +15,13 @@ export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) =
       <table className="table">
         <thead>
           <tr>
-            <th>Categoría</th>
-            <th>Pesticidas</th>
-            <th>Fertilizantes</th>
-            <th>Sistema de riego</th>
-            <th>Manejo de cultivo</th>
-            <th>Total</th>
-            <th>Unidad</th>
+            <th>{t('common.fields.category')}</th>
+            <th>{t('common.fields.pesticides')}</th>
+            <th>{t('common.fields.fertilizers')}</th>
+            <th>{t('common.fields.irrigationSystem')}</th>
+            <th>{t('common.fields.cropManagement')}</th>
+            <th>{t('common.fields.total')}</th>
+            <th>{t('common.fields.unit')}</th>
           </tr>
         </thead>
         <tbody>

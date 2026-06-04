@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
+import { useTranslation } from 'react-i18next';
 
 export const ProvinciaFilterCollapse = (
   {
@@ -13,6 +14,7 @@ export const ProvinciaFilterCollapse = (
   }
 ) => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   const [enabled, setEnabled] = useState<boolean>(
     !!filters.provincias?.length,
@@ -24,10 +26,6 @@ export const ProvinciaFilterCollapse = (
     location.getProvincias().then((p) => setProvincias(p));
   }, [location]);
 
-  useEffect(() => {
-    if (!enabled) setFilters({ ...filters, provincias: [] });
-  }, [enabled]);
-
   const toggleProvincia = (p: Provincia) => {
     const selected = filters.provincias!;
     if (selected.find((i) => i.id === p.id)) {
@@ -38,11 +36,18 @@ export const ProvinciaFilterCollapse = (
   };
 
   return (
-    <FilterCollapse title="Provincia" enabled={enabled} onToggle={setEnabled}>
+    <FilterCollapse
+      title={t('compare.filters.province')}
+      enabled={enabled}
+      onToggle={(isEnabled) => {
+        setEnabled(isEnabled);
+        if (!isEnabled) setFilters({ ...filters, provincias: [] });
+      }}
+    >
       <div className="flex flex-col gap-5 w-full">
         <input
           className="input w-full"
-          placeholder="Provincia..."
+          placeholder={t('compare.filters.placeholders.province')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

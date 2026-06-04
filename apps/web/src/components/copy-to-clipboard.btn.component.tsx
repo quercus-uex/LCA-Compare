@@ -1,9 +1,11 @@
 import { FaCheck, FaRegClipboard } from 'react-icons/fa6';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
 
   if (!text) return null;
 
@@ -15,10 +17,10 @@ export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
           .writeText(text)
           .then(() => {
             setCopied(true);
-            toast.success('Copiado al portapapeles');
+            toast.success(t('clipboard.copied'));
           })
           .catch((e) => {
-            alert('Error al copiar al portapapeles: ' + e);
+            alert(t('clipboard.error', { error: String(e) }));
           });
       }}
     >

@@ -2,6 +2,8 @@ import { Fragment, useState } from 'react';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -24,11 +26,13 @@ const cellColor = (value: number, max: number, hex: string) => {
 
 export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
   const [sortCategory, setSortCategory] = useState<string | null>(null);
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
 
   if (ranking.length === 0) {
     return (
       <div className="flex items-center justify-center h-60 text-base-content/50">
-        No hay datos disponibles
+        {t('stats.noData')}
       </div>
     );
   }
@@ -61,7 +65,7 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
         }}
       >
           <div className="font-semibold text-xs px-1 py-2 bg-base-200 flex items-end">
-            Provincia
+            {t('stats.chart.province')}
           </div>
           {EF_CATEGORIES.map((cat) => (
             <div
@@ -71,7 +75,7 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
               onClick={() =>
                 setSortCategory(sortCategory === cat.id ? null : cat.id)
               }
-              title={`${cat.spanishName} (${cat.unit})`}
+              title={`${getCategoryLabel(cat.id)} (${cat.unit})`}
             >
               <div
                 className="text-[10px] xl:text-xs font-semibold leading-tight w-full overflow-hidden"
@@ -81,7 +85,7 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
                   WebkitBoxOrient: 'vertical',
                 }}
               >
-                {cat.spanishName}
+                {getCategoryLabel(cat.id)}
                 {sortCategory === cat.id ? ' ▾' : ''}
               </div>
             </div>
@@ -103,7 +107,7 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
                     key={`${prov.idProvincia}-${cat.id}`}
                     className="min-w-0 text-center px-1 py-2 text-[10px] xl:text-xs font-mono border-t border-base-200 flex items-center justify-center truncate"
                     style={{ backgroundColor: bg }}
-                    title={`${prov.nombreProvincia} · ${cat.spanishName}: ${formatImpactValue(value)} ${cat.unit}`}
+                    title={`${prov.nombreProvincia} - ${getCategoryLabel(cat.id)}: ${formatImpactValue(value)} ${cat.unit}`}
                   >
                     <span className="truncate">{formatImpactValue(value)}</span>
                   </div>

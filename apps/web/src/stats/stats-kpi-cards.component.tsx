@@ -2,12 +2,17 @@ import type { KpiDto } from './stats.hook.tsx';
 import { EF_CATEGORIES } from '../common/constants.ts';
 import { FiBox, FiGrid, FiActivity } from 'react-icons/fi';
 import { formatInteger, formatNumber } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   kpis: KpiDto;
 };
 
 export const StatsKPICards = ({ kpis }: Props) => {
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -22,10 +27,10 @@ export const StatsKPICards = ({ kpis }: Props) => {
               <div className="card-body p-3">
                 <div
                   className="text-xs font-semibold truncate tooltip tooltip-top"
-                  data-tip={`${cat.spanishName} (${cat.unit})`}
+                  data-tip={`${getCategoryLabel(cat.id)} (${cat.unit})`}
                   style={{ color: cat.color }}
                 >
-                  {cat.spanishName}
+                  {getCategoryLabel(cat.id)}
                 </div>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="text-lg font-bold truncate">
@@ -45,7 +50,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
         <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
           <div className="stat-title text-xs flex items-center gap-1">
             <FiGrid size={14} />
-            Parcelas
+            {t('stats.kpis.plots')}
           </div>
           <div className="stat-value text-lg">
             {formatInteger(kpis.totalParcelas)}
@@ -54,7 +59,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
         <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
           <div className="stat-title text-xs flex items-center gap-1">
             <FiBox size={14} />
-            Cultivos
+            {t('stats.kpis.crops')}
           </div>
           <div className="stat-value text-lg">
             {formatInteger(kpis.totalCultivos)}
@@ -63,7 +68,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
         <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
           <div className="stat-title text-xs flex items-center gap-1">
             <FiActivity size={14} />
-            Superficie
+            {t('stats.kpis.area')}
           </div>
           <div className="stat-value text-lg">
             {formatInteger(kpis.superficieTotal)}{' '}
@@ -72,7 +77,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
         </div>
         {kpis.variacionInteranual !== null && (
           <div className="stat bg-base-100 shadow-sm rounded-box px-4 py-2 min-w-0 flex-1">
-            <div className="stat-title text-xs">Variación Interanual</div>
+            <div className="stat-title text-xs">{t('stats.kpis.yoy')}</div>
             <div
               className={`stat-value text-lg ${
                 kpis.variacionInteranual <= 0 ? 'text-success' : 'text-error'
@@ -81,7 +86,7 @@ export const StatsKPICards = ({ kpis }: Props) => {
               {kpis.variacionInteranual <= 0 ? '↓' : '↑'}{' '}
               {Math.abs(kpis.variacionInteranual).toFixed(1)}%
             </div>
-            <div className="stat-desc text-[10px]">vs año anterior</div>
+            <div className="stat-desc text-[10px]">{t('stats.kpis.vsPreviousYear')}</div>
           </div>
         )}
       </div>

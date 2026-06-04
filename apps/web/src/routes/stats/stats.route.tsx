@@ -11,6 +11,7 @@ import { StatsHeatmap } from '../../stats/stats-heatmap.component.tsx';
 import { StatsCategorySelector } from '../../stats/stats-category-selector.component.tsx';
 import { StatsCropSelector } from '../../stats/stats-crop-selector.component.tsx';
 import type { EfCategoryId } from '../../common/constants.ts';
+import { useTranslation } from 'react-i18next';
 
 type FiltersProps = {
   data: GlobalStatsDto;
@@ -52,22 +53,30 @@ const StatsLoadingSkeleton = () => (
   </div>
 );
 
-const StatsErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-  <div className="w-full max-w-[96rem]">
-    <div className="alert alert-error">
-      <span>{error}</span>
-      <button className="btn btn-sm btn-ghost" onClick={onRetry}>
-        Reintentar
-      </button>
-    </div>
-  </div>
-);
+const StatsErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => {
+  const { t } = useTranslation();
 
-const StatsEmptyState = ({ anio }: { anio?: number }) => (
-  <div className="alert">
-    <span>No hay datos disponibles{anio ? ` para el año ${anio}` : ''}</span>
-  </div>
-);
+  return (
+    <div className="w-full max-w-[96rem]">
+      <div className="alert alert-error">
+        <span>{error}</span>
+        <button className="btn btn-sm btn-ghost" onClick={onRetry}>
+          {t('common.actions.retry')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const StatsEmptyState = ({ anio }: { anio?: number }) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="alert">
+      <span>{anio ? t('stats.noDataForYear', { year: anio }) : t('stats.noData')}</span>
+    </div>
+  );
+};
 
 const StatsFilters = ({
   data,
@@ -77,30 +86,34 @@ const StatsFilters = ({
   onAnioChange,
   onCategoryChange,
   onTipoCultivoChange,
-}: FiltersProps) => (
-  <div className="flex items-center gap-2">
-    <StatsCategorySelector selected={selectedCategory} onChange={onCategoryChange} />
-    <StatsCropSelector
-      selected={tipoCultivo}
-      onChange={onTipoCultivoChange}
-      distribucionCultivos={data.distribucionCultivos}
-    />
-    <select
-      className="select select-bordered select-sm"
-      value={anio ?? ''}
-      onChange={(e) =>
-        onAnioChange(e.target.value ? Number(e.target.value) : undefined)
-      }
-    >
-      <option value="">Todos</option>
-      {data.aniosDisponibles.map((a) => (
-        <option key={a} value={a}>
-          {a}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+}: FiltersProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex items-center gap-2">
+      <StatsCategorySelector selected={selectedCategory} onChange={onCategoryChange} />
+      <StatsCropSelector
+        selected={tipoCultivo}
+        onChange={onTipoCultivoChange}
+        distribucionCultivos={data.distribucionCultivos}
+      />
+      <select
+        className="select select-bordered select-sm"
+        value={anio ?? ''}
+        onChange={(e) =>
+          onAnioChange(e.target.value ? Number(e.target.value) : undefined)
+        }
+      >
+        <option value="">{t('stats.filters.allYears')}</option>
+        {data.aniosDisponibles.map((a) => (
+          <option key={a} value={a}>
+            {a}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 type DashboardContentProps = {
   data: GlobalStatsDto;
@@ -114,8 +127,11 @@ const StatsDashboardContent = ({
   selectedCategory,
   provinciaFilter,
   onProvinciaFilterChange,
-}: DashboardContentProps) => (
-  <>
+}: DashboardContentProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <>
     <section>
       <StatsKPICards kpis={data.kpis} />
     </section>
@@ -123,7 +139,7 @@ const StatsDashboardContent = ({
     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Ranking de Provincias</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.provinceRanking')}</h2>
           <StatsProvinciaRanking
             ranking={data.rankingProvincias}
             selectedCategory={selectedCategory}
@@ -132,7 +148,7 @@ const StatsDashboardContent = ({
       </div>
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Ranking de Poblaciones</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.townRanking')}</h2>
           <StatsPoblacionRanking
             ranking={data.rankingPoblaciones}
             selectedCategory={selectedCategory}
@@ -146,7 +162,7 @@ const StatsDashboardContent = ({
     <section>
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Evolución Temporal por Categoría EF 3.1</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.timeline')}</h2>
           <StatsTimeline data={data.evolucionTemporal} />
         </div>
       </div>
@@ -155,7 +171,7 @@ const StatsDashboardContent = ({
     <section className="grid grid-cols-1 xl:grid-cols-[minmax(420px,2.4fr)_minmax(0,3fr)] gap-6">
       <div className="card bg-base-100 shadow-sm min-w-0">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Perfil de Impacto</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.impactProfile')}</h2>
           <StatsSpiderChart
             ranking={data.rankingProvincias}
             poblacionRanking={data.rankingPoblaciones}
@@ -165,7 +181,7 @@ const StatsDashboardContent = ({
       <div className="card bg-base-100 shadow-sm min-w-0">
         <div className="card-body p-4 min-w-0">
           <h2 className="card-title text-lg">
-            Mapa de Calor: Provincias × Categorías
+            {t('stats.sections.heatmap')}
           </h2>
           <StatsHeatmap ranking={data.rankingProvincias} />
         </div>
@@ -175,19 +191,20 @@ const StatsDashboardContent = ({
     <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Distribución por Cultivo</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.cropDistribution')}</h2>
           <StatsCropDonut data={data.distribucionCultivos} />
         </div>
       </div>
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
-          <h2 className="card-title text-lg">Eficiencia: Producción vs Consumo H₂O</h2>
+          <h2 className="card-title text-lg">{t('stats.sections.efficiency')}</h2>
           <StatsScatterChart ranking={data.rankingProvincias} />
         </div>
       </div>
     </section>
-  </>
-);
+    </>
+  );
+};
 
 export const StatsRoute = () => {
   const [anio, setAnio] = useState<number | undefined>(undefined);
@@ -204,6 +221,7 @@ export const StatsRoute = () => {
     tipoCultivo,
     provinciaFilter,
   );
+  const { t } = useTranslation();
 
   if (loading) {
     return <StatsLoadingSkeleton />;
@@ -229,7 +247,7 @@ export const StatsRoute = () => {
   return (
     <div className="w-full max-w-[96rem] space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-bold">Estadísticas Globales</h1>
+        <h1 className="text-2xl font-bold">{t('stats.title')}</h1>
         <StatsFilters
           data={data}
           anio={anio}

@@ -16,6 +16,8 @@ import type {
 } from './stats.hook.tsx';
 import { SearchableLocationSelect } from './searchable-location-select.component.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -30,14 +32,14 @@ type UnifiedEntity = {
 };
 
 const COLORS = ['#ef4444', '#3b82f6'];
-const MODE_LABELS = ['Provincia', 'Población'] as const;
+const MODE_LABELS = ['province', 'town'] as const;
 type Mode = (typeof MODE_LABELS)[number];
 
 const toUnified = (
   p: ProvinciaRankingItemDto | PoblacionRankingItemDto,
   mode: Mode,
 ): UnifiedEntity => {
-  if (mode === 'Provincia') {
+  if (mode === 'province') {
     const prov = p as ProvinciaRankingItemDto;
     return {
       id: prov.idProvincia,
@@ -56,13 +58,15 @@ const toUnified = (
 };
 
 export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
-  const [mode, setMode] = useState<Mode>('Provincia');
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
+  const [mode, setMode] = useState<Mode>('province');
   const [selected1, setSelected1] = useState<UnifiedEntity | null>(null);
   const [selected2, setSelected2] = useState<UnifiedEntity | null>(null);
   const [hasUserSelected, setHasUserSelected] = useState(false);
 
   const entities = useMemo(() => {
-    const raw = mode === 'Provincia' ? ranking : poblacionRanking;
+    const raw = mode === 'province' ? ranking : poblacionRanking;
     return raw
       .map((r) => toUnified(r, mode))
       .sort((a, b) => b.impactoTotalMedio - a.impactoTotalMedio);
@@ -120,8 +124,8 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
 
   if (entities.length === 0) {
     return (
-      <div className="flex items-center justify-center h-80 text-base-content/50">
-        Sin datos de impacto
+        <div className="flex items-center justify-center h-80 text-base-content/50">
+        {t('stats.chart.noImpactData')}
       </div>
     );
   }
@@ -140,7 +144,7 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
                 }`}
                 onClick={() => handleModeChange(label)}
               >
-                {label}
+                {t(`stats.chart.${label}`)}
               </button>
             ))}
           </div>
@@ -152,12 +156,12 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
             onChange={handleSelect1}
             getLabel={(e) => e.nombre}
             getId={(e) => e.id}
-            placeholder={`Buscar ${mode.toLowerCase()}...`}
-            emptyMessage="Sin resultados"
+            placeholder={t('stats.chart.searchEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
+            emptyMessage={t('common.empty.noResults')}
           />
         </div>
         <div className="flex items-center justify-center h-60 text-base-content/50">
-          Selecciona una {mode.toLowerCase()} para ver su perfil de impacto
+          {t('stats.chart.selectEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
         </div>
       </div>
     );
@@ -166,7 +170,7 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
   const chartData = EF_CATEGORIES.map((cat) => {
     const raw1 = entity1.impactosPorCategoria[cat.id] ?? 0;
     const entry: Record<string, unknown> = {
-      category: cat.spanishName,
+      category: getCategoryLabel(cat.id),
       prov1: normalize(cat.id, raw1),
       prov1_raw: raw1,
     };
@@ -193,7 +197,7 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
               }`}
               onClick={() => handleModeChange(label)}
             >
-              {label}
+              {t(`stats.chart.${label}`)}
             </button>
           ))}
         </div>
@@ -206,8 +210,8 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
           onChange={handleSelect1}
           getLabel={(e) => e.nombre}
           getId={(e) => e.id}
-          placeholder={`Buscar ${mode.toLowerCase()}...`}
-          emptyMessage="Sin resultados"
+          placeholder={t('stats.chart.searchEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
+          emptyMessage={t('common.empty.noResults')}
         />
         <SearchableLocationSelect<UnifiedEntity>
           items={comparisonItems}
@@ -215,8 +219,8 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
           onChange={handleSelect2}
           getLabel={(e) => e.nombre}
           getId={(e) => e.id}
-          placeholder="Comparar con..."
-          emptyMessage="Sin resultados"
+          placeholder={t('stats.chart.compareWith')}
+          emptyMessage={t('common.empty.noResults')}
         />
       </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { API_BASE_URL } from '../../common/constants.ts';
+import { useTranslation } from 'react-i18next';
 
 export interface FkConfig {
   entity: string;
@@ -21,6 +22,7 @@ interface LookupOption {
 }
 
 export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdLookupFieldProps) => {
+  const { t } = useTranslation();
   const [options, setOptions] = useState<LookupOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -102,7 +104,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
         <input
           type="text"
           className="input input-bordered w-full cursor-pointer"
-          placeholder="Buscar..."
+          placeholder={t('common.actions.search')}
           value={open ? search : selectedLabel}
           readOnly={!open}
           disabled={disabled}
@@ -119,7 +121,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
             type="button"
             className="btn btn-ghost btn-sm btn-square shrink-0"
             onClick={handleClear}
-            title="Limpiar selección"
+            title={t('common.actions.clearSelection')}
           >
             ✕
           </button>
@@ -150,7 +152,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
 
             {error && (
               <div className="p-4 text-center text-error text-sm">
-                <p>Error al cargar opciones</p>
+                <p>{t('admin.messages.optionsError')}</p>
                 <button
                   type="button"
                   className="btn btn-ghost btn-xs mt-1"
@@ -185,14 +187,14 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
                     void fetchRetry();
                   }}
                 >
-                  Reintentar
+                  {t('common.actions.retry')}
                 </button>
               </div>
             )}
 
             {!loading && !error && filteredOptions.length === 0 && (
               <p className="p-3 text-center text-base-content/50 text-sm">
-                {search ? 'Sin resultados' : 'Sin opciones disponibles'}
+                {search ? t('common.empty.noResults') : t('common.empty.noOptions')}
               </p>
             )}
 

@@ -3,6 +3,8 @@ import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { formatNumber } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -14,6 +16,8 @@ export const StatsProvinciaRanking = ({
   selectedCategory,
 }: Props) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
 
   const getValue = (item: ProvinciaRankingItemDto) => {
     if (selectedCategory) {
@@ -46,11 +50,11 @@ export const StatsProvinciaRanking = ({
       getValue={getValue}
       renderPrimary={(item) => item.nombreProvincia}
       renderSecondary={(item) =>
-        `${item.numParcelas} parcelas · ${formatNumber(item.superficieTotal, 1)} Ha`
+        t('stats.ranking.plotsArea', { count: item.numParcelas, area: formatNumber(item.superficieTotal, 1) })
       }
-      categoryLabel={selectedCategoryData?.spanishName}
+      categoryLabel={selectedCategoryData ? getCategoryLabel(selectedCategoryData.id) : undefined}
       impactUnit={selectedCategoryData?.unit}
-      emptyLabel="Sin datos"
+      emptyLabel={t('common.empty.noData')}
       onActivate={handleActivate}
     />
   );

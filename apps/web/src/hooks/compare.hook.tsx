@@ -1,9 +1,10 @@
 import type { Pais, Poblacion, Provincia } from 'common/location';
 import type { Parcela } from 'common/parcela';
 import type { CompareFilterDto, CompareResultDto } from 'common/compare';
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export type { CompareFilterDto, CompareResultDto } from 'common/compare';
 export type { CompareResultItemDto } from 'common/compare';
@@ -30,23 +31,23 @@ type CompareContextType = {
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
 
-export function CompareProvider({ children }: { children: React.ReactNode }) {
-  const transformFilters = (filters: CompareFilterType): CompareFilterDto => {
-    return {
-      idsProvincia: filters.provincias?.map(p => p.id),
-      idsPoblacion: filters.poblaciones?.map(p => p.id),
-      idsParcela: filters.parcelas?.map(p => p.id),
-      lat: filters.lat,
-      long: filters.long,
-      range: filters.range,
-      tipoCultivo: filters.tipoCultivo,
-      anioCampaniaInicio: filters.anioCampaniaInicio,
-      anioCampaniaFin: filters.anioCampaniaFin,
-      idPais: filters.pais?.id
-    }
-  }
+const transformFilters = (filters: CompareFilterType): CompareFilterDto => ({
+  idsProvincia: filters.provincias?.map(p => p.id),
+  idsPoblacion: filters.poblaciones?.map(p => p.id),
+  idsParcela: filters.parcelas?.map(p => p.id),
+  lat: filters.lat,
+  long: filters.long,
+  range: filters.range,
+  tipoCultivo: filters.tipoCultivo,
+  anioCampaniaInicio: filters.anioCampaniaInicio,
+  anioCampaniaFin: filters.anioCampaniaFin,
+  idPais: filters.pais?.id
+});
 
-  const compareSingle = async (filters: CompareFilterType) => {
+export function CompareProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
+
+  const compareSingle = useCallback(async (filters: CompareFilterType) => {
     const response = await fetch(`${API_BASE_URL}/compare`, {
       method: 'POST',
       headers: {
@@ -59,16 +60,16 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
     if (!response.ok) {
       toast.error(
-        'No existen datos suficientes con los filtros proporcionados',
+        t('compare.result.insufficientData'),
       );
     }
 
     const json = await response.json();
     return json.data as CompareResultDto;
 
-  }
+  }, [t]);
 
-  const compare = async (reference: CompareFilterType, target: CompareFilterType) => {
+  const compare = useCallback(async (reference: CompareFilterType, target: CompareFilterType) => {
     const response = await fetch(`${API_BASE_URL}/compare`, {
       method: 'POST',
       headers: {
@@ -82,16 +83,16 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
     if (!response.ok) {
       toast.error(
-        'No existen datos suficientes con los filtros proporcionados',
+        t('compare.result.insufficientData'),
       );
     }
 
     const json = await response.json();
     return json.data as CompareResultDto;
-  }
+  }, [t]);
 
-  const generateReport = async (reference: CompareFilterType, target: CompareFilterType) => {
-    toast.info('Generando informe...');
+  const generateReport = useCallback(async (reference: CompareFilterType, target: CompareFilterType) => {
+    toast.info(t('compare.result.generatingReport'));
 
     const response = await fetch(`${API_BASE_URL}/compare/report`, {
       method: 'POST',
@@ -115,10 +116,10 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
 
-    toast.success('Informe generado');
-  }
+    toast.success(t('compare.result.reportGenerated'));
+  }, [t]);
 
-  const value = useMemo(() => ({ compare, compareSingle, generateReport }), []);
+  const value = useMemo(() => ({ compare, compareSingle, generateReport }), [compare, compareSingle, generateReport]);
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>
 }

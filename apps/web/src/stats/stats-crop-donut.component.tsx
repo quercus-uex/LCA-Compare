@@ -12,6 +12,7 @@ import {
   formatNumber,
   formatPercent,
 } from './stats-formatters.ts';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   data: DistribucionCultivoItemDto[];
@@ -29,6 +30,7 @@ const COLORS = [
 ];
 
 export const StatsCropDonut = ({ data }: Props) => {
+  const { t } = useTranslation();
   const total = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
@@ -66,7 +68,7 @@ export const StatsCropDonut = ({ data }: Props) => {
               return (
                 <div className="card bg-base-100 shadow-lg p-3 text-sm">
                   <p className="font-bold">{item.tipo}</p>
-                  <p>{formatInteger(value)} cultivos ({pct})</p>
+                  <p>{t('stats.ranking.cropsCount', { count: formatInteger(value) })} ({pct})</p>
                   <p>{formatNumber(item.superficieTotal, 1)} Ha</p>
                 </div>
               );

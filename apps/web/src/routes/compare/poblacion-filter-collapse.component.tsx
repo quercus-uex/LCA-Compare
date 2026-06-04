@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
+import { useTranslation } from 'react-i18next';
 
 export const PoblacionFilterCollapse = (
   {
@@ -13,6 +14,7 @@ export const PoblacionFilterCollapse = (
   }
 ) => {
   const location = useLocation();
+  const { t } = useTranslation();
   const [poblaciones, setPoblaciones] = useState<Poblacion[]>([]);
   const [enabled, setEnabled] = useState<boolean>(
     !!filters.poblaciones?.length,
@@ -20,13 +22,9 @@ export const PoblacionFilterCollapse = (
   const [query, setQuery] = useState<string>('');
 
   useEffect(() => {
-    if (!enabled) setFilters({ ...filters, poblaciones: [] });
-  }, [enabled]);
-
-  useEffect(() => {
     location.getPoblacionesByName(query)
       .then(p => setPoblaciones(p))
-  }, [query]);
+  }, [location, query]);
 
   const togglePoblacion = (p: Poblacion) => {
     const selected = filters.poblaciones!;
@@ -38,11 +36,18 @@ export const PoblacionFilterCollapse = (
   };
 
   return (
-    <FilterCollapse title="Población" enabled={enabled} onToggle={setEnabled}>
+    <FilterCollapse
+      title={t('compare.filters.town')}
+      enabled={enabled}
+      onToggle={(isEnabled) => {
+        setEnabled(isEnabled);
+        if (!isEnabled) setFilters({ ...filters, poblaciones: [] });
+      }}
+    >
       <div className="flex flex-col gap-5 w-full">
         <input
           className="input w-full"
-          placeholder="Población..."
+          placeholder={t('compare.filters.placeholders.town')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

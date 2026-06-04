@@ -9,19 +9,30 @@ import {
 import { exportJSON, omitNullish } from '../../common/utils.ts';
 import { CompareResultCard } from './compare-result-card.component.tsx';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
+import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
+
+type CompareRouteState = {
+  parcelaObjetivo?: Parcela;
+  provinciaReferencia?: Provincia;
+  poblacionReferencia?: Poblacion;
+};
 
 export const CompareRoute = () => {
   const location = useLocation();
-  const parcelaObjetivo = (location.state as { parcelaObjetivo?: Parcela } | null)?.parcelaObjetivo;
+  const state = location.state as CompareRouteState | null;
+  const parcelaObjetivo = state?.parcelaObjetivo;
+  const provinciaReferencia = state?.provinciaReferencia;
+  const poblacionReferencia = state?.poblacionReferencia;
+  const initialReferenciaFilters: CompareFilterType = {
+    parcelas: [],
+    provincias: provinciaReferencia ? [provinciaReferencia] : [],
+    poblaciones: poblacionReferencia ? [poblacionReferencia] : [],
+  };
   const initialObjetivoFilters: CompareFilterType | undefined = parcelaObjetivo
     ? { parcelas: [parcelaObjetivo], provincias: [], poblaciones: [] }
     : undefined;
 
-  const [filtersRef, setFiltersRef] = useState<CompareFilterType>({
-    parcelas: [],
-    provincias: [],
-    poblaciones: [],
-  });
+  const [filtersRef, setFiltersRef] = useState<CompareFilterType>(initialReferenciaFilters);
   const [filtersObj, setFiltersObj] = useState<CompareFilterType | undefined>(initialObjetivoFilters);
   const [result, setResult] = useState<CompareResult | undefined>();
   const compare = useCompare();
@@ -31,6 +42,7 @@ export const CompareRoute = () => {
       <CompareFilterCard
         name="Referencia"
         required
+        initialFilters={initialReferenciaFilters}
         onSubmit={async (data) => {
           const d = omitNullish(data!) as CompareFilterType;
           setFiltersRef(d);

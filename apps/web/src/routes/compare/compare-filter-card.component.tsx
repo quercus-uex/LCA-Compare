@@ -45,7 +45,7 @@ export const CompareFilterCard = (
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center justify-start flex-wrap min-h-6">
-            {filters.provincias!.map((p) => (
+            {(filters.provincias ?? []).map((p) => (
               <div
                 key={p.id}
                 className="badge badge-primary cursor-pointer"
@@ -61,7 +61,7 @@ export const CompareFilterCard = (
                 {p.nombre}
               </div>
             ))}
-            {filters.poblaciones!.map((p) => (
+            {(filters.poblaciones ?? []).map((p) => (
               <div
                 key={p.id}
                 className="badge badge-primary cursor-pointer"
@@ -77,7 +77,7 @@ export const CompareFilterCard = (
                 {p.nombre}
               </div>
             ))}
-            {filters.parcelas!.map((p) => (
+            {(filters.parcelas ?? []).map((p) => (
               <div
                 key={p.id}
                 className="badge badge-primary cursor-pointer"

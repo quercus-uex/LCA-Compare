@@ -14,7 +14,9 @@ export const PoblacionFilterCollapse = (
 ) => {
   const location = useLocation();
   const [poblaciones, setPoblaciones] = useState<Poblacion[]>([]);
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const [enabled, setEnabled] = useState<boolean>(
+    !!filters.poblaciones?.length,
+  );
   const [query, setQuery] = useState<string>('');
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export const PoblacionFilterCollapse = (
             >
               {p.nombre}
               <div className="badge badge-md badge-primary w-12">
-                {p.provincia!.pais!.codigo}
+                {p.provincia?.pais?.codigo ?? p.provincia?.nombre ?? ''}
               </div>
             </li>
           ))}

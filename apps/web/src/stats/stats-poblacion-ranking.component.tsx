@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { type Provincia, useLocation } from '../hooks/location.hook.tsx';
 import type { PoblacionRankingItemDto } from './stats.hook.tsx';
@@ -21,6 +22,7 @@ export const StatsPoblacionRanking = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     location.getProvincias().then((p) => setProvincias(p));
@@ -33,9 +35,28 @@ export const StatsPoblacionRanking = ({
     return item.impactoTotalMedio;
   };
 
-  const catLabel = selectedCategory
-    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)?.spanishName
+  const selectedCategoryData = selectedCategory
+    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)
     : undefined;
+
+  const handleActivate = (item: PoblacionRankingItemDto) => {
+    navigate('/compare', {
+      state: {
+        poblacionReferencia: {
+          id: item.idPoblacion,
+          idProvincia: '',
+          idCatastro: 0,
+          nombre: item.nombrePoblacion,
+          provincia: {
+            id: '',
+            nombre: item.nombreProvincia,
+            idCatastro: 0,
+            idPais: '',
+          },
+        },
+      },
+    });
+  };
 
   const searchResults =
     searchQuery.length > 0
@@ -88,24 +109,32 @@ export const StatsPoblacionRanking = ({
             ) : (
               <ul className="space-y-1 mt-2">
                 {searchResults.map(({ item, position }) => (
-                  <li
-                    key={item.idPoblacion}
-                    className="flex items-center gap-2 p-2 rounded bg-base-200"
-                  >
-                    <span className="font-mono text-xs font-bold w-6">
-                      {position}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {item.nombrePoblacion}
-                      </p>
-                      <p className="text-xs opacity-70">
-                        {item.nombreProvincia} · {item.numParcelas} parcelas
-                      </p>
-                    </div>
-                    <span className="text-sm font-mono font-bold">
-                      {formatImpactValue(getValue(item), '0')}
-                    </span>
+                  <li key={item.idPoblacion}>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded bg-base-200 p-2 text-left transition hover:bg-base-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      onClick={() => handleActivate(item)}
+                    >
+                      <span className="font-mono text-xs font-bold w-6">
+                        {position}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {item.nombrePoblacion}
+                        </p>
+                        <p className="text-xs opacity-70">
+                          {item.nombreProvincia} · {item.numParcelas} parcelas
+                        </p>
+                      </div>
+                      <span className="text-sm font-mono font-bold whitespace-nowrap">
+                        {formatImpactValue(getValue(item), '0')}
+                        {selectedCategoryData?.unit && (
+                          <span className="ml-1 text-xs font-normal opacity-75">
+                            {selectedCategoryData.unit}
+                          </span>
+                        )}
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -122,8 +151,10 @@ export const StatsPoblacionRanking = ({
         renderSecondary={(item) =>
           `${item.nombreProvincia} · ${item.numParcelas} parcelas`
         }
-        categoryLabel={catLabel}
+        categoryLabel={selectedCategoryData?.spanishName}
+        impactUnit={selectedCategoryData?.unit}
         emptyLabel="Sin datos"
+        onActivate={handleActivate}
       />
     </div>
   );

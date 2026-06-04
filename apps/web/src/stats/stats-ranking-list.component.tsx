@@ -11,8 +11,43 @@ type RankingPanelsProps<T> = {
   renderPrimary: (item: T) => string;
   renderSecondary: (item: T) => string;
   categoryLabel?: string;
+  impactUnit?: string;
   emptyLabel?: string;
+  onActivate?: (item: T) => void;
 };
+
+function RankingEntryContent<T>({
+  item,
+  position,
+  getValue,
+  renderPrimary,
+  renderSecondary,
+  impactUnit,
+}: Pick<
+  RankingPanelsProps<T>,
+  'getValue' | 'renderPrimary' | 'renderSecondary' | 'impactUnit'
+> & {
+  item: T;
+  position: number;
+}) {
+  return (
+    <>
+      <span className="font-mono text-xs font-bold w-6">{position}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{renderPrimary(item)}</p>
+        <p className="text-xs opacity-70">{renderSecondary(item)}</p>
+      </div>
+      <span className="text-sm font-mono font-bold whitespace-nowrap">
+        {formatImpactValue(getValue(item))}
+        {impactUnit && (
+          <span className="ml-1 text-xs font-normal opacity-75">
+            {impactUnit}
+          </span>
+        )}
+      </span>
+    </>
+  );
+}
 
 function RankingCard<T>({
   title,
@@ -23,7 +58,9 @@ function RankingCard<T>({
   renderPrimary,
   renderSecondary,
   categoryLabel,
+  impactUnit,
   emptyLabel = 'Sin datos',
+  onActivate,
 }: RankingPanelsProps<T> & {
   title: string;
   tone: 'success' | 'error' | 'neutral';
@@ -54,25 +91,41 @@ function RankingCard<T>({
           )}
         </h3>
         <ul className="space-y-1 mt-2">
-          {entries.map(({ item, position }) => (
-            <li
-              key={getId(item)}
-              className={`flex items-center gap-2 p-2 rounded ${toneClasses}`}
-            >
-              <span className="font-mono text-xs font-bold w-6">
-                {position}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {renderPrimary(item)}
-                </p>
-                <p className="text-xs opacity-70">{renderSecondary(item)}</p>
-              </div>
-              <span className="text-sm font-mono font-bold">
-                {formatImpactValue(getValue(item))}
-              </span>
-            </li>
-          ))}
+          {entries.map(({ item, position }) => {
+            const entryClasses = `flex w-full items-center gap-2 p-2 rounded text-left ${toneClasses}`;
+
+            return (
+              <li key={getId(item)}>
+                {onActivate ? (
+                  <button
+                    type="button"
+                    className={`${entryClasses} cursor-pointer transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}
+                    onClick={() => onActivate(item)}
+                  >
+                    <RankingEntryContent
+                      item={item}
+                      position={position}
+                      getValue={getValue}
+                      renderPrimary={renderPrimary}
+                      renderSecondary={renderSecondary}
+                      impactUnit={impactUnit}
+                    />
+                  </button>
+                ) : (
+                  <div className={entryClasses}>
+                    <RankingEntryContent
+                      item={item}
+                      position={position}
+                      getValue={getValue}
+                      renderPrimary={renderPrimary}
+                      renderSecondary={renderSecondary}
+                      impactUnit={impactUnit}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
           {entries.length === 0 && (
             <p className="text-sm text-base-content/50 p-2">{emptyLabel}</p>
           )}
@@ -89,7 +142,9 @@ export function StatsRankingPanels<T>({
   renderPrimary,
   renderSecondary,
   categoryLabel,
+  impactUnit,
   emptyLabel,
+  onActivate,
 }: RankingPanelsProps<T>) {
   const { best, worst } = deriveRankingLists(ranking);
 
@@ -105,7 +160,9 @@ export function StatsRankingPanels<T>({
         renderPrimary={renderPrimary}
         renderSecondary={renderSecondary}
         categoryLabel={categoryLabel}
+        impactUnit={impactUnit}
         emptyLabel={emptyLabel}
+        onActivate={onActivate}
       />
     );
   }
@@ -122,7 +179,9 @@ export function StatsRankingPanels<T>({
         renderPrimary={renderPrimary}
         renderSecondary={renderSecondary}
         categoryLabel={categoryLabel}
+        impactUnit={impactUnit}
         emptyLabel={emptyLabel}
+        onActivate={onActivate}
       />
       <RankingCard
         title="Top 10 - Mayor Impacto"
@@ -134,11 +193,13 @@ export function StatsRankingPanels<T>({
         renderPrimary={renderPrimary}
         renderSecondary={renderSecondary}
         categoryLabel={categoryLabel}
+        impactUnit={impactUnit}
         emptyLabel={
           ranking.length > 0
             ? 'No hay suficientes datos para una lista distinta'
             : emptyLabel
         }
+        onActivate={onActivate}
       />
     </div>
   );

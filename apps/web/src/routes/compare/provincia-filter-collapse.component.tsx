@@ -14,7 +14,9 @@ export const ProvinciaFilterCollapse = (
 ) => {
   const location = useLocation();
 
-  const [enabled, setEnabled] = useState<boolean>(false);
+  const [enabled, setEnabled] = useState<boolean>(
+    !!filters.provincias?.length,
+  );
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [query, setQuery] = useState<string>('');
 

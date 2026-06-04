@@ -23,7 +23,7 @@ RUN pnpm --filter common build
 RUN pnpm --filter server prisma:generate
 RUN pnpm --filter server build
 
-FROM node:22-bullseye AS prod
+FROM node:22-bookworm AS prod
 
 WORKDIR /workspace
 

@@ -39,7 +39,7 @@ A su vez, el frontend de ACV Compare enruta las peticiones de cálculo a través
 
 | Ruta | Destino |
 |---|---|
-| `/calc` | `capture-acv:3000/capture-acv` |
+| `/calc` | `capture-openlca-bridge:3000/capture-acv` |
 
 ## Respuesta del servicio
 

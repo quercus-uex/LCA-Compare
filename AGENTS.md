@@ -1,98 +1,69 @@
 # AGENTS.md
 
-## Project Layout
+## Project Shape
 
-- This repo is a pnpm/Turborepo monorepo with apps in `apps/` and packages in `packages/`.
-- Backend app: `apps/server`; entrypoints are `apps/server/src/main.ts` and `apps/server/src/app.module.ts`.
-- Frontend app: `apps/web`; entrypoints are `apps/web/src/main.tsx` and `apps/web/src/App.tsx`; API calls use `apps/web/src/common/constants.ts` with `API_BASE_URL = '/api'`.
-- Docs app: `apps/docs`; Docusaurus 3 site.
-- Shared package placeholder: `packages/common`; currently intentionally empty.
-- OpenCode helpers remain in `.opencode/` and are not part of the application workspace.
+- pnpm 10/Turborepo monorepo: apps live in `apps/*`, shared packages in `packages/*`.
+- Backend is NestJS in `apps/server`; real entrypoints are `src/main.ts` and `src/app.module.ts`.
+- Frontend is React 19/Vite in `apps/web`; routes are in `src/App.tsx`, providers in `src/main.tsx`, API base is `API_BASE_URL = '/api'` in `src/common/constants.ts`.
+- Docs is a Docusaurus 3 app in `apps/docs` with Spanish locale and Lunr search.
+- `packages/common` is a real TypeScript package, not a placeholder; backend and frontend import shared DTO/types/constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
+- `.opencode/` and `opencode.json` are OpenCode configuration, not application code; load the `customize-opencode` skill before editing them.
 
 ## Commands
 
-### Root Workspace
-
 ```bash
 pnpm install
-pnpm dev                 # turbo dev across apps
-pnpm build               # turbo build across apps
-pnpm lint                # turbo lint across apps
+pnpm dev                  # turbo dev across apps, TUI
+pnpm build                # turbo build across common/server/web/docs
+pnpm lint                 # turbo lint
 ```
-
-### Backend
 
 ```bash
-pnpm server:dev          # Nest dev server; .env PORT=8000 in local dev
-pnpm server:build        # nest build for apps/server
-pnpm server:lint         # eslint with --fix and type-aware rules
-pnpm --filter server start:prod
+pnpm --filter common build        # required before consumers can resolve common/dist after clean install
+pnpm --filter common typecheck
+pnpm server:prisma:generate       # generates apps/server/src/generated/prisma
+pnpm server:dev                   # Nest watch mode
+pnpm server:build                 # Nest build
+pnpm server:lint                  # eslint with --fix and type-aware rules
+pnpm web:dev                      # Vite --host
+pnpm web:build                    # tsc -b then vite build
+pnpm web:lint                     # eslint .
+pnpm docs:dev                     # Docusaurus --host 0.0.0.0
+pnpm docs:build
+pnpm docs:typecheck
 ```
 
-### Frontend
-
-```bash
-pnpm web:dev             # Vite dev server, host enabled
-pnpm web:build           # tsc -b then vite build
-pnpm web:lint            # eslint .
-```
-
-### Docs
-
-```bash
-pnpm docs:dev            # Docusaurus dev server
-pnpm docs:build          # Docusaurus production build
-pnpm docs:typecheck      # tsc
-```
-
-### Prisma
-
-```bash
-pnpm server:prisma:generate
-pnpm --filter server prisma:migrate:dev --name <name>
-pnpm server:prisma:migrate:deploy
-```
-
-### Docker
-
-```bash
-docker compose up -d                         # db only; app services are behind prod profile
-docker compose --profile prod up -d --build  # backend + frontend + db
-```
+- There are currently no frontend or backend test scripts and no `*.spec.*`/`*.test.*` files.
+- Clean local backend work needs `pnpm --filter common build` and `pnpm server:prisma:generate` before `pnpm server:build` if `dist/` or generated Prisma files are missing.
 
 ## Prisma And Database
 
-- Always pass `--config prisma.config.ts` from `apps/server`; server package scripts already do this.
-- Prisma schema is split across `apps/server/prisma/schema/*.prisma`, not a single root `schema.prisma`.
-- The generated Prisma client is committed/generated at `apps/server/src/generated/prisma`; import from `../generated/prisma/client`, not from `@prisma/client`.
-- `PrismaService` uses `@prisma/adapter-pg` (`PrismaPg`) and `DATABASE_URL`; inject `apps/server/src/prisma/prisma.service.ts` instead of constructing clients directly.
-- `Parcela.geom` is `Unsupported("geometry(Polygon, 4326)")`; geometry reads/writes need raw SQL or existing service patterns.
-- Local DB expects PostgreSQL with PostGIS. `init/dbinit.sql` seeds `Pais`, `Provincia`, and `Poblacion` reference data.
+- Prisma config is `apps/server/prisma.config.ts`; run Prisma commands from the server package or use scripts that pass `--config prisma.config.ts`.
+- The Prisma schema directory is `apps/server/prisma/schema/`, split into multiple `.prisma` files.
+- Prisma client output is `apps/server/src/generated/prisma` and is gitignored; import it as `../generated/prisma/client`, never `@prisma/client`.
+- `PrismaService` uses `@prisma/adapter-pg` (`PrismaPg`) and `DATABASE_URL`; inject `apps/server/src/prisma/prisma.service.ts` instead of constructing Prisma clients directly.
+- `Parcela.geom` is `Unsupported("geometry(Polygon, 4326)")`; geometry reads/writes use raw SQL/PostGIS patterns in `apps/server/src/parcela/parcela.service.ts`.
+- Local DB must be PostgreSQL with PostGIS. `docker compose up -d` starts only the DB because app services are behind the `prod` profile.
+- `init/dbinit.sql` seeds Portugal `Pais`, `Provincia`, and `Poblacion` reference data but is a manual SQL seed, not wired into migrations.
 
 ## Backend Notes
 
-- `apps/server/tsconfig.json` uses `module: "nodenext"` and `moduleResolution: "nodenext"`.
-- `apps/server/nest-cli.json` copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src` and enables the `@nestjs/swagger` plugin.
-- Swagger is served at `/docs` by `apps/server/src/main.ts`; DTO metadata is generated by the Nest Swagger plugin.
-- `ConfigModule.forRoot()` loads `.env`; required variables are listed in `.env.example`.
-- Local backend defaults to port `3000`, but `.env.example` sets `PORT=8000`; Vite proxy targets `localhost:8000`.
-- Frontend and backend tests have intentionally been removed and will be rebuilt from scratch later.
+- `ConfigModule.forRoot({ envFilePath: ['../../.env', '.env'] })` loads `.env` from repo root or `apps/server`; `.env.example` sets `PORT=8000` even though Nest defaults to `3000`.
+- Vite dev proxy targets `http://localhost:8000` and strips `/api`, so local backend should use `PORT=8000` for frontend integration.
+- Swagger is served by `src/main.ts` at `/docs`; `apps/server/nest-cli.json` enables the `@nestjs/swagger` plugin.
+- Nest build copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src`; keep report/prompt assets under those paths.
+- Server TypeScript uses `module`/`moduleResolution: "nodenext"`; common package also uses NodeNext and explicit `.js` extensions in source re-exports.
 
 ## Frontend Notes
 
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
-- DaisyUI 5 classes are used, but DaisyUI is a dev dependency/plugin dependency rather than a visible config file.
-- Vite proxies `/api/*` to `http://localhost:8000` and strips the `/api` prefix.
+- DaisyUI 5 classes are used, but DaisyUI is only visible as a dependency/plugin dependency.
 - `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, and `noUncheckedSideEffectImports`.
-- React Router routes are defined in `apps/web/src/App.tsx`; providers are composed in `apps/web/src/main.tsx`.
+- Production Nginx proxies `/api/` to `acv-compare-backend:3000/` and `/calc` to `capture-openlca-bridge:3000/capture-acv`; the latter requires the external `olca` network service.
 
 ## Deploy And Infra
 
-- Pushes to `main` or `develop`, plus manual dispatch, trigger `.github/workflows/deploy.yml`.
-- Deploy SSH script force-resets the remote checkout, runs `docker compose --profile prod up -d --build`, then `docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy`.
+- `.github/workflows/deploy.yml` deploys on pushes to `main` or `develop`, plus manual dispatch.
+- The deploy SSH script force-resets `$HOME/openlca/<repo>` to the pushed branch, runs `docker compose --profile prod up -d --build`, then runs `pnpm --filter server prisma:migrate:deploy` inside `acv-compare-backend`.
 - Docker maps backend `8080:3000` and frontend `80:80`; `olca` is an external Docker network required by the prod profile.
-- Backend Docker image runs `pnpm --filter server exec playwright install chromium --with-deps` for report generation.
-
-## OpenCode Files
-
-- `opencode.json` and `.opencode/` configure repo-local OpenCode providers, commands, and skills; use the `customize-opencode` skill before editing them.
+- Backend Docker builds `common` first, runs Prisma generate, builds Nest, and installs Playwright Chromium with deps in the production image for report generation.

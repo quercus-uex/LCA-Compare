@@ -48,27 +48,16 @@ Compose:
 docker compose up -d db
 ```
 
-Tras desplegar la base de datos, tendremos que lanzar la migración inicial para crear las tablas y relaciones definidas
-en el esquema de Prisma.
-
-:::danger[Importante]
-Al crear la migración, es normal que la primera vez lance un error, puesto que esta requiere de la extensión **PostGIS**.
-Para solucionar esto, abre el archivo `.sql` de la migración (`prisma/migrations/2026..../migration.sql`) y añade la
-siguiente línea al principio:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-```
-
-Una vez hecho vuelve a lanzar la migración con el mismo nombre.
-:::
+Tras desplegar la base de datos, aplica las migraciones de Prisma desde el paquete `server`. El esquema está dividido en
+`apps/server/prisma/schema/` y la configuración de Prisma está en `apps/server/prisma.config.ts`, por lo que los comandos
+deben ejecutarse mediante los scripts del workspace o pasando explícitamente esa configuración.
 
 ```bash
-npx prisma migrate dev --name init
+pnpm server:prisma:migrate:deploy
 ```
 
 Por último, hay que ejecutar el archivo SQL con los datos iniciales (países, provincias, poblaciones...) disponible en
-`init/dbinit.sql`:
+`init/dbinit.sql`. Este archivo es un seed SQL manual de datos de referencia de Portugal, no una migración automática:
 
 ```bash
 docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
@@ -76,13 +65,14 @@ docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
 
 ## Estructura del Docker Compose
 
-El archivo `docker-compose.yaml` define tres servicios:
+El archivo `docker-compose.yaml` define tres servicios. La base de datos se levanta sin perfil y las aplicaciones se
+incluyen únicamente con el perfil `prod`:
 
 | Servicio | Imagen | Puerto | Perfil |
 |---|---|---|---|
 | `db` | `postgis/postgis:17-master` | 5432 | *(siempre activo)* |
-| `acv-compare-backend` | Construida desde `Dockerfile` raíz | 8080→3000 | `prod` |
-| `acv-compare-frontend` | Construida desde `web/Dockerfile` | 80 | `prod` |
+| `acv-compare-backend` | Construida desde `apps/server/Dockerfile` | 8080→3000 | `prod` |
+| `acv-compare-frontend` | Construida desde `apps/web/Dockerfile` | 80→80 | `prod` |
 
 ### Redes
 
@@ -102,7 +92,7 @@ El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente e
 | Ruta | Destino |
 |---|---|
 | `/api/` | `acv-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
-| `/calc` | `capture-acv:3000/capture-acv` (cálculo de ACV) |
+| `/calc` | `capture-openlca-bridge:3000/capture-acv` (cálculo de ACV) |
 | `/` | SPA servida estáticamente (`index.html`) |
 
 ## Despliegue completo
@@ -113,11 +103,12 @@ Una vez tengamos la base de datos preparada, desplegamos todos los servicios con
 docker compose --profile prod up -d --build
 ```
 
-Esto construirá las imágenes del backend y frontend, y levantará los tres servicios. Tras el despliegue, ejecuta las
-migraciones de Prisma en el contenedor del backend:
+Esto construirá las imágenes del backend y frontend, y levantará los tres servicios. La imagen del backend compila
+primero `packages/common`, genera el cliente Prisma y después compila NestJS. Tras el despliegue, ejecuta las migraciones
+de Prisma en el contenedor del backend usando el script del workspace `server`:
 
 ```bash
-docker compose exec acv-compare-backend npx prisma migrate deploy
+docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy
 ```
 
 ## CI/CD
@@ -128,7 +119,8 @@ ramas `main` y `develop`. El pipeline:
 1. Se conecta por SSH al servidor de despliegue.
 2. Clona o actualiza el repositorio en la rama correspondiente.
 3. Reconstruye y levanta los contenedores con `docker compose --profile prod up -d --build`.
-4. Ejecuta las migraciones pendientes con `npx prisma migrate deploy`.
+4. Ejecuta las migraciones pendientes con `pnpm --filter server prisma:migrate:deploy` dentro del contenedor
+   `acv-compare-backend`.
 
 Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,
 `OPENROUTER_API_KEY`, etc.).

@@ -13,8 +13,16 @@ import type { CompareService } from './compare.service';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { IMPACT_KEYS } from './compare.types';
 
-function makeImpactDto(overrides?: Record<string, { category: string; amount: number; unit: string }[]>) {
-  const base: Record<string, { category: string; amount: number; unit: string }[]> = {};
+function makeImpactDto(
+  overrides?: Record<
+    string,
+    { category: string; amount: number; unit: string }[]
+  >,
+) {
+  const base: Record<
+    string,
+    { category: string; amount: number; unit: string }[]
+  > = {};
   for (const key of IMPACT_KEYS) {
     base[key] = overrides?.[key] ?? [
       { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
@@ -159,14 +167,8 @@ describe('CompareController', () => {
       });
 
       expect(compareService.findResults).toHaveBeenCalledTimes(2);
-      expect(compareService.findResults).toHaveBeenNthCalledWith(
-        1,
-        refFilters,
-      );
-      expect(compareService.findResults).toHaveBeenNthCalledWith(
-        2,
-        tarFilters,
-      );
+      expect(compareService.findResults).toHaveBeenNthCalledWith(1, refFilters);
+      expect(compareService.findResults).toHaveBeenNthCalledWith(2, tarFilters);
       expect(compareService.generateReport).toHaveBeenCalledWith(
         refFilters,
         refResults,

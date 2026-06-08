@@ -27,27 +27,26 @@ jest.mock('playwright', () => {
   };
 });
 
-const playwrightMock = jest.requireMock('playwright') as {
-  chromium: { launch: jest.Mock };
-  __mockPage: {
-    setContent: jest.Mock;
-    pdf: jest.Mock;
-  };
-  __mockBrowser: {
-    newPage: jest.Mock;
-    close: jest.Mock;
-  };
-};
+const playwrightMock = jest.requireMock('playwright');
 
-function makeImpactItems(overrides?: { category: string; amount: number; unit: string }[]) {
-  return overrides ?? [
-    { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
-    { category: 'AP', amount: 5, unit: 'mol H+ eq' },
-  ];
+function makeImpactItems(
+  overrides?: { category: string; amount: number; unit: string }[],
+) {
+  return (
+    overrides ?? [
+      { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
+      { category: 'AP', amount: 5, unit: 'mol H+ eq' },
+    ]
+  );
 }
 
 function makeImpactDto(
-  overrides?: Partial<Record<(typeof IMPACT_KEYS)[number], { category: string; amount: number; unit: string }[]>>,
+  overrides?: Partial<
+    Record<
+      (typeof IMPACT_KEYS)[number],
+      { category: string; amount: number; unit: string }[]
+    >
+  >,
 ): ResultadoImpactoDto {
   const dto: Record<string, any> = {};
   for (const key of IMPACT_KEYS) {
@@ -129,16 +128,17 @@ describe('CompareService', () => {
       const result = await service.findResults({});
 
       expect(result).toEqual([]);
-      expect(resultadoImpactoService.findManyAroundPoint).not.toHaveBeenCalled();
+      expect(
+        resultadoImpactoService.findManyAroundPoint,
+      ).not.toHaveBeenCalled();
       expect(resultadoImpactoService.findMany).not.toHaveBeenCalled();
     });
 
     it('uses findManyAroundPoint and passes nearby ids to findMany for location radius filters', async () => {
-      const nearbyResults = [
-        { id: 'ri-1' },
-        { id: 'ri-2' },
-      ] as any[];
-      resultadoImpactoService.findManyAroundPoint.mockResolvedValue(nearbyResults);
+      const nearbyResults = [{ id: 'ri-1' }, { id: 'ri-2' }] as any[];
+      resultadoImpactoService.findManyAroundPoint.mockResolvedValue(
+        nearbyResults,
+      );
       const expectedResults = [{ id: 'ri-1' }] as any[];
       resultadoImpactoService.findMany.mockResolvedValue(expectedResults);
 
@@ -181,13 +181,19 @@ describe('CompareService', () => {
       };
       const result = await service.findResults(filters);
 
-      expect(resultadoImpactoService.findManyAroundPoint).not.toHaveBeenCalled();
+      expect(
+        resultadoImpactoService.findManyAroundPoint,
+      ).not.toHaveBeenCalled();
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: {
           AND: [
             {
               OR: [
-                { cultivo: { parcela: { poblacion: { id: { in: ['pop-1'] } } } } },
+                {
+                  cultivo: {
+                    parcela: { poblacion: { id: { in: ['pop-1'] } } },
+                  },
+                },
                 {
                   cultivo: {
                     parcela: {
@@ -278,9 +284,7 @@ describe('CompareService', () => {
   describe('compareResults', () => {
     it('returns reference-only comparison without tarAmount or diff', () => {
       const refImpact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 100, unit: 'kg CO2 eq' },
-        ],
+        impacto_total: [{ category: 'GWP', amount: 100, unit: 'kg CO2 eq' }],
       });
 
       const result = service.compareResults(refImpact);
@@ -298,14 +302,10 @@ describe('CompareService', () => {
 
     it('returns target comparison with tarAmount and percentage diff', () => {
       const refImpact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 120, unit: 'kg CO2 eq' },
-        ],
+        impacto_total: [{ category: 'GWP', amount: 120, unit: 'kg CO2 eq' }],
       });
       const tarImpact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 100, unit: 'kg CO2 eq' },
-        ],
+        impacto_total: [{ category: 'GWP', amount: 100, unit: 'kg CO2 eq' }],
       });
 
       const result = service.compareResults(refImpact, tarImpact);
@@ -329,9 +329,7 @@ describe('CompareService', () => {
         ],
       });
       const tarImpact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 0, unit: 'kg CO2 eq' },
-        ],
+        impacto_total: [{ category: 'GWP', amount: 0, unit: 'kg CO2 eq' }],
       });
 
       const result = service.compareResults(refImpact, tarImpact);
@@ -380,9 +378,17 @@ describe('CompareService', () => {
       const refResults = [
         makeResultadoImpacto(
           makeImpactDto({
-            impacto_total: [{ category: 'GWP', amount: 100, unit: 'kg CO2 eq' }],
+            impacto_total: [
+              { category: 'GWP', amount: 100, unit: 'kg CO2 eq' },
+            ],
           }),
-          { id: 'ri-1', cultivoTipo: 'trigo', paisId: 'pais-1', provinciaId: 'prov-1', poblacionId: 'pop-1' },
+          {
+            id: 'ri-1',
+            cultivoTipo: 'trigo',
+            paisId: 'pais-1',
+            provinciaId: 'prov-1',
+            poblacionId: 'pop-1',
+          },
         ),
       ];
       const tarResults = [
@@ -390,7 +396,13 @@ describe('CompareService', () => {
           makeImpactDto({
             impacto_total: [{ category: 'GWP', amount: 80, unit: 'kg CO2 eq' }],
           }),
-          { id: 'ri-2', cultivoTipo: 'cebada', paisId: 'pais-2', provinciaId: 'prov-2', poblacionId: 'pop-2' },
+          {
+            id: 'ri-2',
+            cultivoTipo: 'cebada',
+            paisId: 'pais-2',
+            provinciaId: 'prov-2',
+            poblacionId: 'pop-2',
+          },
         ),
       ];
 
@@ -463,12 +475,8 @@ describe('CompareService', () => {
 
       aiService.generateFromTemplate.mockResolvedValue('text');
       paisService.findMany
-        .mockResolvedValueOnce([
-          { id: 'pais-1', nombre: 'Spain' },
-        ] as any)
-        .mockResolvedValueOnce([
-          { id: 'pais-2', nombre: 'Portugal' },
-        ] as any);
+        .mockResolvedValueOnce([{ id: 'pais-1', nombre: 'Spain' }] as any)
+        .mockResolvedValueOnce([{ id: 'pais-2', nombre: 'Portugal' }] as any);
       provinciaService.findMany
         .mockResolvedValueOnce([{ id: 'prov-1' }] as any)
         .mockResolvedValueOnce([{ id: 'prov-2' }] as any);
@@ -483,7 +491,8 @@ describe('CompareService', () => {
         tarResults,
       );
 
-      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0] as string;
+      const htmlArg = playwrightMock.__mockPage.setContent.mock
+        .calls[0][0] as string;
 
       expect(htmlArg).toContain('Spain');
       expect(htmlArg).toContain('Portugal');

@@ -11,6 +11,7 @@
     "server:dev": "pnpm --filter server start:dev",
     "server:start": "pnpm --filter server start",
     "server:start:prod": "pnpm --filter server start:prod",
+    "server:test": "pnpm --filter server test",
     "server:lint": "pnpm --filter server lint",
     "server:prisma:generate": "pnpm --filter server prisma:generate",
     "server:prisma:migrate:deploy": "pnpm --filter server prisma:migrate:deploy",

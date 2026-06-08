@@ -26,20 +26,8 @@ export type ResultadoImpacto = {
   cultivo: Cultivo;
 }
 
-export type ResultadoImpactoComparison = {
-  resultado: ResultadoImpacto;
-  nearbyMean: {
-    impacto_total: (ResultadoImpactoItem & { diff: string })[];
-    impacto_pesticidas: (ResultadoImpactoItem & { diff: string })[];
-    impacto_fertilizantes: (ResultadoImpactoItem & { diff: string })[];
-    impacto_sistema_riego: (ResultadoImpactoItem & { diff: string })[];
-    impacto_manejo_cultivo: (ResultadoImpactoItem & { diff: string })[];
-  };
-};
-
 type ResultadoImpactoContextType = {
   getById: (id: string) => Promise<ResultadoImpacto>;
-  compareById: (id: string, range: number) => Promise<ResultadoImpactoComparison>;
 }
 
 const ResultadoImpactoContext = createContext<ResultadoImpactoContextType | undefined>(undefined);
@@ -60,21 +48,7 @@ export function ResultadoImpactoProvider({ children }: { children: React.ReactNo
     return json.data as ResultadoImpacto;
   }
 
-  const compareById = async (id: string, range: number) => {
-    const response = await fetch(`${API_BASE_URL}/resultado/${id}/compare?range=${range}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (!response.ok) throw new Error();
-
-    const json = await response.json();
-    return json.data as ResultadoImpactoComparison;
-  }
-
-  const value = useMemo(() => ({ getById, compareById }), []);
+  const value = useMemo(() => ({ getById }), []);
   return (
     <ResultadoImpactoContext.Provider value={value}>{children}</ResultadoImpactoContext.Provider>
   )

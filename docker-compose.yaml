@@ -1,8 +1,8 @@
 services:
   acv-compare-backend:
     build:
-      context: ./
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/server/Dockerfile
     ports:
       - "8080:3000"
     environment:
@@ -21,11 +21,12 @@ services:
       olca:
     profiles:
       - prod
+    restart: unless-stopped
 
   acv-compare-frontend:
     build:
-      context: ./web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
       - "80:80"
     depends_on:
@@ -35,6 +36,7 @@ services:
       olca:
     profiles:
       - prod
+    restart: unless-stopped
 
   db:
     container_name: db
@@ -49,6 +51,7 @@ services:
       - 5432:5432
     networks:
       acv-compare:
+    restart: unless-stopped
 
 volumes:
   postgres:

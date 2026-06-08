@@ -1,0 +1,60 @@
+{
+  "name": "common",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./impact": {
+      "types": "./dist/impact.d.ts",
+      "import": "./dist/impact.js",
+      "default": "./dist/impact.js"
+    },
+    "./stats": {
+      "types": "./dist/stats.d.ts",
+      "import": "./dist/stats.js",
+      "default": "./dist/stats.js"
+    },
+    "./compare": {
+      "types": "./dist/compare.d.ts",
+      "import": "./dist/compare.js",
+      "default": "./dist/compare.js"
+    },
+    "./location": {
+      "types": "./dist/location.d.ts",
+      "import": "./dist/location.js",
+      "default": "./dist/location.js"
+    },
+    "./parcela": {
+      "types": "./dist/parcela.d.ts",
+      "import": "./dist/parcela.js",
+      "default": "./dist/parcela.js"
+    },
+    "./usuario": {
+      "types": "./dist/usuario.d.ts",
+      "import": "./dist/usuario.js",
+      "default": "./dist/usuario.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js",
+      "default": "./dist/auth.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js",
+      "default": "./dist/api.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

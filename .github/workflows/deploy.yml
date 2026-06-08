@@ -49,4 +49,4 @@ jobs:
             
             cd "${DEPLOY_DIR}"
             docker compose --profile prod up -d --build
-            docker compose exec acv-compare-backend npx prisma migrate deploy
+            docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy

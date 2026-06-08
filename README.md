@@ -14,7 +14,7 @@ El objetivo final de esta app es proporcionar de una interfaz sencilla e intuiti
 
 ## Arquitectura
 
-### Backend (`/src`)
+### Backend (`apps/server/src`)
 API REST que expone endpoints para:
 - **Autenticación** (`/auth`) - Login, registro y gestión de sesiones con JWT
 - **Usuarios** (`/usuario`) - CRUD de usuarios con roles
@@ -83,7 +83,7 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 | `PORT` | Puerto del backend (default: 3000) |
 
 ## Despliegue
-Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose up -d`.
+Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose --profile prod up -d --build`.
 
 El compose levanta tres servicios:
 - **acv-compare-backend** - API NestJS (puerto 8080)
@@ -93,13 +93,14 @@ El compose levanta tres servicios:
 ### Desarrollo
 ```bash
 # Backend
-npm install
-npm run start:dev
+pnpm install
+pnpm server:dev
 
 # Frontend
-cd web
-npm install
-npm run dev
+pnpm web:dev
+
+# Docs
+pnpm docs:dev
 ```
 
 ## Uso
@@ -117,25 +118,24 @@ Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible
 
 ## Estructura del proyecto
 ```
-├── src/                    # Backend NestJS
-│   ├── auth/               # Autenticación JWT
-│   ├── usuario/            # Gestión de usuarios
-│   ├── parcela/            # Gestión de parcelas
-│   ├── cultivo/            # Gestión de cultivos
-│   ├── resultadoimpacto/   # Resultados ACV
-│   ├── compare/            # Comparador
-│   ├── sigpac/             # Integración SIGPAC
-│   ├── catastro/           # Integración Catastro
-│   ├── capture/            # Comunicación con OpenLCA
-│   ├── ai/                 # Integración IA
-│   ├── mailer/             # Servicio de email
-│   ├── templates/          # Plantillas Handlebars
-│   └── generated/          # Prisma Client generado
-├── web/                    # Frontend React
-│   └── src/
-├── prisma/
-│   └── schema/             # Esquema Prisma
+├── apps/
+│   ├── server/             # Backend NestJS
+│   │   ├── src/
+│   │   └── prisma/         # Esquema y migraciones Prisma
+│   ├── web/                # Frontend React
+│   │   └── src/
+│   └── docs/               # Documentación Docusaurus
+├── packages/
+│   └── common/             # Paquete común vacío por ahora
 ├── init/                   # Scripts de inicialización
-├── docker-compose.yaml     # Configuración Docker
-└── Dockerfile              # Imagen backend
+├── pnpm-workspace.yaml     # Workspace pnpm
+├── turbo.json              # Pipeline Turborepo
+└── docker-compose.yaml     # Configuración Docker
 ```
+
+## Despliegue en la máquina actual
+Para desplegar el servicio en la máquina actual, se debe lanzar de forma manual la GitHub Action
+configurada para ello (variables de entorno preconfiguradas). En caso de querer lanzarlo manualmente,
+se encuentra en la siguiente ruta: `/home/ivan/openlca/Ventum-ACV-Visualizer`.
+
+**IMPORTANTE**: el servicio de Capture ACV debe haber sido desplegado anteriormente.

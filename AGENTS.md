@@ -6,8 +6,8 @@
 - Backend is NestJS in `apps/server`; real entrypoints are `src/main.ts` and `src/app.module.ts`.
 - Frontend is React 19/Vite in `apps/web`; routes are in `src/App.tsx`, providers in `src/main.tsx`, API base is `API_BASE_URL = '/api'` in `src/common/constants.ts`.
 - Docs is a Docusaurus 3 app in `apps/docs` with Spanish locale and Lunr search.
-- `packages/common` is a real TypeScript package, not a placeholder; backend and frontend import shared DTO/types/constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
-- `.opencode/` and `opencode.json` are OpenCode configuration, not application code; load the `customize-opencode` skill before editing them.
+- `packages/common` is a real TypeScript package, not a placeholder; backend/frontend import shared DTOs and constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
+- `.opencode/` and `opencode.json` are OpenCode config, not app code; load the `customize-opencode` skill before editing them.
 
 ## Commands
 
@@ -25,6 +25,8 @@ pnpm server:prisma:generate       # generates apps/server/src/generated/prisma
 pnpm server:dev                   # Nest watch mode
 pnpm server:build                 # Nest build
 pnpm server:lint                  # eslint with --fix and type-aware rules
+pnpm server:test                  # Jest backend unit tests
+pnpm --filter server test:cov     # backend coverage; used by Sonar workflow
 pnpm web:dev                      # Vite --host
 pnpm web:build                    # tsc -b then vite build
 pnpm web:lint                     # eslint .
@@ -33,14 +35,15 @@ pnpm docs:build
 pnpm docs:typecheck
 ```
 
-- There are currently no frontend or backend test scripts and no `*.spec.*`/`*.test.*` files.
-- Clean local backend work needs `pnpm --filter common build` and `pnpm server:prisma:generate` before `pnpm server:build` if `dist/` or generated Prisma files are missing.
+- To run one backend spec, use Jest after the filter, e.g. `pnpm --filter server test -- stats.service.spec.ts`.
+- Clean backend verification needs `pnpm --filter common build` before server tests/build, and `pnpm server:prisma:generate` before code that imports `src/generated/prisma`.
+- The Sonar workflow order is `pnpm --filter common build` -> `pnpm server:prisma:generate` -> `pnpm --filter server test:cov`.
 
 ## Prisma And Database
 
 - Prisma config is `apps/server/prisma.config.ts`; run Prisma commands from the server package or use scripts that pass `--config prisma.config.ts`.
 - The Prisma schema directory is `apps/server/prisma/schema/`, split into multiple `.prisma` files.
-- Prisma client output is `apps/server/src/generated/prisma` and is gitignored; import it as `../generated/prisma/client`, never `@prisma/client`.
+- Prisma client output is `apps/server/src/generated/prisma`, is gitignored, and may be absent after a clean checkout; import it as `../generated/prisma/client`, never `@prisma/client`.
 - `PrismaService` uses `@prisma/adapter-pg` (`PrismaPg`) and `DATABASE_URL`; inject `apps/server/src/prisma/prisma.service.ts` instead of constructing Prisma clients directly.
 - `Parcela.geom` is `Unsupported("geometry(Polygon, 4326)")`; geometry reads/writes use raw SQL/PostGIS patterns in `apps/server/src/parcela/parcela.service.ts`.
 - Local DB must be PostgreSQL with PostGIS. `docker compose up -d` starts only the DB because app services are behind the `prod` profile.
@@ -53,6 +56,7 @@ pnpm docs:typecheck
 - Swagger is served by `src/main.ts` at `/docs`; `apps/server/nest-cli.json` enables the `@nestjs/swagger` plugin.
 - Nest build copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src`; keep report/prompt assets under those paths.
 - Server TypeScript uses `module`/`moduleResolution: "nodenext"`; common package also uses NodeNext and explicit `.js` extensions in source re-exports.
+- Backend Jest maps `common/*` to `packages/common/src/*.ts`, but `common/impact` and `@openrouter/sdk` use CJS mocks in `apps/server/test/mocks`.
 
 ## Frontend Notes
 

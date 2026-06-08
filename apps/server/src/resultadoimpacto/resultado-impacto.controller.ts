@@ -83,7 +83,7 @@ export class ResultadoImpactoController {
   getDiffString(value1: number, value2: number) {
     const percentage = ((value1 - value2) / value2) * 100;
     const sign = percentage >= 0 ? '+' : '-';
-    return `${sign}${percentage.toFixed(2)}`;
+    return `${sign}${Math.abs(percentage).toFixed(2)}`;
   }
 
   @UseGuards(AuthGuard)

@@ -3,18 +3,48 @@ on:
   push:
     branches:
       - main
-      - develop
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   sonarqube:
     name: SonarQube
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter common build
+
+      - name: Generate Prisma client
+        run: pnpm server:prisma:generate
+
+      - name: Run backend tests with coverage
+        id: backend-tests
+        continue-on-error: true
+        run: pnpm --filter server test:cov
+
       - name: SonarQube Scan
+        if: always()
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Fail if backend tests failed
+        if: steps.backend-tests.outcome == 'failure'
+        run: exit 1

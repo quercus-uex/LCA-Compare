@@ -4,7 +4,7 @@ import { Prisma, Poblacion } from '../generated/prisma/client';
 
 @Injectable()
 export class PoblacionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.PoblacionWhereUniqueInput,

@@ -6,8 +6,8 @@ import Handlebars from 'handlebars';
 
 @Injectable()
 export class AiService {
-  private templates: Map<string, HandlebarsTemplateDelegate>;
-  private openRouter: OpenRouter;
+  private readonly templates: Map<string, HandlebarsTemplateDelegate>;
+  private readonly openRouter: OpenRouter;
 
   constructor() {
     this.openRouter = new OpenRouter();

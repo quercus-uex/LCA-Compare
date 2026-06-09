@@ -166,6 +166,58 @@ describe('CompareService', () => {
       expect(result).toBe(expectedResults);
     });
 
+    it('treats zero latitude and longitude as valid location filters', async () => {
+      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
+        { id: 'ri-zero' } as any,
+      ]);
+      resultadoImpactoService.findMany.mockResolvedValue([{ id: 'ri-zero' }] as any);
+
+      await service.findResults({ lat: 0, long: 0, range: 10 });
+
+      expect(resultadoImpactoService.findManyAroundPoint).toHaveBeenCalledWith(
+        0,
+        0,
+        10,
+      );
+      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+        where: { AND: [{ OR: [{ id: { in: ['ri-zero'] } }] }] },
+      });
+    });
+
+    it('builds campaign filters when only one campaign boundary is provided', async () => {
+      resultadoImpactoService.findMany.mockResolvedValue([]);
+
+      await service.findResults({ anioCampaniaInicio: 2024 });
+      await service.findResults({ anioCampaniaFin: 2025 });
+
+      expect(resultadoImpactoService.findMany).toHaveBeenNthCalledWith(1, {
+        where: {
+          AND: [
+            {
+              cultivo: {
+                fechaInicioCampania: {
+                  gte: new Date('2024-01-01T00:00:00.000Z'),
+                },
+              },
+            },
+          ],
+        },
+      });
+      expect(resultadoImpactoService.findMany).toHaveBeenNthCalledWith(2, {
+        where: {
+          AND: [
+            {
+              cultivo: {
+                fechaInicioCampania: {
+                  lt: new Date('2026-01-01T00:00:00.000Z'),
+                },
+              },
+            },
+          ],
+        },
+      });
+    });
+
     it('builds combined entity, crop, and campaign filters', async () => {
       const expectedResults = [{ id: 'ri-1' }] as any[];
       resultadoImpactoService.findMany.mockResolvedValue(expectedResults);

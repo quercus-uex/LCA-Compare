@@ -57,12 +57,12 @@ export class CaptureService {
       const res = await this.poblacionService.findMany({
         where: {
           provincia: {
-            idCatastro: parseInt(mParcela.es_referencia_catastral.slice(0, 2)),
+            idCatastro: Number.parseInt(mParcela.es_referencia_catastral.slice(0, 2)),
             pais: {
               codigo: 'ES',
             },
           },
-          idCatastro: parseInt(mParcela.es_referencia_catastral.slice(2, 5)),
+          idCatastro: Number.parseInt(mParcela.es_referencia_catastral.slice(2, 5)),
         },
       });
       poblacion = res[0];
@@ -84,7 +84,7 @@ export class CaptureService {
       });
       poblacion = res[0];
     } else {
-      throw Error(
+      throw new Error(
         'Especifica un identificador de parcela (SIGPAC, Referencia catastral, Predial)',
       );
     }

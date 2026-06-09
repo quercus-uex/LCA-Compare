@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class PaisService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(where: Prisma.PaisWhereUniqueInput): Promise<Pais | null> {
     return this.prisma.pais.findUnique({

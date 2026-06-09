@@ -34,7 +34,7 @@ export class AdminGuard implements CanActivate {
 
       const user = await this.usuarioService.findOne({ id: payload.sub });
 
-      if (!user || user.rol !== 'admin') {
+      if (user?.rol !== 'admin') {
         throw new ForbiddenException(
           'Acceso denegado: se requiere rol de administrador',
         );

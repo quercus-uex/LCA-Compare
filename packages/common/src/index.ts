@@ -36,5 +36,4 @@ export type {
   ApiErrorDto,
   ResultadoImpactoItemDto,
   ResultadoImpactoDto,
-  ResultadoImpactoCompareDto,
 } from './api.js';

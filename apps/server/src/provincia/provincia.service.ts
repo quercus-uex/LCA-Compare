@@ -4,7 +4,7 @@ import { Prisma, Provincia } from '../generated/prisma/client';
 
 @Injectable()
 export class ProvinciaService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.ProvinciaWhereUniqueInput,

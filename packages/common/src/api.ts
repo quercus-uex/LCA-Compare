@@ -26,8 +26,3 @@ export type ResultadoImpactoDto = {
   impacto_sistema_riego: ResultadoImpactoItemDto[];
   impacto_total: ResultadoImpactoItemDto[];
 };
-
-export type ResultadoImpactoCompareDto = {
-  resultado: ResultadoImpactoDto;
-  nearbyMean: ResultadoImpactoDto;
-};

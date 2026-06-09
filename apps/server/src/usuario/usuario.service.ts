@@ -6,7 +6,7 @@ export type UsuarioPublico = Omit<Usuario, 'passwordHash'>;
 
 @Injectable()
 export class UsuarioService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.UsuarioWhereUniqueInput,

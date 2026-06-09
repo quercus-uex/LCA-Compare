@@ -5,7 +5,7 @@ import { Polygon } from 'geojson';
 
 @Injectable()
 export class ParcelaService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.ParcelaWhereUniqueInput,

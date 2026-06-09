@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { SigpacService } from './sigpac.service';
 
 const SIGPAC_BASE_URL =
@@ -107,5 +107,33 @@ describe('SigpacService', () => {
     });
 
     expect(result).toBe(feature);
+  });
+
+  it('sends empty query values for omitted optional SIGPAC identifiers', async () => {
+    httpService.get.mockReturnValue(
+      of({
+        data: {
+          type: 'FeatureCollection',
+          features: [undefined],
+          numberMatched: 0,
+          numberReturned: 0,
+        },
+      } as any),
+    );
+
+    await service.getPolygon({});
+
+    const calledUrl = new URL(httpService.get.mock.calls[0][0]);
+    expect(calledUrl.searchParams.get('provincia')).toBe('');
+    expect(calledUrl.searchParams.get('municipio')).toBe('');
+    expect(calledUrl.searchParams.get('parcela')).toBe('');
+    expect(calledUrl.searchParams.get('poligono')).toBe('');
+  });
+
+  it('propagates HTTP errors from the SIGPAC API call', async () => {
+    const error = new Error('SIGPAC unavailable');
+    httpService.get.mockReturnValue(throwError(() => error));
+
+    await expect(service.getPolygon({ provincia: 28 })).rejects.toThrow(error);
   });
 });

@@ -76,7 +76,9 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
 
     let locationIds: string[] = [];
 
-    if (lat && long && range) {
+    const hasLocationFilter = lat != null && long != null && range != null;
+
+    if (hasLocationFilter) {
       const locationResults =
         await this.resultadoImpactoService.findManyAroundPoint(
           lat,
@@ -102,7 +104,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       idsParcela?.length
         ? { cultivo: { parcela: { id: { in: idsParcela } } } }
         : null,
-      lat && long && range ? { id: { in: locationIds } } : null,
+      hasLocationFilter ? { id: { in: locationIds } } : null,
       idPais
         ? { cultivo: { parcela: { poblacion: { provincia: { idPais } } } } }
         : null,
@@ -172,7 +174,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.getMeanOfResults(results);
   }
 
-  private percentageDiff = (a: number, b: number) =>
+  private readonly percentageDiff = (a: number, b: number) =>
     b === 0 ? 0 : ((a - b) / b) * 100;
 
   compareResults(
@@ -265,7 +267,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     const tarContext = await this.buildReportContext(tarResults, tarFilters);
 
     const topImpacts = comparison.impacto_total
-      .sort((a, b) => Math.abs(b.diff!) - Math.abs(a.diff!))
+      .toSorted((a, b) => Math.abs(b.diff!) - Math.abs(a.diff!))
       .slice(0, 3);
 
     const html = this.reportTemplate({

@@ -7,7 +7,7 @@ import { CultivoService } from '../cultivo/cultivo.service';
 @Injectable()
 export class ResultadoImpactoService {
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly parcelaService: ParcelaService,
     private readonly cultivoService: CultivoService,
   ) {}

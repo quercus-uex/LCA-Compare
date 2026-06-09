@@ -4,7 +4,7 @@ import { Prisma, MetodoImpacto } from '../generated/prisma/client';
 
 @Injectable()
 export class MetodoImpactoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.MetodoImpactoWhereUniqueInput,

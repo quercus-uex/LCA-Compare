@@ -395,5 +395,92 @@ describe('StatsService', () => {
 
       expect(result.kpis.variacionInteranual).toBeNull();
     });
+
+    it('applies crop filter to previous-year lookup and returns null when previous impact is zero', async () => {
+      const cultivoCurrent = makeCultivo({
+        id: 'c1',
+        idResultadoImpacto: 'ri-current',
+        fechaInicioCampania: new Date('2024-06-01'),
+      });
+      const cultivoPrev = makeCultivo({
+        id: 'c2',
+        idResultadoImpacto: 'ri-prev',
+        fechaInicioCampania: new Date('2023-06-01'),
+      });
+
+      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
+        if (args?.where?.fechaInicioCampania) {
+          const gte = args.where.fechaInicioCampania.gte as Date;
+          if (gte.getFullYear() === 2023) return Promise.resolve([cultivoPrev]);
+          return Promise.resolve([cultivoCurrent]);
+        }
+        return Promise.resolve([cultivoCurrent, cultivoPrev]);
+      });
+      prisma.resultadoImpacto.findMany.mockImplementation(
+        (args: FindManyArgs) => {
+          const ids = (args?.where?.id as { in?: string[] })?.in ?? [];
+          if (ids.includes('ri-current')) {
+            return Promise.resolve([makeImpactRecord('ri-current', 50)]);
+          }
+          if (ids.includes('ri-prev')) {
+            return Promise.resolve([makeImpactRecord('ri-prev', 0)]);
+          }
+          return Promise.resolve([]);
+        },
+      );
+
+      const result = await service.getGlobalStats(2024, undefined, 'trigo');
+
+      expect(result.kpis.variacionInteranual).toBeNull();
+      expect(prisma.cultivo.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            tipo: 'trigo',
+            fechaInicioCampania: expect.objectContaining({
+              gte: new Date('2023-01-01T00:00:00.000Z'),
+              lt: new Date('2024-01-01T00:00:00.000Z'),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('skips records without population for rankings and preserves population entries without province names', async () => {
+      const cultivoWithoutPopulation = makeCultivo({
+        id: 'c1',
+        idResultadoImpacto: 'ri-1',
+        parcela: { id: 'par-1', idPoblacion: null, poblacion: null },
+      });
+      const cultivoWithoutProvince = makeCultivo({
+        id: 'c2',
+        idParcela: 'par-2',
+        idResultadoImpacto: 'ri-2',
+        parcela: {
+          id: 'par-2',
+          idPoblacion: 'pop-2',
+          poblacion: { id: 'pop-2', nombre: 'Sin provincia', provincia: null },
+        },
+      });
+
+      prisma.cultivo.findMany.mockResolvedValue([
+        cultivoWithoutPopulation,
+        cultivoWithoutProvince,
+      ]);
+      prisma.resultadoImpacto.findMany.mockResolvedValue([
+        makeImpactRecord('ri-1', 10),
+        makeImpactRecord('ri-2', 20),
+      ]);
+
+      const result = await service.getGlobalStats();
+
+      expect(result.rankingProvincias).toEqual([]);
+      expect(result.rankingPoblaciones).toEqual([
+        expect.objectContaining({
+          nombrePoblacion: 'Sin provincia',
+          nombreProvincia: '',
+          numParcelas: 1,
+        }),
+      ]);
+    });
   });
 });

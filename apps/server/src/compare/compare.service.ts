@@ -76,7 +76,9 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
 
     let locationIds: string[] = [];
 
-    if (lat && long && range) {
+    const hasLocationFilter = lat != null && long != null && range != null;
+
+    if (hasLocationFilter) {
       const locationResults =
         await this.resultadoImpactoService.findManyAroundPoint(
           lat,
@@ -102,7 +104,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       idsParcela?.length
         ? { cultivo: { parcela: { id: { in: idsParcela } } } }
         : null,
-      lat && long && range ? { id: { in: locationIds } } : null,
+      hasLocationFilter ? { id: { in: locationIds } } : null,
       idPais
         ? { cultivo: { parcela: { poblacion: { provincia: { idPais } } } } }
         : null,

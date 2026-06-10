@@ -1,0 +1,10 @@
+{
+  "copyright": {
+    "message": "Capture ACV and ACV Compare documentation.",
+    "description": "The footer copyright"
+  },
+  "logo.alt": {
+    "message": "TID4Agro",
+    "description": "The alt text of footer logo"
+  }
+}

@@ -5,9 +5,9 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Documentación de Capture ACV y ACV Compare',
+  title: 'Capture ACV / ACV Compare',
   tagline: '',
-  favicon: 'img/icon.svg',
+  favicon: '/img/icon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -32,11 +32,25 @@ const config: Config = {
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'es',
-    locales: ['es'],
+    locales: ['es', 'en', 'pt'],
+    localeConfigs: {
+      es: {
+        label: 'Español',
+        htmlLang: 'es-ES',
+      },
+      en: {
+        label: 'English',
+        htmlLang: 'en-US',
+      },
+      pt: {
+        label: 'Português',
+        htmlLang: 'pt-PT',
+      },
+    },
   },
 
   plugins: [[require.resolve('docusaurus-lunr-search'), {
-    languages: ['es'],
+    languages: ['es', 'en', 'pt'],
   }]],
 
   presets: [
@@ -56,7 +70,7 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/icon.svg',
+    image: '/img/icon.svg',
     colorMode: {
       respectPrefersColorScheme: true,
     },
@@ -64,12 +78,12 @@ const config: Config = {
       title: 'Documentación de Capture ACV y ACV Compare',
       logo: {
         alt: 'ACV Compare',
-        src: 'img/icon.svg',
+        src: '/img/icon.svg',
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          type: 'doc',
+          docId: 'introduccion/introduccion',
           position: 'left',
           label: 'Documentación',
         },
@@ -83,6 +97,10 @@ const config: Config = {
           label: 'ACV Compare',
           position: 'right',
         },
+        {
+          type: 'localeDropdown',
+          position: 'right',
+        },
       ],
     },
     footer: {
@@ -90,7 +108,7 @@ const config: Config = {
       links: [],
       logo: {
         alt: 'TID4Agro',
-        src: 'img/tid4agro-banner.png',
+        src: '/img/tid4agro-banner.png',
       },
       copyright: `Documentación de Capture ACV y ACV Compare.`,
     },

@@ -1,0 +1,22 @@
+{
+  "title": {
+    "message": "Documentação do Capture ACV e ACV Compare",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "ACV Compare",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Documentación": {
+    "message": "Documentação",
+    "description": "Navbar item with label Documentación"
+  },
+  "item.label.Capture ACV": {
+    "message": "Capture ACV",
+    "description": "Navbar item with label Capture ACV"
+  },
+  "item.label.ACV Compare": {
+    "message": "ACV Compare",
+    "description": "Navbar item with label ACV Compare"
+  }
+}

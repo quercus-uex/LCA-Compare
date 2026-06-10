@@ -1,0 +1,8 @@
+{
+  "label": "ACV Compare",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Documentation for the ACV comparison visualizer."
+  }
+}

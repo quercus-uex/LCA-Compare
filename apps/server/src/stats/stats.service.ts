@@ -57,7 +57,7 @@ function round(value: number, decimals = 2): number {
 
 @Injectable()
 export class StatsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getGlobalStats(
     anio?: number,

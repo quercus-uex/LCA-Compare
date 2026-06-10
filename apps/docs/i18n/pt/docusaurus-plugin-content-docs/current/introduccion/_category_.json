@@ -1,9 +1,9 @@
 {
-  "label": "Introducción",
+  "label": "Introdução",
   "position": 1,
   "link": {
     "type": "generated-index",
     "slug": "/category/introduccion",
-    "description": "Aspectos generales sobre la arquitectura"
+    "description": "Aspetos gerais sobre a arquitetura"
   }
 }

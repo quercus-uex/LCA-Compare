@@ -1,41 +1,19 @@
-# Website
+# ACV Compare Docs
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Docusaurus 3 documentation app for Capture ACV and ACV Compare in the pnpm workspace.
 
-## Installation
+## Commands
 
-```bash
-yarn
-```
-
-## Local Development
+Run from the repository root:
 
 ```bash
-yarn start
+pnpm docs:dev
+pnpm docs:build
+pnpm docs:typecheck
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+## Runtime Notes
 
-## Build
-
-```bash
-yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
-
-```bash
-USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+- `pnpm docs:dev` runs Docusaurus with `--host 0.0.0.0`.
+- The docs site is Spanish-only (`defaultLocale: 'es'`, `locales: ['es']`).
+- Search uses `docusaurus-lunr-search` configured for Spanish.

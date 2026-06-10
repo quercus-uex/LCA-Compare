@@ -20,6 +20,7 @@ cp .env.example .env
 A continuación, ajusta los valores según tu entorno:
 
 ```sh
+DATABASE_URL="postgres://user:password@localhost:5432/acv"  # Conexión local usada fuera de Docker
 JWT_SECRET="CHANGEME"                    # Clave secreta para JWT (autenticación)
 OPENROUTER_API_KEY="sk-or-v1-...."       # Clave de API para OpenRouter (IA en informes)
 
@@ -37,7 +38,9 @@ DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del m�
 PORT=8000                                # Puerto del backend en desarrollo
 ```
 
-La variable `DATABASE_URL` se construye automáticamente en el Docker Compose a partir de `DB_USER` y `DB_PASSWORD`.
+En producción con Docker Compose, `DATABASE_URL` se inyecta automáticamente en el backend como
+`postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. El valor del `.env` queda para comandos locales, pruebas o desarrollo
+fuera del contenedor.
 
 ## Inicialización de la base de datos
 
@@ -123,7 +126,11 @@ ramas `main` y `develop`. El pipeline:
    `acv-compare-backend`.
 
 Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,
-`OPENROUTER_API_KEY`, etc.).
+`OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD` y
+`DEFAULT_IMPACT_METHOD_UUID`).
+
+El repositorio también incluye el workflow `.github/workflows/sonar.yml`, que instala dependencias, compila
+`packages/common`, genera el cliente Prisma y ejecuta la cobertura del backend antes del análisis de SonarCloud.
 
 ## Verificación
 

@@ -5,8 +5,8 @@
 - pnpm 10/Turborepo monorepo: apps live in `apps/*`, shared packages in `packages/*`.
 - Backend is NestJS in `apps/server`; real entrypoints are `src/main.ts` and `src/app.module.ts`.
 - Frontend is React 19/Vite in `apps/web`; routes are in `src/App.tsx`, providers in `src/main.tsx`, API base is `API_BASE_URL = '/api'` in `src/common/constants.ts`.
-- Docs is a Docusaurus 3 app in `apps/docs` with Spanish locale and Lunr search.
-- `packages/common` is a real TypeScript package, not a placeholder; backend/frontend import shared DTOs and constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
+- Docs is a Docusaurus 3 app in `apps/docs`; locale/search are Spanish-only (`es`, Lunr).
+- `packages/common` is a real TypeScript package; backend/frontend import shared DTOs/constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
 - `.opencode/` and `opencode.json` are OpenCode config, not app code; load the `customize-opencode` skill before editing them.
 
 ## Commands
@@ -36,7 +36,7 @@ pnpm docs:typecheck
 ```
 
 - To run one backend spec, use Jest after the filter, e.g. `pnpm --filter server test -- stats.service.spec.ts`.
-- Clean backend verification needs `pnpm --filter common build` before server tests/build, and `pnpm server:prisma:generate` before code that imports `src/generated/prisma`.
+- Clean backend verification needs `pnpm --filter common build` before server tests/build, and `pnpm server:prisma:generate` before anything that imports `src/generated/prisma`.
 - The Sonar workflow order is `pnpm --filter common build` -> `pnpm server:prisma:generate` -> `pnpm --filter server test:cov`.
 
 ## Prisma And Database
@@ -56,12 +56,12 @@ pnpm docs:typecheck
 - Swagger is served by `src/main.ts` at `/docs`; `apps/server/nest-cli.json` enables the `@nestjs/swagger` plugin.
 - Nest build copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src`; keep report/prompt assets under those paths.
 - Server TypeScript uses `module`/`moduleResolution: "nodenext"`; common package also uses NodeNext and explicit `.js` extensions in source re-exports.
-- Backend Jest maps `common/*` to `packages/common/src/*.ts`, but `common/impact` and `@openrouter/sdk` use CJS mocks in `apps/server/test/mocks`.
+- Backend Jest only matches `apps/server/src/**/*.spec.ts`; it maps `common/*` to `packages/common/src/*.ts`, but `common/impact` and `@openrouter/sdk` use CJS mocks in `apps/server/test/mocks`.
 
 ## Frontend Notes
 
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
-- DaisyUI 5 classes are used, but DaisyUI is only visible as a dependency/plugin dependency.
+- DaisyUI 5 is configured in CSS via `@plugin "daisyui"` and the custom `acv` theme in `apps/web/src/index.css`.
 - `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, and `noUncheckedSideEffectImports`.
 - Production Nginx proxies `/api/` to `acv-compare-backend:3000/` and `/calc` to `capture-openlca-bridge:3000/capture-acv`; the latter requires the external `olca` network service.
 

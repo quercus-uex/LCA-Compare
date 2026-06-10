@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-      title: 'Documentación de Capture ACV y ACV Compare',
+  title: 'Documentación de Capture ACV y ACV Compare',
   tagline: '',
   favicon: 'img/icon.svg',
 
@@ -22,8 +22,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'quercus-uex',
+  projectName: 'Ventum-ACV-Visualizer',
 
   onBrokenLinks: 'throw',
 
@@ -56,12 +56,12 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
+    image: 'img/icon.svg',
     colorMode: {
       respectPrefersColorScheme: true,
     },
     navbar: {
-  title: 'Documentación de Capture ACV y ACV Compare',
+      title: 'Documentación de Capture ACV y ACV Compare',
       logo: {
         alt: 'ACV Compare',
         src: 'img/icon.svg',
@@ -80,7 +80,7 @@ const config: Config = {
         },
         {
           href: 'https://github.com/quercus-uex/Ventum-ACV-Visualizer',
-          label: 'ACV Visualizer',
+          label: 'ACV Compare',
           position: 'right',
         },
       ],

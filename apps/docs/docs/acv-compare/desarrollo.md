@@ -24,6 +24,9 @@ Inicia la base de datos PostgreSQL con PostGIS:
 docker compose up -d db
 ```
 
+En desarrollo local, asegúrate de que `DATABASE_URL` apunta a esa base de datos. Con el Compose incluido, la base se crea
+como `acv`, por ejemplo `postgres://user:password@localhost:5432/acv` si usas las credenciales del `.env.example`.
+
 Después de una instalación limpia, compila el paquete compartido y genera el cliente de
 [Prisma](https://www.prisma.io/docs/orm) antes de compilar o arrancar el backend:
 
@@ -55,6 +58,8 @@ pnpm server:dev
 
 El servidor NestJS arranca en `http://localhost:8000` con hot-reload activado. La documentación Swagger estará
 disponible en `http://localhost:8000/docs`.
+
+El puerto `8000` depende de la variable `PORT` del `.env`. Si no está definida, NestJS usa el valor por defecto `3000`.
 
 ### Frontend (SPA)
 
@@ -142,6 +147,8 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   │   ├── resultadoimpacto/  # Almacenamiento y consulta de resultados ACV
 │   │   │   ├── compare/           # Lógica de comparación entre conjuntos de cultivos
 │   │   │   ├── capture/           # Recepción de datos desde Capture ACV
+│   │   │   ├── stats/             # Estadísticas globales y agregaciones para el dashboard
+│   │   │   ├── admin/             # CRUD administrativo protegido por rol admin
 │   │   │   ├── ai/                # Integración con OpenRouter para IA
 │   │   │   ├── templates/         # Plantillas Handlebars para informes
 │   │   │   └── generated/         # Cliente de Prisma autogenerado
@@ -158,6 +165,7 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   │   ├── App.tsx            # Componente raíz con rutas
 │   │   │   ├── components/        # Componentes reutilizables
 │   │   │   ├── hooks/             # Hooks personalizados
+│   │   │   ├── stats/             # Componentes de visualización estadística
 │   │   │   ├── routes/            # Vistas de la aplicación
 │   │   │   └── utils/             # Utilidades
 │   │   ├── nginx.conf             # Proxy inverso de producción
@@ -173,7 +181,8 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 ```
 
 El backend y el frontend consumen contratos compartidos desde el paquete workspace `common`, por ejemplo mediante
-subrutas como `common/impact`, `common/compare` o `common/api`.
+subrutas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`,
+`common/auth` o `common/api`.
 
 ## Esquema de base de datos
 
@@ -186,6 +195,9 @@ El esquema de Prisma define los siguientes modelos principales:
 | `Cultivo` | Campañas de cultivo con métricas (superficie, producción, consumo de agua) |
 | `ResultadoImpacto` | Resultados de ACV en formato JSON por método de impacto |
 | `MetodoImpacto` | Métodos de impacto registrados (identificados por UUID de OpenLCA) |
+| `Pais` | Países de referencia para ubicar parcelas |
+| `Provincia` | Provincias asociadas a un país y su código catastral |
+| `Poblacion` | Poblaciones asociadas a una provincia y su código catastral |
 
 Las relaciones principales son: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 

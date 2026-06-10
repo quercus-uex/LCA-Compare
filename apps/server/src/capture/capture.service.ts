@@ -192,7 +192,15 @@ export class CaptureService {
       },
     });
 
-    if (!cultivo) {
+    if (cultivo) {
+      await this.cultivoService.update({
+        where: { id: cultivo.id },
+        data: { resultadoImpacto: { connect: { id: idResultadoImpacto } } },
+      });
+      await this.resultadoImpactoService.delete({
+        id: cultivo.idResultadoImpacto!,
+      });
+    } else {
       cultivo = await this.cultivoService.create({
         produccion: mCultivo.produccion,
         tipo: mCultivo.tipo,
@@ -202,14 +210,6 @@ export class CaptureService {
         superficieCultivada: mCultivo.superficie_cultivada,
         consumoAgua: mCultivo.consumo_agua,
         resultadoImpacto: { connect: { id: idResultadoImpacto } },
-      });
-    } else {
-      await this.cultivoService.update({
-        where: { id: cultivo.id },
-        data: { resultadoImpacto: { connect: { id: idResultadoImpacto } } },
-      });
-      await this.resultadoImpactoService.delete({
-        id: cultivo.idResultadoImpacto!,
       });
     }
 

@@ -15,20 +15,18 @@ El objetivo final de esta app es proporcionar de una interfaz sencilla e intuiti
 ## Arquitectura
 
 ### Backend (`apps/server/src`)
-API REST que expone endpoints para:
+API REST NestJS. Los controladores públicos actuales cubren:
 - **Autenticación** (`/auth`) - Login, registro y gestión de sesiones con JWT
 - **Usuarios** (`/usuario`) - CRUD de usuarios con roles
 - **Parcelas** (`/parcela`) - Gestión de parcelas con datos geoespaciales
-- **Cultivos** (`/cultivo`) - Registro y gestión de cultivos
-- **Resultados de impacto** (`/resultadoimpacto`) - Almacenamiento y consulta de resultados ACV
-- **Métodos de impacto** (`/predial`) - Configuración de métodos de análisis
+- **Resultados de impacto** (`/resultado`) - Almacenamiento y consulta de resultados ACV
 - **Comparador** (`/compare`) - Lógica de comparación entre cultivos
-- **SIGPAC/Catastro** (`/sigpac`, `/catastro`) - Integración con APIs externas para datos catastrales
+- **Estadísticas** (`/stats`) - KPIs y agregaciones para el panel estadístico
+- **Administración** (`/admin`) - Operaciones administrativas sobre usuarios, parcelas, cultivos, métodos y ubicaciones
+- **Ubicaciones** (`/pais`, `/provincia`, `/poblacion`) - Consulta de datos territoriales
 - **Capture ACV** (`/capture`) - Comunicación con Capture ACV
-- **AI** (`/ai`) - Integración con OpenRouter para análisis asistido
-- **Mailer** (`/mailer`) - Servicio de envío de emails
 
-La documentación OpenAPI está disponible en `/docs`.
+La documentación OpenAPI del backend está disponible en `/docs` cuando se accede al servidor directamente, o vía `/api/docs` a través del proxy del frontend.
 
 ## Tecnologías
 A continuación se detallan las tecnologías usadas para el desarrollo de la webapp:
@@ -80,7 +78,7 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 | `CAPTURE_ACV_EMAIL` | Email para autenticación en DTAgro |
 | `CAPTURE_ACV_PASSWORD` | Password para autenticación en DTAgro |
 | `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto (EF 3.1) |
-| `PORT` | Puerto del backend (default: 3000) |
+| `PORT` | Puerto del backend; usar `8000` en desarrollo para el proxy de Vite (`3000` es el default de Nest y del contenedor) |
 
 ## Despliegue
 Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose --profile prod up -d --build`.
@@ -92,41 +90,38 @@ El compose levanta tres servicios:
 
 ### Desarrollo
 ```bash
-# Backend
 pnpm install
+pnpm --filter common build
+pnpm server:prisma:generate
+
 pnpm server:dev
-
-# Frontend
 pnpm web:dev
-
-# Docs
 pnpm docs:dev
 ```
 
 ## Uso
-Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible a partir de la ruta `/api` y la documentación Swagger en `/docs`.
+Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible a partir de la ruta `/api` y la documentación Swagger a través del proxy en `/api/docs`.
 
 ### Endpoints principales
 - `POST /auth/register` - Registro de usuario
 - `POST /auth/login` - Login
 - `GET /parcela` - Listar parcelas
 - `POST /parcela` - Crear parcela
-- `GET /cultivo` - Listar cultivos
-- `POST /cultivo` - Crear cultivo
 - `GET /compare` - Comparar cultivos
-- `GET /docs` - Documentación Swagger
+- `GET /stats` - Estadísticas globales
+- `GET /api/docs` - Documentación Swagger a través del proxy frontend
 
 ## Estructura del proyecto
 ```
 ├── apps/
 │   ├── server/             # Backend NestJS
 │   │   ├── src/
-│   │   └── prisma/         # Esquema y migraciones Prisma
+│   │   └── prisma/         # Esquema Prisma y configuración asociada
 │   ├── web/                # Frontend React
 │   │   └── src/
 │   └── docs/               # Documentación Docusaurus
 ├── packages/
-│   └── common/             # Paquete común vacío por ahora
+│   └── common/             # DTOs, tipos y constantes compartidos por subpath exports
 ├── init/                   # Scripts de inicialización
 ├── pnpm-workspace.yaml     # Workspace pnpm
 ├── turbo.json              # Pipeline Turborepo

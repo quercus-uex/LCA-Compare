@@ -41,7 +41,7 @@ de cultivo, pesticidas, sistema de riego e impacto total.
 
 ## Comparador de ACV
 
-El comparador de ACV se accede desde el botón habilitado para ello en la parte superior derecha de la página.
+El comparador de ACV se accede desde el botón habilitado para ello en la barra de navegación.
 
 <p align="center">
     <img src="/img/acv-compare/boton_comparador.png" alt="ACV de una parcela" width="600"/>
@@ -89,8 +89,20 @@ mayor diferencia, y el desglose completo de la comparativa por categorías.
 ## Administración
 
 Si el usuario que inicia sesión tiene rol de administrador, será redirigido automáticamente al panel de administración.
-Desde allí podrá gestionar los métodos de impacto registrados en el sistema.
+Desde allí podrá gestionar usuarios, parcelas, cultivos, métodos de impacto, países, provincias y poblaciones. El panel
+incluye búsqueda, paginación, creación, edición, borrado y ayudas para seleccionar identificadores de entidades
+relacionadas.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Panel de administración" width="600"/>
 </p>
+
+## Estadísticas globales
+
+La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en ACV Compare. Permite filtrar por
+año, categoría de impacto, tipo de cultivo y provincia, y visualiza:
+
+- KPIs globales de cultivos, parcelas, usuarios, superficie, producción, agua e impacto medio.
+- Ranking de provincias y poblaciones.
+- Evolución temporal de los impactos.
+- Perfil de impacto, mapa de calor, distribución de cultivos y relación entre producción e impacto.

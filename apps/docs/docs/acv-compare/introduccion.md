@@ -13,7 +13,7 @@ Docker compartida.
 
 ## Funcionalidades
 
-- **Gestión de parcelas** con integración de las APIs públicas de SIGPAC y Catastro para la localización y
+- **Gestión de parcelas** con integración de SIGPAC, Catastro y el identificador predial portugués para la localización y
   representación geoespacial de polígonos.
 - **Visualización de resultados de ACV** por parcela y campaña, desglosados en categorías de impacto (fertilizantes,
   manejo de cultivo, pesticidas, sistema de riego e impacto total).
@@ -21,7 +21,10 @@ Docker compartida.
   (radio en km), tipo de cultivo y año de campaña.
 - **Generación de informes en PDF** con resumen y recomendaciones generadas por IA a través de OpenRouter.
 - **Exportación de resultados a JSON** tanto del conjunto de referencia como del objetivo.
-- **Panel de administración** para la gestión de métodos de impacto y datos del sistema.
+- **Dashboard de estadísticas** con KPIs globales, evolución temporal, rankings por provincia y población, mapas de calor,
+  perfiles de impacto y distribución de cultivos.
+- **Panel de administración** para la gestión de usuarios, parcelas, cultivos, métodos de impacto, países, provincias y
+  poblaciones.
 - **Autenticación JWT** con envío automático de credenciales por correo electrónico al primer cálculo de ACV.
 
 ## Arquitectura
@@ -60,4 +63,6 @@ que actúa como proxy inverso enrutando las peticiones `/api` al backend y sirvi
 - **Leaflet / React-Leaflet** para mapas interactivos
 - **React Router 7** para enrutamiento
 - **React Hook Form** para formularios
+- **i18next / react-i18next** para internacionalización de la interfaz
+- **Recharts** para gráficas del dashboard de estadísticas
 - **Sonner** para notificaciones toast

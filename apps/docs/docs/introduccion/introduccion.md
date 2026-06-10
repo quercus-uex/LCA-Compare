@@ -26,12 +26,15 @@ según el tipo de cultivo (`TomateProcess`, `OlivoProcess` o `VinedoProcess`).
 persistencia, visualización y comparación de los resultados de ACV generados por Capture ACV. Entre sus funcionalidades
 destacan:
 
-- Gestión de parcelas con integración de las APIs de **SIGPAC** y **Catastro** para la representación geoespacial.
+- Gestión de parcelas con integración de **SIGPAC**, **Catastro** y el identificador predial portugués para la
+  representación geoespacial.
 - Visualización de resultados de ACV desglosados por categoría de impacto (fertilizantes, manejo de cultivo, pesticidas,
   sistema de riego e impacto total).
 - Comparador entre dos conjuntos de cultivos con filtros por ubicación, tipo de cultivo, campaña y más.
+- Dashboard de estadísticas globales con KPIs, evolución temporal, rankings territoriales y distribución por cultivos.
 - Generación de informes en PDF con resumen y recomendaciones asistidas por **IA** (OpenRouter).
-- Panel de administración y autenticación JWT.
+- Panel de administración para usuarios, parcelas, cultivos, métodos de impacto y datos territoriales, con autenticación
+  JWT.
 
 ## Cómo interactúan
 

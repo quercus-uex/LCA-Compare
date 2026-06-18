@@ -549,5 +549,28 @@ describe('CompareService', () => {
       expect(htmlArg).toContain('Spain');
       expect(htmlArg).toContain('Portugal');
     });
+
+    it('renders target location coordinates from target filters', async () => {
+      const refResults = [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })];
+      const tarResults = [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })];
+
+      aiService.generateFromTemplate.mockResolvedValue('text');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+
+      await service.generateReport(
+        refFilters,
+        refResults,
+        { ...tarFilters, lat: 41, long: -8, range: 100 },
+        tarResults,
+      );
+
+      const htmlArg = playwrightMock.__mockPage.setContent.mock
+        .calls[0][0] as string;
+
+      expect(htmlArg).toContain('41.00000, -8.00000');
+      expect(htmlArg).not.toContain('NaN');
+    });
   });
 });

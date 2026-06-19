@@ -118,7 +118,7 @@ Este mismo JSON es el que se envía al endpoint `POST /capture` de **ACV Compare
 
 ## Documentación interactiva (Swagger)
 
-Capture ACV expone una interfaz **Swagger/OpenAPI** que permite explorar y probar todos los endpoints del servicio
+Capture ACV expone una interfaz **Swagger/OpenAPI** que permite explorar y probar el endpoint `POST /capture-acv`
 directamente desde el navegador. La documentación incluye el esquema del JSON de entrada, los códigos de respuesta
 y la posibilidad de ejecutar peticiones de prueba.
 

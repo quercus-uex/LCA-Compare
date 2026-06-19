@@ -20,7 +20,7 @@ Atualmente existem três processos implementados:
 Os processos residem em `src/processes/` e seguem uma hierarquia de herança simples:
 
 ```
-Process (clase base abstracta)
+Process (classe base abstrata)
 ├── TomateProcess
 ├── OlivoProcess
 └── VinedoProcess
@@ -77,7 +77,7 @@ Cada processo deve implementar cinco métodos estáticos que recebem o objeto `C
 | `get_manejo_cultivo_flow(output)` | Mapeia as operações agrícolas e o uso do solo para fluxos de openLCA. |
 | `get_pesticidas_flow(output)` | Mapeia os produtos fitossanitários para fluxos de openLCA. |
 | `get_sistema_riego_flow(output)` | Mapeia os componentes do sistema de rega para fluxos de openLCA. |
-| `get_all_flows(output)` | Devolve um dicionário com os quatro fluxos anteriores, keyed pelos seus nomes. |
+| `get_all_flows(output)` | Devolve um dicionário com os quatro fluxos anteriores, indexado pelos seus nomes. |
 
 ## Modelo `FlowDict`
 
@@ -85,8 +85,8 @@ Cada processo deve implementar cinco métodos estáticos que recebem o objeto `C
 
 ```python
 class FlowDict:
-    inputs: dict[str, float]    # Flujos de entrada (nombre → cantidad)
-    outputs: dict[str, float]   # Flujos de salida (nombre → cantidad)
+    inputs: dict[str, float]    # Fluxos de entrada (nome → quantidade)
+    outputs: dict[str, float]   # Fluxos de saída (nome → quantidade)
 ```
 
 - As **chaves** são os nomes exatos dos fluxos tal como estão definidos na base de dados .zolca do openLCA.
@@ -121,11 +121,11 @@ Os `inputs` representam os recursos consumidos (fertilizantes, combustível) e o
 Quando `ACVService.execute()` recebe um pedido, o processo é usado da seguinte forma:
 
 ```
-1. get_process_class(tipo)           → Selecciona TomateProcess / OlivoProcess / VinedoProcess
-2. process.get_all_flows(output)     → Obtiene los 4 FlowDict (fertilizantes, manejo, pesticidas, riego)
-3. update_processes(flows, process)  → Actualiza cada subproceso en openLCA vía OLCAClient (IPC)
-4. calculate_impacts(process.uuid)   → Ejecuta el cálculo de impacto sobre el sistema de producto
-5. build_final_result()              → Construye el resultado estructurado por categoría
+1. get_process_class(tipo)           → Seleciona TomateProcess / OlivoProcess / VinedoProcess
+2. process.get_all_flows(output)     → Obtém os 4 objetos FlowDict (fertilizantes, maneio, pesticidas, rega)
+3. update_processes(flows, process)  → Atualiza cada subprocesso em openLCA através do OLCAClient (IPC)
+4. calculate_impacts(process.uuid)   → Executa o cálculo de impacto sobre o sistema de produto
+5. build_final_result()              → Constrói o resultado estruturado por categoria
 ```
 
 Cada subprocesso (fertilizantes, maneio da cultura, pesticidas, sistema de rega) é atualizado de forma independente em openLCA antes de executar o cálculo global. Isto permite que os valores dos fluxos reflitam os dados reais da cultura enviada pelo DTAgro.
@@ -155,7 +155,7 @@ from ..models.dtagro_acv_output import GeneratedSchema as CaptureACVOutput
 
 class AlmendroProcess(Process):
     name: str = "Almendro"
-    uuid: str = "<UUID-del-sistema-de-producto-en-openLCA>"
+    uuid: str = "<UUID-do-sistema-de-produto-openLCA>"
 
     fertilizantes_flow_name: str = "Fertilizantes A"
     manejo_cultivo_flow_name: str = "Manejo de cultivo A"
@@ -166,15 +166,15 @@ class AlmendroProcess(Process):
     def get_fertilizantes_flow(output: CaptureACVOutput) -> FlowDict:
         fertilizantes = FlowDict()
         fertilizantes.inputs = {
-            # Mapear campos de output.fertilizantes a flujos de openLCA
+            # Mapear campos de output.fertilizantes para fluxos de openLCA
             "diesel, burned in agricultural machinery": output.fertilizantes.transporte_fert_UF_1,
             "inorganic nitrogen fertiliser, as N": output.fertilizantes.kg_N,
-            # ... añadir según los flujos definidos en openLCA
+            # ... adicionar de acordo com os fluxos definidos em openLCA
         }
         fertilizantes.outputs = {
             AlmendroProcess.fertilizantes_flow_name: 1,
             "Ammonia": output.fertilizantes.kg_NH3,
-            # ... añadir según los flujos definidos en openLCA
+            # ... adicionar de acordo com os fluxos definidos em openLCA
         }
         return fertilizantes
 
@@ -182,7 +182,7 @@ class AlmendroProcess(Process):
     def get_manejo_cultivo_flow(output: CaptureACVOutput) -> FlowDict:
         manejo_cultivo = FlowDict()
         manejo_cultivo.inputs = {
-            # Mapear campos de output.manejo_cultivo y output.maquinaria
+            # Mapear campos de output.manejo_cultivo e output.maquinaria
             # ...
         }
         manejo_cultivo.outputs = {
@@ -194,7 +194,7 @@ class AlmendroProcess(Process):
     def get_pesticidas_flow(output: CaptureACVOutput) -> FlowDict:
         pesticidas = FlowDict()
         pesticidas.inputs = {
-            # Mapear campos de output.fitosanitarios.detalle por clasificación SimaPro
+            # Mapear campos de output.fitosanitarios.detalle por classificação SimaPro
             # ...
         }
         pesticidas.outputs = {
@@ -206,7 +206,7 @@ class AlmendroProcess(Process):
     def get_sistema_riego_flow(output: CaptureACVOutput) -> FlowDict:
         sistema_riego = FlowDict()
         sistema_riego.inputs = {
-            # Mapear campos de output.riegos y output.bombeo
+            # Mapear campos de output.riegos e output.bombeo
             # ...
         }
         sistema_riego.outputs = {

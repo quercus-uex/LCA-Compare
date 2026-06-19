@@ -20,7 +20,7 @@ There are currently three implemented processes:
 Processes live in `src/processes/` and follow a simple inheritance hierarchy:
 
 ```
-Process (clase base abstracta)
+Process (abstract base class)
 ├── TomateProcess
 ├── OlivoProcess
 └── VinedoProcess
@@ -121,11 +121,11 @@ The `inputs` represent consumed resources (fertilizers, fuel), and the `outputs`
 When `ACVService.execute()` receives a request, the process is used as follows:
 
 ```
-1. get_process_class(tipo)           → Selecciona TomateProcess / OlivoProcess / VinedoProcess
-2. process.get_all_flows(output)     → Obtiene los 4 FlowDict (fertilizantes, manejo, pesticidas, riego)
-3. update_processes(flows, process)  → Actualiza cada subproceso en openLCA vía OLCAClient (IPC)
-4. calculate_impacts(process.uuid)   → Ejecuta el cálculo de impacto sobre el sistema de producto
-5. build_final_result()              → Construye el resultado estructurado por categoría
+1. get_process_class(tipo)           → Selects TomateProcess / OlivoProcess / VinedoProcess
+2. process.get_all_flows(output)     → Gets the 4 FlowDict objects (fertilizers, crop management, pesticides, irrigation)
+3. update_processes(flows, process)  → Updates each subprocess in openLCA through OLCAClient (IPC)
+4. calculate_impacts(process.uuid)   → Runs the impact calculation on the product system
+5. build_final_result()              → Builds the structured result by category
 ```
 
 Each subprocess (fertilizers, crop management, pesticides, irrigation system) is updated independently in openLCA before running the global calculation. This lets flow values reflect the real crop data sent by DTAgro.
@@ -155,7 +155,7 @@ from ..models.dtagro_acv_output import GeneratedSchema as CaptureACVOutput
 
 class AlmendroProcess(Process):
     name: str = "Almendro"
-    uuid: str = "<UUID-del-sistema-de-producto-en-openLCA>"
+    uuid: str = "<openLCA-product-system-UUID>"
 
     fertilizantes_flow_name: str = "Fertilizantes A"
     manejo_cultivo_flow_name: str = "Manejo de cultivo A"
@@ -166,15 +166,15 @@ class AlmendroProcess(Process):
     def get_fertilizantes_flow(output: CaptureACVOutput) -> FlowDict:
         fertilizantes = FlowDict()
         fertilizantes.inputs = {
-            # Mapear campos de output.fertilizantes a flujos de openLCA
+            # Map output.fertilizantes fields to openLCA flows
             "diesel, burned in agricultural machinery": output.fertilizantes.transporte_fert_UF_1,
             "inorganic nitrogen fertiliser, as N": output.fertilizantes.kg_N,
-            # ... añadir según los flujos definidos en openLCA
+            # ... add according to the flows defined in openLCA
         }
         fertilizantes.outputs = {
             AlmendroProcess.fertilizantes_flow_name: 1,
             "Ammonia": output.fertilizantes.kg_NH3,
-            # ... añadir según los flujos definidos en openLCA
+            # ... add according to the flows defined in openLCA
         }
         return fertilizantes
 
@@ -182,7 +182,7 @@ class AlmendroProcess(Process):
     def get_manejo_cultivo_flow(output: CaptureACVOutput) -> FlowDict:
         manejo_cultivo = FlowDict()
         manejo_cultivo.inputs = {
-            # Mapear campos de output.manejo_cultivo y output.maquinaria
+            # Map output.manejo_cultivo and output.maquinaria fields
             # ...
         }
         manejo_cultivo.outputs = {
@@ -194,7 +194,7 @@ class AlmendroProcess(Process):
     def get_pesticidas_flow(output: CaptureACVOutput) -> FlowDict:
         pesticidas = FlowDict()
         pesticidas.inputs = {
-            # Mapear campos de output.fitosanitarios.detalle por clasificación SimaPro
+            # Map output.fitosanitarios.detalle fields by SimaPro classification
             # ...
         }
         pesticidas.outputs = {
@@ -206,7 +206,7 @@ class AlmendroProcess(Process):
     def get_sistema_riego_flow(output: CaptureACVOutput) -> FlowDict:
         sistema_riego = FlowDict()
         sistema_riego.inputs = {
-            # Mapear campos de output.riegos y output.bombeo
+            # Map output.riegos and output.bombeo fields
             # ...
         }
         sistema_riego.outputs = {

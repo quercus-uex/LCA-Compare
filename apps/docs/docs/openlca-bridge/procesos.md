@@ -80,7 +80,7 @@ parseado) y devuelven un `FlowDict`:
 | `get_manejo_cultivo_flow(output)` | Mapea las labores agrícolas y uso de suelo a flujos de openLCA. |
 | `get_pesticidas_flow(output)` | Mapea los productos fitosanitarios a flujos de openLCA. |
 | `get_sistema_riego_flow(output)` | Mapea los componentes del sistema de riego a flujos de openLCA. |
-| `get_all_flows(output)` | Devuelve un diccionario con los cuatro flujos anteriores, keyed por sus nombres. |
+| `get_all_flows(output)` | Devuelve un diccionario con los cuatro flujos anteriores, indexado por sus nombres. |
 
 ## Modelo `FlowDict`
 

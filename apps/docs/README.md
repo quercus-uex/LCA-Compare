@@ -15,5 +15,5 @@ pnpm docs:typecheck
 ## Runtime Notes
 
 - `pnpm docs:dev` runs Docusaurus with `--host 0.0.0.0`.
-- The docs site is Spanish-only (`defaultLocale: 'es'`, `locales: ['es']`).
-- Search uses `docusaurus-lunr-search` configured for Spanish.
+- The docs site is available in Spanish, English, and Portuguese (`defaultLocale: 'es'`, `locales: ['es', 'en', 'pt']`).
+- Search uses `docusaurus-lunr-search` configured for Spanish, English, and Portuguese.

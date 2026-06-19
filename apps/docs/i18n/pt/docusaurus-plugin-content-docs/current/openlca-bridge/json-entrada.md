@@ -9,7 +9,7 @@ O endpoint `POST /capture-acv` recebe como corpo do pedido o JSON de saída de u
 
 ## Estrutura Geral
 
-O JSON é composto por seis blocos principais:
+O JSON é composto por sete blocos principais:
 
 | Bloco | Descrição |
 |---|---|

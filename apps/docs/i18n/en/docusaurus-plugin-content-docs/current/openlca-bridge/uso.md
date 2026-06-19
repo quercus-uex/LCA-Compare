@@ -112,12 +112,12 @@ This same JSON is sent to the **ACV Compare** `POST /capture` endpoint for persi
 
 ## Interactive Documentation (Swagger)
 
-Capture ACV exposes a **Swagger/OpenAPI** interface that allows users to explore and test all service endpoints directly from the browser. The documentation includes the input JSON schema, response codes, and the ability to run test requests.
+Capture ACV exposes a **Swagger/OpenAPI** interface that allows users to explore and test the `POST /capture-acv` endpoint directly from the browser. The documentation includes the input JSON schema, response codes, and the ability to run test requests.
 
 | Environment | URL |
 |---|---|
 | Local development | `http://localhost:3000/docs` |
-| Production (Docker) | `http://<host-del-servidor>:3000/docs` |
+| Production (Docker) | `http://<server-host>:3000/docs` |
 
 :::tip
 The OpenAPI specification in JSON format is also available at `/openapi.json`, which is useful for generating clients automatically or importing into tools such as Postman or Insomnia.

@@ -9,7 +9,7 @@ The `POST /capture-acv` endpoint receives, as the request body, the crop output 
 
 ## General Structure
 
-The JSON is composed of six main blocks:
+The JSON is composed of seven main blocks:
 
 | Block | Description |
 |---|---|

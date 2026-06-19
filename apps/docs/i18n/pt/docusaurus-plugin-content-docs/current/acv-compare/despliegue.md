@@ -97,7 +97,7 @@ Depois de preparar a base de dados, implantamos todos os serviços com o perfil 
 docker compose --profile prod up -d --build
 ```
 
-Isto constrói as imagens do backend e frontend e levanta os três serviços. A imagem do backend compila primeiro `packages/common`, gera o cliente Prisma e depois compila NestJS. Após a implantação, execute as migrações do Prisma no contentor do backend usando o script do workspace `server`:
+Isto constrói as imagens do backend e frontend e levanta os três serviços. A imagem do backend compila primeiro `packages/common`, gera o cliente Prisma e depois compila NestJS. Se não aplicou as migrações durante a preparação anterior da base de dados, execute-as agora no contentor do backend usando o script do workspace `server`:
 
 ```bash
 docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy

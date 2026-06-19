@@ -97,7 +97,7 @@ Once the database is ready, deploy all services with the production profile:
 docker compose --profile prod up -d --build
 ```
 
-This builds the backend and frontend images and starts all three services. The backend image first builds `packages/common`, generates the Prisma client, and then builds NestJS. After deployment, run Prisma migrations in the backend container using the workspace `server` script:
+This builds the backend and frontend images and starts all three services. The backend image first builds `packages/common`, generates the Prisma client, and then builds NestJS. If you did not apply migrations during the previous database preparation step, run them now in the backend container using the workspace `server` script:
 
 ```bash
 docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy

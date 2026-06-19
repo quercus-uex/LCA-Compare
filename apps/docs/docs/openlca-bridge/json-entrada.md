@@ -10,7 +10,7 @@ servicio **DTAgro**. A continuación se describe la estructura completa del docu
 
 ## Estructura general
 
-El JSON se compone de seis bloques principales:
+El JSON se compone de siete bloques principales:
 
 | Bloque | Descripción |
 |---|---|

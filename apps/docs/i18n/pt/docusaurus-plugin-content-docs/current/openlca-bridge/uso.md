@@ -112,12 +112,12 @@ Este mesmo JSON é enviado para o endpoint `POST /capture` do **ACV Compare** pa
 
 ## Documentação Interativa (Swagger)
 
-Capture ACV expõe uma interface **Swagger/OpenAPI** que permite explorar e testar todos os endpoints do serviço diretamente a partir do navegador. A documentação inclui o esquema do JSON de entrada, os códigos de resposta e a possibilidade de executar pedidos de teste.
+Capture ACV expõe uma interface **Swagger/OpenAPI** que permite explorar e testar o endpoint `POST /capture-acv` diretamente a partir do navegador. A documentação inclui o esquema do JSON de entrada, os códigos de resposta e a possibilidade de executar pedidos de teste.
 
 | Ambiente | URL |
 |---|---|
 | Desenvolvimento local | `http://localhost:3000/docs` |
-| Produção (Docker) | `http://<host-del-servidor>:3000/docs` |
+| Produção (Docker) | `http://<host-do-servidor>:3000/docs` |
 
 :::tip
 A especificação OpenAPI em formato JSON também está disponível em `/openapi.json`, útil para gerar clientes automaticamente ou importar em ferramentas como Postman ou Insomnia.

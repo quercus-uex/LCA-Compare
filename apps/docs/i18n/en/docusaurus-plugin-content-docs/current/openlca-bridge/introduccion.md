@@ -16,9 +16,9 @@ POST /capture-acv    →    ACVService.execute()
                          ├── validate_parcela()
                          ├── get_process_class()  →  TomateProcess | OlivoProcess | VinedoProcess
                          ├── update_processes()   →  OLCAClient (olca-ipc)
-                         ├── calculate_impacts()  →  usa process.uuid (UUID del sistema de producto)
+                         ├── calculate_impacts()  →  uses process.uuid (product system UUID)
                          ├── build_final_result()
-                         └── send_result_to_app() →  POST a ACV Compare (best-effort, errores logueados)
+                         └── send_result_to_app() →  POST to ACV Compare (best-effort, errors logged)
 ```
 
 - **`IMPACT_METHOD_UUID`**: UUID of the impact method selected for the calculation. By default, **EF 3.1** (Environmental Footprint 3.1) is used, the method recommended by the European Commission for product environmental impact assessment. It is configurable through an environment variable.

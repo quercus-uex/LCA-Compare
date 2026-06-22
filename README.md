@@ -1,7 +1,7 @@
 # LCA Compare
 
 ## Introducción
-LCA Compare es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [LCA Bridge](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
+LCA Compare es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [LCA Bridge](https://github.com/rdereparadores/LCA-Bridge).
 
 ## Objetivo
 El objetivo final de esta app es proporcionar de una interfaz sencilla e intuitiva que permita la comparación de ACV entre cultivos con el fin de identificar puntos de mejora en esta materia. Para ello, la app permite...

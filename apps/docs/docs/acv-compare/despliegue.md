@@ -6,7 +6,7 @@ sidebar_position: 2
 # Despliegue del servicio
 
 Antes de desplegar el servicio de comparativa de ACV, necesitas tener clonado el repositorio
-([https://github.com/quercus-uex/Ventum-ACV-Visualizer](https://github.com/quercus-uex/Ventum-ACV-Visualizer)).
+([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)).
 
 ## Variables de entorno
 

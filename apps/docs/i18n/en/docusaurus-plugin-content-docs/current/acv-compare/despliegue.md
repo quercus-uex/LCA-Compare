@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Service Deployment
 
-Before deploying the LCA comparison service, you need to have cloned the repository ([https://github.com/quercus-uex/Ventum-ACV-Visualizer](https://github.com/quercus-uex/Ventum-ACV-Visualizer)).
+Before deploying the LCA comparison service, you need to have cloned the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)).
 
 ## Environment Variables
 

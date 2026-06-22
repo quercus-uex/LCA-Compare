@@ -9,7 +9,7 @@ sidebar_position: 2
 
 Before deploying the bridge service between LCA Capture and OpenLCA, you need to have downloaded:
 
-- the repository ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (LCA Bridge).
+- the repository ([https://github.com/quercus-uex/LCA-Bridge](https://github.com/quercus-uex/LCA-Bridge)) (LCA Bridge).
 - the database in **.zolca** format with the required processes already defined.
 
 ## .zolca Database Configuration

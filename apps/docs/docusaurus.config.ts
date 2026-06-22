@@ -88,12 +88,12 @@ const config: Config = {
           label: 'Documentación',
         },
         {
-          href: 'https://github.com/quercus-uex/Ventum-OpenLCA-Service',
+          href: 'https://github.com/quercus-uex/LCA-Bridge',
           label: 'LCA Bridge',
           position: 'right',
         },
         {
-          href: 'https://github.com/quercus-uex/Ventum-ACV-Visualizer',
+          href: 'https://github.com/quercus-uex/LCA-Compare',
           label: 'LCA Compare',
           position: 'right',
         },

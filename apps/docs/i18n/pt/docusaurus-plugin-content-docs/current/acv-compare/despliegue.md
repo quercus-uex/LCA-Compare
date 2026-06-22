@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Implantação do Serviço
 
-Antes de implantar o serviço de comparação de ACV, é necessário ter clonado o repositório ([https://github.com/quercus-uex/Ventum-ACV-Visualizer](https://github.com/quercus-uex/Ventum-ACV-Visualizer)).
+Antes de implantar o serviço de comparação de ACV, é necessário ter clonado o repositório ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)).
 
 ## Variáveis de Ambiente
 

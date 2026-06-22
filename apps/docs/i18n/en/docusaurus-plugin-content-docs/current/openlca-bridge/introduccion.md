@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introduction
 
-**Capture ACV** is a **Python 3.12+** microservice built with **FastAPI** that acts as a bridge between the **DTAgro** platform and the **openLCA** Life Cycle Assessment calculation engine using a database in **.zolca** format. It receives crop data from DTAgro, runs the environmental impact calculation in openLCA through its IPC server, and sends the result to [ACV Compare](https://github.com/quercus-uex/Ventum-ACV-Visualizer) for visualization and comparison.
+**LCA Bridge** is a **Python 3.12+** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** Life Cycle Assessment calculation engine using a database in **.zolca** format. It receives crop data from LCA Capture, runs the environmental impact calculation in openLCA through its IPC server, and sends the result to [LCA Compare](https://github.com/quercus-uex/Ventum-ACV-Visualizer) for visualization and comparison.
 
 Communication between both services happens through a shared Docker network (`olca`), which allows the complete LCA calculation and visualization flow to be orchestrated in a decoupled way.
 
@@ -18,7 +18,7 @@ POST /capture-acv    →    ACVService.execute()
                          ├── update_processes()   →  OLCAClient (olca-ipc)
                          ├── calculate_impacts()  →  uses process.uuid (product system UUID)
                          ├── build_final_result()
-                         └── send_result_to_app() →  POST to ACV Compare (best-effort, errors logged)
+                          └── send_result_to_app() →  POST to LCA Compare (best-effort, errors logged)
 ```
 
 - **`IMPACT_METHOD_UUID`**: UUID of the impact method selected for the calculation. By default, **EF 3.1** (Environmental Footprint 3.1) is used, the method recommended by the European Commission for product environmental impact assessment. It is configurable through an environment variable.
@@ -26,10 +26,10 @@ POST /capture-acv    →    ACVService.execute()
 
 ## Features
 
-- **Crop data reception** from DTAgro through the `POST /capture-acv` endpoint.
+- **Crop data reception** from LCA Capture through the `POST /capture-acv` endpoint.
 - **LCA calculation** delegated to the openLCA IPC server using the processes defined in the .zolca database.
 - **Crop-type-specific processes**: `TomateProcess`, `OlivoProcess`, and `VinedoProcess`, automatically selected according to crop metadata.
-- **Result delivery** to ACV Compare for persistence, visualization, and comparison (best-effort).
+- **Result delivery** to LCA Compare for persistence, visualization, and comparison (best-effort).
 - **Interactive Swagger documentation** at `/docs`.
 
 ## Environment Variables
@@ -38,7 +38,7 @@ POST /capture-acv    →    ACVService.execute()
 |---|---|
 | `OLCA_HOST` | OpenLCA IPC server host |
 | `OLCA_PORT` | OpenLCA IPC server port |
-| `ACV_COMPARE_BASE_URL` | Base URL of the ACV Compare service for result delivery |
+| `ACV_COMPARE_BASE_URL` | Base URL of the LCA Compare service for result delivery |
 | `IMPACT_METHOD_UUID` | UUID of the impact method for the calculation (default: EF 3.1) |
 | `CALCULATION_AMOUNT` | Process amount used as calculation reference (default `0.001`, equivalent to 1 kg) |
 
@@ -48,10 +48,10 @@ The service follows a microservice architecture with two components:
 
 | Component | Technology | Port |
 |---|---|---|
-| **Capture ACV** | FastAPI (Python 3.12+) | 3000 |
+| **LCA Bridge** | FastAPI (Python 3.12+) | 3000 |
 | **OpenLCA IPC** | Java (Maven, `openlca-docker/`) | *(internal)* |
 
-The data flow is: DTAgro → Capture ACV (calculation) → ACV Compare (persistence and visualization).
+The data flow is: LCA Capture → LCA Bridge (calculation) → LCA Compare (persistence and visualization).
 
 ## Technology Stack
 

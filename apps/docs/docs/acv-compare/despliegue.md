@@ -30,8 +30,8 @@ DB_PASSWORD="password"                   # Contraseña de la base de datos
 MAILER_EMAIL="example@example.com"       # Email para envío de notificaciones
 MAILER_PASSWORD="Password"               # Contraseña del email para notificaciones
 
-CAPTURE_ACV_EMAIL="email@example.com"    # Email para autenticación en DTAgro (extracción masiva)
-CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password para autenticación en DTAgro (extracción masiva)
+CAPTURE_ACV_EMAIL="email@example.com"    # Email para autenticación en LCA Capture (extracción masiva)
+CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password para autenticación en LCA Capture (extracción masiva)
 
 DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del método de impacto por defecto (EF 3.1)
 
@@ -74,15 +74,15 @@ incluyen únicamente con el perfil `prod`:
 | Servicio | Imagen | Puerto | Perfil |
 |---|---|---|---|
 | `db` | `postgis/postgis:17-master` | 5432 | *(siempre activo)* |
-| `acv-compare-backend` | Construida desde `apps/server/Dockerfile` | 8080→3000 | `prod` |
-| `acv-compare-frontend` | Construida desde `apps/web/Dockerfile` | 80→80 | `prod` |
+| `lca-compare-backend` | Construida desde `apps/server/Dockerfile` | 8080→3000 | `prod` |
+| `lca-compare-frontend` | Construida desde `apps/web/Dockerfile` | 80→80 | `prod` |
 
 ### Redes
 
 El compose define dos redes:
 
 - **`acv-compare`**: red interna para la comunicación entre el backend, frontend y base de datos.
-- **`olca`**: red externa compartida con el servicio Capture ACV. Debe crearse manualmente:
+- **`olca`**: red externa compartida con el servicio LCA Bridge. Debe crearse manualmente:
 
 ```bash
 docker network create olca
@@ -94,8 +94,8 @@ El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente e
 
 | Ruta | Destino |
 |---|---|
-| `/api/` | `acv-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
-| `/calc` | `capture-openlca-bridge:3000/capture-acv` (cálculo de ACV) |
+| `/api/` | `lca-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
+| `/calc` | `lca-bridge:3000/capture-acv` (cálculo de ACV) |
 | `/` | SPA servida estáticamente (`index.html`) |
 
 ## Despliegue completo
@@ -112,7 +112,7 @@ preparación previa de la base de datos, ejecútalas ahora en el contenedor del 
 `server`:
 
 ```bash
-docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy
+docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
 ```
 
 ## CI/CD
@@ -124,7 +124,7 @@ ramas `main` y `develop`. El pipeline:
 2. Clona o actualiza el repositorio en la rama correspondiente.
 3. Reconstruye y levanta los contenedores con `docker compose --profile prod up -d --build`.
 4. Ejecuta las migraciones pendientes con `pnpm --filter server prisma:migrate:deploy` dentro del contenedor
-   `acv-compare-backend`.
+   `lca-compare-backend`.
 
 Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,
 `OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD` y

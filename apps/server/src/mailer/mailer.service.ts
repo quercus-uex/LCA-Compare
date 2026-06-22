@@ -18,8 +18,8 @@ export class MailerService {
   async sendNewUserMail(to: string, password: string) {
     await this.transporter.sendMail({
       to,
-      subject: 'Alta en ACV Compare',
-      text: `Has sido dado de alta en ACV Compare. Tu contraseña es ${password}.`,
+      subject: 'Alta en LCA Compare',
+      text: `Has sido dado de alta en LCA Compare. Tu contraseña es ${password}.`,
     });
   }
 }

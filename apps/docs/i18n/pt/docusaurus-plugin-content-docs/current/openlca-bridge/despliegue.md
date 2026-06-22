@@ -7,9 +7,9 @@ sidebar_position: 2
 
 ## Pré-requisitos
 
-Antes de implantar o serviço ponte entre DTAgro e OpenLCA, é necessário ter descarregado:
+Antes de implantar o serviço ponte entre LCA Capture e OpenLCA, é necessário ter descarregado:
 
-- o repositório ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (Capture ACV).
+- o repositório ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (LCA Bridge).
 - a base de dados em formato **.zolca** com os processos necessários já definidos.
 
 ## Configuração da Base de Dados .zolca
@@ -37,25 +37,25 @@ Em seguida, ajuste os valores ao seu ambiente:
 ```sh
 OLCA_HOST="openlca-ipc"              # Host do servidor IPC do OpenLCA
 OLCA_PORT="8080"                     # Porta do servidor IPC do OpenLCA
-ACV_COMPARE_BASE_URL="http://acv-compare-backend:3000"  # URL base do ACV Compare
+ACV_COMPARE_BASE_URL="http://lca-compare-backend:3000"  # URL base do LCA Compare
 
 IMPACT_METHOD_UUID="20629e27-b863-4fbe-bbc2-082d3eefd1e5"  # UUID do método de impacto (por defeito, EF 3.1)
 CALCULATION_AMOUNT="0.001"           # Quantidade do processo para o cálculo (1000 kg → 0.001 = 1 kg)
 ```
 
 :::note
-O ficheiro `.env.example` contém todos os valores por defeito necessários para uma implantação padrão. Só é imprescindível modificar `ACV_COMPARE_BASE_URL` se a URL do ACV Compare diferir da configuração por defeito.
+O ficheiro `.env.example` contém todos os valores por defeito necessários para uma implantação padrão. Só é imprescindível modificar `ACV_COMPARE_BASE_URL` se a URL do LCA Compare diferir da configuração por defeito.
 :::
 
-## Rede Partilhada com ACV Compare
+## Rede Partilhada com LCA Compare
 
-Caso queira comunicar este serviço com **ACV Compare**, é necessário criar a rede partilhada `olca`:
+Caso queira comunicar este serviço com **LCA Compare**, é necessário criar a rede partilhada `olca`:
 
 ```bash
 docker network create olca
 ```
 
-Ambos os serviços devem estar ligados a esta rede para que o ACV Compare possa receber os resultados dos cálculos e o frontend possa encaminhar os pedidos de cálculo através do proxy inverso para o serviço ponte.
+Ambos os serviços devem estar ligados a esta rede para que o LCA Compare possa receber os resultados dos cálculos e o frontend possa encaminhar os pedidos de cálculo através do proxy inverso para o serviço ponte.
 
 ## Implantação com Docker Compose
 

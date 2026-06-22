@@ -373,7 +373,7 @@ describe('CompareService', () => {
       ]);
     });
 
-    it('uses zero tarAmount and diff for missing target category or zero target amount', () => {
+    it('uses zero tarAmount and null (n/a) diff for missing target category or zero target amount', () => {
       const refImpact = makeImpactDto({
         impacto_total: [
           { category: 'GWP', amount: 50, unit: 'kg CO2 eq' },
@@ -386,13 +386,15 @@ describe('CompareService', () => {
 
       const result = service.compareResults(refImpact, tarImpact);
 
+      // When the target amount is zero the relative difference is undefined
+      // and reported as null (rendered as n/a), while absolute means remain.
       const gwp = result.impacto_total.find((i) => i.category === 'GWP')!;
       expect(gwp.tarAmount).toBe(0);
-      expect(gwp.diff).toBe(0);
+      expect(gwp.diff).toBeNull();
 
       const ap = result.impacto_total.find((i) => i.category === 'AP')!;
       expect(ap.tarAmount).toBe(0);
-      expect(ap.diff).toBe(0);
+      expect(ap.diff).toBeNull();
     });
   });
 

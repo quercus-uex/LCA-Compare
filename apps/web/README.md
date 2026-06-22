@@ -1,4 +1,4 @@
-# ACV Visualizer Web
+# LCA Compare Web
 
 React 19 + Vite 7 frontend for the pnpm workspace.
 

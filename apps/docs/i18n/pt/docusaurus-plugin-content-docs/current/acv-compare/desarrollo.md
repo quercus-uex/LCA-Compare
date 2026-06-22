@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Instalação de Dependências
 
-ACV Compare faz parte de um monorepo **pnpm 10** com **Turborepo**. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
+LCA Compare faz parte de um monorepo **pnpm 10** com **Turborepo**. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
 
 ```bash
 pnpm install
@@ -139,7 +139,7 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   │   ├── cultivo/           # Registo e consulta de culturas
 │   │   │   ├── resultadoimpacto/  # Armazenamento e consulta de resultados ACV
 │   │   │   ├── compare/           # Lógica de comparação entre conjuntos de culturas
-│   │   │   ├── capture/           # Receção de dados a partir do Capture ACV
+│   │   │   ├── capture/           # Receção de dados a partir do LCA Bridge
 │   │   │   ├── stats/             # Estatísticas globais e agregações para o dashboard
 │   │   │   ├── admin/             # CRUD administrativo protegido por papel admin
 │   │   │   ├── ai/                # Integração com OpenRouter para IA

@@ -1,8 +1,8 @@
 {
-  "label": "ACV Compare",
+  "label": "LCA Compare",
   "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "Documentación sobre el visualizador de comparativas de ACV."
+    "description": "Documentación sobre el visualizador de comparativas de LCA."
   }
 }

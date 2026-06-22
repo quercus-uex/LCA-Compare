@@ -3,9 +3,9 @@ sidebar_label: 'Definição de processos'
 sidebar_position: 5
 ---
 
-# Definição de Processos no Capture ACV
+# Definição de Processos no LCA Bridge
 
-Os **processos** são o núcleo do cálculo de ACV no Capture ACV. Cada tipo de cultura suportado tem associado um processo que define como os dados agronómicos do DTAgro são mapeados para os fluxos de entrada e saída do openLCA.
+Os **processos** são o núcleo do cálculo de ACV no LCA Bridge. Cada tipo de cultura suportado tem associado um processo que define como os dados agronómicos do LCA Capture são mapeados para os fluxos de entrada e saída do openLCA.
 
 Atualmente existem três processos implementados:
 
@@ -60,7 +60,7 @@ class Process:
 
 | Atributo | Descrição |
 |---|---|
-| `name` | Nome do processo. Deve coincidir com o valor de `metadatos.cultivo.tipo` que o DTAgro envia no JSON. |
+| `name` | Nome do processo. Deve coincidir com o valor de `metadatos.cultivo.tipo` que o LCA Capture envia no JSON. |
 | `uuid` | UUID do sistema de produto na base de dados .zolca do openLCA. É o ponto de entrada do cálculo de impacto. |
 | `fertilizantes_flow_name` | Nome do fluxo intermédio de fertilizantes em openLCA. |
 | `manejo_cultivo_flow_name` | Nome do fluxo intermédio de maneio da cultura em openLCA. |
@@ -90,7 +90,7 @@ class FlowDict:
 ```
 
 - As **chaves** são os nomes exatos dos fluxos tal como estão definidos na base de dados .zolca do openLCA.
-- Os **valores** são as quantidades extraídas do JSON de entrada do DTAgro.
+- Os **valores** são as quantidades extraídas do JSON de entrada do LCA Capture.
 
 ### Exemplo: Fluxo de Fertilizantes em `TomateProcess`
 
@@ -128,7 +128,7 @@ Quando `ACVService.execute()` recebe um pedido, o processo é usado da seguinte 
 5. build_final_result()              → Constrói o resultado estruturado por categoria
 ```
 
-Cada subprocesso (fertilizantes, maneio da cultura, pesticidas, sistema de rega) é atualizado de forma independente em openLCA antes de executar o cálculo global. Isto permite que os valores dos fluxos reflitam os dados reais da cultura enviada pelo DTAgro.
+Cada subprocesso (fertilizantes, maneio da cultura, pesticidas, sistema de rega) é atualizado de forma independente em openLCA antes de executar o cálculo global. Isto permite que os valores dos fluxos reflitam os dados reais da cultura enviada pelo LCA Capture.
 
 ## Como Adicionar um Novo Processo
 

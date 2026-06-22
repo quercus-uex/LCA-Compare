@@ -12,19 +12,19 @@
     "description": "The generated-index page description for category 'Introducción' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Capture ACV": {
-    "message": "Capture ACV",
+    "message": "LCA Bridge",
     "description": "The label for category 'Capture ACV' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Capture ACV.link.generated-index.description": {
-    "message": "Documentação sobre o Capture ACV, o serviço ponte entre DTAgro e OpenLCA.",
+    "message": "Documentação sobre o LCA Bridge, o serviço ponte entre LCA Capture e OpenLCA.",
     "description": "The generated-index page description for category 'Capture ACV' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.ACV Compare": {
-    "message": "ACV Compare",
+    "message": "LCA Compare",
     "description": "The label for category 'ACV Compare' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.ACV Compare.link.generated-index.description": {
-    "message": "Documentação sobre o visualizador de comparações de ACV.",
+    "message": "Documentação sobre o visualizador de comparações de LCA.",
     "description": "The generated-index page description for category 'ACV Compare' in sidebar 'tutorialSidebar'"
   }
 }

@@ -18,6 +18,9 @@ import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.d
 Handlebars.registerHelper('decimals', (value, digits: number) =>
   Number(value).toFixed(digits),
 );
+Handlebars.registerHelper('percent', (value, digits: number) =>
+  value == null ? 'n/a' : `${Number(value).toFixed(digits)} %`,
+);
 Handlebars.registerHelper('isOdd', (value: number) => value % 2 == 0);
 Handlebars.registerHelper('scientific', (value: number, digits: number) => {
   const num = Number(value);
@@ -174,8 +177,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.getMeanOfResults(results);
   }
 
-  private readonly percentageDiff = (a: number, b: number) =>
-    b === 0 ? 0 : ((a - b) / b) * 100;
+  private readonly percentageDiff = (a: number, b: number): number | null =>
+    b === 0 ? null : ((a - b) / b) * 100;
 
   compareResults(
     refResults: ResultadoImpactoDto,
@@ -267,7 +270,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     const tarContext = await this.buildReportContext(tarResults, tarFilters);
 
     const topImpacts = comparison.impacto_total
-      .toSorted((a, b) => Math.abs(b.diff!) - Math.abs(a.diff!))
+      .toSorted((a, b) => Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0))
       .slice(0, 3);
 
     const html = this.reportTemplate({

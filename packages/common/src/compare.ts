@@ -25,7 +25,7 @@ export type CompareResultItemDto = {
   refAmount: number;
   tarAmount?: number;
   unit: string;
-  diff?: number;
+  diff?: number | null;
 };
 
 export type CompareResultDto = Record<ImpactKey, CompareResultItemDto[]>;

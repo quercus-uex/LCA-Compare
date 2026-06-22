@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # JSON de Entrada do Endpoint `POST /capture-acv`
 
-O endpoint `POST /capture-acv` recebe como corpo do pedido o JSON de saída de uma cultura gerado pelo serviço **DTAgro**. A seguir descreve-se a estrutura completa do documento.
+O endpoint `POST /capture-acv` recebe como corpo do pedido o JSON de saída de uma cultura gerado pelo serviço **LCA Capture**. A seguir descreve-se a estrutura completa do documento.
 
 ## Estrutura Geral
 
@@ -31,7 +31,7 @@ Contém os dados identificativos da parcela, da cultura e do utilizador que real
 
 | Campo | Tipo | Obrigatório | Descrição |
 |---|---|---|---|
-| `id` | `integer` | Sim | Identificador interno da parcela no DTAgro. |
+| `id` | `integer` | Sim | Identificador interno da parcela no LCA Capture. |
 | `es_sigpac` | `object` \| `null` | Condicional | Dados SIGPAC da parcela. Obrigatório se a parcela estiver registada em SIGPAC. |
 | `es_sigpac.provincia` | `integer` | Condicional | Código de província INE. |
 | `es_sigpac.municipio` | `integer` | Condicional | Código de município INE. |
@@ -49,7 +49,7 @@ Pelo menos um dos três identificadores geográficos (`es_sigpac`, `es_referenci
 
 | Campo | Tipo | Obrigatório | Descrição |
 |---|---|---|---|
-| `id` | `integer` | Sim | Identificador interno da cultura no DTAgro. |
+| `id` | `integer` | Sim | Identificador interno da cultura no LCA Capture. |
 | `tipo` | `string` | Sim | Tipo de cultura. Valores suportados: `"Tomate"`, `"Olivo"`, `"Vinedo"`. Determina o processo de cálculo selecionado (`TomateProcess`, `OlivoProcess`, `VinedoProcess`). |
 | `superficie_cultivada` | `number` | Sim | Superfície cultivada em hectares (ha). |
 | `produccion` | `number` | Sim | Produção total em quilogramas (kg). |
@@ -62,7 +62,7 @@ Pelo menos um dos três identificadores geográficos (`es_sigpac`, `es_referenci
 
 | Campo | Tipo | Obrigatório | Descrição |
 |---|---|---|---|
-| `id` | `integer` | Sim | Identificador interno do utilizador no DTAgro. |
+| `id` | `integer` | Sim | Identificador interno do utilizador no LCA Capture. |
 | `nombre` | `string` | Sim | Nome do utilizador. |
 | `email` | `string` | Sim | Endereço de email do utilizador. |
 

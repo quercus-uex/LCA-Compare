@@ -1,10 +1,10 @@
 {
   "title": {
-    "message": "Capture ACV and ACV Compare Documentation",
+    "message": "LCA Bridge and LCA Compare Documentation",
     "description": "The title in the navbar"
   },
   "logo.alt": {
-    "message": "ACV Compare",
+    "message": "LCA Compare",
     "description": "The alt text of navbar logo"
   },
   "item.label.Documentación": {
@@ -12,11 +12,11 @@
     "description": "Navbar item with label Documentación"
   },
   "item.label.Capture ACV": {
-    "message": "Capture ACV",
+    "message": "LCA Bridge",
     "description": "Navbar item with label Capture ACV"
   },
   "item.label.ACV Compare": {
-    "message": "ACV Compare",
+    "message": "LCA Compare",
     "description": "Navbar item with label ACV Compare"
   }
 }

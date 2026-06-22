@@ -51,7 +51,7 @@ export const pt = {
     },
   },
   nav: {
-    appName: 'Comparador ACV',
+    appName: 'Comparador LCA',
     compare: 'Comparador',
     documentation: 'Documentação',
     login: 'Iniciar sessão',

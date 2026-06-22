@@ -28,8 +28,8 @@ DB_PASSWORD="password"                   # Database password
 MAILER_EMAIL="example@example.com"       # Email for notification delivery
 MAILER_PASSWORD="Password"               # Email password for notifications
 
-CAPTURE_ACV_EMAIL="email@example.com"    # Email for DTAgro authentication (bulk extraction)
-CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password for DTAgro authentication (bulk extraction)
+CAPTURE_ACV_EMAIL="email@example.com"    # Email for LCA Capture authentication (bulk extraction)
+CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password for LCA Capture authentication (bulk extraction)
 
 DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID of the default impact method (EF 3.1)
 
@@ -65,15 +65,15 @@ The `docker-compose.yaml` file defines three services. The database starts witho
 | Service | Image | Port | Profile |
 |---|---|---|---|
 | `db` | `postgis/postgis:17-master` | 5432 | *(always active)* |
-| `acv-compare-backend` | Built from `apps/server/Dockerfile` | 8080→3000 | `prod` |
-| `acv-compare-frontend` | Built from `apps/web/Dockerfile` | 80→80 | `prod` |
+| `lca-compare-backend` | Built from `apps/server/Dockerfile` | 8080→3000 | `prod` |
+| `lca-compare-frontend` | Built from `apps/web/Dockerfile` | 80→80 | `prod` |
 
 ### Networks
 
 The compose file defines two networks:
 
 - **`acv-compare`**: internal network for communication between backend, frontend, and database.
-- **`olca`**: external network shared with the Capture ACV service. It must be created manually:
+- **`olca`**: external network shared with the LCA Bridge service. It must be created manually:
 
 ```bash
 docker network create olca
@@ -85,8 +85,8 @@ The frontend is served with Nginx, which acts as a reverse proxy with the follow
 
 | Route | Destination |
 |---|---|
-| `/api/` | `acv-compare-backend:3000` (REST API, removing the `/api` prefix) |
-| `/calc` | `capture-openlca-bridge:3000/capture-acv` (LCA calculation) |
+| `/api/` | `lca-compare-backend:3000` (REST API, removing the `/api` prefix) |
+| `/calc` | `lca-bridge:3000/capture-acv` (LCA calculation) |
 | `/` | Statically served SPA (`index.html`) |
 
 ## Full Deployment
@@ -100,7 +100,7 @@ docker compose --profile prod up -d --build
 This builds the backend and frontend images and starts all three services. The backend image first builds `packages/common`, generates the Prisma client, and then builds NestJS. If you did not apply migrations during the previous database preparation step, run them now in the backend container using the workspace `server` script:
 
 ```bash
-docker compose exec acv-compare-backend pnpm --filter server prisma:migrate:deploy
+docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
 ```
 
 ## CI/CD
@@ -110,7 +110,7 @@ The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) 
 1. Connects to the deployment server through SSH.
 2. Clones or updates the repository on the corresponding branch.
 3. Rebuilds and starts the containers with `docker compose --profile prod up -d --build`.
-4. Runs pending migrations with `pnpm --filter server prisma:migrate:deploy` inside the `acv-compare-backend` container.
+4. Runs pending migrations with `pnpm --filter server prisma:migrate:deploy` inside the `lca-compare-backend` container.
 
 Sensitive environment variables are injected from GitHub secrets (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD`, and `DEFAULT_IMPACT_METHOD_UUID`).
 

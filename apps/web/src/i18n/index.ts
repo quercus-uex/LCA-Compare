@@ -4,7 +4,7 @@ import { en } from './locales/en.ts';
 import { es } from './locales/es.ts';
 import { pt } from './locales/pt.ts';
 
-export const LANGUAGE_STORAGE_KEY = 'ventum-acv-language';
+export const LANGUAGE_STORAGE_KEY = 'lca-compare-language';
 export const fallbackLanguage = 'es';
 
 export const supportedLanguages = [

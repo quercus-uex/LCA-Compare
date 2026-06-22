@@ -1,6 +1,6 @@
-# ACV Compare Docs
+# LCA Compare Docs
 
-Docusaurus 3 documentation app for Capture ACV and ACV Compare in the pnpm workspace.
+Docusaurus 3 documentation app for LCA Bridge and LCA Compare in the pnpm workspace.
 
 ## Commands
 

@@ -5,12 +5,12 @@ sidebar_position: 3
 
 # Uso
 
-Este servicio recibe los resultados de ACV calculados por **Capture ACV** siempre que ambos se estén ejecutando
+Este servicio recibe los resultados de ACV calculados por **LCA Bridge** siempre que ambos se estén ejecutando
 de manera simultánea. Si es la primera vez que un usuario realiza un cálculo de ACV, se le enviará un correo con su
 contraseña de acceso.
 
 <p align="center">
-    <img src="/img/acv-compare/correo.png" alt="Correo de bienvenida a ACV Compare" width="600"/>
+    <img src="/img/acv-compare/correo.png" alt="Correo de bienvenida a LCA Compare" width="600"/>
 </p>
 
 ## Visualizar resultados de ACV de una parcela
@@ -99,7 +99,7 @@ relacionadas.
 
 ## Estadísticas globales
 
-La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en ACV Compare. Permite filtrar por
+La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en LCA Compare. Permite filtrar por
 año, categoría de impacto, tipo de cultivo y provincia, y visualiza:
 
 - KPIs globales de cultivos, parcelas, usuarios, superficie, producción, agua e impacto medio.

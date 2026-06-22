@@ -5,10 +5,10 @@ sidebar_position: 3
 
 # Utilização
 
-Este serviço recebe os resultados de ACV calculados pelo **Capture ACV** sempre que ambos estão a ser executados em simultâneo. Se for a primeira vez que um utilizador realiza um cálculo de ACV, será enviado um email com a sua palavra-passe de acesso.
+Este serviço recebe os resultados de ACV calculados pelo **LCA Bridge** sempre que ambos estão a ser executados em simultâneo. Se for a primeira vez que um utilizador realiza um cálculo de ACV, será enviado um email com a sua palavra-passe de acesso.
 
 <p align="center">
-    <img src="/img/acv-compare/correo.png" alt="Email de boas-vindas ao ACV Compare" width="600"/>
+    <img src="/img/acv-compare/correo.png" alt="Email de boas-vindas ao LCA Compare" width="600"/>
 </p>
 
 ## Visualizar Resultados de ACV de uma Parcela
@@ -88,7 +88,7 @@ Se o utilizador que inicia sessão tiver o papel de administrador, será redirec
 
 ## Estatísticas Globais
 
-A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no ACV Compare. Permite filtrar por ano, categoria de impacto, tipo de cultura e província, e visualiza:
+A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no LCA Compare. Permite filtrar por ano, categoria de impacto, tipo de cultura e província, e visualiza:
 
 - KPIs globais de culturas, parcelas, utilizadores, superfície, produção, água e impacto médio.
 - Ranking de províncias e localidades.

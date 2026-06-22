@@ -1,15 +1,15 @@
 {
   "homepage.title": {
-    "message": "Capture ACV and ACV Compare Documentation"
+    "message": "LCA Bridge and LCA Compare Documentation"
   },
   "homepage.subtitle": {
-    "message": "Development, deployment, and usage guides for Capture ACV and ACV Compare."
+    "message": "Development, deployment, and usage guides for LCA Bridge and LCA Compare."
   },
   "homepage.startButton": {
     "message": "Get started"
   },
   "homepage.description": {
-    "message": "Technical and functional documentation for Capture ACV and ACV Compare."
+    "message": "Technical and functional documentation for LCA Bridge and LCA Compare."
   },
   "theme.ErrorPageContent.title": {
     "message": "This page crashed.",

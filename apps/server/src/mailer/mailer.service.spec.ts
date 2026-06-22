@@ -43,7 +43,7 @@ describe('MailerService', () => {
 
     expect(mockSendMail).toHaveBeenCalledWith({
       to: 'user@example.com',
-      subject: 'Alta en ACV Compare',
+      subject: 'Alta en LCA Compare',
       text: expect.stringContaining('secret123'),
     });
   });

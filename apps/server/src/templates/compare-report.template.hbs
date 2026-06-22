@@ -272,7 +272,7 @@
                 <div class="card-body bg-gray-100 rounded-lg p-5 h-full flex flex-col gap-5 justify-between">
                   <h3 class="card-title line-clamp-2">{{category}}</h3>
                   <div class="flex flex-col gap-1">
-                    <p class="text-5xl text-center">{{decimals diff 2}}%</p>
+                    <p class="text-5xl text-center">{{percent diff 2}}</p>
                     <p class="text-center">
                       <span class="text-blue-600">{{scientific refAmount 3}}</span> vs. <span class="text-red-600">{{scientific tarAmount 3}}</span>
                     </p>
@@ -342,7 +342,7 @@
             <td class="text-blue-600">{{decimals refAmount 5}}</td>
             <td class="text-red-600">{{decimals tarAmount 5}}</td>
             <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{decimals diff 2}} %</td>
+            <td class="">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>
@@ -368,7 +368,7 @@
             <td class="text-blue-600">{{decimals refAmount 5}}</td>
             <td class="text-red-600">{{decimals tarAmount 5}}</td>
             <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{decimals diff 2}} %</td>
+            <td class="">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>
@@ -394,7 +394,7 @@
             <td class="text-blue-600">{{decimals refAmount 5}}</td>
             <td class="text-red-600">{{decimals tarAmount 5}}</td>
             <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{decimals diff 2}} %</td>
+            <td class="">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>
@@ -420,7 +420,7 @@
             <td class="text-blue-600">{{decimals refAmount 5}}</td>
             <td class="text-red-600">{{decimals tarAmount 5}}</td>
             <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{decimals diff 2}} %</td>
+            <td class="">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>
@@ -446,7 +446,7 @@
             <td class="text-blue-600">{{decimals refAmount 5}}</td>
             <td class="text-red-600">{{decimals tarAmount 5}}</td>
             <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{decimals diff 2}} %</td>
+            <td class="">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>

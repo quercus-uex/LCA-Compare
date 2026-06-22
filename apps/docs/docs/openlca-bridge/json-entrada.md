@@ -6,7 +6,7 @@ sidebar_position: 4
 # JSON de entrada del endpoint `POST /capture-acv`
 
 El endpoint `POST /capture-acv` recibe como cuerpo de la petición el JSON de salida de un cultivo generado por el
-servicio **DTAgro**. A continuación se describe la estructura completa del documento.
+servicio **LCA Capture**. A continuación se describe la estructura completa del documento.
 
 ## Estructura general
 
@@ -32,7 +32,7 @@ Contiene los datos identificativos de la parcela, el cultivo y el usuario que re
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno de la parcela en DTAgro. |
+| `id` | `integer` | Sí | Identificador interno de la parcela en LCA Capture. |
 | `es_sigpac` | `object` \| `null` | Condicional | Datos SIGPAC de la parcela. Obligatorio si la parcela está registrada en SIGPAC. |
 | `es_sigpac.provincia` | `integer` | Condicional | Código de provincia INE. |
 | `es_sigpac.municipio` | `integer` | Condicional | Código de municipio INE. |
@@ -51,7 +51,7 @@ debe estar presente. El servicio valida la parcela usando el primero que encuent
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno del cultivo en DTAgro. |
+| `id` | `integer` | Sí | Identificador interno del cultivo en LCA Capture. |
 | `tipo` | `string` | Sí | Tipo de cultivo. Valores soportados: `"Tomate"`, `"Olivo"`, `"Vinedo"`. Determina el proceso de cálculo seleccionado (`TomateProcess`, `OlivoProcess`, `VinedoProcess`). |
 | `superficie_cultivada` | `number` | Sí | Superficie cultivada en hectáreas (ha). |
 | `produccion` | `number` | Sí | Producción total en kilogramos (kg). |
@@ -64,7 +64,7 @@ debe estar presente. El servicio valida la parcela usando el primero que encuent
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno del usuario en DTAgro. |
+| `id` | `integer` | Sí | Identificador interno del usuario en LCA Capture. |
 | `nombre` | `string` | Sí | Nombre del usuario. |
 | `email` | `string` | Sí | Correo electrónico del usuario. |
 

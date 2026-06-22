@@ -1,5 +1,5 @@
 services:
-  acv-compare-backend:
+  lca-compare-backend:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
@@ -17,22 +17,22 @@ services:
     depends_on:
       - db
     networks:
-      acv-compare:
+      lca-compare:
       olca:
     profiles:
       - prod
     restart: unless-stopped
 
-  acv-compare-frontend:
+  lca-compare-frontend:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
       - "80:80"
     depends_on:
-      - acv-compare-backend
+      - lca-compare-backend
     networks:
-      acv-compare:
+      lca-compare:
       olca:
     profiles:
       - prod
@@ -50,13 +50,13 @@ services:
     ports:
       - 5432:5432
     networks:
-      acv-compare:
+      lca-compare:
     restart: unless-stopped
 
 volumes:
   postgres:
 
 networks:
-  acv-compare:
+  lca-compare:
   olca:
     external: true

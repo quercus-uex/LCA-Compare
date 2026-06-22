@@ -7,9 +7,9 @@ sidebar_position: 2
 
 ## Requisitos previos
 
-Antes de desplegar el servicio puente entre DTAgro y OpenLCA, necesitas tener descargado:
+Antes de desplegar el servicio puente entre LCA Capture y OpenLCA, necesitas tener descargado:
 
-- el repositorio ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (Capture ACV).
+- el repositorio ([https://github.com/quercus-uex/Ventum-OpenLCA-Service](https://github.com/quercus-uex/Ventum-OpenLCA-Service)) (LCA Bridge).
 - la base de datos en formato **.zolca** con los procesos necesarios ya definidos.
 
 ## Configuración de la base de datos .zolca
@@ -41,7 +41,7 @@ A continuación, ajusta los valores según tu entorno:
 ```sh
 OLCA_HOST="openlca-ipc"              # Host del servidor IPC de OpenLCA
 OLCA_PORT="8080"                     # Puerto del servidor IPC de OpenLCA
-ACV_COMPARE_BASE_URL="http://acv-compare-backend:3000"  # URL base de ACV Compare
+ACV_COMPARE_BASE_URL="http://lca-compare-backend:3000"  # URL base de LCA Compare
 
 IMPACT_METHOD_UUID="20629e27-b863-4fbe-bbc2-082d3eefd1e5"  # UUID del método de impacto (por defecto, EF 3.1)
 CALCULATION_AMOUNT="0.001"           # Cantidad del proceso para el cálculo (1000 kg → 0.001 = 1 kg)
@@ -49,18 +49,18 @@ CALCULATION_AMOUNT="0.001"           # Cantidad del proceso para el cálculo (10
 
 :::note
 El archivo `.env.example` contiene todos los valores por defecto necesarios para un despliegue estándar. Solo es
-imprescindible modificar `ACV_COMPARE_BASE_URL` si la URL de ACV Compare difiere de la configuración por defecto.
+imprescindible modificar `ACV_COMPARE_BASE_URL` si la URL de LCA Compare difiere de la configuración por defecto.
 :::
 
-## Red compartida con ACV Compare
+## Red compartida con LCA Compare
 
-En el caso de que quieras comunicar este servicio con **ACV Compare**, necesitas crear la red compartida `olca`:
+En el caso de que quieras comunicar este servicio con **LCA Compare**, necesitas crear la red compartida `olca`:
 
 ```bash
 docker network create olca
 ```
 
-Ambos servicios deben estar conectados a esta red para que ACV Compare pueda recibir los resultados de los cálculos y
+Ambos servicios deben estar conectados a esta red para que LCA Compare pueda recibir los resultados de los cálculos y
 el frontend pueda rutear las peticiones de cálculo a través del proxy inverso hacia el servicio puente.
 
 ## Despliegue con Docker Compose

@@ -1,7 +1,7 @@
-# ACV Visualizer
+# LCA Compare
 
 ## Introducción
-ACV Visualizer es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [Capture ACV](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
+LCA Compare es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [LCA Bridge](https://github.com/rdereparadores/Ventum-OpenLCA-Service).
 
 ## Objetivo
 El objetivo final de esta app es proporcionar de una interfaz sencilla e intuitiva que permita la comparación de ACV entre cultivos con el fin de identificar puntos de mejora en esta materia. Para ello, la app permite...
@@ -24,7 +24,7 @@ API REST NestJS. Los controladores públicos actuales cubren:
 - **Estadísticas** (`/stats`) - KPIs y agregaciones para el panel estadístico
 - **Administración** (`/admin`) - Operaciones administrativas sobre usuarios, parcelas, cultivos, métodos y ubicaciones
 - **Ubicaciones** (`/pais`, `/provincia`, `/poblacion`) - Consulta de datos territoriales
-- **Capture ACV** (`/capture`) - Comunicación con Capture ACV
+- **LCA Bridge** (`/capture`) - Comunicación con LCA Bridge
 
 La documentación OpenAPI del backend está disponible en `/docs` cuando se accede al servidor directamente, o vía `/api/docs` a través del proxy del frontend.
 
@@ -60,7 +60,7 @@ A continuación se detallan las tecnologías usadas para el desarrollo de la web
 Para la localización de parcelas se ha integrado el uso de las APIs públicas tanto del SIGPAC como del Catastro. Esto permite el almacenamiento del polígono representativo de dichas parcelas para su posterior uso en el comparador.
 
 Además, el sistema se comunica con:
-- **Capture ACV** para el cálculo de análisis de ciclo de vida
+- **LCA Bridge** para el cálculo de análisis de ciclo de vida
 - **OpenRouter** para capacidades de IA asistida
 
 ## Variables de entorno
@@ -75,8 +75,8 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 | `OPENROUTER_API_KEY` | API key para OpenRouter |
 | `MAILER_EMAIL` | Email para envío de notificaciones |
 | `MAILER_PASSWORD` | Password del servicio de email |
-| `CAPTURE_ACV_EMAIL` | Email para autenticación en DTAgro |
-| `CAPTURE_ACV_PASSWORD` | Password para autenticación en DTAgro |
+| `CAPTURE_ACV_EMAIL` | Email para autenticación en LCA Capture |
+| `CAPTURE_ACV_PASSWORD` | Password para autenticación en LCA Capture |
 | `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto (EF 3.1) |
 | `PORT` | Puerto del backend; usar `8000` en desarrollo para el proxy de Vite (`3000` es el default de Nest y del contenedor) |
 
@@ -84,8 +84,8 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose --profile prod up -d --build`.
 
 El compose levanta tres servicios:
-- **acv-compare-backend** - API NestJS (puerto 8080)
-- **acv-compare-frontend** - Frontend React servido con Nginx (puerto 80)
+- **lca-compare-backend** - API NestJS (puerto 8080)
+- **lca-compare-frontend** - Frontend React servido con Nginx (puerto 80)
 - **db** - PostgreSQL con PostGIS (puerto 5432)
 
 ### Desarrollo
@@ -133,4 +133,4 @@ Para desplegar el servicio en la máquina actual, se debe lanzar de forma manual
 configurada para ello (variables de entorno preconfiguradas). En caso de querer lanzarlo manualmente,
 se encuentra en la siguiente ruta: `/home/ivan/openlca/Ventum-ACV-Visualizer`.
 
-**IMPORTANTE**: el servicio de Capture ACV debe haber sido desplegado anteriormente.
+**IMPORTANTE**: el servicio de LCA Bridge debe haber sido desplegado anteriormente.

@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Dependency Installation
 
-ACV Compare is part of a **pnpm 10** monorepo with **Turborepo**. Install dependencies from the repository root, not from each application separately:
+LCA Compare is part of a **pnpm 10** monorepo with **Turborepo**. Install dependencies from the repository root, not from each application separately:
 
 ```bash
 pnpm install
@@ -139,7 +139,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   │   ├── cultivo/           # Crop registration and queries
 │   │   │   ├── resultadoimpacto/  # LCA result storage and querying
 │   │   │   ├── compare/           # Comparison logic between crop sets
-│   │   │   ├── capture/           # Data reception from Capture ACV
+│   │   │   ├── capture/           # Data reception from LCA Bridge
 │   │   │   ├── stats/             # Global statistics and dashboard aggregations
 │   │   │   ├── admin/             # Role-protected admin CRUD
 │   │   │   ├── ai/                # OpenRouter AI integration

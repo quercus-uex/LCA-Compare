@@ -3,9 +3,9 @@ sidebar_label: 'Process Definition'
 sidebar_position: 5
 ---
 
-# Process Definition in Capture ACV
+# Process Definition in LCA Bridge
 
-**Processes** are the core of LCA calculation in Capture ACV. Each supported crop type has an associated process that defines how DTAgro agronomic data maps to openLCA input and output flows.
+**Processes** are the core of LCA calculation in LCA Bridge. Each supported crop type has an associated process that defines how LCA Capture agronomic data maps to openLCA input and output flows.
 
 There are currently three implemented processes:
 
@@ -60,7 +60,7 @@ class Process:
 
 | Attribute | Description |
 |---|---|
-| `name` | Process name. It must match the `metadatos.cultivo.tipo` value sent by DTAgro in the JSON. |
+| `name` | Process name. It must match the `metadatos.cultivo.tipo` value sent by LCA Capture in the JSON. |
 | `uuid` | Product system UUID in the openLCA .zolca database. It is the entry point for the impact calculation. |
 | `fertilizantes_flow_name` | Name of the intermediate fertilizer flow in openLCA. |
 | `manejo_cultivo_flow_name` | Name of the intermediate crop management flow in openLCA. |
@@ -90,7 +90,7 @@ class FlowDict:
 ```
 
 - **Keys** are the exact flow names as defined in the openLCA .zolca database.
-- **Values** are the amounts extracted from the DTAgro input JSON.
+- **Values** are the amounts extracted from the LCA Capture input JSON.
 
 ### Example: Fertilizer Flow in `TomateProcess`
 
@@ -128,7 +128,7 @@ When `ACVService.execute()` receives a request, the process is used as follows:
 5. build_final_result()              → Builds the structured result by category
 ```
 
-Each subprocess (fertilizers, crop management, pesticides, irrigation system) is updated independently in openLCA before running the global calculation. This lets flow values reflect the real crop data sent by DTAgro.
+Each subprocess (fertilizers, crop management, pesticides, irrigation system) is updated independently in openLCA before running the global calculation. This lets flow values reflect the real crop data sent by LCA Capture.
 
 ## How to Add a New Process
 

@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introduction
 
-**ACV Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. LCA results are calculated by [Capture ACV](https://github.com/quercus-uex/Ventum-OpenLCA-Service), a bridge service between the DTAgro platform and the openLCA calculation engine using a database in .zolca format. Both services communicate through a shared Docker network.
+**LCA Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. LCA results are calculated by [LCA Bridge](https://github.com/quercus-uex/Ventum-OpenLCA-Service), a bridge service between the LCA Capture platform and the openLCA calculation engine using a database in .zolca format. Both services communicate through a shared Docker network.
 
 ## Features
 

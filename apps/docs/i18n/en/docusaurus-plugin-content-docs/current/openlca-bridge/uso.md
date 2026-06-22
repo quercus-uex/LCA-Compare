@@ -7,7 +7,7 @@ sidebar_position: 3
 
 ## Endpoint
 
-The service exposes a single endpoint, `POST /capture-acv`, which receives the crop output JSON from the DTAgro service, runs the LCA calculation in openLCA, and sends the result to ACV Compare for persistence.
+The service exposes a single endpoint, `POST /capture-acv`, which receives the crop output JSON from the LCA Capture service, runs the LCA calculation in openLCA, and sends the result to LCA Compare for persistence.
 
 Internal processing follows this flow:
 
@@ -16,7 +16,7 @@ Internal processing follows this flow:
 3. **`update_processes()`** — Updates processes in openLCA through the IPC client (`OLCAClient`).
 4. **`calculate_impacts()`** — Runs the impact calculation using the product system UUID as reference.
 5. **`build_final_result()`** — Builds the structured result from the openLCA output.
-6. **`send_result_to_app()`** — Sends the result to ACV Compare with a POST request (best-effort; errors are logged without interrupting the response).
+6. **`send_result_to_app()`** — Sends the result to LCA Compare with a POST request (best-effort; errors are logged without interrupting the response).
 
 ## Calculation Parameters
 
@@ -27,15 +27,15 @@ Both parameters are configurable through environment variables in the service `.
 | `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | UUID of the impact method selected for the calculation. By default, **EF 3.1** (Environmental Footprint 3.1), the method recommended by the European Commission, is used. |
 | `CALCULATION_AMOUNT` | `0.001` | Process amount used as reference. Processes in the database are defined for 1 tonne (1000 kg), so a value of `0.001` calculates the impact for 1 kg of production. |
 
-## Integration with ACV Compare
+## Integration with LCA Compare
 
-When **ACV Compare** is deployed on the same Docker network (`olca`), the calculation result is automatically transmitted to the `POST /capture` endpoint of ACV Compare through the `ACV_COMPARE_BASE_URL` environment variable.
+When **LCA Compare** is deployed on the same Docker network (`olca`), the calculation result is automatically transmitted to the `POST /capture` endpoint of LCA Compare through the `ACV_COMPARE_BASE_URL` environment variable.
 
-The ACV Compare frontend also routes calculation requests through the Nginx reverse proxy:
+The LCA Compare frontend also routes calculation requests through the Nginx reverse proxy:
 
 | Route | Destination |
 |---|---|
-| `/calc` | `capture-openlca-bridge:3000/capture-acv` |
+| `/calc` | `lca-bridge:3000/capture-acv` |
 
 ## Service Response
 
@@ -108,11 +108,11 @@ The five impact categories are:
 | `impacto_sistema_riego` | Impact of irrigation system materials (pipes, drippers, pump) and water and energy consumption. |
 | `impacto_total` | Aggregated sum of all previous categories. |
 
-This same JSON is sent to the **ACV Compare** `POST /capture` endpoint for persistence and visualization.
+This same JSON is sent to the **LCA Compare** `POST /capture` endpoint for persistence and visualization.
 
 ## Interactive Documentation (Swagger)
 
-Capture ACV exposes a **Swagger/OpenAPI** interface that allows users to explore and test the `POST /capture-acv` endpoint directly from the browser. The documentation includes the input JSON schema, response codes, and the ability to run test requests.
+LCA Bridge exposes a **Swagger/OpenAPI** interface that allows users to explore and test the `POST /capture-acv` endpoint directly from the browser. The documentation includes the input JSON schema, response codes, and the ability to run test requests.
 
 | Environment | URL |
 |---|---|

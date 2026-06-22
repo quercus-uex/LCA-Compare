@@ -26,7 +26,7 @@ export const ResultComparisonTable = ({
               <th>{t('common.fields.targetAmount')}</th>
             )}
             <th>{t('common.fields.unit')}</th>
-            {result.impacto_total[0].tarAmount != null && result.impacto_total[0].diff != null && <th>{t('common.fields.difference')}</th>}
+            {result.impacto_total[0].tarAmount != null && <th>{t('common.fields.difference')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -36,11 +36,17 @@ export const ResultComparisonTable = ({
               <th>{i.refAmount.toFixed(4)}</th>
               {i.tarAmount != null && <th>{i.tarAmount.toFixed(4)}</th>}
               <th>{i.unit}</th>
-              {i.tarAmount != null && i.diff != null && (
+              {i.tarAmount != null && (
                 <th
-                  className={`${i.diff >= 0 ? 'text-red-400' : 'text-green-400'}`}
+                  className={
+                    i.diff != null
+                      ? i.diff >= 0
+                        ? 'text-red-400'
+                        : 'text-green-400'
+                      : ''
+                  }
                 >
-                  {i.diff.toFixed(2)} %
+                  {i.diff != null ? `${i.diff.toFixed(2)} %` : 'n/a'}
                 </th>
               )}
             </tr>

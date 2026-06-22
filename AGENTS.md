@@ -63,11 +63,11 @@ pnpm docs:typecheck
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
 - DaisyUI 5 is configured in CSS via `@plugin "daisyui"` and the custom `acv` theme in `apps/web/src/index.css`.
 - `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, and `noUncheckedSideEffectImports`.
-- Production Nginx proxies `/api/` to `acv-compare-backend:3000/` and `/calc` to `capture-openlca-bridge:3000/capture-acv`; the latter requires the external `olca` network service.
+- Production Nginx proxies `/api/` to `lca-compare-backend:3000/` and `/calc` to `lca-bridge:3000/capture-acv`; the latter requires the external `olca` network service.
 
 ## Deploy And Infra
 
 - `.github/workflows/deploy.yml` deploys on pushes to `main` or `develop`, plus manual dispatch.
-- The deploy SSH script force-resets `$HOME/openlca/<repo>` to the pushed branch, runs `docker compose --profile prod up -d --build`, then runs `pnpm --filter server prisma:migrate:deploy` inside `acv-compare-backend`.
+- The deploy SSH script force-resets `$HOME/openlca/<repo>` to the pushed branch, runs `docker compose --profile prod up -d --build`, then runs `pnpm --filter server prisma:migrate:deploy` inside `lca-compare-backend`.
 - Docker maps backend `8080:3000` and frontend `80:80`; `olca` is an external Docker network required by the prod profile.
 - Backend Docker builds `common` first, runs Prisma generate, builds Nest, and installs Playwright Chromium with deps in the production image for report generation.

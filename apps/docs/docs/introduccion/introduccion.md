@@ -10,20 +10,20 @@ completa de cálculo, visualización y comparación del **Análisis de Ciclo de 
 
 ## Servicios
 
-### Capture ACV
+### LCA Bridge
 
-**Capture ACV** es un microservicio desarrollado en **Python** con **FastAPI** que actúa como puente entre la plataforma
-**DTAgro** y el motor de cálculo de ACV **openLCA** con base de datos en formato **.zolca**. Su responsabilidad es recibir los
+**LCA Bridge** es un microservicio desarrollado en **Python** con **FastAPI** que actúa como puente entre la plataforma
+**LCA Capture** y el motor de cálculo de ACV **openLCA** con base de datos en formato **.zolca**. Su responsabilidad es recibir los
 datos agronómicos de un cultivo (parcela, tipo de cultivo, insumos, riego, maquinaria, etc.), ejecutar el cálculo de
-impacto ambiental delegando en el servidor IPC de openLCA y enviar el resultado estructurado a ACV Compare.
+impacto ambiental delegando en el servidor IPC de openLCA y enviar el resultado estructurado a LCA Compare.
 
 El servicio expone un único endpoint, `POST /capture-acv`, y selecciona automáticamente el proceso de cálculo adecuado
 según el tipo de cultivo (`TomateProcess`, `OlivoProcess` o `VinedoProcess`).
 
-### ACV Compare
+### LCA Compare
 
-**ACV Compare** es una aplicación web formada por un **backend NestJS** y un **frontend React** que se encarga de la
-persistencia, visualización y comparación de los resultados de ACV generados por Capture ACV. Entre sus funcionalidades
+**LCA Compare** es una aplicación web formada por un **backend NestJS** y un **frontend React** que se encarga de la
+persistencia, visualización y comparación de los resultados de ACV generados por LCA Bridge. Entre sus funcionalidades
 destacan:
 
 - Gestión de parcelas con integración de **SIGPAC**, **Catastro** y el identificador predial portugués para la
@@ -41,14 +41,14 @@ destacan:
 Ambos servicios se comunican a través de una **red Docker compartida** (`olca`), lo que permite un flujo de datos
 desacoplado:
 
-1. **DTAgro** envía los datos de un cultivo al endpoint `POST /capture-acv` de **Capture ACV**.
-2. **Capture ACV** ejecuta el cálculo de impacto ambiental en **openLCA** y construye el resultado estructurado.
-3. El resultado se envía mediante un `POST /capture` al backend de **ACV Compare**, que lo persiste en la base de datos
+1. **LCA Capture** envía los datos de un cultivo al endpoint `POST /capture-acv` de **LCA Bridge**.
+2. **LCA Bridge** ejecuta el cálculo de impacto ambiental en **openLCA** y construye el resultado estructurado.
+3. El resultado se envía mediante un `POST /capture` al backend de **LCA Compare**, que lo persiste en la base de datos
    PostgreSQL asociándolo al usuario, parcela y cultivo correspondientes.
 4. El usuario puede consultar los resultados, compararlos con otros cultivos y generar informes desde la interfaz web
-   de **ACV Compare**.
+   de **LCA Compare**.
 
-El envío de resultados de Capture ACV a ACV Compare se realiza en modo *best-effort*: si ACV Compare no está disponible,
+El envío de resultados de LCA Bridge a LCA Compare se realiza en modo *best-effort*: si LCA Compare no está disponible,
 el error se registra en el log sin interrumpir la respuesta al cliente.
 
 ## Diagrama de la arquitectura software

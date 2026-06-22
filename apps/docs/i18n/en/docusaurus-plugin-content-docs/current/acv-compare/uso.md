@@ -5,10 +5,10 @@ sidebar_position: 3
 
 # Usage
 
-This service receives LCA results calculated by **Capture ACV** whenever both services are running at the same time. If this is the first time a user performs an LCA calculation, they will receive an email with their access password.
+This service receives LCA results calculated by **LCA Bridge** whenever both services are running at the same time. If this is the first time a user performs an LCA calculation, they will receive an email with their access password.
 
 <p align="center">
-    <img src="/img/acv-compare/correo.png" alt="Welcome email for ACV Compare" width="600"/>
+    <img src="/img/acv-compare/correo.png" alt="Welcome email for LCA Compare" width="600"/>
 </p>
 
 ## View LCA Results for a Plot
@@ -88,7 +88,7 @@ If the signed-in user has the administrator role, they are automatically redirec
 
 ## Global Statistics
 
-The **Statistics** route shows an aggregated view of the results registered in ACV Compare. It allows filtering by year, impact category, crop type, and province, and displays:
+The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by year, impact category, crop type, and province, and displays:
 
 - Global KPIs for crops, plots, users, area, production, water, and average impact.
 - Province and town ranking.

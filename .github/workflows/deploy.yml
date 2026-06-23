@@ -59,4 +59,4 @@ jobs:
               fi
               sleep 2
             done
-            docker compose exec -T lca-compare-backend pnpm --filter server prisma:migrate:deploy
+            docker compose exec -T lca-compare-backend pnpm --filter server prisma:db:push

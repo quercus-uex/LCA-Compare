@@ -48,5 +48,15 @@ jobs:
             fi
             
             cd "${DEPLOY_DIR}"
-            docker compose --profile prod up -d --build
-            docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
+            docker compose --profile prod up -d --build --remove-orphans
+            for attempt in $(seq 1 30); do
+              if docker compose exec -T db pg_isready -U "$DB_USER" -d acv; then
+                break
+              fi
+              if [ "$attempt" -eq 30 ]; then
+                docker compose logs db
+                exit 1
+              fi
+              sleep 2
+            done
+            docker compose exec -T lca-compare-backend pnpm --filter server prisma:migrate:deploy

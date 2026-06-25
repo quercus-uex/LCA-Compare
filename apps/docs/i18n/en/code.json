@@ -1,15 +1,15 @@
 {
   "homepage.title": {
-    "message": "LCA Bridge and LCA Compare Documentation"
+    "message": "LCA Capture, LCA Bridge and LCA Compare Documentation"
   },
   "homepage.subtitle": {
-    "message": "Development, deployment, and usage guides for LCA Bridge and LCA Compare."
+    "message": "Development, deployment, and usage guides for LCA Capture, LCA Bridge and LCA Compare."
   },
   "homepage.startButton": {
     "message": "Get started"
   },
   "homepage.description": {
-    "message": "Technical and functional documentation for LCA Bridge and LCA Compare."
+    "message": "Technical and functional documentation for LCA Capture, LCA Bridge and LCA Compare."
   },
   "theme.ErrorPageContent.title": {
     "message": "This page crashed.",

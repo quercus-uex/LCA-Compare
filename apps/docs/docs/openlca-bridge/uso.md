@@ -45,7 +45,9 @@ A su vez, el frontend de LCA Compare enruta las peticiones de cálculo a través
 
 Tras ejecutar el cálculo de ACV en openLCA, el servicio devuelve un JSON con los metadatos originales del cultivo y el
 resultado desglosado en cinco categorías de impacto. Cada categoría contiene un array de objetos con la categoría
-ambiental (`category`), la magnitud (`amount`) y la unidad de medida (`unit`).
+ambiental (`category`), la magnitud (`amount`) y la unidad de medida (`unit`). Los cálculos se han llevado a cabo
+siguiendo los procesos de cálculo de ACV definidos por CICYTEX. A continuación se muestra un ejemplo de la salida del
+cálculo de ACV realizado.
 
 ```json
 {

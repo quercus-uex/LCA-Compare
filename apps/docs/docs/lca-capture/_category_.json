@@ -1,0 +1,8 @@
+{
+  "label": "LCA Capture",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Documentación sobre LCA Capture y sus endpoints de mediciones de sensores para ACV."
+  }
+}

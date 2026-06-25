@@ -13,12 +13,12 @@ function HomepageHeader() {
       <div className="container">
         <Heading as="h1" className="hero__title">
           <Translate id="homepage.title">
-            Documentación de LCA Bridge y LCA Compare
+            Documentación de LCA Capture, LCA Bridge y LCA Compare
           </Translate>
         </Heading>
         <p className="hero__subtitle">
           <Translate id="homepage.subtitle">
-            Guías de desarrollo, despliegue y uso para LCA Bridge y LCA Compare.
+            Guías de desarrollo, despliegue y uso para LCA Capture, LCA Bridge y LCA Compare.
           </Translate>
         </p>
         <div className={styles.buttons}>
@@ -38,11 +38,11 @@ export default function Home(): ReactNode {
     <Layout
       title={translate({
         id: 'homepage.title',
-        message: 'Documentación de Capture ACV y ACV Compare',
+        message: 'Documentación de LCA Capture, LCA Bridge y LCA Compare',
       })}
       description={translate({
         id: 'homepage.description',
-        message: 'Documentación técnica y funcional de LCA Bridge y LCA Compare.',
+        message: 'Documentación técnica y funcional de LCA Capture, LCA Bridge y LCA Compare.',
       })}>
       <HomepageHeader />
     </Layout>

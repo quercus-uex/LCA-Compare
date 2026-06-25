@@ -14,6 +14,8 @@ Before deploying the bridge service between LCA Capture and OpenLCA, you need to
 
 ## .zolca Database Configuration
 
+The [OpenLCA IPC server](https://github.com/GreenDelta/olca-ipc-container) uses the `.zolca` database to run environmental impact calculations.
+
 The OpenLCA database (.zolca file) must exist at `openlca-docker/data/databases/bafu` before starting the service. Modify `docker-compose.yml` so the volume mounted in the `openlca-ipc` service points to the folder that contains that database. The following diagram clarifies the structure:
 
 <p align="center">

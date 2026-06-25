@@ -149,6 +149,12 @@ Antes de tocar código, necesitas definir en la base de datos .zolca:
 - Cuatro **subprocesos** para las categorías: fertilizantes, manejo de cultivo, pesticidas y sistema de riego.
 - Los **flujos** de entrada y salida que conectan los subprocesos con el sistema de producto principal.
 
+La siguiente captura muestra un ejemplo del sistema definido en OpenLCA:
+
+<p align="center">
+    <img src="/img/openlca-bridge/captura-openlca.png" alt="Sistema de producto definido en OpenLCA" width="700"/>
+</p>
+
 Los nombres de los flujos deben coincidir exactamente con los que usarás en el código.
 
 ### 2. Crear la clase del proceso

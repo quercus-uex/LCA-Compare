@@ -7,9 +7,9 @@ sidebar_position: 1
 
 **LCA Bridge** es un microservicio **Python 3.12+** con **FastAPI** que actúa como puente entre la plataforma
 **LCA Capture** y el motor de cálculo de Análisis de Ciclo de Vida **openLCA** con base de datos en formato **.zolca**. Recibe
-los datos de un cultivo desde LCA Capture, ejecuta el cálculo de impacto ambiental en openLCA a través de su servidor
-IPC y envía el resultado a [LCA Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y
-comparativa.
+los datos de un cultivo desde LCA Capture, ejecuta el cálculo de impacto ambiental en openLCA a través del
+[servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) y envía el resultado a
+[LCA Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y comparativa.
 
 La comunicación entre ambos servicios se realiza a través de una red Docker compartida (`olca`), lo que permite
 orquestar todo el flujo de cálculo y visualización de ACV de forma desacoplada.

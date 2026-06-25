@@ -251,6 +251,9 @@ Array con cada máquina tractora utilizada.
 
 ## Ejemplo completo
 
+El siguiente JSON representa la información de un cultivo remitido desde LCA Capture hacia LCA Bridge para ejecutar el
+cálculo de ACV correspondiente.
+
 ```json
 {
     "metadatos": {

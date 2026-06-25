@@ -5,13 +5,17 @@ sidebar_position: 1
 
 # Introduction
 
-The system is made up of two independent services that work together to provide a complete solution for calculating, visualizing, and comparing the **Life Cycle Assessment (LCA)** of agricultural crops.
+The system is made up of three independent services that work together to provide a complete solution for calculating, visualizing, and comparing the **Life Cycle Assessment (LCA)** of agricultural crops.
 
 ## Services
 
+### LCA Capture
+
+**LCA Capture** exposes an API to obtain data recorded by different sensors associated with LCA calculation, including **flowmeter**, **fertilizer**, and **tractor**. These data are queried through JWT-authenticated endpoints and can be filtered by date ranges.
+
 ### LCA Bridge
 
-**LCA Bridge** is a **Python** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** LCA calculation engine, using a database in **.zolca** format. It receives agronomic crop data (plot, crop type, inputs, irrigation, machinery, and so on), runs the environmental impact calculation by delegating to the openLCA IPC server, and sends the structured result to LCA Compare.
+**LCA Bridge** is a **Python** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** LCA calculation engine, using a database in **.zolca** format. It receives agronomic crop data (plot, crop type, inputs, irrigation, machinery, and so on), runs the environmental impact calculation by delegating to the [OpenLCA IPC server](https://github.com/GreenDelta/olca-ipc-container), and sends the structured result to LCA Compare.
 
 The service exposes a single endpoint, `POST /capture-acv`, and automatically selects the appropriate calculation process according to the crop type (`TomateProcess`, `OlivoProcess`, or `VinedoProcess`).
 
@@ -28,7 +32,9 @@ The service exposes a single endpoint, `POST /capture-acv`, and automatically se
 
 ## How They Interact
 
-Both services communicate through a **shared Docker network** (`olca`), enabling a decoupled data flow:
+**LCA Capture** is an independent service that starts the flow by sending crop data to **LCA Bridge**. Internal
+communication between **LCA Bridge**, **LCA Compare**, and **openLCA** takes place through a **shared Docker network**
+(`olca`), enabling a decoupled data flow:
 
 1. **LCA Capture** sends crop data to the **LCA Bridge** `POST /capture-acv` endpoint.
 2. **LCA Bridge** calculates the environmental impact in **openLCA** and builds the structured result.

@@ -1,0 +1,77 @@
+---
+sidebar_label: 'Autenticación'
+sidebar_position: 2
+---
+
+import RedactedSecret from '@site/src/components/RedactedSecret';
+
+# Autenticación requerida
+
+Todos los endpoints requieren un **token JWT válido** en el encabezado `Authorization`.
+Ten en cuenta que el token JWT emitido es temporal y tiene una **validez de 30 minutos**.
+
+```
+Authorization: Bearer <token>
+```
+
+Para obtener este token, utiliza el siguiente endpoint de autenticación:  
+
+## POST `/auth`
+
+Este endpoint permite la autenticación de aplicaciones/clientes externos a: monitoriza.dtagro.es.  
+Al enviar las credenciales correctas del cliente, el servicio devuelve un **token JWT de acceso firmado**.
+
+### Parámetros
+
+| Tipo   | Nombre         | Requerido | Descripción                                    |
+| ------ | -------------- | --------- | ---------------------------------------------- |
+| `body` | `clientId `    | SÍ        | Identificador único de la aplicación o cliente |
+| `body` | `clientSecret` | SÍ        | Clave privada de autenticación para el cliente |
+
+Para obtener el token JWT, se deben enviar siempre las siguientes **credenciales estáticas**:
+
+<RedactedSecret
+  id="lca-capture-auth-credentials"
+  language="sh"
+  redacted={`clientId: ••••••••
+clientSecret: ••••••••`}
+/>
+
+> **Nota:** Estas credenciales son privadas y no deben exponerse en el código frontend.  
+> Su uso está restringido a la consulta de datos (métodos GET) de la API de sensores.
+
+### Ejemplo de solicitud
+
+<RedactedSecret
+  id="lca-capture-auth-request"
+  language="http"
+  redacted={`POST https://monitoriza.dtagro.es/api/acv/auth
+Content-Type: application/json
+
+{
+  "clientId": "••••••••",
+  "clientSecret": "••••••••"
+}`}
+/>
+
+### Respuesta exitosa
+
+Si las credenciales son válidas, devuelve un objeto JSON con el token JWT de acceso:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Este token debe incluirse en todas las peticiones a los endpoints protegidos bajo el prefijo `/acv`.  
+Cada token tiene una validez de 30 minutos. Una vez expirado, las peticiones fallarán con un error 401.  
+Una vez caducado, solicite un nuevo token reautenticándose en `/auth` con el `clientId` y `clientSecret`.
+
+### Posibles errores
+
+| Código                      | Causa                                      | Mensaje                                |
+| --------------------------- | ------------------------------------------ | -------------------------------------- |
+| `400 Bad Request`           | Falta `clientId` y/o `clientSecret`        | `Missing clientId and/or clientSecret` |
+| `401 Unauthorized`          | Las credenciales del cliente son inválidas | `Invalid client credentials`           |
+| `500 Internal Server Error` | Error interno del servidor                 | `Unable to authenticate client`        |

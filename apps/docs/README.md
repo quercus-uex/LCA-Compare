@@ -1,6 +1,6 @@
 # LCA Compare Docs
 
-Docusaurus 3 documentation app for LCA Bridge and LCA Compare in the pnpm workspace.
+Docusaurus 3 documentation app for LCA Capture, LCA Bridge, and LCA Compare in the pnpm workspace.
 
 ## Commands
 

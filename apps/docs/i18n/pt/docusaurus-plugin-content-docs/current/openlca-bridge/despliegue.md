@@ -14,6 +14,8 @@ Antes de implantar o serviço ponte entre LCA Capture e OpenLCA, é necessário 
 
 ## Configuração da Base de Dados .zolca
 
+O [servidor IPC do OpenLCA](https://github.com/GreenDelta/olca-ipc-container) utiliza a base de dados `.zolca` para executar os cálculos de impacto ambiental.
+
 A base de dados do OpenLCA (ficheiro .zolca) deve existir na rota `openlca-docker/data/databases/bafu` antes de iniciar o serviço. Modifique o ficheiro `docker-compose.yml` para que o volume montado no serviço `openlca-ipc` aponte para a pasta que contém essa base de dados. Em seguida é mostrado um gráfico explicativo:
 
 <p align="center">

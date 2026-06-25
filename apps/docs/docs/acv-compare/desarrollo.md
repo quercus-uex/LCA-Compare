@@ -186,6 +186,8 @@ subrutas como `common/impact`, `common/stats`, `common/compare`, `common/locatio
 
 ## Esquema de base de datos
 
+![Diagrama ER de la base de datos de LCA Compare](/img/acv-compare/esquema-er.png)
+
 El esquema de Prisma define los siguientes modelos principales:
 
 | Modelo | Descripción |

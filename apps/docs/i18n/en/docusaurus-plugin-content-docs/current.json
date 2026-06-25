@@ -26,5 +26,13 @@
   "sidebar.tutorialSidebar.category.ACV Compare.link.generated-index.description": {
     "message": "Documentation for the LCA comparison visualizer.",
     "description": "The generated-index page description for category 'ACV Compare' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.LCA Capture": {
+    "message": "LCA Capture",
+    "description": "The label for category 'LCA Capture' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.LCA Capture.link.generated-index.description": {
+    "message": "Documentation for LCA Capture and its sensor measurement endpoints for LCA.",
+    "description": "The generated-index page description for category 'LCA Capture' in sidebar 'tutorialSidebar'"
   }
 }

@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'LCA Bridge / LCA Compare',
+  title: 'LCA Capture / LCA Bridge / LCA Compare',
   tagline: '',
   favicon: '/img/icon.svg',
 
@@ -75,7 +75,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Documentación de LCA Bridge y LCA Compare',
+      title: 'Documentación de LCA Capture, LCA Bridge y LCA Compare',
       logo: {
         alt: 'LCA Compare',
         src: '/img/icon.svg',
@@ -110,7 +110,7 @@ const config: Config = {
         alt: 'TID4Agro',
         src: '/img/tid4agro-banner.png',
       },
-      copyright: `Documentación de LCA Bridge y LCA Compare.`,
+      copyright: `Documentación de LCA Capture, LCA Bridge y LCA Compare.`,
     },
     prism: {
       theme: prismThemes.github,

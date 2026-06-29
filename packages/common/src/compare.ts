@@ -1,5 +1,7 @@
 import type { ImpactKey } from './impact.js';
 
+export type CompareReportLanguage = 'es' | 'en' | 'pt';
+
 export type CompareFilterDto = {
   idPais?: string;
   idsPoblacion?: string[];
@@ -18,6 +20,7 @@ export type CompareQueryItemDto = CompareFilterDto;
 export type CompareQueryDto = {
   reference: CompareQueryItemDto;
   target?: CompareQueryItemDto;
+  language?: CompareReportLanguage;
 };
 
 export type CompareResultItemDto = {

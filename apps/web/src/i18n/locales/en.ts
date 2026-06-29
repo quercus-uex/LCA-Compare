@@ -135,6 +135,7 @@ export const en = {
       insufficientData: 'There is not enough data for the selected filters',
       generatingReport: 'Generating report...',
       reportGenerated: 'Report generated',
+      reportFilename: 'Report.pdf',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticides',

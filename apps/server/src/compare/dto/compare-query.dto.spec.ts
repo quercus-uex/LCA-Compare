@@ -59,4 +59,24 @@ describe('CompareQueryDto', () => {
       ]),
     );
   });
+
+  it('accepts a supported report language', () => {
+    const dto = plainToInstance(CompareQueryDto, {
+      reference: { idPais: uuid },
+      language: 'en',
+    });
+
+    expect(validateSync(dto)).toEqual([]);
+    expect(dto.language).toBe('en');
+  });
+
+  it('rejects an unsupported report language', () => {
+    const dto = plainToInstance(CompareQueryDto, {
+      reference: { idPais: uuid },
+      language: 'fr',
+    });
+
+    const errors = validateSync(dto);
+    expect(errors[0]?.property).toBe('language');
+  });
 });

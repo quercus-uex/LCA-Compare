@@ -170,7 +170,9 @@ describe('CompareService', () => {
       resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
         { id: 'ri-zero' } as any,
       ]);
-      resultadoImpactoService.findMany.mockResolvedValue([{ id: 'ri-zero' }] as any);
+      resultadoImpactoService.findMany.mockResolvedValue([
+        { id: 'ri-zero' },
+      ] as any);
 
       await service.findResults({ lat: 0, long: 0, range: 10 });
 
@@ -553,8 +555,12 @@ describe('CompareService', () => {
     });
 
     it('renders target location coordinates from target filters', async () => {
-      const refResults = [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })];
-      const tarResults = [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })];
+      const refResults = [
+        makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' }),
+      ];
+      const tarResults = [
+        makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' }),
+      ];
 
       aiService.generateFromTemplate.mockResolvedValue('text');
       paisService.findMany.mockResolvedValue([]);
@@ -573,6 +579,106 @@ describe('CompareService', () => {
 
       expect(htmlArg).toContain('41.00000, -8.00000');
       expect(htmlArg).not.toContain('NaN');
+    });
+
+    it('localizes labels, prompts, and date when an English language is requested', async () => {
+      const refResults = [
+        makeResultadoImpacto(makeImpactDto(), {
+          id: 'ri-1',
+          cultivoTipo: 'Tomate',
+          paisId: 'pais-1',
+          provinciaId: 'prov-1',
+          poblacionId: 'pop-1',
+        }),
+      ];
+      const tarResults = [
+        makeResultadoImpacto(makeImpactDto(), {
+          id: 'ri-2',
+          cultivoTipo: 'Olivo',
+          paisId: 'pais-2',
+          provinciaId: 'prov-2',
+          poblacionId: 'pop-2',
+        }),
+      ];
+
+      aiService.generateFromTemplate
+        .mockResolvedValueOnce('overview-en')
+        .mockResolvedValueOnce('recommendations-en');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+
+      await service.generateReport(
+        refFilters,
+        refResults,
+        tarFilters,
+        tarResults,
+        'en',
+      );
+
+      expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
+        1,
+        'compare-overview-en',
+        { data: expect.any(String) },
+      );
+      expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
+        2,
+        'compare-recommendations-en',
+        { data: 'overview-en' },
+      );
+
+      const htmlArg = playwrightMock.__mockPage.setContent.mock
+        .calls[0][0] as string;
+
+      expect(htmlArg).toContain('<html lang="en">');
+      expect(htmlArg).toContain('LCA comparison report');
+      expect(htmlArg).toContain('SELECTED FILTERS');
+      expect(htmlArg).toContain('Reference set');
+      expect(htmlArg).toContain('KEY RESULTS');
+      expect(htmlArg).toContain('SUMMARY');
+      expect(htmlArg).toContain('RECOMMENDATIONS');
+      expect(htmlArg).toContain('TOTAL IMPACT');
+      expect(htmlArg).toContain('AI-generated content');
+      expect(htmlArg).toContain('Tomato');
+      expect(htmlArg).toContain('Olive');
+    });
+
+    it('falls back to Spanish prompts when language is missing', async () => {
+      const refResults = [
+        makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' }),
+      ];
+      const tarResults = [
+        makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' }),
+      ];
+
+      aiService.generateFromTemplate.mockResolvedValue('text');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+
+      await service.generateReport(
+        refFilters,
+        refResults,
+        tarFilters,
+        tarResults,
+      );
+
+      expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
+        1,
+        'compare-overview',
+        { data: expect.any(String) },
+      );
+      expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
+        2,
+        'compare-recommendations',
+        { data: 'text' },
+      );
+
+      const htmlArg = playwrightMock.__mockPage.setContent.mock
+        .calls[0][0] as string;
+
+      expect(htmlArg).toContain('<html lang="es">');
+      expect(htmlArg).toContain('Informe de comparativa de ACV');
     });
   });
 });

@@ -135,6 +135,7 @@ export const es = {
       insufficientData: 'No existen datos suficientes con los filtros proporcionados',
       generatingReport: 'Generando informe...',
       reportGenerated: 'Informe generado',
+      reportFilename: 'Informe.pdf',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',

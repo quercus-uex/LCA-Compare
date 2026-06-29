@@ -24,7 +24,9 @@ import { ResultadoImpactoDto } from './dto/resultado-impacto.dto';
 @ApiBearerAuth()
 @Controller('/resultado')
 export class ResultadoImpactoController {
-  constructor(private readonly resultadoImpactoService: ResultadoImpactoService) {}
+  constructor(
+    private readonly resultadoImpactoService: ResultadoImpactoService,
+  ) {}
 
   @UseGuards(AuthGuard)
   @Get(':id')

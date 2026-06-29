@@ -174,8 +174,32 @@ describe('CompareController', () => {
         refResults,
         tarFilters,
         tarResults,
+        undefined,
       );
       expect(result).toBeInstanceOf(StreamableFile);
+    });
+
+    it('forwards the requested language to the report generator', async () => {
+      const refResults = [{ id: 'r1' }] as any;
+      const tarResults = [{ id: 'r2' }] as any;
+      compareService.findResults
+        .mockResolvedValueOnce(refResults)
+        .mockResolvedValueOnce(tarResults);
+      compareService.generateReport.mockResolvedValue(Buffer.from('pdf'));
+
+      await controller.compareToReport({
+        reference: refFilters,
+        target: tarFilters,
+        language: 'en',
+      });
+
+      expect(compareService.generateReport).toHaveBeenCalledWith(
+        refFilters,
+        refResults,
+        tarFilters,
+        tarResults,
+        'en',
+      );
     });
   });
 });

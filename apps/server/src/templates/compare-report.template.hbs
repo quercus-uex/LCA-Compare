@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{lang}}">
   <head>
     <meta charset="UTF-8">
-    <title>Reporte de comparativa</title>
+    <title>{{labels.documentTitle}}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
@@ -49,22 +49,22 @@
   <body class="google-sans-all">
     <div class="page">
       <div class="flex flex-col gap-5 items-center">
-        <h1 class="text-3xl font-bold">Informe de comparativa de ACV</h1>
-        <h2 class="text-xl">Fecha de comparativa: {{currentDate}}</h2>
+        <h1 class="text-3xl font-bold">{{labels.reportTitle}}</h1>
+        <h2 class="text-xl">{{labels.comparisonDate}}: {{currentDate}}</h2>
         <div class="card w-full">
           <div class="card-body bg-gray-100 rounded-lg p-2 flex flex-col items-center gap-2">
-            <h2 class="text-gray-700 grow font-bold">FILTROS SELECCIONADOS</h2>
+            <h2 class="text-gray-700 grow font-bold">{{labels.selectedFilters}}</h2>
             <div class="flex gap-2 w-full">
               <div class="card w-full">
                 <div class="card-body rounded-xl border border-blue-200">
                   <div class="w-full bg-blue-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
                     <div class="rounded-full w-2 h-2 bg-blue-600"></div>
-                    <h3 class="text-blue-600 line-clamp-1 w-fit">Conjunto de referencia</h3>
-                    <p class="text-end line-clamp-1 w-fit text-sm">{{reference.results.length}} resultados</p>
+                    <h3 class="text-blue-600 line-clamp-1 w-fit">{{labels.referenceSet}}</h3>
+                    <p class="text-end line-clamp-1 w-fit text-sm">{{reference.results.length}} {{labels.results}}</p>
                   </div>
                   <div class="w-full flex flex-col gap-2 p-5">
                     <div class="flex justify-between gap-2">
-                      <p>Países: </p>
+                      <p>{{labels.countries}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each reference.paises}}
                           {{#if chosen}}
@@ -76,7 +76,7 @@
                       </div>
                     </div>
                     <div class="flex justify-between gap-2">
-                      <p>Provincias: </p>
+                      <p>{{labels.provinces}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each reference.provincias}}
                           {{#if chosen}}
@@ -88,7 +88,7 @@
                       </div>
                     </div>
                     <div class="flex justify-between gap-2">
-                      <p>Poblaciones: </p>
+                      <p>{{labels.towns}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each reference.poblaciones}}
                           {{#if chosen}}
@@ -101,7 +101,7 @@
                     </div>
                     {{#if reference.filters.lat}}
                       <div class="flex justify-between">
-                        <p>Ubicación: </p>
+                        <p>{{labels.location}}: </p>
                         <div class="flex gap-2">
                           <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{decimals reference.filters.lat 5}}, {{decimals reference.filters.long 5}}</span>
                         </div>
@@ -109,14 +109,14 @@
                     {{/if}}
                     {{#if reference.filters.range}}
                       <div class="flex justify-between">
-                        <p>Rango: </p>
+                        <p>{{labels.range}}: </p>
                         <div class="flex gap-2">
                           <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{reference.filters.range}} m</span>
                         </div>
                       </div>
                     {{/if}}
                     <div class="flex justify-between">
-                      <p>Tipo de cultivo: </p>
+                      <p>{{labels.cropType}}: </p>
                       <div class="flex gap-2">
                         {{#each reference.tiposCultivo}}
                           {{#if chosen}}
@@ -128,25 +128,25 @@
                       </div>
                     </div>
                     <div class="flex justify-between">
-                      <p>Fecha de campaña: </p>
+                      <p>{{labels.campaignDate}}: </p>
                       <div class="flex gap-2">
                         {{#if reference.anioCampania.inicio.chosen}}
                           <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">
-                            Desde {{reference.anioCampania.inicio.data}}
+                            {{labels.from}} {{reference.anioCampania.inicio.data}}
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            Desde {{reference.anioCampania.inicio.data}}
+                            {{labels.from}} {{reference.anioCampania.inicio.data}}
                           </span>
                         {{/if}}
 
                         {{#if reference.anioCampania.fin.chosen}}
                           <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">
-                            Hasta {{reference.anioCampania.fin.data}}
+                            {{labels.to}} {{reference.anioCampania.fin.data}}
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            Hasta {{reference.anioCampania.fin.data}}
+                            {{labels.to}} {{reference.anioCampania.fin.data}}
                           </span>
                         {{/if}}
                       </div>
@@ -159,12 +159,12 @@
                 <div class="card-body rounded-xl border border-red-200">
                   <div class="w-full bg-red-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
                     <div class="rounded-full w-2 h-2 bg-red-600"></div>
-                    <h3 class="text-red-600 line-clamp-1 w-fit">Conjunto objetivo</h3>
-                    <p class="text-end line-clamp-1 w-fit text-sm">{{target.results.length}} resultados</p>
+                    <h3 class="text-red-600 line-clamp-1 w-fit">{{labels.targetSet}}</h3>
+                    <p class="text-end line-clamp-1 w-fit text-sm">{{target.results.length}} {{labels.results}}</p>
                   </div>
                   <div class="w-full flex flex-col gap-2 p-5">
                     <div class="flex justify-between gap-2">
-                      <p>Países: </p>
+                      <p>{{labels.countries}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each target.paises}}
                           {{#if chosen}}
@@ -176,7 +176,7 @@
                       </div>
                     </div>
                     <div class="flex justify-between gap-2">
-                      <p>Provincias: </p>
+                      <p>{{labels.provinces}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each target.provincias}}
                           {{#if chosen}}
@@ -188,7 +188,7 @@
                       </div>
                     </div>
                     <div class="flex justify-between gap-2">
-                      <p>Poblaciones: </p>
+                      <p>{{labels.towns}}: </p>
                       <div class="flex gap-2 flex-wrap">
                         {{#each target.poblaciones}}
                           {{#if chosen}}
@@ -201,7 +201,7 @@
                     </div>
                     {{#if target.filters.lat}}
                       <div class="flex justify-between">
-                        <p>Ubicación: </p>
+                        <p>{{labels.location}}: </p>
                         <div class="flex gap-2">
                           <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{decimals target.filters.lat 5}}, {{decimals target.filters.long 5}}</span>
                         </div>
@@ -209,14 +209,14 @@
                     {{/if}}
                     {{#if target.filters.range}}
                       <div class="flex justify-between">
-                        <p>Rango: </p>
+                        <p>{{labels.range}}: </p>
                         <div class="flex gap-2">
                           <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{target.filters.range}} m</span>
                         </div>
                       </div>
                     {{/if}}
                     <div class="flex justify-between">
-                      <p>Tipo de cultivo: </p>
+                      <p>{{labels.cropType}}: </p>
                       <div class="flex gap-2">
                         {{#each target.tiposCultivo}}
                           {{#if chosen}}
@@ -228,25 +228,25 @@
                       </div>
                     </div>
                     <div class="flex justify-between">
-                      <p>Fecha de campaña: </p>
+                      <p>{{labels.campaignDate}}: </p>
                       <div class="flex gap-2">
                         {{#if target.anioCampania.inicio.chosen}}
                           <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">
-                            Desde {{target.anioCampania.inicio.data}}
+                            {{labels.from}} {{target.anioCampania.inicio.data}}
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            Desde {{target.anioCampania.inicio.data}}
+                            {{labels.from}} {{target.anioCampania.inicio.data}}
                           </span>
                         {{/if}}
 
                         {{#if target.anioCampania.fin.chosen}}
                           <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">
-                            Hasta {{target.anioCampania.fin.data}}
+                            {{labels.to}} {{target.anioCampania.fin.data}}
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            Hasta {{target.anioCampania.fin.data}}
+                            {{labels.to}} {{target.anioCampania.fin.data}}
                           </span>
                         {{/if}}
                       </div>
@@ -258,13 +258,13 @@
 
             <div class="flex gap-1 items-center justify-start w-full">
               <div class="rounded-full bg-gray-400 w-2 h-2"></div>
-              <p class="text-gray-400">Filtros no escogidos por el usuario</p>
+              <p class="text-gray-400">{{labels.unchosenFilters}}</p>
             </div>
           </div>
         </div>
 
         <div class="flex flex-col gap-2 w-full items-center avoid-break">
-          <h2>RESULTADOS CLAVE</h2>
+          <h2>{{labels.keyResults}}</h2>
 
           <div class="flex gap-2 w-full">
             {{#each topImpacts}}
@@ -289,7 +289,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
               </svg>
-              <h3>RESUMEN</h3>
+              <h3>{{labels.summary}}</h3>
             </div>
 
             <p class="font-normal">
@@ -297,7 +297,7 @@
             </p>
 
             <span class="text-sm font-thin text-gray-700">
-              * Contenido generado por IA. Puede ser inexacto.
+              {{labels.aiDisclaimer}}
             </span>
           </div>
         </div>
@@ -308,7 +308,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
               </svg>
-              <h3>RECOMENDACIONES</h3>
+              <h3>{{labels.recommendations}}</h3>
             </div>
 
             <p class="font-normal">
@@ -316,7 +316,7 @@
             </p>
 
             <span class="text-sm font-thin text-gray-700">
-              * Contenido generado por IA. Puede ser inexacto.
+              {{labels.aiDisclaimer}}
             </span>
           </div>
         </div>
@@ -324,15 +324,15 @@
     </div>
 
     <div class="page flex flex-col gap-2 items-center">
-      <p>IMPACTO TOTAL</p>
+      <p>{{labels.impactTotal}}</p>
       <table class="table-auto">
         <thead class="bg-neutral-secondary-soft border-b border-default">
           <tr>
-            <th class="text-start">Categoría</th>
-            <th class="text-start">Cantidad referencia</th>
-            <th class="text-start">Cantidad objetivo</th>
-            <th class="text-start">Unidad</th>
-            <th class="text-start">Diferencia</th>
+            <th class="text-start">{{labels.category}}</th>
+            <th class="text-start">{{labels.referenceAmount}}</th>
+            <th class="text-start">{{labels.targetAmount}}</th>
+            <th class="text-start">{{labels.unit}}</th>
+            <th class="text-start">{{labels.difference}}</th>
           </tr>
         </thead>
         <tbody>
@@ -350,15 +350,15 @@
     </div>
 
     <div class="page flex flex-col gap-2 items-center">
-      <p>IMPACTO DE PESTICIDAS</p>
+      <p>{{labels.impactPesticides}}</p>
       <table class="table-auto">
         <thead class="bg-neutral-secondary-soft border-b border-default">
         <tr>
-          <th class="text-start">Categoría</th>
-          <th class="text-start">Cantidad referencia</th>
-          <th class="text-start">Cantidad objetivo</th>
-          <th class="text-start">Unidad</th>
-          <th class="text-start">Diferencia</th>
+          <th class="text-start">{{labels.category}}</th>
+          <th class="text-start">{{labels.referenceAmount}}</th>
+          <th class="text-start">{{labels.targetAmount}}</th>
+          <th class="text-start">{{labels.unit}}</th>
+          <th class="text-start">{{labels.difference}}</th>
         </tr>
         </thead>
         <tbody>
@@ -376,15 +376,15 @@
     </div>
 
     <div class="page flex flex-col gap-2 items-center">
-      <p>IMPACTO DE FERTILIZANTES</p>
+      <p>{{labels.impactFertilizers}}</p>
       <table class="table-auto">
         <thead class="bg-neutral-secondary-soft border-b border-default">
         <tr>
-          <th class="text-start">Categoría</th>
-          <th class="text-start">Cantidad referencia</th>
-          <th class="text-start">Cantidad objetivo</th>
-          <th class="text-start">Unidad</th>
-          <th class="text-start">Diferencia</th>
+          <th class="text-start">{{labels.category}}</th>
+          <th class="text-start">{{labels.referenceAmount}}</th>
+          <th class="text-start">{{labels.targetAmount}}</th>
+          <th class="text-start">{{labels.unit}}</th>
+          <th class="text-start">{{labels.difference}}</th>
         </tr>
         </thead>
         <tbody>
@@ -402,15 +402,15 @@
     </div>
 
     <div class="page flex flex-col gap-2 items-center">
-      <p>IMPACTO DEL SISTEMA DE RIEGO</p>
+      <p>{{labels.impactIrrigationSystem}}</p>
       <table class="table-auto">
         <thead class="bg-neutral-secondary-soft border-b border-default">
         <tr>
-          <th class="text-start">Categoría</th>
-          <th class="text-start">Cantidad referencia</th>
-          <th class="text-start">Cantidad objetivo</th>
-          <th class="text-start">Unidad</th>
-          <th class="text-start">Diferencia</th>
+          <th class="text-start">{{labels.category}}</th>
+          <th class="text-start">{{labels.referenceAmount}}</th>
+          <th class="text-start">{{labels.targetAmount}}</th>
+          <th class="text-start">{{labels.unit}}</th>
+          <th class="text-start">{{labels.difference}}</th>
         </tr>
         </thead>
         <tbody>
@@ -428,15 +428,15 @@
     </div>
 
     <div class="page flex flex-col gap-2 items-center">
-      <p>IMPACTO DEL MANEJO DEL CULTIVO</p>
+      <p>{{labels.impactCropManagement}}</p>
       <table class="table-auto">
         <thead class="bg-neutral-secondary-soft border-b border-default">
         <tr>
-          <th class="text-start">Categoría</th>
-          <th class="text-start">Cantidad referencia</th>
-          <th class="text-start">Cantidad objetivo</th>
-          <th class="text-start">Unidad</th>
-          <th class="text-start">Diferencia</th>
+          <th class="text-start">{{labels.category}}</th>
+          <th class="text-start">{{labels.referenceAmount}}</th>
+          <th class="text-start">{{labels.targetAmount}}</th>
+          <th class="text-start">{{labels.unit}}</th>
+          <th class="text-start">{{labels.difference}}</th>
         </tr>
         </thead>
         <tbody>

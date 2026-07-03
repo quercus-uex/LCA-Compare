@@ -60,7 +60,12 @@ O conjunto de **Referência** é obrigatório. Se apenas for especificada a refe
 
 ### Exportar Resultados
 
-Depois de realizada a comparação, pode exportar os resultados em formato **JSON** através dos botões de exportação:
+Tanto no detalhe de um resultado de ACV como no comparador, pode exportar os dados em formato **JSON** ou **CSV** através dos botões de exportação:
+
+- **JSON**: preserva a estrutura completa da resposta, incluindo metadados e discriminação por categorias.
+- **CSV**: gera um ficheiro de valores separados por ponto e vírgula (`;`) com a discriminação por categoria de impacto, pronto para abrir em folhas de cálculo.
+
+No comparador, as opções disponíveis são:
 
 - **Exportar comparação**: exporta os resultados de ambos os conjuntos com os metadados dos filtros aplicados.
 - **Exportar referência**: exporta apenas os valores do conjunto de referência.

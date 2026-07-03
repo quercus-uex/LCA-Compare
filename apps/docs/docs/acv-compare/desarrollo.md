@@ -108,6 +108,7 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 | `pnpm server:lint` | Ejecuta ESLint con las reglas del backend |
 | `pnpm server:prisma:generate` | Genera el cliente de Prisma usando `apps/server/prisma.config.ts` |
 | `pnpm server:prisma:migrate:deploy` | Aplica migraciones pendientes en entornos desplegados |
+| `pnpm admin:create` | Crea un usuario con rol `admin` (requiere `--email`, `--password`, `--nombre`, `--apellidos`) |
 
 ### Frontend (`apps/web`)
 

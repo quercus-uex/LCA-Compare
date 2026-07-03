@@ -58,6 +58,29 @@ Finally, run the SQL file with initial data (countries, provinces, towns, and so
 docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
 ```
 
+## Create an Administrator User
+
+The backend includes a script to create a user with the `admin` role. The script requires `DATABASE_URL` to be available and the backend to be built.
+
+### Local Development
+
+Build the backend and run the script from `apps/server`:
+
+```bash
+pnpm server:build
+pnpm admin:create -- --email="admin@example.com" --password="secret" --nombre="Admin" --apellidos="Platform"
+```
+
+### Production with Docker
+
+Once the backend container is running, execute it inside `lca-compare-backend`:
+
+```bash
+docker compose exec lca-compare-backend pnpm admin:create -- --email="admin@example.com" --password="secret" --nombre="Admin" --apellidos="Platform"
+```
+
+The script validates the email, requires a password of at least 8 characters, and checks that no user with the same email already exists.
+
 ## Docker Compose Structure
 
 The `docker-compose.yaml` file defines three services. The database starts without a profile, and the applications are included only with the `prod` profile:

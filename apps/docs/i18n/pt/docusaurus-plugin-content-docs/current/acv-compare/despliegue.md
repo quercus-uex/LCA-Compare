@@ -58,6 +58,29 @@ Por fim, execute o ficheiro SQL com os dados iniciais (países, províncias, loc
 docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
 ```
 
+## Criar um Utilizador Administrador
+
+O backend inclui um script para criar um utilizador com o papel `admin`. O script necessita que `DATABASE_URL` esteja disponível e que o backend esteja compilado.
+
+### Em Desenvolvimento Local
+
+Compile o backend e execute o script a partir de `apps/server`:
+
+```bash
+pnpm server:build
+pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+```
+
+### Em Produção com Docker
+
+Depois de levantado o contentor do backend, execute-o dentro de `lca-compare-backend`:
+
+```bash
+docker compose exec lca-compare-backend pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+```
+
+O script valida o email, exige uma palavra-passe de pelo menos 8 caracteres e verifica se já existe um utilizador com o mesmo correio.
+
 ## Estrutura do Docker Compose
 
 O ficheiro `docker-compose.yaml` define três serviços. A base de dados é iniciada sem perfil e as aplicações são incluídas apenas com o perfil `prod`:

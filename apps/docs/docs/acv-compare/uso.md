@@ -66,7 +66,12 @@ ambos para cada categoría.
 
 ### Exportar resultados
 
-Una vez realizada la comparativa, puedes exportar los resultados en formato **JSON** mediante los botones de exportación:
+Tanto en el detalle de un resultado de ACV como en el comparador, puedes exportar los datos en formato **JSON** o **CSV** mediante los botones de exportación:
+
+- **JSON**: conserva la estructura completa de la respuesta, incluyendo metadatos y desglose por categorías.
+- **CSV**: genera un archivo de valores separados por punto y coma (`;`) con el desglose por categoría de impacto, listo para abrir en hojas de cálculo.
+
+En el comparador, las opciones disponibles son:
 
 - **Exportar comparativa**: exporta los resultados de ambos conjuntos con los metadatos de los filtros aplicados.
 - **Exportar referencia**: exporta únicamente los valores del conjunto de referencia.

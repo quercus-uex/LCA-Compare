@@ -60,7 +60,12 @@ The **Reference** set is required. If only the reference is specified, the avera
 
 ### Export Results
 
-After running the comparison, you can export the results in **JSON** format with the export buttons:
+Both in the LCA result detail and in the comparator, you can export the data in **JSON** or **CSV** format using the export buttons:
+
+- **JSON**: keeps the full response structure, including metadata and category breakdown.
+- **CSV**: generates a semicolon-separated (`;`) file with the impact category breakdown, ready to open in spreadsheets.
+
+In the comparator, the available options are:
 
 - **Export comparison**: exports the results of both sets with the metadata of the applied filters.
 - **Export reference**: exports only the values from the reference set.

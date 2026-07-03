@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '../generated/prisma/client';
 import { type EfCategoryId } from '../compare/compare.types';
+import { buildCampaignYearFilter } from '../common/helpers/campaign-year.helper';
 import {
-  buildCampaignYearFilter,
   buildEfCategoryLookup,
   collectImpactoIds,
   getCategoryAmounts,
@@ -67,7 +68,7 @@ export class StatsService {
   ): Promise<GlobalStatsDto> {
     const yearFilter = buildCampaignYearFilter(anio);
 
-    const mainWhere: Record<string, unknown> = { ...yearFilter };
+    const mainWhere: Prisma.CultivoWhereInput = { ...yearFilter };
     if (tipoCultivo) {
       mainWhere.tipo = tipoCultivo;
     }
@@ -197,7 +198,9 @@ export class StatsService {
     currentImpact: number,
     tipoCultivo?: string,
   ): Promise<number | null> {
-    const prevFilter = buildCampaignYearFilter(anio - 1);
+    const prevFilter: Prisma.CultivoWhereInput = {
+      ...buildCampaignYearFilter(anio - 1),
+    };
     if (tipoCultivo) {
       prevFilter.tipo = tipoCultivo;
     }

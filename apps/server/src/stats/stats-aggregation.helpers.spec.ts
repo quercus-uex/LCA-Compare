@@ -1,5 +1,4 @@
 import {
-  buildCampaignYearFilter,
   collectImpactoIds,
   normalizeCategoryName,
   buildEfCategoryLookup,
@@ -12,24 +11,6 @@ import {
 } from './stats-aggregation.helpers';
 
 describe('stats-aggregation.helpers', () => {
-  describe('buildCampaignYearFilter', () => {
-    it('returns date range filter for a given year', () => {
-      const result = buildCampaignYearFilter(2024);
-
-      expect(result).toEqual({
-        fechaInicioCampania: {
-          gte: new Date('2024-01-01T00:00:00.000Z'),
-          lt: new Date('2025-01-01T00:00:00.000Z'),
-        },
-      });
-    });
-
-    it('returns empty filter when no year is provided', () => {
-      expect(buildCampaignYearFilter()).toEqual({});
-      expect(buildCampaignYearFilter(undefined)).toEqual({});
-    });
-  });
-
   describe('collectImpactoIds', () => {
     it('returns unique non-null impact ids', () => {
       const cultivos = [

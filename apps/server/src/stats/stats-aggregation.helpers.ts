@@ -21,21 +21,6 @@ const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
   return acc;
 }, {} as CategoryAmountRecord);
 
-export function buildCampaignYearFilter(
-  anio?: number,
-): Record<string, unknown> {
-  if (!anio) {
-    return {};
-  }
-
-  return {
-    fechaInicioCampania: {
-      gte: new Date(`${anio}-01-01T00:00:00.000Z`),
-      lt: new Date(`${anio + 1}-01-01T00:00:00.000Z`),
-    },
-  };
-}
-
 export function collectImpactoIds(cultivos: CultivoWithImpactId[]): string[] {
   return [
     ...new Set(

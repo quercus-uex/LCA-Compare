@@ -12,6 +12,7 @@ import path from 'node:path';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
 import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
+import { CompareQueryBuilder } from './compare-query.builder';
 import { extractLocationData } from './compare.helpers';
 import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
 import {
@@ -84,22 +85,11 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   async findResults(
     filters: CompareQueryItemDto,
   ): Promise<ResultadoImpactoWithRelations[]> {
-    const {
-      idsPoblacion,
-      idsProvincia,
-      idsParcela,
-      long,
-      lat,
-      range,
-      tipoCultivo,
-      anioCampaniaInicio,
-      anioCampaniaFin,
-      idPais,
-    } = filters;
-
     let locationIds: string[] = [];
 
-    const hasLocationFilter = lat != null && long != null && range != null;
+    const { lat, long, range } = filters;
+    const hasLocationFilter =
+      lat != null && long != null && range != null;
 
     if (hasLocationFilter) {
       const locationResults =
@@ -111,60 +101,13 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       locationIds = locationResults.map((i) => i.id);
     }
 
-    const orConditions = [
-      idsPoblacion?.length
-        ? { cultivo: { parcela: { poblacion: { id: { in: idsPoblacion } } } } }
-        : null,
-      idsProvincia?.length
-        ? {
-            cultivo: {
-              parcela: {
-                poblacion: { provincia: { id: { in: idsProvincia } } },
-              },
-            },
-          }
-        : null,
-      idsParcela?.length
-        ? { cultivo: { parcela: { id: { in: idsParcela } } } }
-        : null,
-      hasLocationFilter ? { id: { in: locationIds } } : null,
-      idPais
-        ? { cultivo: { parcela: { poblacion: { provincia: { idPais } } } } }
-        : null,
-    ].filter((i) => i !== null);
+    const where = CompareQueryBuilder.build(filters, locationIds);
 
-    const tipoCondition = tipoCultivo
-      ? { cultivo: { tipo: tipoCultivo } }
-      : null;
-
-    const andConditions = [
-      orConditions.length > 0 ? { OR: orConditions } : null,
-      tipoCondition,
-      anioCampaniaInicio || anioCampaniaFin
-        ? {
-            cultivo: {
-              fechaInicioCampania: {
-                ...(anioCampaniaInicio && {
-                  gte: new Date(`${anioCampaniaInicio}-01-01T00:00:00.000Z`),
-                }),
-                ...(anioCampaniaFin && {
-                  lt: new Date(`${anioCampaniaFin + 1}-01-01T00:00:00.000Z`),
-                }),
-              },
-            },
-          }
-        : null,
-    ].filter((i) => i !== null);
-
-    let results: ResultadoImpactoWithRelations[] = [];
-
-    if (andConditions.length > 0) {
-      results = await this.resultadoImpactoService.findMany({
-        where: { AND: andConditions },
-      });
+    if (!where) {
+      return [];
     }
 
-    return results;
+    return this.resultadoImpactoService.findMany({ where });
   }
 
   getMeanOfResults(

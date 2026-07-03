@@ -22,6 +22,7 @@ export const en = {
     fields: {
       actions: 'Actions',
       category: 'Category',
+      impactArea: 'Impact area',
       crop: 'Crop',
       cropCycle: 'Crop cycle',
       cropType: 'Type',

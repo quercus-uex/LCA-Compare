@@ -17,3 +17,21 @@ export function exportJSON(input: object) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export function exportCSV(filename: string, rows: (string | number)[][]) {
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const SEP = ';';
+  const body = rows.map(r => r.map(escape).join(SEP)).join('\r\n');
+  const csv = '\ufeff' + body;
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}

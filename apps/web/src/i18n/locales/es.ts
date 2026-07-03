@@ -22,6 +22,7 @@ export const es = {
     fields: {
       actions: 'Acciones',
       category: 'Categoría',
+      impactArea: 'Área de impacto',
       crop: 'Cultivo',
       cropCycle: 'Ciclo de cultivo',
       cropType: 'Tipo',

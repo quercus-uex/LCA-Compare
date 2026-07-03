@@ -9,7 +9,7 @@ import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
 import type { LatLngExpression } from 'leaflet';
 import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
-import { exportJSON } from '../../common/utils.ts';
+import { exportCSV, exportJSON } from '../../common/utils.ts';
 import { useTranslation } from 'react-i18next';
 
 export const ResultadoRoute = () => {
@@ -68,12 +68,51 @@ export const ResultadoRoute = () => {
               </div>
             </div>
           </div>
-          <button
-            className="btn btn-secondary"
-            onClick={() => exportJSON(resultado.datos)}
-          >
-            {t('common.actions.export')}
-          </button>
+          <div className="flex gap-2 w-full">
+            <button
+              className="btn btn-secondary flex-1"
+              onClick={() => exportJSON(resultado.datos)}
+            >
+              {t('common.actions.export')} JSON
+            </button>
+            <button
+              className="btn btn-secondary flex-1"
+              onClick={() => {
+                const find = (
+                  arr: typeof resultado.datos.impacto_pesticidas,
+                  category: string,
+                ) => arr.find(i => i.category === category)!.amount.toFixed(5);
+                const rows = resultado.datos.impacto_total.map(
+                  ({ category, amount, unit }) => [
+                    category,
+                    find(resultado.datos.impacto_pesticidas, category),
+                    find(resultado.datos.impacto_fertilizantes, category),
+                    find(resultado.datos.impacto_sistema_riego, category),
+                    find(resultado.datos.impacto_manejo_cultivo, category),
+                    amount.toFixed(5),
+                    unit,
+                  ],
+                );
+                exportCSV(
+                  `impacto-${parcela.nombre}.csv`,
+                  [
+                    [
+                      t('common.fields.category'),
+                      t('common.fields.pesticides'),
+                      t('common.fields.fertilizers'),
+                      t('common.fields.irrigationSystem'),
+                      t('common.fields.cropManagement'),
+                      t('common.fields.total'),
+                      t('common.fields.unit'),
+                    ],
+                    ...rows,
+                  ],
+                );
+              }}
+            >
+              {t('common.actions.export')} CSV
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 grow">
@@ -86,12 +125,36 @@ export const ResultadoRoute = () => {
             </div>
           </div>
 
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
-          >
-            {t('resultados.addToComparison')}
-          </button>
+          <div className="dropdown dropdown-end w-full">
+            <button
+              type="button"
+              className="btn btn-primary w-full"
+              tabIndex={0}
+            >
+              {t('resultados.addToComparison')}
+            </button>
+            <ul
+              tabIndex={-1}
+              className="dropdown-content menu bg-base-100 rounded-box z-50 w-full p-2 shadow-sm"
+            >
+              <li>
+                <button
+                  type="button"
+                  onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
+                >
+                  {t('compare.filters.target')}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => navigate('/compare', { state: { parcelaReferencia: parcela } })}
+                >
+                  {t('compare.filters.reference')}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
         <MapContainer
           className="h-full rounded-box aspect-square"

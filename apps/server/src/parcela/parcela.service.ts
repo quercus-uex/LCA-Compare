@@ -25,7 +25,7 @@ export class ParcelaService {
     take?: number;
     cursor?: Prisma.ParcelaWhereUniqueInput;
     where?: Prisma.ParcelaWhereInput;
-    orderBy?: Prisma.UsuarioOrderByWithRelationInput;
+    orderBy?: Prisma.ParcelaOrderByWithRelationInput;
     include?: Prisma.ParcelaInclude;
   }): Promise<Parcela[]> {
     const { skip, take, cursor, where, orderBy, include } = params;

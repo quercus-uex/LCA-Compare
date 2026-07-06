@@ -257,8 +257,11 @@ describe('AdminController', () => {
 
     it('hashes password input before creating a user', async () => {
       const body = {
+        nombre: 'Test',
+        apellidos: 'User',
         email: 'user@example.com',
         passwordHash: 'plain-password',
+        rol: 'admin' as const,
       };
       const created = { id: 'user-1' };
       hashMock.mockResolvedValue('hashed-password');
@@ -271,8 +274,11 @@ describe('AdminController', () => {
         type: argon2.argon2id,
       });
       expect(usuarioService.create).toHaveBeenCalledWith({
+        nombre: 'Test',
+        apellidos: 'User',
         email: 'user@example.com',
         passwordHash: 'hashed-password',
+        rol: 'admin',
       });
     });
 

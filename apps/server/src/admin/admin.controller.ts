@@ -13,7 +13,6 @@ import {
 import { AdminGuard } from './admin.guard';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -32,6 +31,29 @@ import { MetodoImpactoDto } from './dto/metodo-impacto.dto';
 import { PaisDto } from '../pais/dto/pais.dto';
 import { ProvinciaDto } from '../provincia/provincia.dto';
 import { PoblacionDto } from '../poblacion/dto/poblacion.dto';
+import { CreateCultivoDto } from '../cultivo/dto/create-cultivo.dto';
+import { CreateMetodoImpactoDto } from '../metodoimpacto/dto/create-metodo-impacto.dto';
+import { CreatePaisDto } from '../pais/dto/create-pais.dto';
+import { CreateParcelaDto } from '../parcela/dto/create-parcela.dto';
+import { CreatePoblacionDto } from '../poblacion/dto/create-poblacion.dto';
+import { CreateProvinciaDto } from '../provincia/dto/create-provincia.dto';
+import { CreateUsuarioAdminDto } from './dto/create-usuario-admin.dto';
+import { UpdateCultivoDto } from '../cultivo/dto/update-cultivo.dto';
+import { UpdateMetodoImpactoDto } from '../metodoimpacto/dto/update-metodo-impacto.dto';
+import { UpdatePaisDto } from '../pais/dto/update-pais.dto';
+import { UpdateParcelaDto } from '../parcela/dto/update-parcela.dto';
+import { UpdatePoblacionDto } from '../poblacion/dto/update-poblacion.dto';
+import { UpdateProvinciaDto } from '../provincia/dto/update-provincia.dto';
+import { UpdateUsuarioAdminDto } from './dto/update-usuario-admin.dto';
+import {
+  cultivoAdminSearch,
+  metodoImpactoAdminSearch,
+  paisAdminSearch,
+  parcelaAdminSearch,
+  poblacionAdminSearch,
+  provinciaAdminSearch,
+  usuarioAdminSearch,
+} from './helpers/admin-search.helpers';
 import { UsuarioService } from '../usuario/usuario.service';
 import { ParcelaService } from '../parcela/parcela.service';
 import { CultivoService } from '../cultivo/cultivo.service';
@@ -39,18 +61,18 @@ import { MetodoImpactoService } from '../metodoimpacto/metodoimpacto.service';
 import { PaisService } from '../pais/pais.service';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
+import {
+  Cultivo,
+  MetodoImpacto,
+  Pais,
+  Parcela,
+  Poblacion,
+  Provincia,
+} from '../generated/prisma/client';
+import type { UsuarioPublico } from '../usuario/usuario.service';
 import * as argon2 from 'argon2';
 
 type Paginated<T> = { data: T[]; total: number };
-
-function textSearch(fields: string[], search: string) {
-  if (!search) return undefined;
-  return {
-    OR: fields.map((field) => ({
-      [field]: { contains: search, mode: 'insensitive' as const },
-    })),
-  };
-}
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -84,15 +106,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['nombre', 'apellidos', 'email', 'rol'], search!);
+  ): Promise<Paginated<UsuarioPublico>> {
+    const where = usuarioAdminSearch(search);
     const [data, total] = await Promise.all([
       this.usuarioService.findAll({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.usuarioService.count(where as any),
+      this.usuarioService.count(where),
     ]);
     return { data, total };
   }
@@ -109,35 +131,35 @@ export class AdminController {
 
   @Post('/usuarios')
   @ApiOperation({ summary: 'Crear un usuario' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(UsuarioDto) })
-  async createUsuario(@Body() body: Record<string, unknown>) {
-    if (body.passwordHash) {
-      body.passwordHash = await argon2.hash(body.passwordHash as string, {
+  async createUsuario(@Body() body: CreateUsuarioAdminDto) {
+    const data = {
+      ...body,
+      passwordHash: await argon2.hash(body.passwordHash, {
         type: argon2.argon2id,
-      });
-    }
-    return { data: await this.usuarioService.create(body as any) };
+      }),
+    };
+    return { data: await this.usuarioService.create(data) };
   }
 
   @Put('/usuarios/:id')
   @ApiOperation({ summary: 'Actualizar un usuario' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(UsuarioDto) })
   async updateUsuario(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateUsuarioAdminDto,
   ) {
+    const data = { ...body };
     if (typeof body.passwordHash === 'string') {
-      body.passwordHash = await argon2.hash(body.passwordHash, {
+      data.passwordHash = await argon2.hash(body.passwordHash, {
         type: argon2.argon2id,
       });
     }
     return {
       data: await this.usuarioService.update({
         where: { id },
-        data: body,
+        data,
       }),
     };
   }
@@ -162,19 +184,16 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(
-      ['nombre', 'sigpac', 'refCat', 'ptIdParcela', 'idPropietario'],
-      search!,
-    );
+  ): Promise<Paginated<Parcela>> {
+    const where = parcelaAdminSearch(search);
     const [data, total] = await Promise.all([
       this.parcelaService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
         include: { cultivos: { orderBy: { fechaInicioCampania: 'desc' } } },
       }),
-      this.parcelaService.count(where as any),
+      this.parcelaService.count(where),
     ]);
     return { data, total };
   }
@@ -191,21 +210,16 @@ export class AdminController {
 
   @Post('/parcelas')
   @ApiOperation({ summary: 'Crear una parcela' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(ParcelaDto) })
-  async createParcela(@Body() body: Record<string, unknown>) {
-    return { data: await this.parcelaService.create(body as any) };
+  async createParcela(@Body() body: CreateParcelaDto) {
+    return { data: await this.parcelaService.create(body) };
   }
 
   @Put('/parcelas/:id')
   @ApiOperation({ summary: 'Actualizar una parcela' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(ParcelaDto) })
-  async updateParcela(
-    @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
-  ) {
+  async updateParcela(@Param('id') id: string, @Body() body: UpdateParcelaDto) {
     return {
       data: await this.parcelaService.update({
         where: { id },
@@ -234,15 +248,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['tipo', 'idParcela'], search!);
+  ): Promise<Paginated<Cultivo>> {
+    const where = cultivoAdminSearch(search);
     const [data, total] = await Promise.all([
       this.cultivoService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.cultivoService.count(where as any),
+      this.cultivoService.count(where),
     ]);
     return { data, total };
   }
@@ -259,21 +273,16 @@ export class AdminController {
 
   @Post('/cultivos')
   @ApiOperation({ summary: 'Crear un cultivo' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(CultivoDto) })
-  async createCultivo(@Body() body: Record<string, unknown>) {
-    return { data: await this.cultivoService.create(body as any) };
+  async createCultivo(@Body() body: CreateCultivoDto) {
+    return { data: await this.cultivoService.create(body) };
   }
 
   @Put('/cultivos/:id')
   @ApiOperation({ summary: 'Actualizar un cultivo' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(CultivoDto) })
-  async updateCultivo(
-    @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
-  ) {
+  async updateCultivo(@Param('id') id: string, @Body() body: UpdateCultivoDto) {
     return {
       data: await this.cultivoService.update({
         where: { id },
@@ -304,15 +313,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['id', 'nombre'], search!);
+  ): Promise<Paginated<MetodoImpacto>> {
+    const where = metodoImpactoAdminSearch(search);
     const [data, total] = await Promise.all([
       this.metodoImpactoService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.metodoImpactoService.count(where as any),
+      this.metodoImpactoService.count(where),
     ]);
     return { data, total };
   }
@@ -329,20 +338,18 @@ export class AdminController {
 
   @Post('/metodos-impacto')
   @ApiOperation({ summary: 'Crear un método de impacto' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(MetodoImpactoDto) })
-  async createMetodoImpacto(@Body() body: Record<string, unknown>) {
-    return { data: await this.metodoImpactoService.create(body as any) };
+  async createMetodoImpacto(@Body() body: CreateMetodoImpactoDto) {
+    return { data: await this.metodoImpactoService.create(body) };
   }
 
   @Put('/metodos-impacto/:id')
   @ApiOperation({ summary: 'Actualizar un método de impacto' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(MetodoImpactoDto) })
   async updateMetodoImpacto(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateMetodoImpactoDto,
   ) {
     return {
       data: await this.metodoImpactoService.update({
@@ -372,15 +379,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['nombre', 'codigo'], search!);
+  ): Promise<Paginated<Pais>> {
+    const where = paisAdminSearch(search);
     const [data, total] = await Promise.all([
       this.paisService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.paisService.count(where as any),
+      this.paisService.count(where),
     ]);
     return { data, total };
   }
@@ -397,21 +404,16 @@ export class AdminController {
 
   @Post('/paises')
   @ApiOperation({ summary: 'Crear un país' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(PaisDto) })
-  async createPais(@Body() body: Record<string, unknown>) {
-    return { data: await this.paisService.create(body as any) };
+  async createPais(@Body() body: CreatePaisDto) {
+    return { data: await this.paisService.create(body) };
   }
 
   @Put('/paises/:id')
   @ApiOperation({ summary: 'Actualizar un país' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(PaisDto) })
-  async updatePais(
-    @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
-  ) {
+  async updatePais(@Param('id') id: string, @Body() body: UpdatePaisDto) {
     return {
       data: await this.paisService.update({ where: { id }, data: body }),
     };
@@ -437,15 +439,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['nombre', 'idPais'], search!);
+  ): Promise<Paginated<Provincia>> {
+    const where = provinciaAdminSearch(search);
     const [data, total] = await Promise.all([
       this.provinciaService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.provinciaService.count(where as any),
+      this.provinciaService.count(where),
     ]);
     return { data, total };
   }
@@ -462,20 +464,18 @@ export class AdminController {
 
   @Post('/provincias')
   @ApiOperation({ summary: 'Crear una provincia' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(ProvinciaDto) })
-  async createProvincia(@Body() body: Record<string, unknown>) {
-    return { data: await this.provinciaService.create(body as any) };
+  async createProvincia(@Body() body: CreateProvinciaDto) {
+    return { data: await this.provinciaService.create(body) };
   }
 
   @Put('/provincias/:id')
   @ApiOperation({ summary: 'Actualizar una provincia' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(ProvinciaDto) })
   async updateProvincia(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateProvinciaDto,
   ) {
     return {
       data: await this.provinciaService.update({
@@ -505,15 +505,15 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-  ): Promise<Paginated<unknown>> {
-    const where = textSearch(['nombre', 'idProvincia'], search!);
+  ): Promise<Paginated<Poblacion>> {
+    const where = poblacionAdminSearch(search);
     const [data, total] = await Promise.all([
       this.poblacionService.findMany({
-        where: where as any,
+        where,
         skip: skip ? Number(skip) : undefined,
         take: take ? Number(take) : undefined,
       }),
-      this.poblacionService.count(where as any),
+      this.poblacionService.count(where),
     ]);
     return { data, total };
   }
@@ -530,20 +530,18 @@ export class AdminController {
 
   @Post('/poblaciones')
   @ApiOperation({ summary: 'Crear una población' })
-  @ApiBody({ type: Object })
   @ApiOkResponse({ type: ApiResponseDto(PoblacionDto) })
-  async createPoblacion(@Body() body: Record<string, unknown>) {
-    return { data: await this.poblacionService.create(body as any) };
+  async createPoblacion(@Body() body: CreatePoblacionDto) {
+    return { data: await this.poblacionService.create(body) };
   }
 
   @Put('/poblaciones/:id')
   @ApiOperation({ summary: 'Actualizar una población' })
-  @ApiBody({ type: Object })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(PoblacionDto) })
   async updatePoblacion(
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdatePoblacionDto,
   ) {
     return {
       data: await this.poblacionService.update({

@@ -46,13 +46,21 @@ export class CultivoService {
     });
   }
 
-  async create(data: Prisma.CultivoCreateInput): Promise<Cultivo> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.CultivoCreateInput,
+      Prisma.CultivoUncheckedCreateInput
+    >,
+  ): Promise<Cultivo> {
     return this.prisma.cultivo.create({ data });
   }
 
   async update(params: {
     where: Prisma.CultivoWhereUniqueInput;
-    data: Prisma.CultivoUpdateInput;
+    data: Prisma.XOR<
+      Prisma.CultivoUpdateInput,
+      Prisma.CultivoUncheckedUpdateInput
+    >;
   }): Promise<Cultivo> {
     const { where, data } = params;
     return this.prisma.cultivo.update({ data, where });

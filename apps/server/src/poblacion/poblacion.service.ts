@@ -38,13 +38,21 @@ export class PoblacionService {
     });
   }
 
-  async create(data: Prisma.PoblacionCreateInput): Promise<Poblacion> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.PoblacionCreateInput,
+      Prisma.PoblacionUncheckedCreateInput
+    >,
+  ): Promise<Poblacion> {
     return this.prisma.poblacion.create({ data });
   }
 
   async update(params: {
     where: Prisma.PoblacionWhereUniqueInput;
-    data: Prisma.PoblacionUpdateInput;
+    data: Prisma.XOR<
+      Prisma.PoblacionUpdateInput,
+      Prisma.PoblacionUncheckedUpdateInput
+    >;
   }): Promise<Poblacion> {
     const { where, data } = params;
     return this.prisma.poblacion.update({ data, where });

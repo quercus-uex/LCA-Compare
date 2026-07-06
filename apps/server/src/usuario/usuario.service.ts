@@ -43,7 +43,12 @@ export class UsuarioService {
     });
   }
 
-  async create(data: Prisma.UsuarioCreateInput): Promise<UsuarioPublico> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.UsuarioCreateInput,
+      Prisma.UsuarioUncheckedCreateInput
+    >,
+  ): Promise<UsuarioPublico> {
     return this.prisma.usuario.create({
       data,
       omit: { passwordHash: true },
@@ -52,7 +57,10 @@ export class UsuarioService {
 
   async update(params: {
     where: Prisma.UsuarioWhereUniqueInput;
-    data: Prisma.UsuarioUpdateInput;
+    data: Prisma.XOR<
+      Prisma.UsuarioUpdateInput,
+      Prisma.UsuarioUncheckedUpdateInput
+    >;
   }): Promise<UsuarioPublico> {
     const { where, data } = params;
     return this.prisma.usuario.update({

@@ -34,13 +34,15 @@ export class PaisService {
     });
   }
 
-  async create(data: Prisma.PaisCreateInput): Promise<Pais> {
+  async create(
+    data: Prisma.XOR<Prisma.PaisCreateInput, Prisma.PaisUncheckedCreateInput>,
+  ): Promise<Pais> {
     return this.prisma.pais.create({ data });
   }
 
   async update(params: {
     where: Prisma.PaisWhereUniqueInput;
-    data: Prisma.PaisUpdateInput;
+    data: Prisma.XOR<Prisma.PaisUpdateInput, Prisma.PaisUncheckedUpdateInput>;
   }): Promise<Pais> {
     const { where, data } = params;
     return this.prisma.pais.update({ data, where });

@@ -39,7 +39,12 @@ export class ParcelaService {
     });
   }
 
-  create(data: Prisma.ParcelaCreateInput): Promise<Parcela> {
+  create(
+    data: Prisma.XOR<
+      Prisma.ParcelaCreateInput,
+      Prisma.ParcelaUncheckedCreateInput
+    >,
+  ): Promise<Parcela> {
     return this.prisma.parcela.create({ data });
   }
 
@@ -96,7 +101,10 @@ export class ParcelaService {
 
   async update(params: {
     where: Prisma.ParcelaWhereUniqueInput;
-    data: Prisma.ParcelaUpdateInput;
+    data: Prisma.XOR<
+      Prisma.ParcelaUpdateInput,
+      Prisma.ParcelaUncheckedUpdateInput
+    >;
   }): Promise<Parcela> {
     const { where, data } = params;
     return this.prisma.parcela.update({

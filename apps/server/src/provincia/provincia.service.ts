@@ -33,13 +33,21 @@ export class ProvinciaService {
     });
   }
 
-  async create(data: Prisma.ProvinciaCreateInput): Promise<Provincia> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.ProvinciaCreateInput,
+      Prisma.ProvinciaUncheckedCreateInput
+    >,
+  ): Promise<Provincia> {
     return this.prisma.provincia.create({ data });
   }
 
   async update(params: {
     where: Prisma.ProvinciaWhereUniqueInput;
-    data: Prisma.ProvinciaUpdateInput;
+    data: Prisma.XOR<
+      Prisma.ProvinciaUpdateInput,
+      Prisma.ProvinciaUncheckedUpdateInput
+    >;
   }): Promise<Provincia> {
     const { where, data } = params;
     return this.prisma.provincia.update({ data, where });

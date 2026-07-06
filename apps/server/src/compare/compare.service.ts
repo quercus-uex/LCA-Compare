@@ -88,8 +88,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     let locationIds: string[] = [];
 
     const { lat, long, range } = filters;
-    const hasLocationFilter =
-      lat != null && long != null && range != null;
+    const hasLocationFilter = lat != null && long != null && range != null;
 
     if (hasLocationFilter) {
       const locationResults =

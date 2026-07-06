@@ -33,13 +33,21 @@ export class MetodoImpactoService {
     });
   }
 
-  async create(data: Prisma.MetodoImpactoCreateInput): Promise<MetodoImpacto> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.MetodoImpactoCreateInput,
+      Prisma.MetodoImpactoUncheckedCreateInput
+    >,
+  ): Promise<MetodoImpacto> {
     return this.prisma.metodoImpacto.create({ data });
   }
 
   async update(params: {
     where: Prisma.MetodoImpactoWhereUniqueInput;
-    data: Prisma.MetodoImpactoUpdateInput;
+    data: Prisma.XOR<
+      Prisma.MetodoImpactoUpdateInput,
+      Prisma.MetodoImpactoUncheckedUpdateInput
+    >;
   }): Promise<MetodoImpacto> {
     const { where, data } = params;
     return this.prisma.metodoImpacto.update({ data, where });

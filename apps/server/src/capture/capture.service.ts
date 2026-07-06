@@ -1,11 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CaptureInputDto } from './dto/capture-input.dto';
 import { ParcelaService } from '../parcela/parcela.service';
-import { Parcela, Poblacion, Cultivo } from '../generated/prisma/client';
-import { Feature, Polygon } from 'geojson';
-import { CatastroService } from '../catastro/catastro.service';
+import { Parcela, Cultivo } from '../generated/prisma/client';
 import { PoblacionService } from '../poblacion/poblacion.service';
-import { SigpacService } from '../sigpac/sigpac.service';
 import { UsuarioPublico, UsuarioService } from '../usuario/usuario.service';
 import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
@@ -13,93 +10,53 @@ import generator from 'generate-password';
 import { DateTime } from 'luxon';
 import { CultivoService } from '../cultivo/cultivo.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
-import { PredialService } from '../predial/predial.service';
+import type {
+  CaptureStrategy,
+  ParcelaMetadata,
+} from './strategies/capture-strategy.interface';
+import { SigpacCaptureStrategy } from './strategies/sigpac-capture.strategy';
+import { CatastroCaptureStrategy } from './strategies/catastro-capture.strategy';
+import { PredialCaptureStrategy } from './strategies/predial-capture.strategy';
 
 @Injectable()
 export class CaptureService {
+  private readonly strategies: CaptureStrategy[];
+
   constructor(
     private readonly parcelaService: ParcelaService,
-    private readonly catastroService: CatastroService,
     private readonly poblacionService: PoblacionService,
-    private readonly sigpacService: SigpacService,
     private readonly usuarioService: UsuarioService,
     private readonly mailerService: MailerService,
     private readonly cultivoService: CultivoService,
     private readonly resultadoImpactoService: ResultadoImpactoService,
-    private readonly predialService: PredialService,
-  ) {}
+    sigpacStrategy: SigpacCaptureStrategy,
+    catastroStrategy: CatastroCaptureStrategy,
+    predialStrategy: PredialCaptureStrategy,
+  ) {
+    this.strategies = [sigpacStrategy, catastroStrategy, predialStrategy];
+  }
 
-  private async createParcela(
-    idPropietario: string,
-    mParcela: CaptureInputDto['metadatos']['parcela'],
-  ): Promise<Parcela> {
-    let polygon: Feature<Polygon>;
-    let poblacion: Poblacion | undefined;
-
-    if (mParcela.es_sigpac.provincia) {
-      polygon = await this.sigpacService.getPolygon(mParcela.es_sigpac);
-      const res = await this.poblacionService.findMany({
-        where: {
-          provincia: {
-            idCatastro: mParcela.es_sigpac.provincia,
-            pais: {
-              codigo: 'ES',
-            },
-          },
-          idCatastro: mParcela.es_sigpac.municipio,
-        },
-      });
-      poblacion = res[0];
-    } else if (mParcela.es_referencia_catastral) {
-      polygon = await this.catastroService.getPolygon(
-        mParcela.es_referencia_catastral,
-      );
-      const res = await this.poblacionService.findMany({
-        where: {
-          provincia: {
-            idCatastro: Number.parseInt(
-              mParcela.es_referencia_catastral.slice(0, 2),
-            ),
-            pais: {
-              codigo: 'ES',
-            },
-          },
-          idCatastro: Number.parseInt(
-            mParcela.es_referencia_catastral.slice(2, 5),
-          ),
-        },
-      });
-      poblacion = res[0];
-    } else if (mParcela.pt_id_parcela_predial) {
-      polygon = await this.predialService.getPolygon(
-        mParcela.pt_id_parcela_predial,
-      );
-
-      const res = await this.poblacionService.findMany({
-        where: {
-          provincia: {
-            idCatastro: polygon.properties!.provincia as number,
-            pais: {
-              codigo: 'PT',
-            },
-          },
-          idCatastro: polygon.properties!.poblacion as number,
-        },
-      });
-      poblacion = res[0];
-    } else {
-      throw new Error(
+  private selectStrategy(mParcela: ParcelaMetadata): CaptureStrategy {
+    const strategy = this.strategies.find((s) => s.matches(mParcela));
+    if (!strategy) {
+      throw new BadRequestException(
         'Especifica un identificador de parcela (SIGPAC, Referencia catastral, Predial)',
       );
     }
+    return strategy;
+  }
 
-    const { provincia, parcela, municipio, poligono } = mParcela.es_sigpac;
+  private async createParcela(
+    idPropietario: string,
+    mParcela: ParcelaMetadata,
+  ): Promise<Parcela> {
+    const strategy = this.selectStrategy(mParcela);
+    const { polygon, poblacion, sigpacKey } =
+      await strategy.resolveParcela(mParcela);
 
     return this.parcelaService.createWithGeom(
       {
-        sigpac: mParcela.es_sigpac.provincia
-          ? `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`
-          : null,
+        sigpac: sigpacKey,
         refCat: mParcela.es_referencia_catastral,
         ptIdParcela: mParcela.pt_id_parcela_predial,
         nombre: mParcela.nombre,

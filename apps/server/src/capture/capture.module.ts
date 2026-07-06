@@ -11,6 +11,9 @@ import { PoblacionModule } from '../poblacion/poblacion.module';
 import { CaptureService } from './capture.service';
 import { MailerModule } from '../mailer/mailer.module';
 import { PredialService } from '../predial/predial.service';
+import { SigpacCaptureStrategy } from './strategies/sigpac-capture.strategy';
+import { CatastroCaptureStrategy } from './strategies/catastro-capture.strategy';
+import { PredialCaptureStrategy } from './strategies/predial-capture.strategy';
 
 @Module({
   imports: [
@@ -23,6 +26,14 @@ import { PredialService } from '../predial/predial.service';
     MailerModule,
   ],
   controllers: [CaptureController],
-  providers: [CaptureService, SigpacService, CatastroService, PredialService],
+  providers: [
+    CaptureService,
+    SigpacService,
+    CatastroService,
+    PredialService,
+    SigpacCaptureStrategy,
+    CatastroCaptureStrategy,
+    PredialCaptureStrategy,
+  ],
 })
 export class CaptureModule {}

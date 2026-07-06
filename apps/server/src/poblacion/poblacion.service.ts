@@ -62,6 +62,23 @@ export class PoblacionService {
     return this.prisma.poblacion.delete({ where });
   }
 
+  async findByCatastroIds(
+    provinciaCatastro: number,
+    poblacionCatastro: number,
+    countryCode: string,
+  ): Promise<Poblacion | undefined> {
+    const res = await this.findMany({
+      where: {
+        provincia: {
+          idCatastro: provinciaCatastro,
+          pais: { codigo: countryCode },
+        },
+        idCatastro: poblacionCatastro,
+      },
+    });
+    return res[0];
+  }
+
   async count(where?: Prisma.PoblacionWhereInput): Promise<number> {
     return this.prisma.poblacion.count({ where });
   }

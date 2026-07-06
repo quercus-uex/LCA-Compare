@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { InternalServerErrorException, Injectable } from '@nestjs/common';
 import { OpenRouter } from '@openrouter/sdk';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -34,7 +34,10 @@ export class AiService {
     model?: string,
   ): Promise<string> {
     const template = this.templates.get(templateName);
-    if (!template) throw new Error(`Template ${templateName} not found`);
+    if (!template)
+      throw new InternalServerErrorException(
+        `Template ${templateName} not found`,
+      );
     const content = template(context);
 
     const response = await this.openRouter.chat.send({

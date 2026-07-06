@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { getBearerToken } from './auth.helpers';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -13,7 +14,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.getBearerToken(request);
+    const token = getBearerToken(request);
 
     if (!token) {
       throw new UnauthorizedException('Token de acceso no proporcionado');
@@ -29,12 +30,5 @@ export class AuthGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private getBearerToken(request: Request): string | null {
-    const authorization = request.headers.authorization;
-    if (!authorization) return null;
-    const [type, token] = authorization.split(' ');
-    return type === 'Bearer' ? token : null;
   }
 }

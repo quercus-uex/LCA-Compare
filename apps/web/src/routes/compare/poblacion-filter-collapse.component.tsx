@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
+import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
 
@@ -20,11 +21,14 @@ export const PoblacionFilterCollapse = (
     !!filters.poblaciones?.length,
   );
   const [query, setQuery] = useState<string>('');
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
-    location.getPoblacionesByName(query)
-      .then(p => setPoblaciones(p))
-  }, [location, query]);
+    let cancelled = false;
+    location.getPoblacionesByName(debouncedQuery)
+      .then(p => { if (!cancelled) setPoblaciones(p); });
+    return () => { cancelled = true; };
+  }, [location, debouncedQuery]);
 
   const togglePoblacion = (p: Poblacion) => {
     const selected = filters.poblaciones!;

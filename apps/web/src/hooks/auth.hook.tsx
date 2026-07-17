@@ -16,7 +16,7 @@ type Usuario = {
 type AuthContextType = {
   usuario: Usuario | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<Usuario | null>;
   logout: () => void;
 }
 
@@ -65,17 +65,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!response.ok) {
       toast.error(t('auth.login.invalidCredentials'));
-      return false;
+      return null;
     }
 
     const json = await response.json();
-    localStorage.setItem('token', json.data.accessToken);
-    return true;
+    const token = json.data.accessToken as string;
+    localStorage.setItem('token', token);
+
+    try {
+      const userRes = await fetch(`${API_BASE_URL}/usuario`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!userRes.ok) throw new Error();
+      const userJson = await userRes.json();
+      const u = userJson.data as Usuario;
+      setUsuario(u);
+      return u;
+    } catch {
+      return null;
+    }
   }, [t]);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
-    window.location.reload();
+    setUsuario(null);
   }, []);
 
   const value = useMemo(() => ({ usuario, loading, login, logout }), [usuario, loading, login, logout]);

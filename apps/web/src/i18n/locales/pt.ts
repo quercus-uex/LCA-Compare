@@ -52,6 +52,11 @@ export const pt = {
     },
     yes: 'Sim',
     no: 'Não',
+    notFound: {
+      title: 'Página não encontrada',
+      description: 'A página que procuras não existe ou foi movida.',
+      goHome: 'Ir para o início',
+    },
   },
   nav: {
     appName: 'Comparador LCA',

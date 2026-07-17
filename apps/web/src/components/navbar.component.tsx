@@ -80,7 +80,10 @@ export const NavBar = () => {
                 )}
                 <div className="divider m-0"></div>
                 <li>
-                  <a className="btn btn-error" onClick={auth.logout}>
+                  <a className="btn btn-error" onClick={() => {
+                    auth.logout();
+                    navigate('/auth/login', { replace: true });
+                  }}>
                     {t('nav.logout')}
                   </a>
                 </li>

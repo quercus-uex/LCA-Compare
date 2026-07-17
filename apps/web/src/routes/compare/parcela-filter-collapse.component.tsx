@@ -56,7 +56,7 @@ export const ParcelaFilterCollapse = (
         <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
           {parcelas
             .filter((p) =>
-              p.nombre.toUpperCase().match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
+              p.nombre.toUpperCase().includes(query.toUpperCase()),
             )
             .map((p) => (
               <li

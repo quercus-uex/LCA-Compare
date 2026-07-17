@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -10,19 +10,19 @@ type ErrorBoundaryProps = {
 type ErrorBoundaryState = { error: Error | null };
 
 class ErrorBoundaryInner extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { error: null };
+  override state: ErrorBoundaryState = { error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
+  override componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info);
   }
 
   reset = () => this.setState({ error: null });
 
-  render() {
+  override render() {
     if (this.state.error) {
       if (this.props.fallback) return this.props.fallback(this.state.error, this.reset);
       return <DefaultFallback error={this.state.error} reset={this.reset} />;
@@ -57,7 +57,7 @@ const DefaultFallback = ({ error, reset }: { error: Error; reset: () => void }) 
         <button
           type="button"
           className="btn btn-ghost"
-          onClick={() => navigate('/', { replace: true })}
+          onClick={() => void navigate('/', { replace: true })}
         >
           {t('common.errors.goHome')}
         </button>

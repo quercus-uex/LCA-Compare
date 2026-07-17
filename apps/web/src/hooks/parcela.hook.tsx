@@ -1,8 +1,8 @@
+import type { Cultivo as CultivoBase, Parcela as ParcelaBase } from 'common/parcela';
+import type { Polygon } from 'geojson';
 import { createContext, useContext, useMemo } from 'react';
 import * as React from 'react';
 import { apiFetch } from '../common/api.ts';
-import type { Polygon } from 'geojson';
-import type { Cultivo as CultivoBase, Parcela as ParcelaBase } from 'common/parcela';
 
 export type Parcela = ParcelaBase & {
   geom?: Polygon;

@@ -8,6 +8,15 @@ export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<
   ) as Partial<T>;
 }
 
+export function safeString(value: unknown): string | null {
+  if (value === null || value === undefined || typeof value === 'object') return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return value.toString();
+  }
+  return null;
+}
+
 export function formatDate(value: Date | string): string | null {
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return null;

@@ -1,7 +1,7 @@
+import type { Usuario } from 'common/usuario';
 import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
 import { ApiError, apiFetch, apiRequest } from '../common/api.ts';
 import { clearToken, getToken, setToken } from '../common/auth.ts';
-import type { Usuario } from 'common/usuario';
 
 type AuthContextType = {
   usuario: Usuario | null;
@@ -14,14 +14,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!getToken());
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   useEffect(() => {
     const token = getToken();
 
     if (!token) {
-      setLoading(false);
       return;
     }
 
@@ -30,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsuario(u);
         setLoading(false);
       })
-      .catch(() => { setLoading(false) });
+      .catch(() => { void setLoading(false) });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -43,8 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    const token = json.data.accessToken as string;
+    const json = (await response.json()) as { data: { accessToken: string } };
+    const token = json.data.accessToken;
     setToken(token);
 
     try {

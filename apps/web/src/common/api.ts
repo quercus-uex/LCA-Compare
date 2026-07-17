@@ -1,5 +1,5 @@
-import { API_BASE_URL } from './constants.ts';
 import { getAuthHeaders } from './auth.ts';
+import { API_BASE_URL } from './constants.ts';
 
 export class ApiError extends Error {
   status: number;
@@ -32,8 +32,8 @@ export async function apiFetch<T>(path: string, init?: ApiInit): Promise<T> {
   if (!res.ok) {
     throw new ApiError(res.status, await res.text().catch(() => res.statusText));
   }
-  const json = await res.json();
-  return json.data as T;
+  const json = (await res.json()) as { data: T };
+  return json.data;
 }
 
 export async function apiFetchRaw<T>(path: string, init?: ApiInit): Promise<T> {

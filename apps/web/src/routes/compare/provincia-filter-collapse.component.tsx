@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const ProvinciaFilterCollapse = (
   {
@@ -64,10 +64,15 @@ export const ProvinciaFilterCollapse = (
               <li
                 key={p.id}
                 className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
-                onClick={() => toggleProvincia(p)}
               >
-                {p.nombre}
-                <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between"
+                  onClick={() => toggleProvincia(p)}
+                >
+                  {p.nombre}
+                  <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+                </button>
               </li>
             ))}
         </ul>

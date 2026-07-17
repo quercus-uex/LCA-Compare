@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { FilterCollapse } from './filter-collapse.component';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
 export const PoblacionFilterCollapse = (
   {
@@ -63,12 +63,17 @@ export const PoblacionFilterCollapse = (
             <li
               key={p.id}
               className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
-              onClick={() => togglePoblacion(p)}
             >
-              {p.nombre}
-              <div className="badge badge-md badge-primary w-12">
-                {p.provincia?.pais?.codigo ?? p.provincia?.nombre ?? ''}
-              </div>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between"
+                onClick={() => togglePoblacion(p)}
+              >
+                {p.nombre}
+                <div className="badge badge-md badge-primary w-12">
+                  {p.provincia?.pais?.codigo ?? p.provincia?.nombre ?? ''}
+                </div>
+              </button>
             </li>
           ))}
         </ul>

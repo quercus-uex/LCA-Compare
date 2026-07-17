@@ -1,7 +1,7 @@
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { useState } from 'react';
-import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const AniocampaniaFilterCollapse = (
   {

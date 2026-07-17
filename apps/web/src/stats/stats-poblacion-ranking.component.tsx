@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { type Provincia, useLocation } from '../hooks/location.hook.tsx';
-import type { PoblacionRankingItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
-import { useTranslation } from 'react-i18next';
+import type { PoblacionRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
-import { toast } from 'sonner';
 
 type Props = {
   ranking: PoblacionRankingItemDto[];
@@ -47,7 +47,7 @@ export const StatsPoblacionRanking = ({
     : undefined;
 
   const handleActivate = (item: PoblacionRankingItemDto) => {
-    navigate('/compare', {
+    void navigate('/compare', {
       state: {
         poblacionReferencia: {
           id: item.idPoblacion,

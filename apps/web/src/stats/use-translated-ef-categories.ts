@@ -1,5 +1,5 @@
-import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { useTranslation } from 'react-i18next';
+import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 
 export const useTranslatedEfCategories = () => {
   const { t } = useTranslation();

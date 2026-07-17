@@ -1,9 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { formatImpactValue } from './stats-formatters.ts';
 import {
   deriveRankingLists,
   type RankedEntry,
 } from './stats-ranking.helpers.ts';
-import { useTranslation } from 'react-i18next';
 
 type RankingPanelsProps<T> = {
   ranking: T[];

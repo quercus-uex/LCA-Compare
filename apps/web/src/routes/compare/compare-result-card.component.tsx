@@ -1,8 +1,8 @@
-import type { CompareResult } from '../../hooks/compare.hook.tsx';
-import type { ImpactKey } from '../../common/constants.ts';
-import { ResultComparisonTable } from '../../components/result-comparison-table.component.tsx';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ImpactKey } from '../../common/constants.ts';
+import { ResultComparisonTable } from '../../components/result-comparison-table.component.tsx';
+import type { CompareResult } from '../../hooks/compare.hook.tsx';
 
 export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
   const { t } = useTranslation();

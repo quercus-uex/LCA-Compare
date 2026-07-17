@@ -1,10 +1,10 @@
+import type { CompareFilterDto, CompareResultDto } from 'common/compare';
 import type { Pais, Poblacion, Provincia } from 'common/location';
 import type { Parcela } from 'common/parcela';
-import type { CompareFilterDto, CompareResultDto } from 'common/compare';
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import { ApiError, apiRequest } from '../common/api.ts';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { ApiError, apiRequest } from '../common/api.ts';
 import { isSupportedLanguage, type SupportedLanguage } from '../i18n/index.ts';
 
 export type { CompareFilterDto, CompareResultDto } from 'common/compare';
@@ -63,8 +63,8 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    return json.data as CompareResultDto;
+    const json = (await response.json()) as { data: CompareResultDto };
+    return json.data;
   }, []);
 
   const compare = useCallback(async (reference: CompareFilterType, target: CompareFilterType) => {
@@ -80,8 +80,8 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    return json.data as CompareResultDto;
+    const json = (await response.json()) as { data: CompareResultDto };
+    return json.data;
   }, []);
 
   const getReportLanguage = useCallback((): SupportedLanguage => {

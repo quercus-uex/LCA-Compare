@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 import type { ResultadoImpactoItemDto } from 'common/api';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 
 const byCategory = (items: ResultadoImpactoItemDto[]) =>
   new Map(items.map((i) => [i.category, i]));

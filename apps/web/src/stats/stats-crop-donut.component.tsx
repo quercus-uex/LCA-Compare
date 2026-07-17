@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   PieChart,
   Pie,
@@ -6,14 +7,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 import { colorAt } from './stats-colors.ts';
 import {
   formatInteger,
   formatNumber,
   formatPercent,
 } from './stats-formatters.ts';
-import { useTranslation } from 'react-i18next';
+import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
   data: DistribucionCultivoItemDto[];

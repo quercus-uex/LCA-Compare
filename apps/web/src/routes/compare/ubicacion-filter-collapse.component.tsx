@@ -1,11 +1,11 @@
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { useState } from 'react';
-import { Circle, Marker, useMapEvents } from 'react-leaflet';
 import { LatLng, type LeafletMouseEvent } from 'leaflet';
-import { FilterCollapse } from './filter-collapse.component';
-import { MapPreview } from '../../components/map-preview.component.tsx';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Circle, Marker, useMapEvents } from 'react-leaflet';
 import { DEFAULT_MAP_CENTER, UBICACION_RANGE_MAX, UBICACION_RANGE_MIN } from '../../common/constants.ts';
+import { MapPreview } from '../../components/map-preview.component.tsx';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const UbicacionFilterCollapse = (
   {

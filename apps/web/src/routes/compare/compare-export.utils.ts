@@ -1,5 +1,5 @@
-import type { CompareResult } from '../../hooks/compare.hook.tsx';
 import { IMPACT_KEYS, type ImpactKey } from '../../common/constants.ts';
+import type { CompareResult } from '../../hooks/compare.hook.tsx';
 
 export type CompareExportMode = 'full' | 'reference' | 'target';
 

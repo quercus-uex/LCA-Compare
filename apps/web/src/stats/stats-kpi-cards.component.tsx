@@ -1,8 +1,8 @@
-import type { KpiDto } from './stats.hook.tsx';
-import { EF_CATEGORIES } from '../common/constants.ts';
-import { FiBox, FiGrid, FiActivity } from 'react-icons/fi';
-import { formatInteger, formatNumber } from './stats-formatters.ts';
 import { useTranslation } from 'react-i18next';
+import { FiBox, FiGrid, FiActivity } from 'react-icons/fi';
+import { EF_CATEGORIES } from '../common/constants.ts';
+import { formatInteger, formatNumber } from './stats-formatters.ts';
+import type { KpiDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {

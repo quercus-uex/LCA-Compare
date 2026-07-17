@@ -1,5 +1,5 @@
-import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 import { exportCSV } from '../../common/utils.ts';
+import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 
 type Translator = (key: string) => string;
 

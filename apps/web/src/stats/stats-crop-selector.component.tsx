@@ -1,5 +1,5 @@
-import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 import { useTranslation } from 'react-i18next';
+import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
   selected?: string;

@@ -1,6 +1,6 @@
-import type { CompareResult } from '../hooks/compare.hook.tsx';
-import type { ImpactKey } from '../common/constants.ts';
 import { useTranslation } from 'react-i18next';
+import type { ImpactKey } from '../common/constants.ts';
+import type { CompareResult } from '../hooks/compare.hook.tsx';
 
 export const ResultComparisonTable = ({
   result,
@@ -18,11 +18,11 @@ export const ResultComparisonTable = ({
           <tr>
             <th>{t('common.fields.category')}</th>
             <th>{t('common.fields.referenceAmount')}</th>
-            {result.impacto_total[0].tarAmount != null && (
+            {result.impacto_total[0]?.tarAmount != null && (
               <th>{t('common.fields.targetAmount')}</th>
             )}
             <th>{t('common.fields.unit')}</th>
-            {result.impacto_total[0].tarAmount != null && <th>{t('common.fields.difference')}</th>}
+            {result.impacto_total[0]?.tarAmount != null && <th>{t('common.fields.difference')}</th>}
           </tr>
         </thead>
         <tbody>

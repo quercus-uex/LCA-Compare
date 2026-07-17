@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '../../common/utils.ts';
+import { formatDate, safeString } from '../../common/utils.ts';
 import { CONFIG, TABLE_FK_LINKS, type Entity } from './admin.config.ts';
 
 type Item = Record<string, unknown>;
@@ -16,7 +16,7 @@ type Props = {
   formatCell: (field: string, raw: unknown) => string | null;
   navigateToTab: (entity: Entity, query: string) => void;
   openEditModal: (item: Item, entity?: Entity) => void;
-  handleDelete: (id: string, entity?: Entity) => void;
+  handleDelete: (id: string, entity?: Entity) => void | Promise<void>;
   getEntityLabel: (entity: Entity) => string;
 };
 
@@ -152,28 +152,16 @@ export const AdminTable = ({
                             <tbody>
                               {cultivos.map((c: Item) => (
                                 <tr key={c.id as string}>
-                                  <td>{c.tipo != null && typeof c.tipo !== 'object' ? String(c.tipo) : '—'}</td>
+                                  <td>{safeString(c.tipo) ?? '—'}</td>
                                   <td>
                                     {c.fechaInicioCampania
                                       ? formatDate(c.fechaInicioCampania as string) ?? '—'
                                       : '—'}
                                   </td>
-                                  <td>
-                                    {c.superficieCultivada != null && typeof c.superficieCultivada !== 'object'
-                                      ? String(c.superficieCultivada)
-                                      : '—'}
-                                  </td>
-                                  <td>
-                                    {c.produccion != null && typeof c.produccion !== 'object'
-                                      ? String(c.produccion)
-                                      : '—'}
-                                  </td>
-                                  <td>
-                                    {c.consumoAgua != null && typeof c.consumoAgua !== 'object'
-                                      ? String(c.consumoAgua)
-                                      : '—'}
-                                  </td>
-                                  <td>{c.ciclo != null && typeof c.ciclo !== 'object' ? String(c.ciclo) : '—'}</td>
+                                  <td>{safeString(c.superficieCultivada) ?? '—'}</td>
+                                  <td>{safeString(c.produccion) ?? '—'}</td>
+                                  <td>{safeString(c.consumoAgua) ?? '—'}</td>
+                                  <td>{safeString(c.ciclo) ?? '—'}</td>
                                   <td>
                                     <div className="flex gap-1.5">
                                       <button

@@ -1,16 +1,16 @@
-import { useNavigate, useParams } from 'react-router';
+import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router';
+import { exportJSON } from '../../common/utils.ts';
+import { MapPreview } from '../../components/map-preview.component.tsx';
+import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import {
   type ResultadoImpacto,
   useResultadoImpacto,
 } from '../../hooks/resultado-impacto.hook.tsx';
-import { ResultadoTable } from './resultado-table.component.tsx';
-import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
-import { DateTime } from 'luxon';
-import { MapPreview } from '../../components/map-preview.component.tsx';
-import { exportJSON } from '../../common/utils.ts';
 import { buildResultadoCSV } from './resultado-export.utils.ts';
-import { useTranslation } from 'react-i18next';
+import { ResultadoTable } from './resultado-table.component.tsx';
 
 export const ResultadoRoute = () => {
   const { id } = useParams();
@@ -109,7 +109,7 @@ export const ResultadoRoute = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
+                  onClick={() => void navigate('/compare', { state: { parcelaObjetivo: parcela } })}
                 >
                   {t('compare.filters.target')}
                 </button>
@@ -117,7 +117,7 @@ export const ResultadoRoute = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => navigate('/compare', { state: { parcelaReferencia: parcela } })}
+                  onClick={() => void navigate('/compare', { state: { parcelaReferencia: parcela } })}
                 >
                   {t('compare.filters.reference')}
                 </button>
@@ -127,7 +127,7 @@ export const ResultadoRoute = () => {
         </div>
         <MapPreview
           className="h-full rounded-box aspect-square"
-          polygon={parcela.geom!}
+          polygon={parcela.geom}
         />
       </div>
       <ResultadoTable resultado={resultado} />

@@ -1,6 +1,6 @@
-import { NavBar } from './navbar.component.tsx';
 import { Outlet, useLocation } from 'react-router';
 import { ErrorBoundary } from './error-boundary.component.tsx';
+import { NavBar } from './navbar.component.tsx';
 
 export const NavbarContainer = () => {
   const location = useLocation();

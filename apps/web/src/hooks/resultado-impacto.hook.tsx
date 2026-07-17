@@ -1,7 +1,7 @@
-import { createContext, useContext, useMemo } from 'react';
-import type { Cultivo } from './parcela.hook.tsx';
-import { apiFetch } from '../common/api.ts';
 import type { ResultadoImpactoDto } from 'common/api';
+import { createContext, useContext, useMemo } from 'react';
+import { apiFetch } from '../common/api.ts';
+import type { Cultivo } from './parcela.hook.tsx';
 
 type MetodoImpacto = {
   id: string;

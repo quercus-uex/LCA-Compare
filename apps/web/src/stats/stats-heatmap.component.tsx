@@ -1,8 +1,8 @@
 import { Fragment, useState } from 'react';
-import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
-import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
-import { formatImpactValue } from './stats-formatters.ts';
 import { useTranslation } from 'react-i18next';
+import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { formatImpactValue } from './stats-formatters.ts';
+import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
@@ -70,11 +70,19 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
           {EF_CATEGORIES.map((cat) => (
             <div
               key={cat.id}
+              role="button"
+              tabIndex={0}
               className="cursor-pointer min-w-0 px-1 py-2 bg-base-200 text-center flex items-end justify-center"
               style={{ color: cat.color }}
               onClick={() =>
                 setSortCategory(sortCategory === cat.id ? null : cat.id)
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSortCategory(sortCategory === cat.id ? null : cat.id);
+                }
+              }}
               title={`${getCategoryLabel(cat.id)} (${cat.unit})`}
             >
               <div
@@ -94,14 +102,22 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
           {sorted.map((prov) => (
             <Fragment key={prov.idProvincia}>
               <div
+                role={onProvinceClick ? 'button' : undefined}
+                tabIndex={onProvinceClick ? 0 : undefined}
                 className="text-xs font-medium px-1 py-2 truncate cursor-pointer hover:underline bg-base-100 border-t border-base-200 flex items-center"
                 onClick={() => onProvinceClick?.(prov.idProvincia)}
+                onKeyDown={onProvinceClick ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onProvinceClick(prov.idProvincia);
+                  }
+                } : undefined}
               >
                 {prov.nombreProvincia}
               </div>
               {EF_CATEGORIES.map((cat) => {
                 const value = prov.impactosPorCategoria[cat.id] ?? 0;
-                const bg = cellColor(value, colMax[cat.id], cat.color);
+                const bg = cellColor(value, colMax[cat.id] ?? 0, cat.color);
                 return (
                   <div
                     key={`${prov.idProvincia}-${cat.id}`}

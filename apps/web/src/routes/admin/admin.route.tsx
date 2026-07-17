@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../hooks/auth.hook.tsx';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
-import { formatDate } from '../../common/utils.ts';
-import { SmartPagination } from './smart-pagination.component.tsx';
-import { useTranslation } from 'react-i18next';
+import { formatDate, safeString } from '../../common/utils.ts';
+import { useAuth } from '../../hooks/auth.hook.tsx';
+import { AdminModal } from './admin-modal.component.tsx';
+import { AdminTable } from './admin-table.component.tsx';
 import {
   CONFIG,
   ENTITIES,
@@ -12,9 +13,8 @@ import {
   type Entity,
   type FieldConfig,
 } from './admin.config.ts';
+import { SmartPagination } from './smart-pagination.component.tsx';
 import { useAdminCrud } from './use-admin-crud.hook.ts';
-import { AdminTable } from './admin-table.component.tsx';
-import { AdminModal } from './admin-modal.component.tsx';
 
 export const AdminRoute = () => {
   const auth = useAuth();
@@ -84,9 +84,9 @@ export const AdminRoute = () => {
       return raw === true ? t('common.yes') : t('common.no');
     }
     if (formField?.type === 'datetime-local' && raw) {
-      return formatDate(raw as string) ?? String(raw);
+      return formatDate(raw as string) ?? safeString(raw);
     }
-    return String(raw);
+    return safeString(raw);
   };
 
   if (auth.loading) {
@@ -109,8 +109,9 @@ export const AdminRoute = () => {
 
           <div role="tablist" className="tabs tabs-lifted tabs-md gap-1">
             {ENTITIES.map((entity) => (
-              <a
+              <button
                 key={entity}
+                type="button"
                 role="tab"
                 className={`tab transition-colors duration-200 ${
                   activeTab === entity
@@ -120,7 +121,7 @@ export const AdminRoute = () => {
                 onClick={() => setActiveTab(entity)}
               >
                 {getEntityLabel(entity)}
-              </a>
+              </button>
             ))}
           </div>
 

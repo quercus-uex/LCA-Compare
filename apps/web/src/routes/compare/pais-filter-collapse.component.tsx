@@ -1,9 +1,9 @@
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
 import { useEffect, useState } from 'react';
-import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const PaisFilterCollapse = (
   {

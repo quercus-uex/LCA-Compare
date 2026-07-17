@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 export const NotFoundRoute = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export const NotFoundRoute = () => {
       <button
         type="button"
         className="btn btn-primary"
-        onClick={() => navigate('/', { replace: true })}
+        onClick={() => void navigate('/', { replace: true })}
       >
         {t('common.notFound.goHome')}
       </button>

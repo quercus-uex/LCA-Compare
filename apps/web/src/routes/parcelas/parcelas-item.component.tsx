@@ -1,7 +1,7 @@
-import { FaCircleArrowRight } from 'react-icons/fa6';
-import type { Parcela } from '../../hooks/parcela.hook.tsx';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { FaCircleArrowRight } from 'react-icons/fa6';
+import { useNavigate } from 'react-router';
+import type { Parcela } from '../../hooks/parcela.hook.tsx';
 
 export const ParcelasItem = ({ parcela }: { parcela: Parcela }) => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export const ParcelasItem = ({ parcela }: { parcela: Parcela }) => {
         <div className="card-actions justify-end">
           <button
             className="btn btn-primary btn-circle"
-            onClick={() => navigate(`/parcelas/${parcela.id}`)}
+            onClick={() => void navigate(`/parcelas/${parcela.id}`)}
           >
             <FaCircleArrowRight className="w-5 h-5" />
           </button>

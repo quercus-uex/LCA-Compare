@@ -1,18 +1,18 @@
-import { CompareFilterCard } from './compare-filter-card.component.tsx';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
+import { toast } from 'sonner';
+import { exportJSON, exportCSV, omitNullish } from '../../common/utils.ts';
 import {
   type CompareFilterType,
   type CompareResult,
   useCompare,
 } from '../../hooks/compare.hook.tsx';
-import { exportJSON, exportCSV, omitNullish } from '../../common/utils.ts';
-import { CompareResultCard } from './compare-result-card.component.tsx';
-import { buildCompareCSV, buildCompareExportPayload } from './compare-export.utils.ts';
-import type { Parcela } from '../../hooks/parcela.hook.tsx';
 import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import type { Parcela } from '../../hooks/parcela.hook.tsx';
+import { buildCompareCSV, buildCompareExportPayload } from './compare-export.utils.ts';
+import { CompareFilterCard } from './compare-filter-card.component.tsx';
+import { CompareResultCard } from './compare-result-card.component.tsx';
 
 type CompareRouteState = {
   parcelaObjetivo?: Parcela;
@@ -65,15 +65,17 @@ export const CompareRoute = () => {
       <div className="flex flex-col gap-2 max-w-full flex-3">
         {result && (
           <div className="flex gap-2 justify-end flex-wrap">
-            {result.impacto_total[0].tarAmount && (
+            {result.impacto_total[0]?.tarAmount && (
               <button
                 className="btn btn-secondary"
-                onClick={async () => {
-                  try {
-                    await compare.generateReport(filtersRef, filtersObj!);
-                  } catch {
-                    toast.error(t('compare.result.insufficientData'));
-                  }
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      await compare.generateReport(filtersRef, filtersObj!);
+                    } catch {
+                      toast.error(t('compare.result.insufficientData'));
+                    }
+                  })();
                 }}
               >
                 {t('compare.actions.generateReport')}
@@ -92,7 +94,7 @@ export const CompareRoute = () => {
                 tabIndex={-1}
                 className="dropdown-content menu bg-base-100 rounded-box z-50 mt-2 w-56 p-2 shadow-sm"
               >
-                {result.impacto_total[0].tarAmount && (
+                {result.impacto_total[0]?.tarAmount && (
                   <>
                     <li className="menu-title">{t('compare.actions.exportComparison')}</li>
                     <li>
@@ -126,7 +128,7 @@ export const CompareRoute = () => {
                     </li>
                   </>
                 )}
-                {result.impacto_total[0].tarAmount && (
+                {result.impacto_total[0]?.tarAmount && (
                   <>
                     <li className="menu-title">{t('compare.actions.exportTarget')}</li>
                     <li>

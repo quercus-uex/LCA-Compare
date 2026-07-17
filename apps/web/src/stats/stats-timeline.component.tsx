@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AreaChart,
   Area,
@@ -10,9 +11,8 @@ import {
   Line,
 } from 'recharts';
 import { EF_CATEGORIES } from '../common/constants.ts';
-import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
-import { useTranslation } from 'react-i18next';
+import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
@@ -45,7 +45,7 @@ export const StatsTimeline = ({ data }: Props) => {
           <XAxis
             dataKey="anio"
             tick={{ fontSize: 12 }}
-            tickFormatter={(v) => v.toString()}
+            tickFormatter={(v: number) => v.toString()}
           />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip
@@ -108,7 +108,7 @@ export const StatsTimeline = ({ data }: Props) => {
               <div className="text-[10px] text-base-content/50 text-right">
                 {data.length > 0
                   ? formatImpactValue(
-                      data[data.length - 1].categorias[cat.id] ?? 0,
+                      data[data.length - 1]?.categorias[cat.id] ?? 0,
                       '0',
                     )
                   : '—'}{' '}

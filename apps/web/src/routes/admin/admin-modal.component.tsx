@@ -1,6 +1,7 @@
+/* eslint-disable jsx-a11y/label-has-associated-control -- DaisyUI label>div.label>span.label-text pattern not detected by rule; labels wrap controls implicitly */
 import { useTranslation } from 'react-i18next';
-import { IdLookupField } from './id-lookup-field.component.tsx';
 import { CONFIG, FK_REFERENCES, ROLES, type Entity, type FieldConfig } from './admin.config.ts';
+import { IdLookupField } from './id-lookup-field.component.tsx';
 
 type FormState = Record<string, string | boolean>;
 
@@ -148,8 +149,15 @@ export const AdminModal = ({
           </button>
         </div>
       </div>
-      <div className="modal-backdrop" onClick={closeModal}>
-        <button className="opacity-0">close</button>
+      <div
+        className="modal-backdrop"
+        role="button"
+        tabIndex={0}
+        aria-label={t('common.actions.close')}
+        onClick={closeModal}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') closeModal(); }}
+      >
+        <button className="opacity-0" tabIndex={-1}>close</button>
       </div>
     </div>
   );

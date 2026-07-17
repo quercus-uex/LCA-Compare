@@ -1,9 +1,9 @@
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
-import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { formatNumber } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
-import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
+import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
@@ -31,7 +31,7 @@ export const StatsProvinciaRanking = ({
     : undefined;
 
   const handleActivate = (item: ProvinciaRankingItemDto) => {
-    navigate('/compare', {
+    void navigate('/compare', {
       state: {
         provinciaReferencia: {
           id: item.idProvincia,

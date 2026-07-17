@@ -1,9 +1,9 @@
-import { useAuth } from '../hooks/auth.hook.tsx';
-import { Link, useNavigate } from 'react-router';
-import {FiExternalLink} from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
-import { LanguageSelector } from './language-selector.component.tsx';
+import {FiExternalLink} from "react-icons/fi";
+import { Link, useNavigate } from 'react-router';
 import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
+import { useAuth } from '../hooks/auth.hook.tsx';
+import { LanguageSelector } from './language-selector.component.tsx';
 
 export const NavBar = () => {
   const auth = useAuth();
@@ -30,11 +30,11 @@ export const NavBar = () => {
             {t('nav.documentation')}
           </a>
 
-          <button className="btn" onClick={() => navigate('/compare')}>
+          <button className="btn" onClick={() => void navigate('/compare')}>
             {t('nav.compare')}
           </button>
 
-          <button className="btn" onClick={() => navigate('/estadisticas')}>
+          <button className="btn" onClick={() => void navigate('/estadisticas')}>
             {t('nav.statistics')}
           </button>
 
@@ -44,7 +44,7 @@ export const NavBar = () => {
             auth.usuario === null && (
               <button
                 className="btn btn-md btn-primary"
-                onClick={() => navigate('/auth/login')}
+                onClick={() => void navigate('/auth/login')}
               >
                 {t('nav.login')}
               </button>
@@ -89,7 +89,7 @@ export const NavBar = () => {
                     className="btn btn-error"
                     onClick={() => {
                       auth.logout();
-                      navigate('/auth/login', { replace: true });
+                      void navigate('/auth/login', { replace: true });
                     }}
                   >
                     {t('nav.logout')}

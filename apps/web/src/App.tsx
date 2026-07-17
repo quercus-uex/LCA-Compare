@@ -1,14 +1,14 @@
 import { Route, Routes } from 'react-router';
-import { NavbarContainer } from './components/navbar-container.component.tsx';
-import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
-import { LoginRoute } from './routes/auth/login.route.tsx';
 import { Toaster } from 'sonner';
+import { NavbarContainer } from './components/navbar-container.component.tsx';
+import { AdminRoute } from './routes/admin/admin.route.tsx';
+import { LoginRoute } from './routes/auth/login.route.tsx';
+import { CompareRoute } from './routes/compare/compare.route.tsx';
+import { NotFoundRoute } from './routes/not-found.route.tsx';
+import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
 import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
 import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
-import { CompareRoute } from './routes/compare/compare.route.tsx';
-import { AdminRoute } from './routes/admin/admin.route.tsx';
 import { StatsRoute } from './routes/stats/stats.route.tsx';
-import { NotFoundRoute } from './routes/not-found.route.tsx';
 
 function App() {
   return (

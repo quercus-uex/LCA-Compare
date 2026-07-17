@@ -1,33 +1,34 @@
 import { useState } from 'react';
-import { ProvinciaFilterCollapse } from './provincia-filter-collapse.component.tsx';
+import { useTranslation } from 'react-i18next';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
-import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.tsx';
-import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.component.tsx';
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
+import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
+import { ProvinciaFilterCollapse } from './provincia-filter-collapse.component.tsx';
 import { ReferenciaFilterCollapse } from './referencia-filter-collapse.component.tsx';
-import { useTranslation } from 'react-i18next';
+import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.component.tsx';
+import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.tsx';
 
 type ChipItem = { id: string; nombre: string };
 
 const SelectedChips = ({ items, onRemove }: { items: ChipItem[]; onRemove: (id: string) => void }) => (
   <>
     {items.map((p) => (
-      <div
+      <button
         key={p.id}
+        type="button"
         className="badge badge-primary cursor-pointer"
         onClick={() => onRemove(p.id)}
       >
         {p.nombre}
-      </div>
+      </button>
     ))}
   </>
 );
 
 export const CompareFilterCard = (
-  { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void }
+  { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void | Promise<void> }
 ) => {
   const [enabled, setEnabled] = useState<boolean>(required || !!initialFilters);
   const [filters, setFilters] = useState<CompareFilterType>(initialFilters ?? {
@@ -53,7 +54,7 @@ export const CompareFilterCard = (
               checked={enabled}
               onChange={(e) => {
                 setEnabled(e.target.checked);
-                if (!e.target.checked) onSubmit(undefined);
+                if (!e.target.checked) void onSubmit(undefined);
               }}
             />
           )}
@@ -82,12 +83,13 @@ export const CompareFilterCard = (
               })}
             />
             {filters.pais && (
-              <div
+              <button
+                type="button"
                 className="badge badge-primary cursor-pointer"
                 onClick={() => setFilters({ ...filters, pais: undefined })}
               >
                 {filters.pais.nombre}
-              </div>
+              </button>
             )}
           </div>
 
@@ -115,7 +117,7 @@ export const CompareFilterCard = (
 
           <button
             className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}
-            onClick={() => onSubmit(filters)}
+            onClick={() => void onSubmit(filters)}
           >
             {t('common.actions.applyFilters')}
           </button>

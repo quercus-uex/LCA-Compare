@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
-import { apiRequest } from '../../common/api.ts';
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from '../../common/api.ts';
+import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
+import { safeString } from '../../common/utils.ts';
 
 export interface FkConfig {
   entity: string;
@@ -25,7 +26,7 @@ interface LookupOption {
 export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdLookupFieldProps) => {
   const { t } = useTranslation();
   const [options, setOptions] = useState<LookupOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -38,21 +39,20 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
   }, [value, options]);
 
   const loadOptions = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(false);
     try {
       const params = new URLSearchParams();
       params.set('skip', '0');
       params.set('take', String(ADMIN_LOOKUP_TAKE));
       const res = await apiRequest(`/admin/${fkConfig.endpoint}?${params}`, { signal });
+      setError(false);
       if (!res.ok) throw new Error();
       const json = (await res.json()) as { data?: Record<string, unknown>[] };
       if (signal?.aborted) return;
       const data = json.data ?? [];
       const mapped: LookupOption[] = data.map((item) => ({
-        id: String(item.id ?? ''),
+        id: safeString(item.id) ?? '',
         label: fkConfig.displayFields
-          .map((f) => String(item[f] ?? ''))
+          .map((f) => safeString(item[f]) ?? '')
           .filter(Boolean)
           .join(' '),
       }));
@@ -136,6 +136,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
               className="input input-bordered input-sm w-full"
               placeholder="Filtrar..."
               value={search}
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: focus search on open
               autoFocus
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -156,7 +157,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
                 <button
                   type="button"
                   className="btn btn-ghost btn-xs mt-1"
-                  onClick={() => { void loadOptions(); }}
+                  onClick={() => { setLoading(true); void loadOptions(); }}
                 >
                   {t('common.actions.retry')}
                 </button>

@@ -1,16 +1,16 @@
-import type { GlobalStatsDto } from './stats.hook.tsx';
-import { StatsKPICards } from './stats-kpi-cards.component.tsx';
-import { StatsProvinciaRanking } from './stats-provincia-ranking.component.tsx';
-import { StatsTimeline } from './stats-timeline.component.tsx';
-import { StatsCropDonut } from './stats-crop-donut.component.tsx';
-import { StatsScatterChart } from './stats-scatter-chart.component.tsx';
-import { StatsPoblacionRanking } from './stats-poblacion-ranking.component.tsx';
-import { StatsSpiderChart } from './stats-spider-chart.component.tsx';
-import { StatsHeatmap } from './stats-heatmap.component.tsx';
-import { StatsCategorySelector } from './stats-category-selector.component.tsx';
-import { StatsCropSelector } from './stats-crop-selector.component.tsx';
-import type { EfCategoryId } from '../common/constants.ts';
 import { useTranslation } from 'react-i18next';
+import type { EfCategoryId } from '../common/constants.ts';
+import { StatsCategorySelector } from './stats-category-selector.component.tsx';
+import { StatsCropDonut } from './stats-crop-donut.component.tsx';
+import { StatsCropSelector } from './stats-crop-selector.component.tsx';
+import { StatsHeatmap } from './stats-heatmap.component.tsx';
+import { StatsKPICards } from './stats-kpi-cards.component.tsx';
+import { StatsPoblacionRanking } from './stats-poblacion-ranking.component.tsx';
+import { StatsProvinciaRanking } from './stats-provincia-ranking.component.tsx';
+import { StatsScatterChart } from './stats-scatter-chart.component.tsx';
+import { StatsSpiderChart } from './stats-spider-chart.component.tsx';
+import { StatsTimeline } from './stats-timeline.component.tsx';
+import type { GlobalStatsDto } from './stats.hook.tsx';
 
 type FiltersProps = {
   data: GlobalStatsDto;

@@ -9,4 +9,4 @@ export const CHART_COLORS = [
   '#84cc16',
 ];
 
-export const colorAt = (index: number): string => CHART_COLORS[index % CHART_COLORS.length];
+export const colorAt = (index: number): string => CHART_COLORS[index % CHART_COLORS.length] ?? CHART_COLORS[0]!;

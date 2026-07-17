@@ -1,8 +1,8 @@
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { useAuth } from '../../hooks/auth.hook.tsx';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useAuth } from '../../hooks/auth.hook.tsx';
 
 type LoginType = {
   email: string;
@@ -23,7 +23,7 @@ export const LoginRoute = () => {
     try {
       const usuario = await auth.login(data.email, data.password);
       if (usuario) {
-        navigate(usuario.rol === 'admin' ? '/admin' : '/parcelas', { replace: true });
+        void navigate(usuario.rol === 'admin' ? '/admin' : '/parcelas', { replace: true });
       }
     } catch {
       toast.error(t('auth.login.invalidCredentials'));
@@ -36,7 +36,7 @@ export const LoginRoute = () => {
 
         <div className="card-body flex flex-col gap-5 items-center">
           <h1 className="card-title">{t('auth.login.title')}</h1>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2 items-center w-full">
+          <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="flex flex-col gap-2 items-center w-full">
             <input className="input w-full" placeholder={t('auth.login.email')} type="email" {...register('email', { required: true })} />
             <input className="input w-full" placeholder={t('auth.login.password')} type="password" {...register('password', { required: true })} />
             <button type="submit" className="btn btn-primary w-full">{t('auth.login.submit')}</button>

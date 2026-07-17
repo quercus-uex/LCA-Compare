@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions -- autocomplete listbox uses mouse events for highlight/selection */
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 
 type Props<T> = {

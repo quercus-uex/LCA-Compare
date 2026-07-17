@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
-import { apiRequest } from '../../common/api.ts';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { apiRequest } from '../../common/api.ts';
+import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { safeString } from '../../common/utils.ts';
 import { CONFIG, type Entity } from './admin.config.ts';
 
 type FormState = Record<string, string | boolean>;
@@ -89,7 +90,7 @@ export const useAdminCrud = (
       }
       let val = '';
       if (raw !== null && raw !== undefined && typeof raw !== 'object') {
-        val = String(raw);
+        val = safeString(raw) ?? '';
       }
       if (f.type === 'datetime-local' && val) {
         val = new Date(val).toISOString().slice(0, 16);

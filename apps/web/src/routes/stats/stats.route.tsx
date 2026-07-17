@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useStats } from '../../stats/stats.hook.tsx';
-import { StatsLoadingSkeleton, StatsErrorState, StatsEmptyState } from '../../stats/stats-states.tsx';
-import { StatsFilters, StatsDashboardContent } from '../../stats/stats-dashboard.component.tsx';
-import type { EfCategoryId } from '../../common/constants.ts';
 import { useTranslation } from 'react-i18next';
+import type { EfCategoryId } from '../../common/constants.ts';
+import { StatsFilters, StatsDashboardContent } from '../../stats/stats-dashboard.component.tsx';
+import { StatsLoadingSkeleton, StatsErrorState, StatsEmptyState } from '../../stats/stats-states.tsx';
+import { useStats } from '../../stats/stats.hook.tsx';
 
 export const StatsRoute = () => {
   const [anio, setAnio] = useState<number | undefined>(undefined);
@@ -27,7 +27,7 @@ export const StatsRoute = () => {
   }
 
   if (error) {
-    return <StatsErrorState error={error} onRetry={refetch} />;
+    return <StatsErrorState error={error} onRetry={() => void refetch()} />;
   }
 
   if (!data) {

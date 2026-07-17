@@ -20,7 +20,7 @@ export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
             toast.success(t('clipboard.copied'));
           })
           .catch((e) => {
-            alert(t('clipboard.error', { error: String(e) }));
+            toast.error(t('clipboard.error', { error: String(e) }));
           });
       }}
     >

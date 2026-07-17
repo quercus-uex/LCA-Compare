@@ -1,13 +1,12 @@
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
+import type { ImpactKey } from '../../common/constants.ts';
 import { ResultComparisonTable } from '../../components/result-comparison-table.component.tsx';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
   const { t } = useTranslation();
-  const [impact, setImpact] = useState<
-    'impacto_total' | 'impacto_pesticidas' | 'impacto_sistema_riego' | 'impacto_fertilizantes' | 'impacto_manejo_cultivo'
-  >('impacto_total');
+  const [impact, setImpact] = useState<ImpactKey>('impacto_total');
 
   if (!result) return (
     <div className="card bg-base-100">

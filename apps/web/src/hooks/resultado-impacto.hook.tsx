@@ -1,27 +1,16 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { Cultivo } from './parcela.hook.tsx';
 import { API_BASE_URL } from '../common/constants.ts';
+import type { ResultadoImpactoDto } from 'common/api';
 
 type MetodoImpacto = {
   id: string;
   nombre: string;
 }
 
-export type ResultadoImpactoItem = {
-  unit: string;
-  amount: number;
-  category: string;
-}
-
 export type ResultadoImpacto = {
   id: string;
-  datos: {
-    impacto_total: ResultadoImpactoItem[],
-    impacto_pesticidas: ResultadoImpactoItem[],
-    impacto_fertilizantes: ResultadoImpactoItem[],
-    impacto_sistema_riego: ResultadoImpactoItem[],
-    impacto_manejo_cultivo: ResultadoImpactoItem[],
-  };
+  datos: ResultadoImpactoDto;
   impacto: MetodoImpacto;
   cultivo: Cultivo;
 }

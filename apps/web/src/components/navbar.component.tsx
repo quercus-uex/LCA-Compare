@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import {FiExternalLink} from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelector } from './language-selector.component.tsx';
+import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
 
 export const NavBar = () => {
   const auth = useAuth();
@@ -19,11 +20,14 @@ export const NavBar = () => {
         <div className="flex gap-2 flex-wrap justify-end">
           <LanguageSelector />
 
-          <a href="https://acv-compare-docs.netlify.app" target="_blank" rel="noopener noreferrer">
-            <button className="btn btn-ghost">
-              <FiExternalLink />
-              {t('nav.documentation')}
-            </button>
+          <a
+            className="btn btn-ghost"
+            href={DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FiExternalLink />
+            {t('nav.documentation')}
           </a>
 
           <button className="btn" onClick={() => navigate('/compare')}>
@@ -56,7 +60,7 @@ export const NavBar = () => {
               >
                 <div className="w-10 rounded-full">
                   <img
-                    src="https://cdn-icons-png.freepik.com/512/12225/12225935.png"
+                    src={AVATAR_URL}
                     alt={t('nav.profileImageAlt')}
                   />
                 </div>
@@ -80,12 +84,16 @@ export const NavBar = () => {
                 )}
                 <div className="divider m-0"></div>
                 <li>
-                  <a className="btn btn-error" onClick={() => {
-                    auth.logout();
-                    navigate('/auth/login', { replace: true });
-                  }}>
+                  <button
+                    type="button"
+                    className="btn btn-error"
+                    onClick={() => {
+                      auth.logout();
+                      navigate('/auth/login', { replace: true });
+                    }}
+                  >
                     {t('nav.logout')}
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

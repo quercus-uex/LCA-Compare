@@ -1,16 +1,17 @@
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
+import { IMPACT_KEYS, type ImpactKey } from '../../common/constants.ts';
 
 export type CompareExportMode = 'full' | 'reference' | 'target';
 
 type Translator = (key: string) => string;
 
-const IMPACTS: ReadonlyArray<{ key: keyof CompareResult; labelKey: string }> = [
-  { key: 'impacto_total', labelKey: 'common.fields.total' },
-  { key: 'impacto_pesticidas', labelKey: 'common.fields.pesticides' },
-  { key: 'impacto_sistema_riego', labelKey: 'common.fields.irrigationSystem' },
-  { key: 'impacto_fertilizantes', labelKey: 'common.fields.fertilizers' },
-  { key: 'impacto_manejo_cultivo', labelKey: 'common.fields.cropManagement' },
-];
+const IMPACT_LABEL_KEYS: Readonly<Record<ImpactKey, string>> = {
+  impacto_total: 'common.fields.total',
+  impacto_pesticidas: 'common.fields.pesticides',
+  impacto_sistema_riego: 'common.fields.irrigationSystem',
+  impacto_fertilizantes: 'common.fields.fertilizers',
+  impacto_manejo_cultivo: 'common.fields.cropManagement',
+};
 
 const num = (n: number | null | undefined) => (n == null ? '' : n.toFixed(4));
 
@@ -37,8 +38,8 @@ export const buildCompareCSV = (
         ];
 
   const rows: (string | number)[][] = [];
-  for (const { key, labelKey } of IMPACTS) {
-    const label = t(labelKey);
+  for (const key of IMPACT_KEYS) {
+    const label = t(IMPACT_LABEL_KEYS[key]);
     for (const item of result[key]) {
       if (mode === 'full') {
         rows.push([

@@ -4,8 +4,6 @@ import { API_BASE_URL } from '../common/constants.ts';
 import type { Polygon } from 'geojson';
 import type { Cultivo as CultivoBase, Parcela as ParcelaBase } from 'common/parcela';
 
-export type { CultivoBase };
-
 export type Parcela = ParcelaBase & {
   geom?: Polygon;
   cultivos?: Cultivo[];

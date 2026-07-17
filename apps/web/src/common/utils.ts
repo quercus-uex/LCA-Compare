@@ -1,9 +1,21 @@
+import { i18n } from '../i18n/index.ts';
+
 export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(
       ([, value]) => value !== null && value !== undefined && (Array.isArray(value) ? value.length !== 0 : true),
     ),
   ) as Partial<T>;
+}
+
+export function formatDate(value: Date | string): string | null {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(i18n.language ?? 'es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 export function exportJSON(input: object) {

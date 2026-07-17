@@ -1,17 +1,8 @@
 import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
 import { API_BASE_URL } from '../common/constants.ts';
+import type { Usuario } from 'common/usuario';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-
-type Usuario = {
-  id: string;
-  nombre: string;
-  apellidos: string;
-  email: string;
-  rol: string;
-  fechaRegistro: string;
-  fechaActualizacion: string;
-}
 
 type AuthContextType = {
   usuario: Usuario | null;

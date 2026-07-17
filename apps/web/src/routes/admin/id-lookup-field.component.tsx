@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { API_BASE_URL } from '../../common/constants.ts';
+import { API_BASE_URL, ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
 import { useTranslation } from 'react-i18next';
 
 export interface FkConfig {
@@ -46,7 +46,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
       try {
         const params = new URLSearchParams();
         params.set('skip', '0');
-        params.set('take', '1000');
+        params.set('take', String(ADMIN_LOOKUP_TAKE));
         const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
           headers: { Authorization: token },
         });
@@ -163,7 +163,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
                       try {
                         const params = new URLSearchParams();
                         params.set('skip', '0');
-                        params.set('take', '1000');
+        params.set('take', String(ADMIN_LOOKUP_TAKE));
                         const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
                           headers: { Authorization: token },
                         });

@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useNavigate } from 'react-router';
-import { API_BASE_URL } from '../../common/constants.ts';
+import { API_BASE_URL, ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { formatDate } from '../../common/utils.ts';
 import { toast } from 'sonner';
 import { SmartPagination } from './smart-pagination.component.tsx';
 import { IdLookupField, type FkConfig } from './id-lookup-field.component.tsx';
 import { useTranslation } from 'react-i18next';
-
-const PAGE_SIZE = 15;
 
 const ENTITIES = [
   'usuarios',
@@ -172,8 +171,8 @@ export const AdminRoute = () => {
     try {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
-      params.set('skip', String(page * PAGE_SIZE));
-      params.set('take', String(PAGE_SIZE));
+      params.set('skip', String(page * ADMIN_PAGE_SIZE));
+      params.set('take', String(ADMIN_PAGE_SIZE));
 
       const res = await fetch(`${API_BASE_URL}/admin/${activeTab}?${params}`, {
         headers: { Authorization: token },
@@ -210,7 +209,7 @@ export const AdminRoute = () => {
     initialLoadDone.current = false;
   }, [activeTab]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE));
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
@@ -274,8 +273,7 @@ export const AdminRoute = () => {
       return raw === true ? t('common.yes') : t('common.no');
     }
     if (formField?.type === 'datetime-local' && raw) {
-      const d = new Date(raw as string);
-      if (!Number.isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return formatDate(raw as string) ?? String(raw);
     }
     return String(raw);
   };
@@ -539,7 +537,7 @@ export const AdminRoute = () => {
                                         <td>{c.tipo != null && typeof c.tipo !== 'object' ? String(c.tipo) : '—'}</td>
                                         <td>
                                           {c.fechaInicioCampania
-                                              ? new Date(c.fechaInicioCampania as string).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                              ? formatDate(c.fechaInicioCampania as string) ?? '—'
                                               : '—'}
                                         </td>
                                         <td>

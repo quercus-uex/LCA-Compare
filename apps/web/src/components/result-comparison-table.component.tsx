@@ -1,4 +1,5 @@
 import type { CompareResult } from '../hooks/compare.hook.tsx';
+import type { ImpactKey } from '../common/constants.ts';
 import { useTranslation } from 'react-i18next';
 
 export const ResultComparisonTable = ({
@@ -6,12 +7,7 @@ export const ResultComparisonTable = ({
   selectedImpact,
 }: {
   result: CompareResult;
-  selectedImpact:
-    | 'impacto_total'
-    | 'impacto_pesticidas'
-    | 'impacto_sistema_riego'
-    | 'impacto_fertilizantes'
-    | 'impacto_manejo_cultivo';
+  selectedImpact: ImpactKey;
 }) => {
   const { t } = useTranslation();
 

@@ -8,7 +8,8 @@ import { ResultadoTable } from './resultado-table.component.tsx';
 import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
 import { MapPreview } from '../../components/map-preview.component.tsx';
-import { exportCSV, exportJSON } from '../../common/utils.ts';
+import { exportJSON } from '../../common/utils.ts';
+import { buildResultadoCSV } from './resultado-export.utils.ts';
 import { useTranslation } from 'react-i18next';
 
 export const ResultadoRoute = () => {
@@ -76,38 +77,7 @@ export const ResultadoRoute = () => {
             </button>
             <button
               className="btn btn-secondary flex-1"
-              onClick={() => {
-                const find = (
-                  arr: typeof resultado.datos.impacto_pesticidas,
-                  category: string,
-                ) => arr.find(i => i.category === category)!.amount.toFixed(5);
-                const rows = resultado.datos.impacto_total.map(
-                  ({ category, amount, unit }) => [
-                    category,
-                    find(resultado.datos.impacto_pesticidas, category),
-                    find(resultado.datos.impacto_fertilizantes, category),
-                    find(resultado.datos.impacto_sistema_riego, category),
-                    find(resultado.datos.impacto_manejo_cultivo, category),
-                    amount.toFixed(5),
-                    unit,
-                  ],
-                );
-                exportCSV(
-                  `impacto-${parcela.nombre}.csv`,
-                  [
-                    [
-                      t('common.fields.category'),
-                      t('common.fields.pesticides'),
-                      t('common.fields.fertilizers'),
-                      t('common.fields.irrigationSystem'),
-                      t('common.fields.cropManagement'),
-                      t('common.fields.total'),
-                      t('common.fields.unit'),
-                    ],
-                    ...rows,
-                  ],
-                );
-              }}
+              onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}
             >
               {t('common.actions.export')} CSV
             </button>

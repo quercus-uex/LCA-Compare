@@ -8,7 +8,7 @@ import {
 } from '../../hooks/compare.hook.tsx';
 import { exportJSON, exportCSV, omitNullish } from '../../common/utils.ts';
 import { CompareResultCard } from './compare-result-card.component.tsx';
-import { buildCompareCSV } from './compare-export.utils.ts';
+import { buildCompareCSV, buildCompareExportPayload } from './compare-export.utils.ts';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
 import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
 import { useTranslation } from 'react-i18next';
@@ -104,7 +104,7 @@ export const CompareRoute = () => {
                               reference: filtersRef,
                               target: filtersObj,
                             },
-                            result,
+                            result: buildCompareExportPayload(result, 'full'),
                           })
                         }
                       >
@@ -135,38 +135,7 @@ export const CompareRoute = () => {
                         onClick={() =>
                           exportJSON({
                             metadata: filtersObj,
-                            result: {
-                              impacto_total: result?.impacto_total.map((i) => ({
-                                unit: i.unit,
-                                category: i.category,
-                                amount: i.tarAmount,
-                              })),
-                              impacto_fertilizantes:
-                                result?.impacto_fertilizantes.map((i) => ({
-                                  unit: i.unit,
-                                  category: i.category,
-                                  amount: i.tarAmount,
-                                })),
-                              impacto_sistema_riego:
-                                result?.impacto_sistema_riego.map((i) => ({
-                                  unit: i.unit,
-                                  category: i.category,
-                                  amount: i.tarAmount,
-                                })),
-                              impacto_pesticidas: result?.impacto_pesticidas.map(
-                                (i) => ({
-                                  unit: i.unit,
-                                  category: i.category,
-                                  amount: i.tarAmount,
-                                }),
-                              ),
-                              impacto_manejo_cultivo:
-                                result?.impacto_manejo_cultivo.map((i) => ({
-                                  unit: i.unit,
-                                  category: i.category,
-                                  amount: i.tarAmount,
-                                })),
-                            },
+                            result: buildCompareExportPayload(result, 'target'),
                           })
                         }
                       >
@@ -195,40 +164,7 @@ export const CompareRoute = () => {
                     onClick={() =>
                       exportJSON({
                         metadata: filtersRef,
-                        result: {
-                          impacto_total: result?.impacto_total.map((i) => ({
-                            unit: i.unit,
-                            category: i.category,
-                            amount: i.refAmount,
-                          })),
-                          impacto_fertilizantes: result?.impacto_fertilizantes.map(
-                            (i) => ({
-                              unit: i.unit,
-                              category: i.category,
-                              amount: i.refAmount,
-                            }),
-                          ),
-                          impacto_sistema_riego: result?.impacto_sistema_riego.map(
-                            (i) => ({
-                              unit: i.unit,
-                              category: i.category,
-                              amount: i.refAmount,
-                            }),
-                          ),
-                          impacto_pesticidas: result?.impacto_pesticidas.map(
-                            (i) => ({
-                              unit: i.unit,
-                              category: i.category,
-                              amount: i.refAmount,
-                            }),
-                          ),
-                          impacto_manejo_cultivo:
-                            result?.impacto_manejo_cultivo.map((i) => ({
-                              unit: i.unit,
-                              category: i.category,
-                              amount: i.refAmount,
-                            })),
-                        },
+                        result: buildCompareExportPayload(result, 'reference'),
                       })
                     }
                   >

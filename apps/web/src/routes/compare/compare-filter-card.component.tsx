@@ -10,6 +10,22 @@ import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
 import { ReferenciaFilterCollapse } from './referencia-filter-collapse.component.tsx';
 import { useTranslation } from 'react-i18next';
 
+type ChipItem = { id: string; nombre: string };
+
+const SelectedChips = ({ items, onRemove }: { items: ChipItem[]; onRemove: (id: string) => void }) => (
+  <>
+    {items.map((p) => (
+      <div
+        key={p.id}
+        className="badge badge-primary cursor-pointer"
+        onClick={() => onRemove(p.id)}
+      >
+        {p.nombre}
+      </div>
+    ))}
+  </>
+);
+
 export const CompareFilterCard = (
   { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void }
 ) => {
@@ -44,63 +60,35 @@ export const CompareFilterCard = (
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center justify-start flex-wrap min-h-6">
-            {(filters.provincias ?? []).map((p) => (
-              <div
-                key={p.id}
-                className="badge badge-primary cursor-pointer"
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    provincias: filters.provincias?.filter(
-                      (i) => i.id !== p.id,
-                    ),
-                  })
-                }
-              >
-                {p.nombre}
-              </div>
-            ))}
-            {(filters.poblaciones ?? []).map((p) => (
-              <div
-                key={p.id}
-                className="badge badge-primary cursor-pointer"
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    poblaciones: filters.poblaciones?.filter(
-                      (i) => i.id !== p.id,
-                    ),
-                  })
-                }
-              >
-                {p.nombre}
-              </div>
-            ))}
-            {(filters.parcelas ?? []).map((p) => (
-              <div
-                key={p.id}
-                className="badge badge-primary cursor-pointer"
-                onClick={() =>
-                  setFilters({
-                    ...filters,
-                    parcelas: filters.parcelas?.filter(
-                      (i) => i.id !== p.id,
-                    ),
-                  })
-                }
-              >
-                {p.nombre}
-              </div>
-            ))}
-            {filters.pais &&
+            <SelectedChips
+              items={filters.provincias ?? []}
+              onRemove={(id) => setFilters({
+                ...filters,
+                provincias: filters.provincias?.filter((i) => i.id !== id),
+              })}
+            />
+            <SelectedChips
+              items={filters.poblaciones ?? []}
+              onRemove={(id) => setFilters({
+                ...filters,
+                poblaciones: filters.poblaciones?.filter((i) => i.id !== id),
+              })}
+            />
+            <SelectedChips
+              items={filters.parcelas ?? []}
+              onRemove={(id) => setFilters({
+                ...filters,
+                parcelas: filters.parcelas?.filter((i) => i.id !== id),
+              })}
+            />
+            {filters.pais && (
               <div
                 className="badge badge-primary cursor-pointer"
                 onClick={() => setFilters({ ...filters, pais: undefined })}
               >
                 {filters.pais.nombre}
               </div>
-
-            }
+            )}
           </div>
 
           <PaisFilterCollapse filters={filters} setFilters={setFilters} />

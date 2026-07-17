@@ -9,7 +9,7 @@ export const FilterCollapse = ({
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   disabled?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) => {
   return (
     <div
@@ -27,7 +27,7 @@ export const FilterCollapse = ({
           />
         </div>
       </div>
-      <div className="collapse-content">{children}</div>
+      {children && <div className="collapse-content">{children}</div>}
     </div>
   );
 };

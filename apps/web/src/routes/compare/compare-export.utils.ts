@@ -15,6 +15,27 @@ const IMPACT_LABEL_KEYS: Readonly<Record<ImpactKey, string>> = {
 
 const num = (n: number | null | undefined) => (n == null ? '' : n.toFixed(4));
 
+type ExportItem = { unit: string; category: string; amount: number | undefined };
+type ExportPayload = Record<ImpactKey, ExportItem[]>;
+
+export const buildCompareExportPayload = (
+  result: CompareResult,
+  mode: CompareExportMode,
+): CompareResult | ExportPayload => {
+  if (mode === 'full') return result;
+  const pickAmount = (i: { refAmount: number; tarAmount?: number }): number | undefined =>
+    mode === 'target' ? i.tarAmount : i.refAmount;
+  const payload = {} as ExportPayload;
+  for (const key of IMPACT_KEYS) {
+    payload[key] = result[key].map((i) => ({
+      unit: i.unit,
+      category: i.category,
+      amount: pickAmount(i),
+    }));
+  }
+  return payload;
+};
+
 export const buildCompareCSV = (
   result: CompareResult,
   mode: CompareExportMode,

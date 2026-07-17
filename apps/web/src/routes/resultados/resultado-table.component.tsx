@@ -1,15 +1,28 @@
+import { useMemo } from 'react';
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
+import type { ResultadoImpactoItemDto } from 'common/api';
 import { useTranslation } from 'react-i18next';
+
+const byCategory = (items: ResultadoImpactoItemDto[]) =>
+  new Map(items.map((i) => [i.category, i]));
 
 export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) => {
   const { t } = useTranslation();
-  const impactos = resultado.datos.impacto_total.map(i => i.category);
-  const pesticidas = resultado.datos.impacto_pesticidas;
-  const fertilizantes = resultado.datos.impacto_fertilizantes;
-  const sistemaRiego = resultado.datos.impacto_sistema_riego;
-  const manejoCultivo = resultado.datos.impacto_manejo_cultivo;
-  const total = resultado.datos.impacto_total;
-  
+
+  const lookup = useMemo(() => {
+    const d = resultado.datos;
+    return {
+      pesticidas: byCategory(d.impacto_pesticidas),
+      fertilizantes: byCategory(d.impacto_fertilizantes),
+      sistemaRiego: byCategory(d.impacto_sistema_riego),
+      manejoCultivo: byCategory(d.impacto_manejo_cultivo),
+      total: byCategory(d.impacto_total),
+    };
+  }, [resultado]);
+
+  const fmt = (m: Map<string, ResultadoImpactoItemDto>, category: string) =>
+    m.get(category)?.amount.toFixed(5) ?? '—';
+
   return (
     <div className="overflow-x-auto">
       <table className="table">
@@ -25,39 +38,19 @@ export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) =
           </tr>
         </thead>
         <tbody>
-          {impactos.map((impacto) => (
-            <tr key={impacto}>
-              <th>{impacto}</th>
-              <th>
-                {pesticidas
-                  .find((i) => i.category === impacto)!
-                  .amount.toFixed(5)}
-              </th>
-              <th>
-                {fertilizantes
-                  .find((i) => i.category === impacto)!
-                  .amount.toFixed(5)}
-              </th>
-              <th>
-                {sistemaRiego
-                  .find((i) => i.category === impacto)!
-                  .amount.toFixed(5)}
-              </th>
-              <th>
-                {manejoCultivo
-                  .find((i) => i.category === impacto)!
-                  .amount.toFixed(5)}
-              </th>
-              <th>
-                {total.find((i) => i.category === impacto)!.amount.toFixed(5)}
-              </th>
-              <th>
-                {total.find((i) => i.category === impacto)!.unit}
-              </th>
+          {resultado.datos.impacto_total.map((i) => (
+            <tr key={i.category}>
+              <th>{i.category}</th>
+              <th>{fmt(lookup.pesticidas, i.category)}</th>
+              <th>{fmt(lookup.fertilizantes, i.category)}</th>
+              <th>{fmt(lookup.sistemaRiego, i.category)}</th>
+              <th>{fmt(lookup.manejoCultivo, i.category)}</th>
+              <th>{fmt(lookup.total, i.category)}</th>
+              <th>{lookup.total.get(i.category)?.unit ?? '—'}</th>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
-}
+};

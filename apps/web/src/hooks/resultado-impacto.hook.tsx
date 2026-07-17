@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { Cultivo } from './parcela.hook.tsx';
-import { API_BASE_URL } from '../common/constants.ts';
+import { apiFetch } from '../common/api.ts';
 import type { ResultadoImpactoDto } from 'common/api';
 
 type MetodoImpacto = {
@@ -23,19 +23,7 @@ const ResultadoImpactoContext = createContext<ResultadoImpactoContextType | unde
 
 export function ResultadoImpactoProvider({ children }: { children: React.ReactNode }) {
 
-  const getById = async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/resultado/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (!response.ok) throw new Error();
-
-    const json = await response.json();
-    return json.data as ResultadoImpacto;
-  }
+  const getById = async (id: string) => apiFetch<ResultadoImpacto>(`/resultado/${id}`);
 
   const value = useMemo(() => ({ getById }), []);
   return (

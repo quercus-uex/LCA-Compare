@@ -1,8 +1,9 @@
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { useState } from 'react';
-import { Circle, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { Circle, Marker, useMapEvents } from 'react-leaflet';
 import { LatLng, type LeafletMouseEvent } from 'leaflet';
 import { FilterCollapse } from './filter-collapse.component';
+import { MapPreview } from '../../components/map-preview.component.tsx';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_MAP_CENTER, UBICACION_RANGE_MAX, UBICACION_RANGE_MIN } from '../../common/constants.ts';
 
@@ -45,10 +46,10 @@ export const UbicacionFilterCollapse = (
       }}
     >
       <div className="flex flex-col gap-5 w-full">
-        <MapContainer
+        <MapPreview
+          className="w-full aspect-square"
           center={DEFAULT_MAP_CENTER}
           zoom={10}
-          className="w-full aspect-square"
         >
           {target && (
             <>
@@ -56,12 +57,8 @@ export const UbicacionFilterCollapse = (
               <Circle center={target} radius={range} />
             </>
           )}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
           <MapClickHandler />
-        </MapContainer>
+        </MapPreview>
         <div className="flex flex-col gap-2">
           <p>{t('compare.filters.range', { range })}</p>
           <input

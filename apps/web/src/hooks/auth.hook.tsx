@@ -1,8 +1,7 @@
 import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
+import { ApiError, apiFetch, apiRequest } from '../common/api.ts';
+import { clearToken, getToken, setToken } from '../common/auth.ts';
 import type { Usuario } from 'common/usuario';
-import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 
 type AuthContextType = {
   usuario: Usuario | null;
@@ -17,71 +16,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [loading, setLoading] = useState(true);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const { t } = useTranslation();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
 
     if (!token) {
-      new Promise(() => setLoading(false));
+      setLoading(false);
       return;
     }
 
-    fetch(`${API_BASE_URL}/usuario`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
+    apiFetch<Usuario>('/usuario')
       .then(u => {
-        setUsuario(u.data);
+        setUsuario(u);
         setLoading(false);
       })
-      .catch(() => { setLoading(false) })
+      .catch(() => { setLoading(false) });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await apiRequest('/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email, password }),
-    })
+    });
 
     if (!response.ok) {
-      toast.error(t('auth.login.invalidCredentials'));
-      return null;
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
     const json = await response.json();
     const token = json.data.accessToken as string;
-    localStorage.setItem('token', token);
+    setToken(token);
 
     try {
-      const userRes = await fetch(`${API_BASE_URL}/usuario`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!userRes.ok) throw new Error();
-      const userJson = await userRes.json();
-      const u = userJson.data as Usuario;
+      const u = await apiFetch<Usuario>('/usuario');
       setUsuario(u);
       return u;
     } catch {
       return null;
     }
-  }, [t]);
+  }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
+    clearToken();
     setUsuario(null);
   }, []);
 

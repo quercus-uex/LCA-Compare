@@ -57,6 +57,12 @@ export const en = {
       description: 'The page you are looking for does not exist or has been moved.',
       goHome: 'Go home',
     },
+    errors: {
+      boundaryTitle: 'Something went wrong',
+      boundaryDescription: 'An unexpected error occurred while showing this section.',
+      retry: 'Retry',
+      goHome: 'Go home',
+    },
   },
   nav: {
     appName: 'LCA Comparator',

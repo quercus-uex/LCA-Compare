@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { API_BASE_URL, ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
+import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
+import { apiRequest } from '../../common/api.ts';
 import { useTranslation } from 'react-i18next';
 
 export interface FkConfig {
@@ -30,8 +31,6 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const token = `Bearer ${localStorage.getItem('token')}`;
-
   const selectedLabel = useMemo(() => {
     if (!value) return '';
     const found = options.find((o) => o.id === value);
@@ -47,9 +46,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
         const params = new URLSearchParams();
         params.set('skip', '0');
         params.set('take', String(ADMIN_LOOKUP_TAKE));
-        const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
-          headers: { Authorization: token },
-        });
+        const res = await apiRequest(`/admin/${fkConfig.endpoint}?${params}`);
         if (!res.ok) throw new Error();
         const json = (await res.json()) as { data?: Record<string, unknown>[] };
         const data = json.data ?? [];
@@ -69,7 +66,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
     };
     void fetchOptions();
     return () => { cancelled = true; };
-  }, [fkConfig.endpoint, fkConfig.displayFields, token]);
+  }, [fkConfig.endpoint, fkConfig.displayFields]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -164,9 +161,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
                         const params = new URLSearchParams();
                         params.set('skip', '0');
         params.set('take', String(ADMIN_LOOKUP_TAKE));
-                        const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
-                          headers: { Authorization: token },
-                        });
+                        const res = await apiRequest(`/admin/${fkConfig.endpoint}?${params}`);
                         if (!res.ok) throw new Error();
                         const json = (await res.json()) as { data?: Record<string, unknown>[] };
                         const data = json.data ?? [];

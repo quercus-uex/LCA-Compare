@@ -7,6 +7,7 @@ import { formatImpactValue } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
 import { useTranslation } from 'react-i18next';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
+import { toast } from 'sonner';
 
 type Props = {
   ranking: PoblacionRankingItemDto[];
@@ -29,8 +30,10 @@ export const StatsPoblacionRanking = ({
   const { getCategoryLabel } = useTranslatedEfCategories();
 
   useEffect(() => {
-    location.getProvincias().then((p) => setProvincias(p));
-  }, [location]);
+    location.getProvincias()
+      .then((p) => setProvincias(p))
+      .catch(() => toast.error(t('location.provincesError')));
+  }, [location, t]);
 
   const getValue = (item: PoblacionRankingItemDto) => {
     if (selectedCategory) {

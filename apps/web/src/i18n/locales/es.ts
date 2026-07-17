@@ -57,6 +57,12 @@ export const es = {
       description: 'La página que buscas no existe o se ha movido.',
       goHome: 'Ir al inicio',
     },
+    errors: {
+      boundaryTitle: 'Algo salió mal',
+      boundaryDescription: 'Se produjo un error inesperado al mostrar esta sección.',
+      retry: 'Reintentar',
+      goHome: 'Ir al inicio',
+    },
   },
   nav: {
     appName: 'Comparador LCA',

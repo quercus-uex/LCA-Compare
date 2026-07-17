@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
+import { apiRequest } from '../common/api.ts';
 import type { EfCategoryId } from 'common/impact';
 import type { GlobalStatsDto } from 'common/stats';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +34,7 @@ export function useStats(
       if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
       if (idProvinciaPoblacion) params.set('idProvinciaPoblacion', idProvinciaPoblacion);
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const response = await fetch(`${API_BASE_URL}/stats/global${qs}`);
+      const response = await apiRequest(`/stats/global${qs}`);
       if (!response.ok) {
         throw new Error(t('stats.chart.loadError'));
       }

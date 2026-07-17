@@ -3,6 +3,7 @@ import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const ProvinciaFilterCollapse = (
   {
@@ -23,8 +24,10 @@ export const ProvinciaFilterCollapse = (
   const [query, setQuery] = useState<string>('');
 
   useEffect(() => {
-    location.getProvincias().then((p) => setProvincias(p));
-  }, [location]);
+    location.getProvincias()
+      .then((p) => setProvincias(p))
+      .catch(() => toast.error(t('location.provincesError')));
+  }, [location, t]);
 
   const toggleProvincia = (p: Provincia) => {
     const selected = filters.provincias!;

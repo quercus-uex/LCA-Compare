@@ -12,6 +12,7 @@ import { buildCompareCSV } from './compare-export.utils.ts';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
 import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 type CompareRouteState = {
   parcelaObjetivo?: Parcela;
@@ -51,12 +52,13 @@ export const CompareRoute = () => {
         onSubmit={async (data) => {
           const d = omitNullish(data!) as CompareFilterType;
           setFiltersRef(d);
-          if (filtersObj) {
-            const result = await compare.compare(d, filtersObj);
+          try {
+            const result = filtersObj
+              ? await compare.compare(d, filtersObj)
+              : await compare.compareSingle(d);
             setResult(result);
-          } else {
-            const result = await compare.compareSingle(d);
-            setResult(result);
+          } catch {
+            toast.error(t('compare.result.insufficientData'));
           }
         }}
       />
@@ -67,7 +69,11 @@ export const CompareRoute = () => {
               <button
                 className="btn btn-secondary"
                 onClick={async () => {
-                  await compare.generateReport(filtersRef, filtersObj!);
+                  try {
+                    await compare.generateReport(filtersRef, filtersObj!);
+                  } catch {
+                    toast.error(t('compare.result.insufficientData'));
+                  }
                 }}
               >
                 {t('compare.actions.generateReport')}
@@ -256,8 +262,12 @@ export const CompareRoute = () => {
           if (!data) return setFiltersObj(data);
           const d = omitNullish(data) as CompareFilterType;
           setFiltersObj(d);
-          const result = await compare.compare(filtersRef, d);
-          setResult(result);
+          try {
+            const result = await compare.compare(filtersRef, d);
+            setResult(result);
+          } catch {
+            toast.error(t('compare.result.insufficientData'));
+          }
         }}
       />
     </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useNavigate } from 'react-router';
-import { API_BASE_URL, ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { apiRequest } from '../../common/api.ts';
 import { formatDate } from '../../common/utils.ts';
 import { toast } from 'sonner';
 import { SmartPagination } from './smart-pagination.component.tsx';
@@ -161,7 +162,6 @@ export const AdminRoute = () => {
   const initialLoadDone = useRef(false);
   const pendingSearchRef = useRef<string | null>(null);
 
-  const token = `Bearer ${localStorage.getItem('token')}`;
   const getEntity = () => modalEntity ?? activeTab;
   const getEntityLabel = (entity: Entity) => t(ENTITY_LABEL_KEYS[entity]);
   const getFieldLabel = (field: FieldConfig) => t(field.labelKey);
@@ -174,9 +174,7 @@ export const AdminRoute = () => {
       params.set('skip', String(page * ADMIN_PAGE_SIZE));
       params.set('take', String(ADMIN_PAGE_SIZE));
 
-      const res = await fetch(`${API_BASE_URL}/admin/${activeTab}?${params}`, {
-        headers: { Authorization: token },
-      });
+      const res = await apiRequest(`/admin/${activeTab}?${params}`);
       const json = (await res.json()) as { data?: Record<string, unknown>[]; total?: number };
       setData(json.data ?? []);
       setTotal(json.total ?? 0);
@@ -185,7 +183,7 @@ export const AdminRoute = () => {
       toast.error(t('admin.messages.loadError'));
     }
     setLoading(false);
-  }, [activeTab, search, page, token, t]);
+  }, [activeTab, search, page, t]);
 
   useEffect(() => {
     if (!auth.loading && (!auth.usuario || auth.usuario.rol !== 'admin')) {
@@ -307,18 +305,16 @@ export const AdminRoute = () => {
 
     try {
       if (modalMode === 'create') {
-        const res = await fetch(`${API_BASE_URL}/admin/${entity}`, {
+        const res = await apiRequest(`/admin/${entity}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: token },
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
         toast.success(t('admin.messages.created'));
       } else {
         const id = currentItem?.id as string;
-        const res = await fetch(`${API_BASE_URL}/admin/${entity}/${id}`, {
+        const res = await apiRequest(`/admin/${entity}/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: token },
           body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error();
@@ -335,9 +331,8 @@ export const AdminRoute = () => {
     const e = entity ?? getEntity();
     if (!window.confirm(t('admin.deleteConfirm'))) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/${e}/${id}`, {
+      const res = await apiRequest(`/admin/${e}/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: token },
       });
       if (!res.ok) throw new Error();
       toast.success(t('admin.messages.deleted'));

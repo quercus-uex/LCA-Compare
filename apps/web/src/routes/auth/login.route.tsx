@@ -2,6 +2,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 type LoginType = {
   email: string;
@@ -19,9 +20,13 @@ export const LoginRoute = () => {
   const { t } = useTranslation();
 
   const onSubmit: SubmitHandler<LoginType> = async (data) => {
-    const usuario = await auth.login(data.email, data.password);
-    if (usuario) {
-      navigate(usuario.rol === 'admin' ? '/admin' : '/parcelas', { replace: true });
+    try {
+      const usuario = await auth.login(data.email, data.password);
+      if (usuario) {
+        navigate(usuario.rol === 'admin' ? '/admin' : '/parcelas', { replace: true });
+      }
+    } catch {
+      toast.error(t('auth.login.invalidCredentials'));
     }
   }
 

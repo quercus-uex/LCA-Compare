@@ -4,6 +4,7 @@ import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const PoblacionFilterCollapse = (
   {
@@ -26,9 +27,10 @@ export const PoblacionFilterCollapse = (
   useEffect(() => {
     let cancelled = false;
     location.getPoblacionesByName(debouncedQuery)
-      .then(p => { if (!cancelled) setPoblaciones(p); });
+      .then(p => { if (!cancelled) setPoblaciones(p); })
+      .catch(() => { if (!cancelled) toast.error(t('location.townsError')); });
     return () => { cancelled = true; };
-  }, [location, debouncedQuery]);
+  }, [location, debouncedQuery, t]);
 
   const togglePoblacion = (p: Poblacion) => {
     const selected = filters.poblaciones!;

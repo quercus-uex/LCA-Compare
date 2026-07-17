@@ -7,8 +7,7 @@ import {
 import { ResultadoTable } from './resultado-table.component.tsx';
 import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
-import type { LatLngExpression } from 'leaflet';
-import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
+import { MapPreview } from '../../components/map-preview.component.tsx';
 import { exportCSV, exportJSON } from '../../common/utils.ts';
 import { useTranslation } from 'react-i18next';
 
@@ -156,22 +155,10 @@ export const ResultadoRoute = () => {
             </ul>
           </div>
         </div>
-        <MapContainer
+        <MapPreview
           className="h-full rounded-box aspect-square"
-          center={
-            [
-              parcela.geom!.coordinates[0][0][1],
-              parcela.geom!.coordinates[0][0][0],
-            ] as LatLngExpression
-          }
-          zoom={16}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <GeoJSON data={parcela.geom!} />
-        </MapContainer>
+          polygon={parcela.geom!}
+        />
       </div>
       <ResultadoTable resultado={resultado} />
     </div>

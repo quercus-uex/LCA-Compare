@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import * as React from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
+import { apiFetch } from '../common/api.ts';
 import type { Polygon } from 'geojson';
 import type { Cultivo as CultivoBase, Parcela as ParcelaBase } from 'common/parcela';
 
@@ -22,33 +22,9 @@ const ParcelaContext = createContext<ParcelaContextType | undefined>(undefined);
 
 export function ParcelaProvider({ children }: { children: React.ReactNode }) {
 
-  const getFromToken = async () => {
-    const response = await fetch(`${API_BASE_URL}/parcela`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+  const getFromToken = async () => apiFetch<Parcela[]>('/parcela');
 
-    if (!response.ok) throw new Error();
-
-    const json = await response.json();
-    return json.data as Parcela[];
-  }
-
-  const getById = async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/parcela/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (!response.ok) throw new Error();
-
-    const json = await response.json();
-    return json.data as Parcela;
-  }
+  const getById = async (id: string) => apiFetch<Parcela>(`/parcela/${id}`);
 
   const value = useMemo(() => ({ getFromToken, getById }), []);
   return (

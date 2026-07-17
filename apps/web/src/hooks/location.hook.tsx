@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
-import { toast } from 'sonner';
+import { ApiError, apiRequest } from '../common/api.ts';
 import type { Pais, Provincia, Poblacion } from 'common/location';
-import { useTranslation } from 'react-i18next';
 
 export type { Pais, Provincia, Poblacion } from 'common/location';
 
@@ -15,60 +13,40 @@ type LocationContextType = {
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
 
+const throwIfNotOk = async (response: Response): Promise<void> => {
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text().catch(() => response.statusText));
+  }
+};
+
 export function LocationProvider({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
-
   const getProvincias = useCallback(async () => {
-    const response = await fetch(`${API_BASE_URL}/provincia`, {
-      method: 'GET',
-    });
-
-    if (!response.ok) {
-      toast.error(t('location.provincesError'));
-      throw new Error();
-    }
-
+    const response = await apiRequest('/provincia');
+    await throwIfNotOk(response);
     const json = await response.json();
     return json.data as Provincia[];
-  }, [t]);
+  }, []);
 
   const getPoblacionesByName = useCallback(async (name: string) => {
-    const response = await fetch(
-      `${API_BASE_URL}/poblacion?nombre=${name}`,
-      {
-        method: 'GET',
-      },
-    );
-
+    const response = await apiRequest(`/poblacion?nombre=${name}`);
+    await throwIfNotOk(response);
     const json = await response.json();
     return json.data as Poblacion[];
   }, []);
 
   const getPoblacionesFromProvinciaId = useCallback(async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/provincia/${id}/poblaciones`, {
-      method: 'GET',
-    });
-
-    if (!response.ok) {
-      toast.error(t('location.townsError'));
-      throw new Error();
-    }
-
+    const response = await apiRequest(`/provincia/${id}/poblaciones`);
+    await throwIfNotOk(response);
     const json = await response.json();
     return json.data as Poblacion[];
-  }, [t]);
+  }, []);
 
   const getPaises = useCallback(async () => {
-    const response = await fetch(`${API_BASE_URL}/pais`, { method: 'GET' });
-
-    if (!response.ok) {
-      toast.error(t('location.countriesError'));
-      throw new Error();
-    }
-
+    const response = await apiRequest('/pais');
+    await throwIfNotOk(response);
     const json = await response.json();
     return json.data as Pais[];
-  }, [t]);
+  }, []);
 
   const value = useMemo(() => ({ getProvincias, getPoblacionesFromProvinciaId, getPoblacionesByName, getPaises }), [getProvincias, getPoblacionesFromProvinciaId, getPoblacionesByName, getPaises]);
 

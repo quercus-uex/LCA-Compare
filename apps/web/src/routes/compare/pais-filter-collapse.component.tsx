@@ -3,6 +3,7 @@ import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
 import { useEffect, useState } from 'react';
 import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export const PaisFilterCollapse = (
   {
@@ -21,7 +22,8 @@ export const PaisFilterCollapse = (
   useEffect(() => {
     location.getPaises()
       .then(p => setPaises(p))
-  }, [location]);
+      .catch(() => toast.error(t('location.countriesError')));
+  }, [location, t]);
   
   return (
     <FilterCollapse

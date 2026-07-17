@@ -18,4 +18,5 @@ export type Parcela = {
   nombre: string;
   idPropietario: string;
   idPoblacion: string;
+  esParcelaReferencia: boolean;
 };

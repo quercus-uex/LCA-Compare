@@ -105,6 +105,26 @@ describe('CompareQueryBuilder', () => {
     });
   });
 
+  it('builds a soloParcelasReferencia filter', () => {
+    const result = CompareQueryBuilder.build({ soloParcelasReferencia: true });
+
+    expect(result).toEqual({
+      AND: [
+        {
+          cultivo: {
+            parcela: { esParcelaReferencia: true },
+          },
+        },
+      ],
+    });
+  });
+
+  it('ignores soloParcelasReferencia when false', () => {
+    const result = CompareQueryBuilder.build({ soloParcelasReferencia: false });
+
+    expect(result).toBeNull();
+  });
+
   it('builds a campaign start year filter', () => {
     const result = CompareQueryBuilder.build({ anioCampaniaInicio: 2024 });
 
@@ -166,6 +186,7 @@ describe('CompareQueryBuilder', () => {
       tipoCultivo: 'trigo',
       anioCampaniaInicio: 2023,
       anioCampaniaFin: 2025,
+      soloParcelasReferencia: true,
     };
 
     const result = CompareQueryBuilder.build(filters, ['ri-loc']);
@@ -200,6 +221,11 @@ describe('CompareQueryBuilder', () => {
           ],
         },
         { cultivo: { tipo: 'trigo' } },
+        {
+          cultivo: {
+            parcela: { esParcelaReferencia: true },
+          },
+        },
         {
           cultivo: {
             fechaInicioCampania: {

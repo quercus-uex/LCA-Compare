@@ -34,7 +34,14 @@ export const ParcelaRoute = () => {
         </figure>
         <div className="card-body flex flex-col">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-semibold">{parcela.nombre}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold">{parcela.nombre}</h1>
+              {parcela.esParcelaReferencia && (
+                <span className="badge badge-success">
+                  {t('parcelas.referenceBadge')}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2 items-center">
               <p>
                 <span className="font-bold">SIGPAC: </span>

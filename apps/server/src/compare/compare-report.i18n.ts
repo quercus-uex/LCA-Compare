@@ -51,6 +51,8 @@ type ReportLabels = {
   readonly unit: string;
   readonly difference: string;
   readonly notAvailable: string;
+  readonly referenceOnly: string;
+  readonly yes: string;
 };
 
 const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
@@ -89,6 +91,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     unit: 'Unidad',
     difference: 'Diferencia',
     notAvailable: 'n/a',
+    referenceOnly: 'Solo parcelas de referencia',
+    yes: 'Sí',
   },
   en: {
     htmlLang: 'en',
@@ -125,6 +129,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     unit: 'Unit',
     difference: 'Difference',
     notAvailable: 'n/a',
+    referenceOnly: 'Only reference plots',
+    yes: 'Yes',
   },
   pt: {
     htmlLang: 'pt',
@@ -161,6 +167,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     unit: 'Unidade',
     difference: 'Diferença',
     notAvailable: 'n/a',
+    referenceOnly: 'Apenas parcelas de referência',
+    yes: 'Sim',
   },
 };
 

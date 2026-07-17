@@ -127,6 +127,14 @@
                         {{/each}}
                       </div>
                     </div>
+                    {{#if reference.filters.soloParcelasReferencia}}
+                      <div class="flex justify-between">
+                        <p>{{labels.referenceOnly}}: </p>
+                        <div class="flex gap-2">
+                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{labels.yes}}</span>
+                        </div>
+                      </div>
+                    {{/if}}
                     <div class="flex justify-between">
                       <p>{{labels.campaignDate}}: </p>
                       <div class="flex gap-2">
@@ -227,6 +235,14 @@
                         {{/each}}
                       </div>
                     </div>
+                    {{#if target.filters.soloParcelasReferencia}}
+                      <div class="flex justify-between">
+                        <p>{{labels.referenceOnly}}: </p>
+                        <div class="flex gap-2">
+                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{labels.yes}}</span>
+                        </div>
+                      </div>
+                    {{/if}}
                     <div class="flex justify-between">
                       <p>{{labels.campaignDate}}: </p>
                       <div class="flex gap-2">

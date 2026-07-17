@@ -50,6 +50,8 @@ export const pt = {
       litersPerHectare: 'L/ha',
       tonsPerHectare: 'T/ha',
     },
+    yes: 'Sim',
+    no: 'Não',
   },
   nav: {
     appName: 'Comparador LCA',
@@ -118,6 +120,7 @@ export const pt = {
       campaignDate: 'Data da campanha',
       selectType: 'Escolha um tipo...',
       range: 'Raio: {{range}} m',
+      referenceOnly: 'Apenas parcelas de referência',
       placeholders: {
         plot: 'Parcela...',
         province: 'Província...',
@@ -152,6 +155,7 @@ export const pt = {
     currentCrop: 'Cultura atual',
     previousCrops: 'Culturas anteriores',
     viewImpacts: 'Ver impactos',
+    referenceBadge: 'Referência',
   },
   resultados: {
     title: 'Resultado de impacto',
@@ -217,6 +221,7 @@ export const pt = {
       idProvincia: 'ID Província',
       tipo: 'Tipo',
       inicioCampania: 'Início Campanha',
+      esParcelaReferencia: 'Parcela de referência',
     },
     pagination: {
       summary: '{{total}} resultados - Página {{page}} de {{totalPages}}',

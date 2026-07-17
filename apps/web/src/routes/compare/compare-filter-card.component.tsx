@@ -7,6 +7,7 @@ import { TipocultivoFilterCollapse } from './tipocultivo-filter-collapse.compone
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
+import { ReferenciaFilterCollapse } from './referencia-filter-collapse.component.tsx';
 import { useTranslation } from 'react-i18next';
 
 export const CompareFilterCard = (
@@ -122,6 +123,7 @@ export const CompareFilterCard = (
             filters={filters}
             setFilters={setFilters}
           />
+          <ReferenciaFilterCollapse filters={filters} setFilters={setFilters} />
 
           <button
             className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}

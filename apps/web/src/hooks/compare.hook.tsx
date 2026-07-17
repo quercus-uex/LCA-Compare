@@ -22,6 +22,7 @@ export type CompareFilterType = {
   tipoCultivo?: string;
   anioCampaniaInicio?: number;
   anioCampaniaFin?: number;
+  soloParcelasReferencia?: boolean;
 };
 
 type CompareContextType = {
@@ -43,7 +44,8 @@ const transformFilters = (filters: CompareFilterType): CompareFilterDto => ({
   tipoCultivo: filters.tipoCultivo,
   anioCampaniaInicio: filters.anioCampaniaInicio,
   anioCampaniaFin: filters.anioCampaniaFin,
-  idPais: filters.pais?.id
+  idPais: filters.pais?.id,
+  soloParcelasReferencia: filters.soloParcelasReferencia,
 });
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {

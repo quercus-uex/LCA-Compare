@@ -13,6 +13,7 @@ export type CompareFilterDto = {
   tipoCultivo?: string;
   anioCampaniaInicio?: number;
   anioCampaniaFin?: number;
+  soloParcelasReferencia?: boolean;
 };
 
 export type CompareQueryItemDto = CompareFilterDto;

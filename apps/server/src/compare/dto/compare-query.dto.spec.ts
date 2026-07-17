@@ -79,4 +79,24 @@ describe('CompareQueryDto', () => {
     const errors = validateSync(dto);
     expect(errors[0]?.property).toBe('language');
   });
+
+  it('accepts a soloParcelasReferencia boolean flag', () => {
+    const dto = plainToInstance(CompareQueryDto, {
+      reference: { idPais: uuid, soloParcelasReferencia: true },
+    });
+
+    expect(validateSync(dto)).toEqual([]);
+    expect(dto.reference.soloParcelasReferencia).toBe(true);
+  });
+
+  it('rejects a non-boolean soloParcelasReferencia flag', () => {
+    const dto = plainToInstance(CompareQueryDto, {
+      reference: { soloParcelasReferencia: 'yes' },
+    });
+
+    const referenceErrors = validateSync(dto)[0]?.children?.filter(
+      (c) => c.property === 'soloParcelasReferencia',
+    );
+    expect(referenceErrors).toHaveLength(1);
+  });
 });

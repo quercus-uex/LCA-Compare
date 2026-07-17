@@ -34,7 +34,7 @@ const ENTITY_LABEL_KEYS: Record<Entity, string> = {
 type FieldConfig = {
   name: string;
   labelKey: string;
-  type: 'text' | 'email' | 'password' | 'number' | 'datetime-local';
+  type: 'text' | 'email' | 'password' | 'number' | 'datetime-local' | 'checkbox';
   optional?: boolean;
 };
 
@@ -58,7 +58,7 @@ const CONFIG: Record<
     ],
   },
   parcelas: {
-    tableFields: ['nombre', 'sigpac', 'refCat', 'idPropietario'],
+    tableFields: ['nombre', 'sigpac', 'refCat', 'esParcelaReferencia', 'idPropietario'],
     formFields: [
       { name: 'nombre', labelKey: 'admin.fields.nombre', type: 'text' },
       { name: 'sigpac', labelKey: 'admin.fields.sigpac', type: 'text' },
@@ -66,6 +66,7 @@ const CONFIG: Record<
       { name: 'ptIdParcela', labelKey: 'admin.fields.ptIdParcela', type: 'text' },
       { name: 'idPropietario', labelKey: 'admin.fields.idPropietario', type: 'text' },
       { name: 'idPoblacion', labelKey: 'admin.fields.idPoblacion', type: 'text' },
+      { name: 'esParcelaReferencia', labelKey: 'admin.fields.esParcelaReferencia', type: 'checkbox' },
     ],
   },
   cultivos: {
@@ -156,7 +157,7 @@ export const AdminRoute = () => {
     string,
     unknown
   > | null>(null);
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<Record<string, string | boolean>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const initialLoadDone = useRef(false);
   const pendingSearchRef = useRef<string | null>(null);
@@ -233,9 +234,13 @@ export const AdminRoute = () => {
     setModalEntity(entity ?? null);
     setCurrentItem(item);
     const config = CONFIG[entity ?? activeTab];
-    const initial: Record<string, string> = {};
+    const initial: Record<string, string | boolean> = {};
     for (const f of config.formFields) {
       const raw = item[f.name];
+      if (f.type === 'checkbox') {
+        initial[f.name] = raw === true;
+        continue;
+      }
       let val = '';
       if (raw !== null && raw !== undefined && typeof raw !== 'object') {
         val = String(raw);
@@ -265,27 +270,32 @@ export const AdminRoute = () => {
   const formatCell = (field: string, raw: unknown): string | null => {
     if (raw === null || raw === undefined || typeof raw === 'object') return null;
     const formField = CONFIG[activeTab].formFields.find((f) => f.name === field);
+    if (formField?.type === 'checkbox') {
+      return raw === true ? t('common.yes') : t('common.no');
+    }
     if (formField?.type === 'datetime-local' && raw) {
       const d = new Date(raw as string);
-      if (!isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      if (!Number.isNaN(d.getTime())) return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
     return String(raw);
   };
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const getSubmitBody = (): Record<string, string | number | null> => {
+  const getSubmitBody = (): Record<string, string | number | boolean | null> => {
     const config = CONFIG[getEntity()];
-    const body: Record<string, string | number | null> = {};
+    const body: Record<string, string | number | boolean | null> = {};
     for (const f of config.formFields) {
       const val = form[f.name] ?? '';
       if (f.optional === true && !val && modalMode === 'edit') continue;
-      if (f.type === 'number') {
+      if (f.type === 'checkbox') {
+        body[f.name] = val === true || val === 'true';
+      } else if (f.type === 'number') {
         body[f.name] = val === '' ? null : Number(val);
       } else if (f.type === 'datetime-local') {
-        body[f.name] = val ? new Date(val).toISOString() : null;
+        body[f.name] = val ? new Date(val as string).toISOString() : null;
       } else {
         body[f.name] = val;
       }
@@ -622,7 +632,7 @@ export const AdminRoute = () => {
                       </div>
                       <select
                         className="select select-bordered w-full"
-                        value={form[field.name] ?? ''}
+                        value={(form[field.name] as string) ?? ''}
                         onChange={(e) => handleChange(field.name, e.target.value)}
                       >
                         <option value="" disabled>{t('admin.selectRole')}</option>
@@ -642,11 +652,29 @@ export const AdminRoute = () => {
                       </div>
                       <IdLookupField
                         name={field.name}
-                        value={form[field.name] ?? ''}
+                        value={(form[field.name] as string) ?? ''}
                         onChange={handleChange}
                         fkConfig={fkConfig}
                         disabled={isDisabled}
                       />
+                    </label>
+                  );
+                }
+
+                if (field.type === 'checkbox') {
+                  const checked = form[field.name] === true || form[field.name] === 'true';
+                  return (
+                    <label key={field.name} className="form-control w-full">
+                      <div className="label py-0.5 justify-start gap-3">
+                        <input
+                          type="checkbox"
+                          className="toggle toggle-primary"
+                          checked={checked}
+                          disabled={isDisabled}
+                          onChange={(e) => handleChange(field.name, e.target.checked)}
+                        />
+                        <span className="label-text">{getFieldLabel(field)}</span>
+                      </div>
                     </label>
                   );
                 }
@@ -671,7 +699,7 @@ export const AdminRoute = () => {
                       }
                       className="input input-bordered w-full"
                       placeholder={getFieldLabel(field)}
-                      value={form[field.name] ?? ''}
+                      value={(form[field.name] as string) ?? ''}
                       disabled={isDisabled}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                     />

@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class UpdateParcelaDto {
   @IsOptional()
@@ -25,4 +31,8 @@ export class UpdateParcelaDto {
   @IsOptional()
   @IsUUID()
   idPoblacion?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  esParcelaReferencia?: boolean;
 }

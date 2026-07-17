@@ -9,7 +9,14 @@ export const ParcelasItem = ({ parcela }: { parcela: Parcela }) => {
   return (
     <div className="card bg-base-100 w-96 shadow-sm">
       <div className="card-body">
-        <h2 className="card-title">{parcela.nombre}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="card-title">{parcela.nombre}</h2>
+          {parcela.esParcelaReferencia && (
+            <span className="badge badge-success badge-sm">
+              {t('parcelas.referenceBadge')}
+            </span>
+          )}
+        </div>
         <p>SIGPAC: {parcela.sigpac ?? '-'}</p>
         <p>{t('common.fields.cadastralReference')}: {parcela.refCat ?? '-'}</p>
         <p>{t('common.fields.portugalId')}: {parcela.ptIdParcela ?? '-'}</p>

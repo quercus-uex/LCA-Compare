@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDefined,
   IsIn,
   IsInt,
@@ -67,6 +68,10 @@ export class CompareQueryItemDto implements CompareQueryItemShape {
   @IsNumber()
   @Min(2020)
   anioCampaniaFin?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  soloParcelasReferencia?: boolean;
 }
 
 export const COMPARE_REPORT_LANGUAGES: readonly CompareReportLanguage[] = [

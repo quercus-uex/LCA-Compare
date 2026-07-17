@@ -21,17 +21,18 @@ model Usuario {
 }
 
 model Parcela {
-  id            String                                  @id @default(uuid())
-  sigpac        String?                                 @unique
-  refCat        String?                                 @unique
-  ptIdParcela   String?                                 @unique
-  nombre        String
-  idPropietario String
-  propietario   Usuario                                 @relation(fields: [idPropietario], references: [id])
-  idPoblacion   String?
-  poblacion     Poblacion?                              @relation(fields: [idPoblacion], references: [id])
-  cultivos      Cultivo[]
-  geom          Unsupported("geometry(Polygon, 4326)")?
+  id                  String                                  @id @default(uuid())
+  sigpac              String?                                 @unique
+  refCat              String?                                 @unique
+  ptIdParcela         String?                                 @unique
+  nombre              String
+  idPropietario       String
+  propietario         Usuario                                 @relation(fields: [idPropietario], references: [id])
+  idPoblacion         String?
+  poblacion           Poblacion?                              @relation(fields: [idPoblacion], references: [id])
+  cultivos            Cultivo[]
+  geom                Unsupported("geometry(Polygon, 4326)")?
+  esParcelaReferencia Boolean                                 @default(false)
 }
 
 model Cultivo {

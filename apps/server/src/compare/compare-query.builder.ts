@@ -64,6 +64,12 @@ export class CompareQueryBuilder {
       andConditions.push({ cultivo: { tipo: filters.tipoCultivo } });
     }
 
+    if (filters.soloParcelasReferencia) {
+      andConditions.push({
+        cultivo: { parcela: { esParcelaReferencia: true } },
+      });
+    }
+
     const yearFilter = buildCampaignYearRangeFilter(
       filters.anioCampaniaInicio,
       filters.anioCampaniaFin,

@@ -1,4 +1,3 @@
-import './App.css'
 import { Route, Routes } from 'react-router';
 import { NavbarContainer } from './components/navbar-container.component.tsx';
 import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
@@ -9,6 +8,7 @@ import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
 import { CompareRoute } from './routes/compare/compare.route.tsx';
 import { AdminRoute } from './routes/admin/admin.route.tsx';
 import { StatsRoute } from './routes/stats/stats.route.tsx';
+import { NotFoundRoute } from './routes/not-found.route.tsx';
 
 function App() {
   return (
@@ -27,6 +27,7 @@ function App() {
           <Route path="/resultados">
             <Route path=":id" element={<ResultadoRoute />} />
           </Route>
+          <Route path="*" element={<NotFoundRoute />} />
         </Route>
       </Routes>
     </div>

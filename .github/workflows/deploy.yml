@@ -23,12 +23,13 @@ jobs:
           MAILER_EMAIL: ${{ secrets.MAILER_EMAIL }}
           MAILER_PASSWORD: ${{ secrets.MAILER_PASSWORD }}
           DEFAULT_IMPACT_METHOD_UUID: ${{ secrets.DEFAULT_IMPACT_METHOD_UUID }}
+          CALC_API_KEY: ${{ secrets.CALC_API_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
-          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY,CAPTURE_ACV_EMAIL,CAPTURE_ACV_PASSWORD,MAILER_EMAIL,MAILER_PASSWORD,DEFAULT_IMPACT_METHOD_UUID
+          envs: DB_USER,DB_PASSWORD,JWT_SECRET,OPENROUTER_API_KEY,CAPTURE_ACV_EMAIL,CAPTURE_ACV_PASSWORD,MAILER_EMAIL,MAILER_PASSWORD,DEFAULT_IMPACT_METHOD_UUID,CALC_API_KEY
           script: |
             set -euo pipefail
             

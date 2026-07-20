@@ -24,6 +24,6 @@ RUN pnpm --filter web build
 FROM nginx:alpine AS prod
 
 COPY --from=builder /workspace/apps/web/dist /usr/share/nginx/html
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -29,6 +29,8 @@ services:
       dockerfile: apps/web/Dockerfile
     ports:
       - "80:80"
+    environment:
+      CALC_API_KEY: ${CALC_API_KEY}
     depends_on:
       - lca-compare-backend
     networks:

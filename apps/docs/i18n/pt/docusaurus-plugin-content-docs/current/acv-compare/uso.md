@@ -23,7 +23,7 @@ Para visualizar as parcelas do seu utilizador, com sessão iniciada selecione a 
     <img src="/img/acv-compare/mis_parcelas_ruta.png" alt="Vista das minhas parcelas" width="600"/>
 </p>
 
-A partir da lista de parcelas, pode aceder ao detalhe de cada uma, onde são apresentados o identificador SIGPAC, a referência cadastral, um mapa com o polígono da parcela e as culturas associadas ordenadas por campanha.
+A partir da lista de parcelas, pode aceder ao detalhe de cada uma, onde são apresentados o identificador SIGPAC, a referência cadastral, um mapa com o polígono da parcela e as culturas associadas ordenadas por campanha. As parcelas marcadas por um administrador como **parcelas de referência** são identificadas com o distintivo «Referência» junto ao nome.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Exemplo de parcela" width="600"/>
@@ -51,6 +51,9 @@ Nele, pode comparar dois conjuntos de culturas, filtrando por:
 - Localização (coordenadas e raio em quilómetros)
 - Tipo de cultura
 - Ano de campanha (início ou fim)
+- **Apenas parcelas de referência**: limita o conjunto às parcelas marcadas como referência
+
+Este filtro pode ser aplicado a qualquer um dos dois conjuntos e combina-se com os restantes filtros. Uma **parcela de referência** é uma parcela que um administrador marcou como dado validado; não deve ser confundida com o **conjunto de Referência**, que é o conjunto obrigatório da comparação.
 
 O conjunto de **Referência** é obrigatório. Se apenas for especificada a referência, serão apresentados os valores médios de impacto do conjunto. Se também for especificado um conjunto **Objetivo**, será calculada a diferença percentual entre ambos para cada categoria.
 
@@ -85,7 +88,7 @@ Também pode gerar um relatório detalhado da comparação em **PDF** clicando e
 
 ## Administração
 
-Se o utilizador que inicia sessão tiver o papel de administrador, será redirecionado automaticamente para o painel de administração. A partir daí poderá gerir utilizadores, parcelas, culturas, métodos de impacto, países, províncias e localidades. O painel inclui pesquisa, paginação, criação, edição, eliminação e ajudas para selecionar identificadores de entidades relacionadas.
+Se o utilizador que inicia sessão tiver o papel de administrador, será redirecionado automaticamente para o painel de administração. A partir daí poderá gerir utilizadores, parcelas, culturas, métodos de impacto, países, províncias e localidades. O painel inclui pesquisa, paginação, criação, edição, eliminação e ajudas para selecionar identificadores de entidades relacionadas. Além disso, a gestão de parcelas permite marcar ou desmarcar uma parcela como **parcela de referência**.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Painel de administração" width="600"/>

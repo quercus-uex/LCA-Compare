@@ -183,7 +183,7 @@ O esquema Prisma define os seguintes modelos principais:
 | Modelo | Descrição |
 |---|---|
 | `Usuario` | Utilizadores com papel (`admin` ou utilizador padrão) |
-| `Parcela` | Parcelas com referência SIGPAC, cadastral e geometria PostGIS |
+| `Parcela` | Parcelas com referência SIGPAC, cadastral, geometria PostGIS e marca de parcela de referência |
 | `Cultivo` | Campanhas de cultura com métricas (superfície, produção, consumo de água) |
 | `ResultadoImpacto` | Resultados de ACV em formato JSON por método de impacto |
 | `MetodoImpacto` | Métodos de impacto registados (identificados por UUID de OpenLCA) |
@@ -194,3 +194,5 @@ O esquema Prisma define os seguintes modelos principais:
 As relações principais são: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 A localização geográfica é modelada com a hierarquia `Pais` → `Provincia` → `Poblacion`, onde cada parcela é atribuída a uma localidade e armazena o seu polígono numa coluna PostGIS `geometry(Polygon, 4326)`.
+
+A marca `esParcelaReferencia` (por omissão `false`) só pode ser atribuída por um administrador e permite que o comparador restrinja um conjunto a estas parcelas através do filtro `soloParcelasReferencia`.

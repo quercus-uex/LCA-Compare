@@ -26,7 +26,8 @@ Para visualizar las parcelas de tu usuario, con la sesión iniciada selecciona l
 </p>
 
 Desde el listado de parcelas, puedes acceder al detalle de cada una, donde se muestra su identificador SIGPAC, referencia
-catastral, un mapa con el polígono de la parcela, y los cultivos asociados ordenados por campaña.
+catastral, un mapa con el polígono de la parcela, y los cultivos asociados ordenados por campaña. Las parcelas marcadas
+por un administrador como **parcelas de referencia** se identifican con la etiqueta «Referencia» junto a su nombre.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Ejemplo de parcela" width="600"/>
@@ -55,6 +56,11 @@ En él, podrás comparar dos conjuntos de cultivos, filtrando por:
 - Ubicación (coordenadas y radio en kilómetros)
 - Tipo de cultivo
 - Año de campaña (inicio o fin)
+- **Solo parcelas de referencia**: limita el conjunto a las parcelas marcadas como de referencia
+
+Este filtro puede aplicarse a cualquiera de los dos conjuntos y se combina con el resto de filtros. Una **parcela de
+referencia** es una parcela que un administrador ha marcado como dato validado; no debe confundirse con el
+**conjunto de Referencia**, que es el conjunto obligatorio de la comparativa.
 
 El conjunto de **Referencia** es obligatorio. Si solo se especifica la referencia, se mostrarán los valores medios de
 impacto del conjunto. Si también se especifica un conjunto **Objetivo**, se calculará la diferencia porcentual entre
@@ -96,7 +102,7 @@ mayor diferencia, y el desglose completo de la comparativa por categorías.
 Si el usuario que inicia sesión tiene rol de administrador, será redirigido automáticamente al panel de administración.
 Desde allí podrá gestionar usuarios, parcelas, cultivos, métodos de impacto, países, provincias y poblaciones. El panel
 incluye búsqueda, paginación, creación, edición, borrado y ayudas para seleccionar identificadores de entidades
-relacionadas.
+relacionadas. Además, desde la gestión de parcelas se puede marcar o desmarcar una parcela como **parcela de referencia**.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Panel de administración" width="600"/>

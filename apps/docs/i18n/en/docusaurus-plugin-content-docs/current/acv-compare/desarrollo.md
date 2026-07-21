@@ -183,7 +183,7 @@ The Prisma schema defines these main models:
 | Model | Description |
 |---|---|
 | `Usuario` | Users with role (`admin` or standard user) |
-| `Parcela` | Plots with SIGPAC, cadastral reference, and PostGIS geometry |
+| `Parcela` | Plots with SIGPAC, cadastral reference, PostGIS geometry, and a reference plot flag |
 | `Cultivo` | Crop campaigns with metrics (area, production, water consumption) |
 | `ResultadoImpacto` | LCA results in JSON format by impact method |
 | `MetodoImpacto` | Registered impact methods (identified by OpenLCA UUID) |
@@ -194,3 +194,5 @@ The Prisma schema defines these main models:
 The main relationships are: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` hierarchy, where each plot is assigned to a town and stores its polygon in a PostGIS `geometry(Polygon, 4326)` column.
+
+The `esParcelaReferencia` flag (default `false`) can only be set by an administrator and lets the comparator restrict a set to these plots through the `soloParcelasReferencia` filter.

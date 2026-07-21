@@ -7,6 +7,8 @@ sidebar_position: 3
 
 Este serviço recebe os resultados de ACV calculados pelo **LCA Bridge** sempre que ambos estão a ser executados em simultâneo. Se for a primeira vez que um utilizador realiza um cálculo de ACV, será enviado um email com a sua palavra-passe de acesso.
 
+A interface está disponível em espanhol, inglês e português. Pode mudar o idioma a partir do seletor na barra de navegação, e a escolha é mantida entre sessões.
+
 <p align="center">
     <img src="/img/acv-compare/correo.png" alt="Email de boas-vindas ao LCA Compare" width="600"/>
 </p>
@@ -29,7 +31,7 @@ A partir da lista de parcelas, pode aceder ao detalhe de cada uma, onde são apr
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Exemplo de parcela" width="600"/>
 </p>
 
-Ao selecionar uma cultura, são apresentados os resultados de ACV discriminados por categoria de impacto: fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total.
+Ao selecionar uma cultura, são apresentados os resultados de ACV discriminados por categoria de impacto: fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total. A partir desta vista também pode usar **Adicionar à comparação** para abrir o comparador com essa parcela pré-carregada como conjunto de Referência ou Objetivo.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="ACV de uma parcela" width="600"/>
@@ -48,9 +50,10 @@ Nele, pode comparar dois conjuntos de culturas, filtrando por:
 - País
 - Província
 - Localidade
-- Localização (coordenadas e raio em quilómetros)
+- Parcelas (as suas próprias parcelas; requer sessão iniciada)
+- Localização (ponto selecionado num mapa e raio em metros)
 - Tipo de cultura
-- Ano de campanha (início ou fim)
+- Ano de campanha (início ou fim; a partir de 2020)
 - **Apenas parcelas de referência**: limita o conjunto às parcelas marcadas como referência
 
 Este filtro pode ser aplicado a qualquer um dos dois conjuntos e combina-se com os restantes filtros. Uma **parcela de referência** é uma parcela que um administrador marcou como dado validado; não deve ser confundida com o **conjunto de Referência**, que é o conjunto obrigatório da comparação.
@@ -76,7 +79,7 @@ No comparador, as opções disponíveis são:
 
 ### Gerar Relatório
 
-Também pode gerar um relatório detalhado da comparação em **PDF** clicando em **Gerar relatório**. O relatório contém um resumo da comparação gerado por IA, recomendações para o conjunto objetivo, os três impactos com maior diferença e a discriminação completa da comparação por categorias.
+Também pode gerar um relatório detalhado da comparação em **PDF** clicando em **Gerar relatório**. O relatório contém um resumo da comparação gerado por IA, recomendações para o conjunto objetivo, os três impactos com maior diferença e a discriminação completa da comparação por categorias. O relatório é gerado no idioma ativo da interface.
 
 <p align="center">
     <img src="/img/acv-compare/boton_generar_informe.png" alt="Botão para gerar relatório de ACV" width="400"/>
@@ -98,7 +101,9 @@ Se o utilizador que inicia sessão tiver o papel de administrador, será redirec
 
 A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no LCA Compare. Permite filtrar por ano, categoria de impacto, tipo de cultura e província, e visualiza:
 
-- KPIs globais de culturas, parcelas, utilizadores, superfície, produção, água e impacto médio.
-- Ranking de províncias e localidades.
-- Evolução temporal dos impactos.
-- Perfil de impacto, mapa de calor, distribuição de culturas e relação entre produção e impacto.
+- KPIs globais: número de parcelas, culturas e superfície total, impacto médio por categoria e variação interanual do impacto de alterações climáticas.
+- Ranking de províncias e localidades. Ao clicar numa entrada, abre-se o comparador com essa província ou localidade pré-carregada como conjunto de Referência. O ranking de localidades inclui uma caixa de pesquisa que mostra a posição da localidade no ranking.
+- Evolução temporal dos impactos, com um gráfico de tendência (sparkline) por categoria.
+- Perfil de impacto: gráfico de radar que permite comparar duas províncias ou duas localidades.
+- Mapa de calor por província e categoria; ao clicar no nome de uma categoria, o mapa é reordenado pelos seus valores.
+- Distribuição de culturas e relação entre produção e impacto.

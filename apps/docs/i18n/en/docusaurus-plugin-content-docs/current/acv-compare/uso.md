@@ -7,6 +7,8 @@ sidebar_position: 3
 
 This service receives LCA results calculated by **LCA Bridge** whenever both services are running at the same time. If this is the first time a user performs an LCA calculation, they will receive an email with their access password.
 
+The interface is available in Spanish, English, and Portuguese. You can change the language from the selector in the navigation bar, and your choice is kept between sessions.
+
 <p align="center">
     <img src="/img/acv-compare/correo.png" alt="Welcome email for LCA Compare" width="600"/>
 </p>
@@ -29,7 +31,7 @@ From the plot list, you can open the details for each plot, where its SIGPAC ide
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Plot example" width="600"/>
 </p>
 
-When selecting a crop, LCA results are shown by impact category: fertilizers, crop management, pesticides, irrigation system, and total impact.
+When selecting a crop, LCA results are shown by impact category: fertilizers, crop management, pesticides, irrigation system, and total impact. From this view you can also use **Add to comparison** to open the comparator with that plot preloaded as the Reference or Target set.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="LCA for a plot" width="600"/>
@@ -48,9 +50,10 @@ There, you can compare two crop sets, filtering by:
 - Country
 - Province
 - Town
-- Location (coordinates and radius in kilometers)
+- Plots (your own plots; requires signing in)
+- Location (point selected on a map and radius in meters)
 - Crop type
-- Campaign year (start or end)
+- Campaign year (start or end; from 2020 onwards)
 - **Only reference plots**: limits the set to plots marked as reference
 
 This filter can be applied to either set and is combined with the other filters. A **reference plot** is a plot that an administrator has marked as validated data; it should not be confused with the **Reference** set, which is the mandatory set in the comparison.
@@ -76,7 +79,7 @@ In the comparator, the available options are:
 
 ### Generate Report
 
-You can also generate a detailed comparison report in **PDF** by clicking **Generate report**. The report contains an AI-generated comparison summary, recommendations for the target set, the three impacts with the largest difference, and the full category-by-category comparison breakdown.
+You can also generate a detailed comparison report in **PDF** by clicking **Generate report**. The report contains an AI-generated comparison summary, recommendations for the target set, the three impacts with the largest difference, and the full category-by-category comparison breakdown. The report is generated in the language currently active in the interface.
 
 <p align="center">
     <img src="/img/acv-compare/boton_generar_informe.png" alt="Button to generate LCA report" width="400"/>
@@ -98,7 +101,9 @@ If the signed-in user has the administrator role, they are automatically redirec
 
 The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by year, impact category, crop type, and province, and displays:
 
-- Global KPIs for crops, plots, users, area, production, water, and average impact.
-- Province and town ranking.
-- Time evolution of impacts.
-- Impact profile, heat map, crop distribution, and relationship between production and impact.
+- Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of the climate change impact.
+- Province and town ranking. Clicking an entry opens the comparator with that province or town preloaded as the Reference set. The town ranking includes a search box that shows the town's position in the ranking.
+- Time evolution of impacts, with a trend (sparkline) chart per category.
+- Impact profile: a radar chart that allows comparing two provinces or two towns.
+- Heat map by province and category; clicking a category name reorders the map by its values.
+- Crop distribution and relationship between production and impact.

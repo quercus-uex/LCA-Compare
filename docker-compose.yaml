@@ -55,6 +55,28 @@ services:
       lca-compare:
     restart: unless-stopped
 
+  db-backup:
+    build:
+      context: ./docker/backup
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: acv
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      BACKUP_SCHEDULE: "0 3 * * *"
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+      S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${BACKUP_S3_REGION}
+    depends_on:
+      - db
+    networks:
+      lca-compare:
+    profiles:
+      - prod
+    restart: unless-stopped
+
 volumes:
   postgres:
 

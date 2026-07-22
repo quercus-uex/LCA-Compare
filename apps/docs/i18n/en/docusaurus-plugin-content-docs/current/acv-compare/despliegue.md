@@ -34,6 +34,15 @@ CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password for LCA Capture authenticati
 DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID of the default impact method (EF 3.1)
 
 PORT=8000                                # Backend port in development
+
+BACKUP_S3_ENABLED="false"                 # Upload backups to the S3 bucket
+BACKUP_LOCAL_ENABLED="false"              # Save backups to a local directory on the machine
+BACKUP_LOCAL_DIR="./backups"              # Local directory for backups (mounted in the container as /backups)
+BACKUP_S3_ENDPOINT=""                    # Empty for AWS S3; endpoint for S3-compatible providers
+BACKUP_S3_REGION="eu-west-1"             # Backup bucket region
+BACKUP_S3_BUCKET="acv-db-backups"        # S3 bucket for backups
+BACKUP_S3_ACCESS_KEY_ID="..."            # Access key of the backup IAM user
+BACKUP_S3_SECRET_ACCESS_KEY="..."        # Secret key of the backup IAM user
 ```
 
 In production with Docker Compose, `DATABASE_URL` is automatically injected into the backend as `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. The `.env` value remains available for local commands, tests, or development outside the container.
@@ -83,19 +92,20 @@ The script validates the email, requires a password of at least 8 characters, an
 
 ## Docker Compose Structure
 
-The `docker-compose.yaml` file defines three services. The database starts without a profile, and the applications are included only with the `prod` profile:
+The `docker-compose.yaml` file defines four services. The database starts without a profile, and the applications are included only with the `prod` profile:
 
 | Service | Image | Port | Profile |
 |---|---|---|---|
 | `db` | `postgis/postgis:17-master` | 5432 | *(always active)* |
 | `lca-compare-backend` | Built from `apps/server/Dockerfile` | 8080→3000 | `prod` |
 | `lca-compare-frontend` | Built from `apps/web/Dockerfile` | 80→80 | `prod` |
+| `db-backup` | Built from `docker/backup/Dockerfile` | — | `prod` |
 
 ### Networks
 
 The compose file defines two networks:
 
-- **`acv-compare`**: internal network for communication between backend, frontend, and database.
+- **`lca-compare`**: internal network for communication between backend, frontend, database, and backups.
 - **`olca`**: external network shared with the LCA Bridge service. It must be created manually:
 
 ```bash
@@ -120,7 +130,7 @@ Once the database is ready, deploy all services with the production profile:
 docker compose --profile prod up -d --build
 ```
 
-This builds the backend and frontend images and starts all three services. The backend image first builds `packages/common`, generates the Prisma client, and then builds NestJS. If you did not apply migrations during the previous database preparation step, run them now in the backend container using the workspace `server` script:
+This builds the backend, frontend and backup images and starts all four services. The backend image first builds `packages/common`, generates the Prisma client, and then builds NestJS. If you did not apply migrations during the previous database preparation step, run them now in the backend container using the workspace `server` script:
 
 ```bash
 docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
@@ -135,9 +145,123 @@ The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) 
 3. Rebuilds and starts the containers with `docker compose --profile prod up -d --build`.
 4. Runs pending migrations with `pnpm --filter server prisma:migrate:deploy` inside the `lca-compare-backend` container.
 
-Sensitive environment variables are injected from GitHub secrets (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD`, and `DEFAULT_IMPACT_METHOD_UUID`).
+Sensitive environment variables are injected from GitHub secrets (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD`, `DEFAULT_IMPACT_METHOD_UUID`, `CALC_API_KEY`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID`, and `BACKUP_S3_SECRET_ACCESS_KEY`).
 
 The repository also includes the `.github/workflows/sonar.yml` workflow, which installs dependencies, builds `packages/common`, generates the Prisma client, and runs backend coverage before SonarCloud analysis.
+
+## Backups
+
+The `db-backup` service (prod profile) performs automatic database backups. Every day at 03:00 UTC it runs `pg_dump` against the `acv` database and gzips the output. The destination of the backups is controlled by two boolean variables. Both are disabled by default and at least one must be enabled explicitly (otherwise the `backup` command fails):
+
+- **`BACKUP_S3_ENABLED`**: uploads the backup to `s3://<bucket>/lca-compare-db/daily/`. On Sundays it also copies the backup to the `lca-compare-db/weekly/` prefix for longer retention.
+- **`BACKUP_LOCAL_ENABLED`**: saves the backup to a local directory on the machine. The directory is set with `BACKUP_LOCAL_DIR` (default `./backups`, relative to `docker-compose.yaml`) and is mounted into the container as `/backups`. Backups are organized the same way as in S3: `daily/` and, on Sundays, `weekly/`.
+
+If both destinations are enabled, the dump is generated once and written to both. With only S3 enabled, the backup is streamed without using disk space on the server.
+
+The deployment workflow (`.github/workflows/deploy.yml`) forces both variables to `true`, so on the server both backups are generated: in S3 and in `./backups` inside the deployment directory.
+
+Retention of the S3 backups is enforced by the bucket lifecycle rules (7 daily and 4 weekly). Local backups are **not rotated automatically**: `BACKUP_LOCAL_DIR` must be purged by other means (cron, logrotate...).
+
+The image is built from `docker/backup/` (PostgreSQL 17 client + AWS CLI + cron) and exposes the `backup` command — the same one cron runs — which you can also trigger manually.
+
+### AWS prerequisites
+
+This setup is only needed if `BACKUP_S3_ENABLED=true`. Before the first deployment with S3 backups, three things must be prepared in the AWS account:
+
+**1. Create the S3 bucket.** The name must be globally unique (e.g. `acv-db-backups`). Keep public access blocked (the default), leave versioning disabled, and pick the region you will set in `BACKUP_S3_REGION` (e.g. `eu-west-1`).
+
+**2. Create an IAM user with minimal permissions.** Create a policy with this JSON (adjusting the bucket name):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListBucket",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::acv-db-backups"
+    },
+    {
+      "Sid": "ReadWriteObjects",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::acv-db-backups/*"
+    }
+  ]
+}
+```
+
+Attach the policy to a new user (e.g. `acv-db-backup`) and generate an access key with the "Application running outside AWS" use case. Those two values are `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY`.
+
+**3. Configure the lifecycle rules (retention).** Rotation is not done by the container: it is enforced by the bucket lifecycle rules, keeping 7 daily and 4 weekly backups:
+
+```json
+{
+  "Rules": [
+    {
+      "ID": "expire-daily",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "lca-compare-db/daily/" },
+      "Expiration": { "Days": 8 }
+    },
+    {
+      "ID": "expire-weekly",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "lca-compare-db/weekly/" },
+      "Expiration": { "Days": 29 }
+    }
+  ]
+}
+```
+
+They are configured once, from the console (S3 → bucket → Management → Lifecycle rules) or via CLI with administrator credentials (not the backup user's):
+
+```bash
+aws s3api put-bucket-lifecycle-configuration \
+  --bucket acv-db-backups \
+  --lifecycle-configuration file://lifecycle.json
+```
+
+The margins (8 and 29 days) guarantee keeping at least 7 and 4 complete copies, because AWS evaluates the rules only once a day.
+
+### Manual run and verification
+
+The `backup` command lets you trigger a backup on demand and check that everything works:
+
+```bash
+# With the container running
+docker compose --profile prod exec db-backup backup
+
+# Or as a one-off run
+docker compose --profile prod run --rm db-backup backup
+```
+
+If everything goes well you will see `Backup OK: lca-<date>.sql.gz`. Check that the backup is in its destination:
+
+```bash
+# S3
+aws s3 ls s3://acv-db-backups/lca-compare-db/daily/
+
+# Local directory (the path configured in BACKUP_LOCAL_DIR)
+ls ./backups/daily/
+```
+
+Scheduled runs are recorded in the container logs (`docker logs`).
+
+### Restore
+
+```bash
+# 1. Download the backup (only if the backup is in S3; if it is in the local directory, skip this step and use that path)
+aws s3 cp s3://acv-db-backups/lca-compare-db/daily/<file>.sql.gz .
+
+# 2. Recreate the database with the PostGIS extension (with the backend stopped)
+docker compose exec -T db psql -U "$DB_USER" -d postgres -c "DROP DATABASE acv; CREATE DATABASE acv;"
+docker compose exec -T db psql -U "$DB_USER" -d acv -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+
+# 3. Restore
+gunzip -c <file>.sql.gz | docker compose exec -T db psql -U "$DB_USER" -d acv
+```
 
 ## Verification
 

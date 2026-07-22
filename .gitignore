@@ -74,3 +74,5 @@ apps/server/prisma/migrations
 apps/server/src/generated
 
 .agents/
+
+/backups/

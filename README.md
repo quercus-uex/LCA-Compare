@@ -1,13 +1,13 @@
 # LCA Compare
 
 ## Introducción
-LCA Compare es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [LCA Bridge](https://github.com/rdereparadores/LCA-Bridge).
+LCA Compare es una app web que permite la visualización y comparación del Análisis de Ciclo de Vida (ACV) de los cultivos a partir del resultado proporcionado por [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge).
 
 ## Objetivo
 El objetivo final de esta app es proporcionar de una interfaz sencilla e intuitiva que permita la comparación de ACV entre cultivos con el fin de identificar puntos de mejora en esta materia. Para ello, la app permite...
 - Analizar el resultado de impacto de un cultivo propio.
 - Comparar entre distintos grupos de cultivos según los distintos filtros disponibles.
-- Exportar de los resultados de la comparativa a **JSON**.
+- Exportar de los resultados de la comparativa a **JSON** y **CSV**.
 - Gestionar parcelas con integración de **SIGPAC** y **Catastro** para la localización y representación geoespacial de polígonos.
 - Generar informes y reportes automatizados.
 - Integración con **IA** para análisis asistido.
@@ -79,14 +79,21 @@ El proyecto requiere las siguientes variables de entorno (ver `.env.example`):
 | `CAPTURE_ACV_PASSWORD` | Password para autenticación en LCA Capture |
 | `DEFAULT_IMPACT_METHOD_UUID` | UUID del método de impacto por defecto (EF 3.1) |
 | `PORT` | Puerto del backend; usar `8000` en desarrollo para el proxy de Vite (`3000` es el default de Nest y del contenedor) |
+| `CALC_API_KEY` | Clave de API para realizar un cálculo de ACV |
+| `LCA_CAPTURE_CLIENT_ID` / `LCA_CAPTURE_CLIENT_SECRET` | Credenciales de LCA Capture (solo para regenerar los PDFs de la documentación) |
+| `BACKUP_S3_ENABLED` / `BACKUP_LOCAL_ENABLED` | Activan copias en S3 y/o en disco; en despliegue el workflow fuerza ambas a `true` |
+| `BACKUP_LOCAL_DIR` | Directorio local de copias (por defecto `./backups`) |
+| `BACKUP_S3_ENDPOINT` / `BACKUP_S3_REGION` / `BACKUP_S3_BUCKET` | Configuración del bucket S3 de copias |
+| `BACKUP_S3_ACCESS_KEY_ID` / `BACKUP_S3_SECRET_ACCESS_KEY` | Credenciales IAM para subir copias a S3 |
 
 ## Despliegue
 Para desplegar la infraestructura completa sólo hace falta ejecutar el comando `docker compose --profile prod up -d --build`.
 
-El compose levanta tres servicios:
+El compose levanta cuatro servicios:
 - **lca-compare-backend** - API NestJS (puerto 8080)
 - **lca-compare-frontend** - Frontend React servido con Nginx (puerto 80)
 - **db** - PostgreSQL con PostGIS (puerto 5432)
+- **db-backup** - Copias de seguridad automáticas de la base de datos (perfil prod)
 
 ### Desarrollo
 ```bash
@@ -130,7 +137,8 @@ Por defecto la webapp se encuentra mapeada al puerto 80. La API está disponible
 
 ## Despliegue en la máquina actual
 Para desplegar el servicio en la máquina actual, se debe lanzar de forma manual la GitHub Action
-configurada para ello (variables de entorno preconfiguradas). En caso de querer lanzarlo manualmente,
-se encuentra en la siguiente ruta: `/home/ivan/openlca/Ventum-ACV-Visualizer`.
+configurada para ello (variables de entorno preconfiguradas). El workflow clona o actualiza el
+repositorio en `$HOME/openlca/LCA-Compare` del servidor de despliegue y reconstruye los contenedores
+con Docker Compose.
 
 **IMPORTANTE**: el servicio de LCA Bridge debe haber sido desplegado anteriormente.

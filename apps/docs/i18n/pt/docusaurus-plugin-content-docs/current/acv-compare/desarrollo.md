@@ -98,10 +98,11 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 | `pnpm server:dev` | Inicia o servidor NestJS em modo desenvolvimento com hot reload |
 | `pnpm server:build` | Compila o backend |
 | `pnpm server:start:prod` | Inicia a versão compilada |
+| `pnpm server:test` | Executa os testes unitários do backend com Jest |
 | `pnpm server:lint` | Executa ESLint com as regras do backend |
 | `pnpm server:prisma:generate` | Gera o cliente Prisma usando `apps/server/prisma.config.ts` |
 | `pnpm server:prisma:migrate:deploy` | Aplica migrações pendentes em ambientes implantados |
-| `pnpm admin:create` | Cria um utilizador com o papel `admin` (requer `--email`, `--password`, `--nombre`, `--apellidos`) |
+| `pnpm --filter server admin:create` | Cria um utilizador com o papel `admin` (requer `--email`, `--password`, `--nombre`, `--apellidos`) |
 
 ### Frontend (`apps/web`)
 
@@ -136,14 +137,26 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   │   ├── main.ts            # Bootstrap da aplicação
 │   │   │   ├── app.module.ts      # Módulo raiz
 │   │   │   ├── auth/              # Autenticação JWT (login, registo, guards)
+│   │   │   ├── usuario/           # CRUD de utilizadores
 │   │   │   ├── parcela/           # Gestão de parcelas com dados geoespaciais
 │   │   │   ├── cultivo/           # Registo e consulta de culturas
 │   │   │   ├── resultadoimpacto/  # Armazenamento e consulta de resultados ACV
 │   │   │   ├── compare/           # Lógica de comparação entre conjuntos de culturas
 │   │   │   ├── capture/           # Receção de dados a partir do LCA Bridge
+│   │   │   ├── sigpac/            # Integração com SIGPAC
+│   │   │   ├── catastro/          # Integração com Catastro
+│   │   │   ├── predial/           # Identificador predial português
+│   │   │   ├── pais/              # Consulta de países
+│   │   │   ├── provincia/         # Consulta de províncias
+│   │   │   ├── poblacion/         # Consulta de localidades
+│   │   │   ├── metodoimpacto/     # Métodos de impacto
 │   │   │   ├── stats/             # Estatísticas globais e agregações para o dashboard
 │   │   │   ├── admin/             # CRUD administrativo protegido por papel admin
 │   │   │   ├── ai/                # Integração com OpenRouter para IA
+│   │   │   ├── mailer/            # Envio de correios eletrónicos
+│   │   │   ├── prisma/            # PrismaService de acesso à base de dados
+│   │   │   ├── common/            # DTOs e helpers internos do backend
+│   │   │   ├── scripts/           # Scripts utilitários (p. ex. criar utilizador admin)
 │   │   │   ├── templates/         # Templates Handlebars para relatórios
 │   │   │   └── generated/         # Cliente Prisma autogerado
 │   │   ├── prisma.config.ts       # Configuração Prisma para o pacote server
@@ -161,7 +174,8 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   │   ├── hooks/             # Hooks personalizados
 │   │   │   ├── stats/             # Componentes de visualização estatística
 │   │   │   ├── routes/            # Vistas da aplicação
-│   │   │   └── utils/             # Utilitários
+│   │   │   ├── common/            # Constantes e utilitários partilhados
+│   │   │   └── i18n/              # Internacionalização (es, en, pt)
 │   │   ├── nginx.conf             # Proxy inverso de produção
 │   │   └── Dockerfile             # Imagem do frontend
 │   └── docs/                      # Site Docusaurus
@@ -177,6 +191,8 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 O backend e o frontend consomem contratos partilhados a partir do pacote workspace `common`, por exemplo através de subrotas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/auth` ou `common/api`.
 
 ## Esquema da Base de Dados
+
+![Diagrama ER da base de dados do LCA Compare](/img/acv-compare/esquema-er.png)
 
 O esquema Prisma define os seguintes modelos principais:
 

@@ -37,6 +37,11 @@ DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del m�
 
 PORT=8000                                # Puerto del backend en desarrollo
 
+CALC_API_KEY="calc-api-key"              # Clave de API para realizar un cálculo de ACV
+
+LCA_CAPTURE_CLIENT_ID="..."              # Credenciales de LCA Capture (solo para regenerar los PDFs de la documentación)
+LCA_CAPTURE_CLIENT_SECRET="..."
+
 BACKUP_S3_ENABLED="false"                 # Subir las copias al bucket S3
 BACKUP_LOCAL_ENABLED="false"              # Guardar las copias en un directorio local de la máquina
 BACKUP_LOCAL_DIR="./backups"              # Directorio local para las copias (montado en el contenedor como /backups)
@@ -60,12 +65,13 @@ Compose:
 docker compose up -d db
 ```
 
-Tras desplegar la base de datos, aplica las migraciones de Prisma desde el paquete `server`. El esquema está dividido en
+Tras desplegar la base de datos, sincroniza el esquema de Prisma desde el paquete `server`. El esquema está dividido en
 `apps/server/prisma/schema/` y la configuración de Prisma está en `apps/server/prisma.config.ts`, por lo que los comandos
-deben ejecutarse mediante los scripts del workspace o pasando explícitamente esa configuración.
+deben ejecutarse mediante los scripts del workspace o pasando explícitamente esa configuración. El despliegue utiliza
+`prisma db push`, que aplica el esquema directamente sin historial de migraciones:
 
 ```bash
-pnpm server:prisma:migrate:deploy
+pnpm --filter server prisma:db:push
 ```
 
 Por último, hay que ejecutar el archivo SQL con los datos iniciales (países, provincias, poblaciones...) disponible en
@@ -82,11 +88,12 @@ El backend incluye un script para dar de alta un usuario con rol `admin`. El scr
 
 ### En desarrollo local
 
-Compila el backend y ejecuta el script desde `apps/server`:
+Compila el backend y ejecuta el script desde la raíz del repositorio. El script `admin:create` solo existe en el paquete
+`server`, por lo que hay que invocarlo con `--filter`:
 
 ```bash
 pnpm server:build
-pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
 ```
 
 ### En producción con Docker
@@ -94,7 +101,7 @@ pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="
 Una vez levantado el contenedor del backend, ejecútalo dentro de `lca-compare-backend`:
 
 ```bash
-docker compose exec lca-compare-backend pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+docker compose exec lca-compare-backend pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
 ```
 
 El script valida el email, exige una contraseña de al menos 8 caracteres y comprueba que no exista ya un usuario con
@@ -142,12 +149,11 @@ docker compose --profile prod up -d --build
 ```
 
 Esto construirá las imágenes del backend, frontend y backup, y levantará los cuatro servicios. La imagen del backend compila
-primero `packages/common`, genera el cliente Prisma y después compila NestJS. Si no aplicaste las migraciones durante la
-preparación previa de la base de datos, ejecútalas ahora en el contenedor del backend usando el script del workspace
-`server`:
+primero `packages/common`, genera el cliente Prisma y después compila NestJS. Si no sincronizaste el esquema durante la
+preparación previa de la base de datos, hazlo ahora en el contenedor del backend usando el script del workspace `server`:
 
 ```bash
-docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
+docker compose exec lca-compare-backend pnpm --filter server prisma:db:push
 ```
 
 ## CI/CD
@@ -158,7 +164,7 @@ ramas `main` y `develop`. El pipeline:
 1. Se conecta por SSH al servidor de despliegue.
 2. Clona o actualiza el repositorio en la rama correspondiente.
 3. Reconstruye y levanta los contenedores con `docker compose --profile prod up -d --build`.
-4. Ejecuta las migraciones pendientes con `pnpm --filter server prisma:migrate:deploy` dentro del contenedor
+4. Sincroniza el esquema de Prisma con `pnpm --filter server prisma:db:push` dentro del contenedor
    `lca-compare-backend`.
 
 Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,

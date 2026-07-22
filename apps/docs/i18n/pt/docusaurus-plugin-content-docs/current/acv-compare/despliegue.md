@@ -35,6 +35,11 @@ DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID do mé
 
 PORT=8000                                # Porta do backend em desenvolvimento
 
+CALC_API_KEY="calc-api-key"              # Chave de API para realizar um cálculo de ACV
+
+LCA_CAPTURE_CLIENT_ID="..."              # Credenciais do LCA Capture (apenas para regenerar os PDFs da documentação)
+LCA_CAPTURE_CLIENT_SECRET="..."
+
 BACKUP_S3_ENABLED="false"                 # Enviar as cópias para o bucket S3
 BACKUP_LOCAL_ENABLED="false"              # Guardar as cópias num diretório local da máquina
 BACKUP_LOCAL_DIR="./backups"              # Diretório local para as cópias (montado no contentor como /backups)
@@ -55,10 +60,10 @@ Em primeiro lugar, é necessário implantar a base de dados. Para isso, levantam
 docker compose up -d db
 ```
 
-Após implantar a base de dados, aplique as migrações do Prisma a partir do pacote `server`. O esquema está dividido em `apps/server/prisma/schema/` e a configuração do Prisma está em `apps/server/prisma.config.ts`, pelo que os comandos devem ser executados através dos scripts do workspace ou passando explicitamente essa configuração.
+Após implantar a base de dados, sincronize o esquema do Prisma a partir do pacote `server`. O esquema está dividido em `apps/server/prisma/schema/` e a configuração do Prisma está em `apps/server/prisma.config.ts`, pelo que os comandos devem ser executados através dos scripts do workspace ou passando explicitamente essa configuração. A implantação utiliza `prisma db push`, que aplica o esquema diretamente sem histórico de migrações:
 
 ```bash
-pnpm server:prisma:migrate:deploy
+pnpm --filter server prisma:db:push
 ```
 
 Por fim, execute o ficheiro SQL com os dados iniciais (países, províncias, localidades...) disponível em `init/dbinit.sql`. Este ficheiro é um seed SQL manual de dados de referência de Portugal, não uma migração automática:
@@ -73,11 +78,11 @@ O backend inclui um script para criar um utilizador com o papel `admin`. O scrip
 
 ### Em Desenvolvimento Local
 
-Compile o backend e execute o script a partir de `apps/server`:
+Compile o backend e execute o script a partir da raiz do repositório. O script `admin:create` só existe no pacote `server`, pelo que deve ser invocado com `--filter`:
 
 ```bash
 pnpm server:build
-pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
 ```
 
 ### Em Produção com Docker
@@ -85,7 +90,7 @@ pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="
 Depois de levantado o contentor do backend, execute-o dentro de `lca-compare-backend`:
 
 ```bash
-docker compose exec lca-compare-backend pnpm admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+docker compose exec lca-compare-backend pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
 ```
 
 O script valida o email, exige uma palavra-passe de pelo menos 8 caracteres e verifica se já existe um utilizador com o mesmo correio.
@@ -130,10 +135,10 @@ Depois de preparar a base de dados, implantamos todos os serviços com o perfil 
 docker compose --profile prod up -d --build
 ```
 
-Isto constrói as imagens do backend, frontend e backup e levanta os quatro serviços. A imagem do backend compila primeiro `packages/common`, gera o cliente Prisma e depois compila NestJS. Se não aplicou as migrações durante a preparação anterior da base de dados, execute-as agora no contentor do backend usando o script do workspace `server`:
+Isto constrói as imagens do backend, frontend e backup e levanta os quatro serviços. A imagem do backend compila primeiro `packages/common`, gera o cliente Prisma e depois compila NestJS. Se não sincronizou o esquema durante a preparação anterior da base de dados, faça-o agora no contentor do backend usando o script do workspace `server`:
 
 ```bash
-docker compose exec lca-compare-backend pnpm --filter server prisma:migrate:deploy
+docker compose exec lca-compare-backend pnpm --filter server prisma:db:push
 ```
 
 ## CI/CD
@@ -143,7 +148,7 @@ O projeto inclui um workflow de GitHub Actions (`.github/workflows/deploy.yml`) 
 1. Liga-se por SSH ao servidor de implantação.
 2. Clona ou atualiza o repositório na branch correspondente.
 3. Reconstrói e levanta os contentores com `docker compose --profile prod up -d --build`.
-4. Executa as migrações pendentes com `pnpm --filter server prisma:migrate:deploy` dentro do contentor `lca-compare-backend`.
+4. Sincroniza o esquema do Prisma com `pnpm --filter server prisma:db:push` dentro do contentor `lca-compare-backend`.
 
 As variáveis de ambiente sensíveis são injetadas a partir dos secrets do GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD`, `DEFAULT_IMPACT_METHOD_UUID`, `CALC_API_KEY`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY_ID` e `BACKUP_S3_SECRET_ACCESS_KEY`).
 

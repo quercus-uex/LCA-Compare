@@ -31,6 +31,8 @@ services:
       - "80:80"
     environment:
       CALC_API_KEY: ${CALC_API_KEY}
+    volumes:
+      - ./logs/nginx:/var/log/nginx
     depends_on:
       - lca-compare-backend
     networks:

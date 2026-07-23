@@ -14,7 +14,7 @@ export const NavBar = () => {
     <div className="w-full relative z-[1100]">
       <div className="w-full min-h-16 bg-white flex items-center p-3 rounded-xl gap-3 flex-wrap">
         <div className="flex-1">
-          <p>{t('nav.appName')}</p>
+          <Link to="/" className="font-semibold hover:text-primary transition-colors">{t('nav.appName')}</Link>
         </div>
 
         <div className="flex gap-2 flex-wrap justify-end">

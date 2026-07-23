@@ -65,7 +65,7 @@ export const es = {
     },
   },
   nav: {
-    appName: 'Comparador LCA',
+    appName: 'LCA Compare',
     compare: 'Comparador',
     documentation: 'Documentación',
     login: 'Iniciar sesión',
@@ -172,6 +172,35 @@ export const es = {
     title: 'Resultado de impacto',
     method: 'Método utilizado',
     addToComparison: 'Añadir a comparativa',
+  },
+  landing: {
+    hero: {
+      title: 'LCA Compare',
+      subtitle: 'Analiza y compara el impacto ambiental de tus parcelas agrícolas con datos de Análisis de Ciclo de Vida.',
+      cta: {
+        primary: 'Comparar parcelas',
+        primaryAriaLabel: 'Ir al comparador de parcelas',
+        secondary: 'Ver documentación',
+        secondaryAriaLabel: 'Abrir la documentación de LCA Compare en una pestaña nueva (enlace externo)',
+      },
+    },
+    features: {
+      compare: {
+        title: 'Comparador',
+        description: 'Compara parcelas de referencia y objetivo con datos de Análisis de Ciclo de Vida normalizados.',
+        ariaLabel: 'Ir al comparador de parcelas',
+      },
+      stats: {
+        title: 'Estadísticas',
+        description: 'Explora rankings, evolución temporal y perfiles de impacto por provincia, población y cultivo.',
+        ariaLabel: 'Ir a las estadísticas globales',
+      },
+      plots: {
+        title: 'Mis parcelas',
+        description: 'Gestiona tus parcelas y visualiza sus cultivos e impactos asociados.',
+        ariaLabel: 'Ir a mis parcelas',
+      },
+    },
   },
   admin: {
     title: 'Panel de Administración',

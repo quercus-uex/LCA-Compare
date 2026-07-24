@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toggleInArray } from '../../common/utils.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
@@ -27,12 +28,7 @@ export const ParcelaFilterCollapse = (
   }, [parcela, usuario]);
 
   const toggleParcela = (p: Parcela) => {
-    const selected = filters.parcelas!;
-    if (selected.find((i) => i.id === p.id)) {
-      setFilters({ ...filters, parcelas: selected.filter((i) => i.id !== p.id) });
-    } else {
-      setFilters({ ...filters, parcelas: [...selected, p] });
-    }
+    setFilters({ ...filters, parcelas: toggleInArray(filters.parcelas ?? [], p) });
   };
 
   return (
@@ -61,7 +57,7 @@ export const ParcelaFilterCollapse = (
             .map((p) => (
               <li
                 key={p.id}
-                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.parcelas!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.parcelas?.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
               >
                 <button
                   type="button"

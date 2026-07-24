@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
 import { type Provincia, useLocation } from '../hooks/location.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
@@ -43,7 +43,7 @@ export const StatsPoblacionRanking = ({
   };
 
   const selectedCategoryData = selectedCategory
-    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)
+    ? getEfCategory(selectedCategory)
     : undefined;
 
   const handleActivate = (item: PoblacionRankingItemDto) => {

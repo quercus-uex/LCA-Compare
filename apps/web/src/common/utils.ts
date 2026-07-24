@@ -17,6 +17,12 @@ export function safeString(value: unknown): string | null {
   return null;
 }
 
+export function toggleInArray<T extends { id: string }>(arr: T[], item: T): T[] {
+  return arr.some((i) => i.id === item.id)
+    ? arr.filter((i) => i.id !== item.id)
+    : [...arr, item];
+}
+
 export function formatDate(value: Date | string): string | null {
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return null;

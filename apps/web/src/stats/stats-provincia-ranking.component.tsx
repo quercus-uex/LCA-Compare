@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
 import { formatNumber } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
@@ -27,7 +27,7 @@ export const StatsProvinciaRanking = ({
   };
 
   const selectedCategoryData = selectedCategory
-    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)
+    ? getEfCategory(selectedCategory)
     : undefined;
 
   const handleActivate = (item: ProvinciaRankingItemDto) => {

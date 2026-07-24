@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { toggleInArray } from '../../common/utils.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
@@ -30,12 +31,7 @@ export const ProvinciaFilterCollapse = (
   }, [location, t]);
 
   const toggleProvincia = (p: Provincia) => {
-    const selected = filters.provincias!;
-    if (selected.find((i) => i.id === p.id)) {
-      setFilters({ ...filters, provincias: selected.filter((i) => i.id !== p.id) });
-    } else {
-      setFilters({ ...filters, provincias: [...selected, p] });
-    }
+    setFilters({ ...filters, provincias: toggleInArray(filters.provincias ?? [], p) });
   };
 
   return (
@@ -63,7 +59,7 @@ export const ProvinciaFilterCollapse = (
             .map((p) => (
               <li
                 key={p.id}
-                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
+                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias?.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
               >
                 <button
                   type="button"

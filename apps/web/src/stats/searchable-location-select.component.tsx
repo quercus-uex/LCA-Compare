@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions -- autocomplete listbox uses mouse events for highlight/selection */
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, type KeyboardEvent } from 'react';
+import { useClickOutside } from '../hooks/use-click-outside.ts';
 
 type Props<T> = {
   items: T[];
@@ -38,18 +39,7 @@ export function SearchableLocationSelect<T>({
     setHighlightIndex(0);
   }, []);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        close();
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [close]);
+  useClickOutside(containerRef, close);
 
   const selectItem = (item: T) => {
     onChange(item);

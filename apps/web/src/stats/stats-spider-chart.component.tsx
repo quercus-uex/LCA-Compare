@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { SearchableLocationSelect } from './searchable-location-select.component.tsx';
+import { CHART_TOOLTIP_STYLE } from './stats-colors.ts';
 import { formatImpactValue } from './stats-formatters.ts';
 import type {
   ProvinciaRankingItemDto,
@@ -243,13 +244,7 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
             tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'oklch(0.21 0.006 285.885)',
-              border: '1px solid oklch(0.3 0.01 285.885)',
-              borderRadius: '0.5rem',
-              fontSize: '12px',
-              color: 'oklch(0.9 0.01 285.885)',
-            }}
+            contentStyle={CHART_TOOLTIP_STYLE}
             formatter={(_value, _name, entry) => {
               const dk = entry?.dataKey as string | undefined;
               const rawKey = dk === 'prov1' ? 'prov1_raw' : 'prov2_raw';

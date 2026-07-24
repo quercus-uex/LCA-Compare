@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { apiRequest } from '../../common/api.ts';
 import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
 import { safeString } from '../../common/utils.ts';
+import { useClickOutside } from '../../hooks/use-click-outside.ts';
 
 export interface FkConfig {
   entity: string;
@@ -71,15 +72,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
     return () => controller.abort();
   }, [loadOptions]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(containerRef, () => setOpen(false));
 
   const filteredOptions = useMemo(() => {
     if (!search) return options;

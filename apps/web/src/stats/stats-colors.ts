@@ -10,3 +10,11 @@ export const CHART_COLORS = [
 ];
 
 export const colorAt = (index: number): string => CHART_COLORS[index % CHART_COLORS.length] ?? CHART_COLORS[0]!;
+
+export const CHART_TOOLTIP_STYLE = {
+  backgroundColor: 'oklch(0.21 0.006 285.885)',
+  border: '1px solid oklch(0.3 0.01 285.885)',
+  borderRadius: '0.5rem',
+  fontSize: '12px',
+  color: 'oklch(0.9 0.01 285.885)',
+};

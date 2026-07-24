@@ -10,4 +10,10 @@ export const DEFAULT_MAP_CENTER = { lat: 39.46292681484013, lng: -6.329063770806
 export const UBICACION_RANGE_MIN = 1;
 export const UBICACION_RANGE_MAX = 100000;
 
-export { EF_CATEGORIES, type EfCategoryId, IMPACT_KEYS, type ImpactKey } from 'common/impact';
+export {
+  EF_CATEGORIES,
+  type EfCategoryId,
+  IMPACT_KEYS,
+  type ImpactKey,
+  getEfCategory,
+} from 'common/impact';

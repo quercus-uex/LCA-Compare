@@ -65,7 +65,7 @@ pnpm docs:typecheck
 
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
 - DaisyUI 5 is configured in CSS via `@plugin "daisyui"` and the custom `acv` theme in `apps/web/src/index.css`.
-- `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, and `noUncheckedSideEffectImports`.
+- `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noUncheckedSideEffectImports`, `noImplicitOverride`, and `noUncheckedIndexedAccess` (the last makes `arr[i]`/`obj[k]` return `T | undefined`, so index reads need null guards).
 - Production Nginx proxies `/api/` to `lca-compare-backend:3000/` and `/calc` to `lca-bridge:3000/capture-acv`; `/calc` rejects requests without header `x-api-key: $CALC_API_KEY` (401) and requires the external `olca` network service.
 
 ## Deploy And Infra

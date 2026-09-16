@@ -18,6 +18,7 @@ export type {
   CompareFilterDto,
   CompareQueryItemDto,
   CompareQueryDto,
+  CompareReportLanguage,
   CompareResultItemDto,
   CompareResultDto,
 } from './compare.js';

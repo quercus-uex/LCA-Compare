@@ -19,7 +19,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Servidor IPC do OpenLCA
+## [Servidor IPC do OpenLCA](https://github.com/GreenDelta/olca-ipc-container)
 
 O serviço necessita de um servidor IPC do OpenLCA em execução. A base de dados do OpenLCA deve estar disponível em `openlca-docker/data/databases/bafu`. Para iniciar o servidor IPC, implante esse serviço do Docker Compose:
 

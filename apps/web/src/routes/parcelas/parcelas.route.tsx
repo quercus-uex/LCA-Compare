@@ -1,7 +1,7 @@
-import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { useEffect, useState } from 'react';
-import { ParcelasItem } from './parcelas-item.component.tsx';
 import { useTranslation } from 'react-i18next';
+import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
+import { ParcelasItem } from './parcelas-item.component.tsx';
 
 export const ParcelasRoute = () => {
   const [parcelas, setParcelas] = useState<Parcela[] | undefined>(undefined);
@@ -10,7 +10,7 @@ export const ParcelasRoute = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    parcela.getFromToken()
+    void parcela.getFromToken()
       .then(p => setParcelas(p));
   }, [parcela]);
 

@@ -1,27 +1,16 @@
+import type { ResultadoImpactoDto } from 'common/api';
 import { createContext, useContext, useMemo } from 'react';
+import { apiFetch } from '../common/api.ts';
 import type { Cultivo } from './parcela.hook.tsx';
-import { API_BASE_URL } from '../common/constants.ts';
 
 type MetodoImpacto = {
   id: string;
   nombre: string;
 }
 
-export type ResultadoImpactoItem = {
-  unit: string;
-  amount: number;
-  category: string;
-}
-
 export type ResultadoImpacto = {
   id: string;
-  datos: {
-    impacto_total: ResultadoImpactoItem[],
-    impacto_pesticidas: ResultadoImpactoItem[],
-    impacto_fertilizantes: ResultadoImpactoItem[],
-    impacto_sistema_riego: ResultadoImpactoItem[],
-    impacto_manejo_cultivo: ResultadoImpactoItem[],
-  };
+  datos: ResultadoImpactoDto;
   impacto: MetodoImpacto;
   cultivo: Cultivo;
 }
@@ -34,19 +23,7 @@ const ResultadoImpactoContext = createContext<ResultadoImpactoContextType | unde
 
 export function ResultadoImpactoProvider({ children }: { children: React.ReactNode }) {
 
-  const getById = async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/resultado/${id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-
-    if (!response.ok) throw new Error();
-
-    const json = await response.json();
-    return json.data as ResultadoImpacto;
-  }
+  const getById = async (id: string) => apiFetch<ResultadoImpacto>(`/resultado/${id}`);
 
   const value = useMemo(() => ({ getById }), []);
   return (

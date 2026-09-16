@@ -3,10 +3,10 @@ sidebar_label: 'Definición de procesos'
 sidebar_position: 5
 ---
 
-# Definición de procesos en Capture ACV
+# Definición de procesos en LCA Bridge
 
-Los **procesos** son el núcleo del cálculo de ACV en Capture ACV. Cada tipo de cultivo soportado tiene asociado un
-proceso que define cómo se mapean los datos agronómicos de DTAgro a los flujos de entrada y salida de openLCA.
+Los **procesos** son el núcleo del cálculo de ACV en LCA Bridge. Cada tipo de cultivo soportado tiene asociado un
+proceso que define cómo se mapean los datos agronómicos de LCA Capture a los flujos de entrada y salida de openLCA.
 
 Actualmente existen tres procesos implementados:
 
@@ -62,7 +62,7 @@ class Process:
 
 | Atributo | Descripción |
 |---|---|
-| `name` | Nombre del proceso. Debe coincidir con el valor de `metadatos.cultivo.tipo` que DTAgro envía en el JSON. |
+| `name` | Nombre del proceso. Debe coincidir con el valor de `metadatos.cultivo.tipo` que LCA Capture envía en el JSON. |
 | `uuid` | UUID del sistema de producto en la base de datos .zolca de openLCA. Es el punto de entrada del cálculo de impacto. |
 | `fertilizantes_flow_name` | Nombre del flujo intermedio de fertilizantes en openLCA. |
 | `manejo_cultivo_flow_name` | Nombre del flujo intermedio de manejo de cultivo en openLCA. |
@@ -80,7 +80,7 @@ parseado) y devuelven un `FlowDict`:
 | `get_manejo_cultivo_flow(output)` | Mapea las labores agrícolas y uso de suelo a flujos de openLCA. |
 | `get_pesticidas_flow(output)` | Mapea los productos fitosanitarios a flujos de openLCA. |
 | `get_sistema_riego_flow(output)` | Mapea los componentes del sistema de riego a flujos de openLCA. |
-| `get_all_flows(output)` | Devuelve un diccionario con los cuatro flujos anteriores, keyed por sus nombres. |
+| `get_all_flows(output)` | Devuelve un diccionario con los cuatro flujos anteriores, indexado por sus nombres. |
 
 ## Modelo `FlowDict`
 
@@ -93,7 +93,7 @@ class FlowDict:
 ```
 
 - Las **claves** son los nombres exactos de los flujos tal como están definidos en la base de datos .zolca de openLCA.
-- Los **valores** son las cantidades extraídas del JSON de entrada de DTAgro.
+- Los **valores** son las cantidades extraídas del JSON de entrada de LCA Capture.
 
 ### Ejemplo: flujo de fertilizantes en `TomateProcess`
 
@@ -135,7 +135,7 @@ Cuando `ACVService.execute()` recibe una petición, el proceso se utiliza de la 
 
 Cada subproceso (fertilizantes, manejo de cultivo, pesticidas, sistema de riego) se actualiza de forma independiente
 en openLCA antes de ejecutar el cálculo global. Esto permite que los valores de los flujos reflejen los datos reales
-del cultivo enviado por DTAgro.
+del cultivo enviado por LCA Capture.
 
 ## Cómo añadir un nuevo proceso
 
@@ -148,6 +148,12 @@ Antes de tocar código, necesitas definir en la base de datos .zolca:
 - Un **sistema de producto** para el nuevo cultivo con su UUID correspondiente.
 - Cuatro **subprocesos** para las categorías: fertilizantes, manejo de cultivo, pesticidas y sistema de riego.
 - Los **flujos** de entrada y salida que conectan los subprocesos con el sistema de producto principal.
+
+La siguiente captura muestra un ejemplo del sistema definido en OpenLCA:
+
+<p align="center">
+    <img src="/img/openlca-bridge/captura-openlca.png" alt="Sistema de producto definido en OpenLCA" width="700"/>
+</p>
 
 Los nombres de los flujos deben coincidir exactamente con los que usarás en el código.
 

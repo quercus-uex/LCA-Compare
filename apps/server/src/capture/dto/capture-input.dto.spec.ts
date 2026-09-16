@@ -4,7 +4,11 @@ import { validateSync } from 'class-validator';
 import { CaptureInputDto, SigpacDto } from './capture-input.dto';
 
 function validPayload() {
-  const impact = { category: 'Climate change', amount: 12.5, unit: 'kg CO2 eq' };
+  const impact = {
+    category: 'Climate change',
+    amount: 12.5,
+    unit: 'kg CO2 eq',
+  };
   return {
     metadatos: {
       parcela: {
@@ -49,9 +53,7 @@ describe('CaptureInputDto', () => {
 
     expect(validateSync(dto)).toEqual([]);
     expect(dto.metadatos.parcela.es_sigpac).toBeInstanceOf(SigpacDto);
-    expect(dto.metadatos.cultivo.constructor.name).toBe(
-      'MetadatosCultivoDto',
-    );
+    expect(dto.metadatos.cultivo.constructor.name).toBe('MetadatosCultivoDto');
     expect(dto.resultado.impacto_total[0].constructor.name).toBe('ImpactoDto');
   });
 

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AreaChart,
   Area,
@@ -9,10 +10,10 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { EF_CATEGORIES } from '../common/constants.ts';
-import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
+import { EF_CATEGORIES, getEfCategory, type EfCategoryId } from '../common/constants.ts';
+import { CHART_TOOLTIP_STYLE } from './stats-colors.ts';
 import { formatImpactValue } from './stats-formatters.ts';
-import { useTranslation } from 'react-i18next';
+import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
@@ -45,21 +46,15 @@ export const StatsTimeline = ({ data }: Props) => {
           <XAxis
             dataKey="anio"
             tick={{ fontSize: 12 }}
-            tickFormatter={(v) => v.toString()}
+            tickFormatter={(v: number) => v.toString()}
           />
           <YAxis tick={{ fontSize: 12 }} />
           <Tooltip
-            contentStyle={{
-              backgroundColor: 'oklch(0.21 0.006 285.885)',
-              border: '1px solid oklch(0.3 0.01 285.885)',
-              borderRadius: '0.5rem',
-              fontSize: '12px',
-              color: 'oklch(0.9 0.01 285.885)',
-            }}
+            contentStyle={CHART_TOOLTIP_STYLE}
             formatter={(value, name) => {
               const v = typeof value === 'number' ? value : 0;
               const n = String(name);
-              const cat = EF_CATEGORIES.find((c) => c.id === n);
+              const cat = getEfCategory(n as EfCategoryId);
               return [
                 formatImpactValue(v, '0'),
                 cat ? `${getCategoryLabel(cat.id)} (${cat.unit})` : n,
@@ -108,7 +103,7 @@ export const StatsTimeline = ({ data }: Props) => {
               <div className="text-[10px] text-base-content/50 text-right">
                 {data.length > 0
                   ? formatImpactValue(
-                      data[data.length - 1].categorias[cat.id] ?? 0,
+                      data[data.length - 1]?.categorias[cat.id] ?? 0,
                       '0',
                     )
                   : '—'}{' '}

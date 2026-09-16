@@ -16,25 +16,10 @@ type RankedByImpact = {
   impactosPorCategoria: CategoryAmountRecord;
 };
 
-const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
+export const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
   acc[cat.id] = 0;
   return acc;
 }, {} as CategoryAmountRecord);
-
-export function buildCampaignYearFilter(
-  anio?: number,
-): Record<string, unknown> {
-  if (!anio) {
-    return {};
-  }
-
-  return {
-    fechaInicioCampania: {
-      gte: new Date(`${anio}-01-01T00:00:00.000Z`),
-      lt: new Date(`${anio + 1}-01-01T00:00:00.000Z`),
-    },
-  };
-}
 
 export function collectImpactoIds(cultivos: CultivoWithImpactId[]): string[] {
   return [
@@ -106,6 +91,11 @@ export function meanCategories(
 
 export function totalImpact(record: CategoryAmountRecord): number {
   return EF_CATEGORIES.reduce((sum, cat) => sum + (record[cat.id] ?? 0), 0);
+}
+
+export function round(value: number, decimals = 2): number {
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
 }
 
 export function sortByImpact<T extends RankedByImpact>(

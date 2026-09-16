@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { FilterCollapse } from './filter-collapse.component';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { toggleInArray } from '../../common/utils.ts';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const ProvinciaFilterCollapse = (
   {
@@ -23,16 +25,13 @@ export const ProvinciaFilterCollapse = (
   const [query, setQuery] = useState<string>('');
 
   useEffect(() => {
-    location.getProvincias().then((p) => setProvincias(p));
-  }, [location]);
+    location.getProvincias()
+      .then((p) => setProvincias(p))
+      .catch(() => toast.error(t('location.provincesError')));
+  }, [location, t]);
 
   const toggleProvincia = (p: Provincia) => {
-    const selected = filters.provincias!;
-    if (selected.find((i) => i.id === p.id)) {
-      setFilters({ ...filters, provincias: selected.filter((i) => i.id !== p.id) });
-    } else {
-      setFilters({ ...filters, provincias: [...selected, p] });
-    }
+    setFilters({ ...filters, provincias: toggleInArray(filters.provincias ?? [], p) });
   };
 
   return (
@@ -55,16 +54,21 @@ export const ProvinciaFilterCollapse = (
         <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
           {provincias
             .filter((p) =>
-              p.nombre.toUpperCase().match(new RegExp(`^.*${query.toUpperCase()}.*$`)),
+              p.nombre.toUpperCase().includes(query.toUpperCase()),
             )
             .map((p) => (
               <li
                 key={p.id}
-                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias!.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
-                onClick={() => toggleProvincia(p)}
+                className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.provincias?.find(i => i.id === p.id) ? 'bg-base-300' : ''}`}
               >
-                {p.nombre}
-                <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between"
+                  onClick={() => toggleProvincia(p)}
+                >
+                  {p.nombre}
+                  <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+                </button>
               </li>
             ))}
         </ul>

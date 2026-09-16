@@ -1,22 +1,12 @@
+import type { Usuario } from 'common/usuario';
 import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
-import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-
-type Usuario = {
-  id: string;
-  nombre: string;
-  apellidos: string;
-  email: string;
-  rol: string;
-  fechaRegistro: string;
-  fechaActualizacion: string;
-}
+import { ApiError, apiFetch, apiRequest } from '../common/api.ts';
+import { clearToken, getToken, setToken } from '../common/auth.ts';
 
 type AuthContextType = {
   usuario: Usuario | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<Usuario | null>;
   logout: () => void;
 }
 
@@ -24,58 +14,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!getToken());
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const { t } = useTranslation();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
 
     if (!token) {
-      new Promise(() => setLoading(false));
       return;
     }
 
-    fetch(`${API_BASE_URL}/usuario`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
+    apiFetch<Usuario>('/usuario')
       .then(u => {
-        setUsuario(u.data);
+        setUsuario(u);
         setLoading(false);
       })
-      .catch(() => { setLoading(false) })
+      .catch(() => { void setLoading(false) });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await apiRequest('/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ email, password }),
-    })
+    });
 
     if (!response.ok) {
-      toast.error(t('auth.login.invalidCredentials'));
-      return false;
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    localStorage.setItem('token', json.data.accessToken);
-    return true;
-  }, [t]);
+    const json = (await response.json()) as { data: { accessToken: string } };
+    const token = json.data.accessToken;
+    setToken(token);
+
+    try {
+      const u = await apiFetch<Usuario>('/usuario');
+      setUsuario(u);
+      return u;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    window.location.reload();
+    clearToken();
+    setUsuario(null);
   }, []);
 
   const value = useMemo(() => ({ usuario, loading, login, logout }), [usuario, loading, login, logout]);

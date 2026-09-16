@@ -1,10 +1,10 @@
-import { CopyToClipboardBtn } from '../../components/copy-to-clipboard.btn.component.tsx';
-import { CultivoCard } from './cultivo.card.component.tsx';
-import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { MapPreview } from '../../components/map-preview.component.tsx';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router';
+import { CopyToClipboardBtn } from '../../components/copy-to-clipboard.btn.component.tsx';
+import { MapPreview } from '../../components/map-preview.component.tsx';
+import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
+import { CultivoCard } from './cultivo.card.component.tsx';
 
 export const ParcelaRoute = () => {
   const [parcela, setParcela] = useState<Parcela | undefined>(undefined);
@@ -18,7 +18,7 @@ export const ParcelaRoute = () => {
 
     p.getById(id)
       .then(p => setParcela(p))
-      .catch(() => {navigate('/404')});
+      .catch(() => { void navigate('/404') });
   }, [id, navigate, p])
 
   if (!parcela || !parcela.cultivos || !parcela.geom) return <div className="skeleton w-full h-full" />
@@ -34,7 +34,14 @@ export const ParcelaRoute = () => {
         </figure>
         <div className="card-body flex flex-col">
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-semibold">{parcela.nombre}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold">{parcela.nombre}</h1>
+              {parcela.esParcelaReferencia && (
+                <span className="badge badge-success">
+                  {t('parcelas.referenceBadge')}
+                </span>
+              )}
+            </div>
             <div className="flex gap-2 items-center">
               <p>
                 <span className="font-bold">SIGPAC: </span>
@@ -60,7 +67,7 @@ export const ParcelaRoute = () => {
 
           <div className="flex flex-col gap-2">
             <h2 className="text-xl ">{t('parcelas.currentCrop')}</h2>
-            <CultivoCard cultivo={parcela.cultivos[0]} />
+            {parcela.cultivos[0] && <CultivoCard cultivo={parcela.cultivos[0]} />}
           </div>
         </div>
       </div>

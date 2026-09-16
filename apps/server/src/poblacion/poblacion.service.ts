@@ -38,13 +38,21 @@ export class PoblacionService {
     });
   }
 
-  async create(data: Prisma.PoblacionCreateInput): Promise<Poblacion> {
+  async create(
+    data: Prisma.XOR<
+      Prisma.PoblacionCreateInput,
+      Prisma.PoblacionUncheckedCreateInput
+    >,
+  ): Promise<Poblacion> {
     return this.prisma.poblacion.create({ data });
   }
 
   async update(params: {
     where: Prisma.PoblacionWhereUniqueInput;
-    data: Prisma.PoblacionUpdateInput;
+    data: Prisma.XOR<
+      Prisma.PoblacionUpdateInput,
+      Prisma.PoblacionUncheckedUpdateInput
+    >;
   }): Promise<Poblacion> {
     const { where, data } = params;
     return this.prisma.poblacion.update({ data, where });
@@ -52,6 +60,23 @@ export class PoblacionService {
 
   async delete(where: Prisma.PoblacionWhereUniqueInput): Promise<Poblacion> {
     return this.prisma.poblacion.delete({ where });
+  }
+
+  async findByCatastroIds(
+    provinciaCatastro: number,
+    poblacionCatastro: number,
+    countryCode: string,
+  ): Promise<Poblacion | undefined> {
+    const res = await this.findMany({
+      where: {
+        provincia: {
+          idCatastro: provinciaCatastro,
+          pais: { codigo: countryCode },
+        },
+        idCatastro: poblacionCatastro,
+      },
+    });
+    return res[0];
   }
 
   async count(where?: Prisma.PoblacionWhereInput): Promise<number> {

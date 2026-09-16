@@ -1,9 +1,11 @@
-import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
-import { useState } from 'react';
-import { Circle, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import { LatLng, type LeafletMouseEvent } from 'leaflet';
-import { FilterCollapse } from './filter-collapse.component';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Circle, Marker, useMapEvents } from 'react-leaflet';
+import { DEFAULT_MAP_CENTER, UBICACION_RANGE_MAX, UBICACION_RANGE_MIN } from '../../common/constants.ts';
+import { MapPreview } from '../../components/map-preview.component.tsx';
+import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { FilterCollapse } from './filter-collapse.component';
 
 export const UbicacionFilterCollapse = (
   {
@@ -44,10 +46,10 @@ export const UbicacionFilterCollapse = (
       }}
     >
       <div className="flex flex-col gap-5 w-full">
-        <MapContainer
-          center={{ lat: 39.46292681484013, lng: -6.329063770806773 }}
-          zoom={10}
+        <MapPreview
           className="w-full aspect-square"
+          center={DEFAULT_MAP_CENTER}
+          zoom={10}
         >
           {target && (
             <>
@@ -55,19 +57,15 @@ export const UbicacionFilterCollapse = (
               <Circle center={target} radius={range} />
             </>
           )}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
           <MapClickHandler />
-        </MapContainer>
+        </MapPreview>
         <div className="flex flex-col gap-2">
           <p>{t('compare.filters.range', { range })}</p>
           <input
             className="range range-primary w-full"
             type="range"
-            min={1}
-            max={100000}
+            min={UBICACION_RANGE_MIN}
+            max={UBICACION_RANGE_MAX}
             value={range}
             onChange={(e) => {
               const nextRange = parseInt(e.target.value);

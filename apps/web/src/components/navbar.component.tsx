@@ -1,7 +1,8 @@
-import { useAuth } from '../hooks/auth.hook.tsx';
-import { Link, useNavigate } from 'react-router';
-import {FiExternalLink} from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
+import {FiExternalLink} from "react-icons/fi";
+import { Link, useNavigate } from 'react-router';
+import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
+import { useAuth } from '../hooks/auth.hook.tsx';
 import { LanguageSelector } from './language-selector.component.tsx';
 
 export const NavBar = () => {
@@ -10,27 +11,30 @@ export const NavBar = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="w-full">
+    <div className="w-full relative z-[1100]">
       <div className="w-full min-h-16 bg-white flex items-center p-3 rounded-xl gap-3 flex-wrap">
         <div className="flex-1">
-          <p>{t('nav.appName')}</p>
+          <Link to="/" className="font-semibold hover:text-primary transition-colors">{t('nav.appName')}</Link>
         </div>
 
         <div className="flex gap-2 flex-wrap justify-end">
           <LanguageSelector />
 
-          <a href="https://acv-compare-docs.netlify.app" target="_blank" rel="noopener noreferrer">
-            <button className="btn btn-ghost">
-              <FiExternalLink />
-              {t('nav.documentation')}
-            </button>
+          <a
+            className="btn btn-ghost"
+            href={DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FiExternalLink />
+            {t('nav.documentation')}
           </a>
 
-          <button className="btn" onClick={() => navigate('/compare')}>
+          <button className="btn" onClick={() => void navigate('/compare')}>
             {t('nav.compare')}
           </button>
 
-          <button className="btn" onClick={() => navigate('/estadisticas')}>
+          <button className="btn" onClick={() => void navigate('/estadisticas')}>
             {t('nav.statistics')}
           </button>
 
@@ -40,7 +44,7 @@ export const NavBar = () => {
             auth.usuario === null && (
               <button
                 className="btn btn-md btn-primary"
-                onClick={() => navigate('/auth/login')}
+                onClick={() => void navigate('/auth/login')}
               >
                 {t('nav.login')}
               </button>
@@ -56,7 +60,7 @@ export const NavBar = () => {
               >
                 <div className="w-10 rounded-full">
                   <img
-                    src="https://cdn-icons-png.freepik.com/512/12225/12225935.png"
+                    src={AVATAR_URL}
                     alt={t('nav.profileImageAlt')}
                   />
                 </div>
@@ -80,9 +84,16 @@ export const NavBar = () => {
                 )}
                 <div className="divider m-0"></div>
                 <li>
-                  <a className="btn btn-error" onClick={auth.logout}>
+                  <button
+                    type="button"
+                    className="btn btn-error"
+                    onClick={() => {
+                      auth.logout();
+                      void navigate('/auth/login', { replace: true });
+                    }}
+                  >
                     {t('nav.logout')}
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

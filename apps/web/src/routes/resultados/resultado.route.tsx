@@ -1,16 +1,16 @@
-import { useNavigate, useParams } from 'react-router';
+import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router';
+import { exportJSON } from '../../common/utils.ts';
+import { MapPreview } from '../../components/map-preview.component.tsx';
+import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
 import {
   type ResultadoImpacto,
   useResultadoImpacto,
 } from '../../hooks/resultado-impacto.hook.tsx';
+import { buildResultadoCSV } from './resultado-export.utils.ts';
 import { ResultadoTable } from './resultado-table.component.tsx';
-import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
-import { DateTime } from 'luxon';
-import type { LatLngExpression } from 'leaflet';
-import { GeoJSON, MapContainer, TileLayer } from 'react-leaflet';
-import { exportJSON } from '../../common/utils.ts';
-import { useTranslation } from 'react-i18next';
 
 export const ResultadoRoute = () => {
   const { id } = useParams();
@@ -68,12 +68,20 @@ export const ResultadoRoute = () => {
               </div>
             </div>
           </div>
-          <button
-            className="btn btn-secondary"
-            onClick={() => exportJSON(resultado.datos)}
-          >
-            {t('common.actions.export')}
-          </button>
+          <div className="flex gap-2 w-full">
+            <button
+              className="btn btn-secondary flex-1"
+              onClick={() => exportJSON(resultado.datos)}
+            >
+              {t('common.actions.export')} JSON
+            </button>
+            <button
+              className="btn btn-secondary flex-1"
+              onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}
+            >
+              {t('common.actions.export')} CSV
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 grow">
@@ -86,29 +94,41 @@ export const ResultadoRoute = () => {
             </div>
           </div>
 
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate('/compare', { state: { parcelaObjetivo: parcela } })}
-          >
-            {t('resultados.addToComparison')}
-          </button>
+          <div className="dropdown dropdown-end w-full">
+            <button
+              type="button"
+              className="btn btn-primary w-full"
+              tabIndex={0}
+            >
+              {t('resultados.addToComparison')}
+            </button>
+            <ul
+              tabIndex={-1}
+              className="dropdown-content menu bg-base-100 rounded-box z-50 w-full p-2 shadow-sm"
+            >
+              <li>
+                <button
+                  type="button"
+                  onClick={() => void navigate('/compare', { state: { parcelaObjetivo: parcela } })}
+                >
+                  {t('compare.filters.target')}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => void navigate('/compare', { state: { parcelaReferencia: parcela } })}
+                >
+                  {t('compare.filters.reference')}
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-        <MapContainer
+        <MapPreview
           className="h-full rounded-box aspect-square"
-          center={
-            [
-              parcela.geom!.coordinates[0][0][1],
-              parcela.geom!.coordinates[0][0][0],
-            ] as LatLngExpression
-          }
-          zoom={16}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <GeoJSON data={parcela.geom!} />
-        </MapContainer>
+          polygon={parcela.geom}
+        />
       </div>
       <ResultadoTable resultado={resultado} />
     </div>

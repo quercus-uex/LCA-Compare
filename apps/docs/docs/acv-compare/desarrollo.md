@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Instalación de dependencias
 
-ACV Compare forma parte de un monorepo **pnpm 10** con **Turborepo**. Instala las dependencias desde la raíz del
+LCA Compare forma parte de un monorepo **pnpm 10** con **Turborepo**. Instala las dependencias desde la raíz del
 repositorio, no desde cada aplicación por separado:
 
 ```bash
@@ -105,9 +105,11 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 | `pnpm server:dev` | Inicia el servidor NestJS en modo desarrollo con hot-reload |
 | `pnpm server:build` | Compila el backend |
 | `pnpm server:start:prod` | Inicia la versión compilada |
+| `pnpm server:test` | Ejecuta los tests unitarios del backend con Jest |
 | `pnpm server:lint` | Ejecuta ESLint con las reglas del backend |
 | `pnpm server:prisma:generate` | Genera el cliente de Prisma usando `apps/server/prisma.config.ts` |
 | `pnpm server:prisma:migrate:deploy` | Aplica migraciones pendientes en entornos desplegados |
+| `pnpm --filter server admin:create` | Crea un usuario con rol `admin` (requiere `--email`, `--password`, `--nombre`, `--apellidos`) |
 
 ### Frontend (`apps/web`)
 
@@ -142,14 +144,26 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   │   ├── main.ts            # Bootstrap de la aplicación
 │   │   │   ├── app.module.ts      # Módulo raíz
 │   │   │   ├── auth/              # Autenticación JWT (login, registro, guards)
+│   │   │   ├── usuario/           # CRUD de usuarios
 │   │   │   ├── parcela/           # Gestión de parcelas con datos geoespaciales
 │   │   │   ├── cultivo/           # Registro y consulta de cultivos
 │   │   │   ├── resultadoimpacto/  # Almacenamiento y consulta de resultados ACV
 │   │   │   ├── compare/           # Lógica de comparación entre conjuntos de cultivos
-│   │   │   ├── capture/           # Recepción de datos desde Capture ACV
+│   │   │   ├── capture/           # Recepción de datos desde LCA Bridge
+│   │   │   ├── sigpac/            # Integración con SIGPAC
+│   │   │   ├── catastro/          # Integración con Catastro
+│   │   │   ├── predial/           # Identificador predial portugués
+│   │   │   ├── pais/              # Consulta de países
+│   │   │   ├── provincia/         # Consulta de provincias
+│   │   │   ├── poblacion/         # Consulta de poblaciones
+│   │   │   ├── metodoimpacto/     # Métodos de impacto
 │   │   │   ├── stats/             # Estadísticas globales y agregaciones para el dashboard
 │   │   │   ├── admin/             # CRUD administrativo protegido por rol admin
 │   │   │   ├── ai/                # Integración con OpenRouter para IA
+│   │   │   ├── mailer/            # Envío de correos electrónicos
+│   │   │   ├── prisma/            # PrismaService de acceso a la base de datos
+│   │   │   ├── common/            # DTOs y helpers internos del backend
+│   │   │   ├── scripts/           # Scripts de utilidad (p. ej. crear usuario admin)
 │   │   │   ├── templates/         # Plantillas Handlebars para informes
 │   │   │   └── generated/         # Cliente de Prisma autogenerado
 │   │   ├── prisma.config.ts       # Configuración de Prisma para el paquete server
@@ -167,7 +181,8 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   │   ├── hooks/             # Hooks personalizados
 │   │   │   ├── stats/             # Componentes de visualización estadística
 │   │   │   ├── routes/            # Vistas de la aplicación
-│   │   │   └── utils/             # Utilidades
+│   │   │   ├── common/            # Constantes y utilidades compartidas
+│   │   │   └── i18n/              # Internacionalización (es, en, pt)
 │   │   ├── nginx.conf             # Proxy inverso de producción
 │   │   └── Dockerfile             # Imagen del frontend
 │   └── docs/                      # Sitio Docusaurus
@@ -186,12 +201,14 @@ subrutas como `common/impact`, `common/stats`, `common/compare`, `common/locatio
 
 ## Esquema de base de datos
 
+![Diagrama ER de la base de datos de LCA Compare](/img/acv-compare/esquema-er.png)
+
 El esquema de Prisma define los siguientes modelos principales:
 
 | Modelo | Descripción |
 |---|---|
 | `Usuario` | Usuarios con rol (`admin` o usuario estándar) |
-| `Parcela` | Parcelas con referencia SIGPAC, catastral y geometría PostGIS |
+| `Parcela` | Parcelas con referencia SIGPAC, catastral, geometría PostGIS y marca de parcela de referencia |
 | `Cultivo` | Campañas de cultivo con métricas (superficie, producción, consumo de agua) |
 | `ResultadoImpacto` | Resultados de ACV en formato JSON por método de impacto |
 | `MetodoImpacto` | Métodos de impacto registrados (identificados por UUID de OpenLCA) |
@@ -203,3 +220,6 @@ Las relaciones principales son: `Usuario` → `Parcela` → `Cultivo` → `Resul
 
 La ubicación geográfica se modela con la jerarquía `Pais` → `Provincia` → `Poblacion`, donde cada parcela se asigna a
 una población y almacena su polígono en una columna `geometry(Polygon, 4326)` de PostGIS.
+
+La marca `esParcelaReferencia` (por defecto `false`) solo puede asignarla un administrador y permite que el comparador
+restrinja un conjunto a estas parcelas mediante el filtro `soloParcelasReferencia`.

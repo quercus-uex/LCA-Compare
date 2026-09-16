@@ -1,0 +1,77 @@
+---
+sidebar_label: 'Authentication'
+sidebar_position: 2
+---
+
+import RedactedSecret from '@site/src/components/RedactedSecret';
+
+# Authentication required
+
+All endpoints require a **valid JWT token** in the `Authorization` header.
+Keep in mind that the issued JWT token is temporary and is **valid for 30 minutes**.
+
+```
+Authorization: Bearer <token>
+```
+
+To obtain this token, use the following authentication endpoint:  
+
+## POST `/auth`
+
+This endpoint allows external applications/clients to authenticate against: monitoriza.dtagro.es.  
+When the correct client credentials are sent, the service returns a **signed access JWT token**.
+
+### Parameters
+
+| Type   | Name           | Required | Description                                    |
+| ------ | -------------- | -------- | ---------------------------------------------- |
+| `body` | `clientId `    | YES      | Unique identifier of the application or client |
+| `body` | `clientSecret` | YES      | Private authentication key for the client      |
+
+To obtain the JWT token, the following **static credentials** must always be sent:
+
+<RedactedSecret
+  id="lca-capture-auth-credentials"
+  language="sh"
+  redacted={`clientId: ••••••••
+clientSecret: ••••••••`}
+/>
+
+> **Note:** These credentials are private and must not be exposed in frontend code.  
+> Their use is restricted to data queries (GET methods) of the sensor API.
+
+### Request example
+
+<RedactedSecret
+  id="lca-capture-auth-request"
+  language="http"
+  redacted={`POST https://monitoriza.dtagro.es/api/acv/auth
+Content-Type: application/json
+
+{
+  "clientId": "••••••••",
+  "clientSecret": "••••••••"
+}`}
+/>
+
+### Successful response
+
+If the credentials are valid, it returns a JSON object with the access JWT token:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+This token must be included in all requests to the protected endpoints under the `/acv` prefix.  
+Each token is valid for 30 minutes. Once expired, requests will fail with a 401 error.  
+Once expired, request a new token by re-authenticating at `/auth` with the `clientId` and `clientSecret`.
+
+### Possible errors
+
+| Code                        | Cause                                | Message                                |
+| --------------------------- | ------------------------------------ | -------------------------------------- |
+| `400 Bad Request`           | Missing `clientId` and/or `clientSecret` | `Missing clientId and/or clientSecret` |
+| `401 Unauthorized`          | The client credentials are invalid   | `Invalid client credentials`           |
+| `500 Internal Server Error` | Internal server error                | `Unable to authenticate client`        |

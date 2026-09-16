@@ -1,7 +1,7 @@
-import { FaCheck, FaRegClipboard } from 'react-icons/fa6';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { FaCheck, FaRegClipboard } from 'react-icons/fa6';
+import { toast } from 'sonner';
 
 export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
   const [copied, setCopied] = useState(false);
@@ -20,7 +20,7 @@ export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
             toast.success(t('clipboard.copied'));
           })
           .catch((e) => {
-            alert(t('clipboard.error', { error: String(e) }));
+            toast.error(t('clipboard.error', { error: String(e) }));
           });
       }}
     >

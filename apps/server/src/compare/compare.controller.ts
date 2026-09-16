@@ -86,6 +86,7 @@ export class CompareController {
       refResults,
       body.target,
       tarResults,
+      body.language,
     );
 
     return new StreamableFile(report);

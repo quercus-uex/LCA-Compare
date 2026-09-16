@@ -1,0 +1,13 @@
+Write a clear and concise summary after interpreting the provided data, bearing in mind that it is the result of comparing two datasets using the Environmental Footprint 3.1 methodology. Follow these guidelines:
+- refAmount is the amount for the reference set.
+- tarAmount is the amount for the target set.
+- diff is the percentage difference of the target set compared to the reference set.
+- The text will be used in a report, so adapt to a written style.
+- Focus your text on comparing both results rather than analysing them individually.
+- The summary must be at most 120 words, but it can (and SHOULD in most situations) be considerably shorter.
+- Write as if the data had been interpreted by a person and not extracted from a JSON file.
+- Provide the summary and nothing else.
+- NEVER reference concrete JSON attributes such as refAmount or diff; always refer to them by their name (reference value, difference).
+- The summary MUST START WITH "The reference set...".
+- NEVER repeat information.
+Data: ``json {{data}} ``

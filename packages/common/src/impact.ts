@@ -75,3 +75,6 @@ export const IMPACT_KEYS = [
 ] as const;
 
 export type ImpactKey = (typeof IMPACT_KEYS)[number];
+
+export const getEfCategory = (id: EfCategoryId) =>
+  EF_CATEGORIES.find((c) => c.id === id);

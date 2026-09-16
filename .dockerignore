@@ -19,3 +19,4 @@ coverage
 .prettierrc
 eslint.config.mjs
 docker-compose.yaml
+deploy/

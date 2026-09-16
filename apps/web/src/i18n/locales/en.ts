@@ -22,6 +22,7 @@ export const en = {
     fields: {
       actions: 'Actions',
       category: 'Category',
+      impactArea: 'Impact area',
       crop: 'Crop',
       cropCycle: 'Crop cycle',
       cropType: 'Type',
@@ -49,9 +50,22 @@ export const en = {
       litersPerHectare: 'L/ha',
       tonsPerHectare: 'T/ha',
     },
+    yes: 'Yes',
+    no: 'No',
+    notFound: {
+      title: 'Page not found',
+      description: 'The page you are looking for does not exist or has been moved.',
+      goHome: 'Go home',
+    },
+    errors: {
+      boundaryTitle: 'Something went wrong',
+      boundaryDescription: 'An unexpected error occurred while showing this section.',
+      retry: 'Retry',
+      goHome: 'Go home',
+    },
   },
   nav: {
-    appName: 'LCA Comparator',
+    appName: 'LCA Compare',
     compare: 'Comparator',
     documentation: 'Documentation',
     login: 'Log in',
@@ -117,6 +131,7 @@ export const en = {
       campaignDate: 'Campaign date',
       selectType: 'Choose a type...',
       range: 'Range: {{range}} m',
+      referenceOnly: 'Only reference plots',
       placeholders: {
         plot: 'Plot...',
         province: 'Province...',
@@ -135,6 +150,7 @@ export const en = {
       insufficientData: 'There is not enough data for the selected filters',
       generatingReport: 'Generating report...',
       reportGenerated: 'Report generated',
+      reportFilename: 'Report.pdf',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticides',
@@ -150,11 +166,41 @@ export const en = {
     currentCrop: 'Current crop',
     previousCrops: 'Previous crops',
     viewImpacts: 'View impacts',
+    referenceBadge: 'Reference',
   },
   resultados: {
     title: 'Impact result',
     method: 'Method used',
     addToComparison: 'Add to comparison',
+  },
+  landing: {
+    hero: {
+      title: 'LCA Compare',
+      subtitle: 'Analyze and compare the environmental impact of your agricultural plots using Life Cycle Assessment data.',
+      cta: {
+        primary: 'Compare plots',
+        primaryAriaLabel: 'Go to the plot comparator',
+        secondary: 'View documentation',
+        secondaryAriaLabel: 'Open the LCA Compare documentation in a new tab (external link)',
+      },
+    },
+    features: {
+      compare: {
+        title: 'Comparator',
+        description: 'Compare reference and target plots with normalized Life Cycle Assessment data.',
+        ariaLabel: 'Go to the plot comparator',
+      },
+      stats: {
+        title: 'Statistics',
+        description: 'Explore rankings, temporal evolution and impact profiles by province, town and crop.',
+        ariaLabel: 'Go to global statistics',
+      },
+      plots: {
+        title: 'My plots',
+        description: 'Manage your plots and visualize their crops and associated impacts.',
+        ariaLabel: 'Go to my plots',
+      },
+    },
   },
   admin: {
     title: 'Administration Panel',
@@ -215,6 +261,7 @@ export const en = {
       idProvincia: 'Province ID',
       tipo: 'Type',
       inicioCampania: 'Campaign Start',
+      esParcelaReferencia: 'Reference plot',
     },
     pagination: {
       summary: '{{total}} results - Page {{page}} of {{totalPages}}',

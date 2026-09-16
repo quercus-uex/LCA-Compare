@@ -3,15 +3,19 @@ import * as argon2 from 'argon2';
 import generator from 'generate-password';
 import { CaptureService } from './capture.service';
 import { ParcelaService } from '../parcela/parcela.service';
-import { CatastroService } from '../catastro/catastro.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
-import { SigpacService } from '../sigpac/sigpac.service';
 import { UsuarioService } from '../usuario/usuario.service';
 import { MailerService } from '../mailer/mailer.service';
 import { CultivoService } from '../cultivo/cultivo.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
-import { PredialService } from '../predial/predial.service';
-import { SigpacDto } from './dto/capture-input.dto';
+import { SigpacCaptureStrategy } from './strategies/sigpac-capture.strategy';
+import { CatastroCaptureStrategy } from './strategies/catastro-capture.strategy';
+import { PredialCaptureStrategy } from './strategies/predial-capture.strategy';
+import type { Feature, Polygon } from 'geojson';
+import type {
+  CaptureStrategy,
+  ParcelaResolution,
+} from './strategies/capture-strategy.interface';
 
 jest.mock('argon2', () => ({
   hash: jest.fn(),
@@ -25,14 +29,19 @@ jest.mock('generate-password', () => ({
 const argon2HashMock = jest.mocked(argon2.hash);
 const generatorGenerateMock = jest.mocked(generator.generate);
 
+function createMockStrategy(): jest.Mocked<CaptureStrategy> {
+  return {
+    matches: jest.fn(),
+    resolveParcela: jest.fn(),
+  };
+}
+
 describe('CaptureService', () => {
   let service: CaptureService;
   let parcelaService: jest.Mocked<
     Pick<ParcelaService, 'findMany' | 'createWithGeom'>
   >;
-  let catastroService: jest.Mocked<Pick<CatastroService, 'getPolygon'>>;
-  let poblacionService: jest.Mocked<Pick<PoblacionService, 'findMany'>>;
-  let sigpacService: jest.Mocked<Pick<SigpacService, 'getPolygon'>>;
+  let poblacionService: jest.Mocked<PoblacionService>;
   let usuarioService: jest.Mocked<
     Pick<UsuarioService, 'findOnePublic' | 'create'>
   >;
@@ -43,13 +52,15 @@ describe('CaptureService', () => {
   let resultadoImpactoService: jest.Mocked<
     Pick<ResultadoImpactoService, 'create' | 'delete'>
   >;
-  let predialService: jest.Mocked<Pick<PredialService, 'getPolygon'>>;
+  let sigpacStrategy: jest.Mocked<CaptureStrategy>;
+  let catastroStrategy: jest.Mocked<CaptureStrategy>;
+  let predialStrategy: jest.Mocked<CaptureStrategy>;
 
   beforeEach(() => {
     parcelaService = { findMany: jest.fn(), createWithGeom: jest.fn() };
-    catastroService = { getPolygon: jest.fn() };
-    poblacionService = { findMany: jest.fn() };
-    sigpacService = { getPolygon: jest.fn() };
+    poblacionService = {
+      findByCatastroIds: jest.fn(),
+    } as unknown as jest.Mocked<PoblacionService>;
     usuarioService = { findOnePublic: jest.fn(), create: jest.fn() };
     mailerService = { sendNewUserMail: jest.fn() };
     cultivoService = {
@@ -58,18 +69,20 @@ describe('CaptureService', () => {
       update: jest.fn(),
     };
     resultadoImpactoService = { create: jest.fn(), delete: jest.fn() };
-    predialService = { getPolygon: jest.fn() };
+    sigpacStrategy = createMockStrategy();
+    catastroStrategy = createMockStrategy();
+    predialStrategy = createMockStrategy();
 
     service = new CaptureService(
       parcelaService as unknown as ParcelaService,
-      catastroService as unknown as CatastroService,
-      poblacionService as unknown as PoblacionService,
-      sigpacService as unknown as SigpacService,
+      poblacionService,
       usuarioService as unknown as UsuarioService,
       mailerService as unknown as MailerService,
       cultivoService as unknown as CultivoService,
       resultadoImpactoService as unknown as ResultadoImpactoService,
-      predialService as unknown as PredialService,
+      sigpacStrategy as unknown as SigpacCaptureStrategy,
+      catastroStrategy as unknown as CatastroCaptureStrategy,
+      predialStrategy as unknown as PredialCaptureStrategy,
     );
   });
 
@@ -136,25 +149,23 @@ describe('CaptureService', () => {
   describe('checkParcela', () => {
     const idPropietario = 'u1';
 
-    describe('SIGPAC parcel', () => {
-      const mSigpac = {
-        id: 10,
-        es_sigpac: {
-          provincia: 41,
-          municipio: 91,
-          poligono: 3,
-          parcela: 45,
-        },
-        es_referencia_catastral: undefined,
-        pt_id_parcela_predial: undefined,
-        nombre: 'Test parcel',
-      } as any;
-
-      it('reuses an existing SIGPAC parcel and does not call geospatial lookup or parcel creation', async () => {
+    describe('existing parcel reuse', () => {
+      it('reuses an existing parcel matching SIGPAC key and does not invoke strategies or creation', async () => {
+        const mParcela = {
+          es_sigpac: {
+            provincia: 41,
+            municipio: 91,
+            poligono: 3,
+            parcela: 45,
+          },
+          es_referencia_catastral: undefined,
+          pt_id_parcela_predial: undefined,
+          nombre: 'Test parcel',
+        } as any;
         const existing = { id: 'p1' } as any;
         parcelaService.findMany.mockResolvedValue([existing]);
 
-        const result = await service.checkParcela(idPropietario, mSigpac);
+        const result = await service.checkParcela(idPropietario, mParcela);
 
         expect(result).toBe(existing);
         expect(parcelaService.findMany).toHaveBeenCalledWith({
@@ -163,155 +174,103 @@ describe('CaptureService', () => {
             OR: [{ sigpac: '41:91:0:0:3:45:1' }],
           },
         });
-        expect(sigpacService.getPolygon).not.toHaveBeenCalled();
+        expect(sigpacStrategy.resolveParcela).not.toHaveBeenCalled();
         expect(parcelaService.createWithGeom).not.toHaveBeenCalled();
       });
+    });
 
-      it('creates a missing SIGPAC parcel using SigpacService, Spanish population lookup, computed SIGPAC key, and polygon geometry', async () => {
-        parcelaService.findMany.mockResolvedValue([]);
-        const polygon = {
-          type: 'Feature',
-          geometry: { type: 'Polygon', coordinates: [] },
-          properties: {},
+    describe('missing parcel creation', () => {
+      const polygon: Feature<Polygon> = {
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [] },
+        properties: {},
+      };
+
+      function mockResolution(
+        strategy: jest.Mocked<CaptureStrategy>,
+        resolution: Partial<ParcelaResolution>,
+      ) {
+        strategy.matches.mockReturnValue(true);
+        strategy.resolveParcela.mockResolvedValue({
+          polygon,
+          poblacion: { id: 'pop1' } as any,
+          sigpacKey: null,
+          ...resolution,
+        });
+      }
+
+      it('delegates to the matching strategy and persists parcela with geometry', async () => {
+        const mParcela = {
+          es_sigpac: { provincia: 41 },
+          es_referencia_catastral: undefined,
+          pt_id_parcela_predial: undefined,
+          nombre: 'New parcel',
         } as any;
-        sigpacService.getPolygon.mockResolvedValue(polygon);
-        poblacionService.findMany.mockResolvedValue([{ id: 'pop1' }] as any);
+        parcelaService.findMany.mockResolvedValue([]);
+        mockResolution(sigpacStrategy, {
+          sigpacKey: '41:91:0:0:3:45:1',
+        });
         const created = { id: 'p2' } as any;
         parcelaService.createWithGeom.mockResolvedValue(created);
 
-        const result = await service.checkParcela(idPropietario, mSigpac);
+        const result = await service.checkParcela(idPropietario, mParcela);
 
         expect(result).toBe(created);
-        expect(sigpacService.getPolygon).toHaveBeenCalledWith(
-          mSigpac.es_sigpac,
-        );
-        expect(poblacionService.findMany).toHaveBeenCalledWith({
-          where: {
-            provincia: { idCatastro: 41, pais: { codigo: 'ES' } },
-            idCatastro: 91,
-          },
-        });
+        expect(sigpacStrategy.matches).toHaveBeenCalledWith(mParcela);
+        expect(sigpacStrategy.resolveParcela).toHaveBeenCalledWith(mParcela);
         expect(parcelaService.createWithGeom).toHaveBeenCalledWith(
           expect.objectContaining({
             sigpac: '41:91:0:0:3:45:1',
-            refCat: undefined,
-            ptIdParcela: undefined,
-            nombre: 'Test parcel',
+            nombre: 'New parcel',
             propietario: { connect: { id: 'u1' } },
             poblacion: { connect: { id: 'pop1' } },
           }),
           polygon.geometry,
         );
       });
-    });
 
-    describe('Spanish cadastral parcel', () => {
-      const mCatastral = {
-        id: 10,
-        es_sigpac: { provincia: undefined },
-        es_referencia_catastral: '4191003AG3456S0001EP',
-        pt_id_parcela_predial: undefined,
-        nombre: 'Cadastral parcel',
-      } as any;
-
-      it('creates a missing Spanish cadastral parcel using CatastroService, Spanish population lookup from reference segments, and polygon geometry', async () => {
-        parcelaService.findMany.mockResolvedValue([]);
-        const polygon = {
-          type: 'Feature',
-          geometry: { type: 'Polygon', coordinates: [] },
-          properties: {},
+      it('passes through refCat and ptIdParcela from input metadata', async () => {
+        const mParcela = {
+          es_sigpac: { provincia: undefined },
+          es_referencia_catastral: '4191003AG3456S0001EP',
+          pt_id_parcela_predial: undefined,
+          nombre: 'Catastral parcel',
         } as any;
-        catastroService.getPolygon.mockResolvedValue(polygon);
-        poblacionService.findMany.mockResolvedValue([{ id: 'pop2' }] as any);
+        parcelaService.findMany.mockResolvedValue([]);
+        mockResolution(catastroStrategy, {});
         const created = { id: 'p3' } as any;
         parcelaService.createWithGeom.mockResolvedValue(created);
 
-        const result = await service.checkParcela(idPropietario, mCatastral);
+        const result = await service.checkParcela(idPropietario, mParcela);
 
         expect(result).toBe(created);
-        expect(catastroService.getPolygon).toHaveBeenCalledWith(
-          '4191003AG3456S0001EP',
-        );
-        expect(poblacionService.findMany).toHaveBeenCalledWith({
-          where: {
-            provincia: { idCatastro: 41, pais: { codigo: 'ES' } },
-            idCatastro: 910,
-          },
-        });
+        expect(catastroStrategy.resolveParcela).toHaveBeenCalledWith(mParcela);
         expect(parcelaService.createWithGeom).toHaveBeenCalledWith(
           expect.objectContaining({
             sigpac: null,
             refCat: '4191003AG3456S0001EP',
             ptIdParcela: undefined,
-            nombre: 'Cadastral parcel',
-            propietario: { connect: { id: 'u1' } },
-            poblacion: { connect: { id: 'pop2' } },
           }),
           polygon.geometry,
         );
       });
     });
 
-    describe('Portuguese predial parcel', () => {
-      const mPredial = {
-        id: 10,
-        es_sigpac: { provincia: undefined },
-        es_referencia_catastral: undefined,
-        pt_id_parcela_predial: 'PT12345',
-        nombre: 'Predial parcel',
-      } as any;
-
-      it('creates a missing Portuguese predial parcel using PredialService, Portuguese population lookup from polygon properties, and polygon geometry', async () => {
-        parcelaService.findMany.mockResolvedValue([]);
-        const polygon = {
-          type: 'Feature',
-          geometry: { type: 'Polygon', coordinates: [] },
-          properties: { provincia: 10, poblacion: 20 },
-        } as any;
-        predialService.getPolygon.mockResolvedValue(polygon);
-        poblacionService.findMany.mockResolvedValue([{ id: 'pop3' }] as any);
-        const created = { id: 'p4' } as any;
-        parcelaService.createWithGeom.mockResolvedValue(created);
-
-        const result = await service.checkParcela(idPropietario, mPredial);
-
-        expect(result).toBe(created);
-        expect(predialService.getPolygon).toHaveBeenCalledWith('PT12345');
-        expect(poblacionService.findMany).toHaveBeenCalledWith({
-          where: {
-            provincia: { idCatastro: 10, pais: { codigo: 'PT' } },
-            idCatastro: 20,
-          },
-        });
-        expect(parcelaService.createWithGeom).toHaveBeenCalledWith(
-          expect.objectContaining({
-            sigpac: null,
-            refCat: undefined,
-            ptIdParcela: 'PT12345',
-            nombre: 'Predial parcel',
-            propietario: { connect: { id: 'u1' } },
-            poblacion: { connect: { id: 'pop3' } },
-          }),
-          polygon.geometry,
-        );
-      });
-    });
-
-    it('rejects parcel metadata without SIGPAC province, Spanish cadastral reference, or Portuguese predial id', async () => {
+    it('throws BadRequestException when no strategy matches the parcel metadata', async () => {
       const mMissing = {
-        id: 10,
         es_sigpac: { provincia: undefined },
         es_referencia_catastral: undefined,
         pt_id_parcela_predial: undefined,
         nombre: 'Bad parcel',
       } as any;
       parcelaService.findMany.mockResolvedValue([]);
+      sigpacStrategy.matches.mockReturnValue(false);
+      catastroStrategy.matches.mockReturnValue(false);
+      predialStrategy.matches.mockReturnValue(false);
 
       await expect(
         service.checkParcela(idPropietario, mMissing),
-      ).rejects.toThrow(
-        'Especifica un identificador de parcela (SIGPAC, Referencia catastral, Predial)',
-      );
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

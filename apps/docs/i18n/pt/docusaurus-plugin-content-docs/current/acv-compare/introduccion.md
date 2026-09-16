@@ -5,13 +5,13 @@ sidebar_position: 1
 
 # Introdução
 
-**ACV Compare** é uma aplicação web que permite a visualização, comparação e geração de relatórios da Avaliação do Ciclo de Vida (ACV) de culturas agrícolas. Os resultados de ACV são calculados por [Capture ACV](https://github.com/quercus-uex/Ventum-OpenLCA-Service), um serviço ponte entre a plataforma DTAgro e o motor de cálculo openLCA com base de dados em formato .zolca. Ambos os serviços comunicam através de uma rede Docker partilhada.
+**LCA Compare** é uma aplicação web que permite a visualização, comparação e geração de relatórios da Avaliação do Ciclo de Vida (ACV) de culturas agrícolas. Os resultados de ACV são calculados por [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge), um serviço ponte entre a plataforma LCA Capture e o motor de cálculo openLCA com base de dados em formato .zolca. Ambos os serviços comunicam através de uma rede Docker partilhada.
 
 ## Funcionalidades
 
 - **Gestão de parcelas** com integração de SIGPAC, Catastro e identificador predial português para localização e representação geoespacial de polígonos.
 - **Visualização de resultados de ACV** por parcela e campanha, discriminados em categorias de impacto (fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total).
-- **Comparador de ACV** entre dois conjuntos de culturas filtrando por país, província, localidade, localização geográfica (raio em km), tipo de cultura e ano de campanha.
+- **Comparador de ACV** entre dois conjuntos de culturas filtrando por país, província, localidade, localização geográfica (raio em metros), tipo de cultura e ano de campanha.
 - **Geração de relatórios em PDF** com resumo e recomendações geradas por IA através do OpenRouter.
 - **Exportação de resultados para JSON** tanto do conjunto de referência como do objetivo.
 - **Dashboard de estatísticas** com KPIs globais, evolução temporal, rankings por província e localidade, mapas de calor, perfis de impacto e distribuição de culturas.

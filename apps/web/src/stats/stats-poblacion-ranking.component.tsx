@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { toast } from 'sonner';
+import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
 import { type Provincia, useLocation } from '../hooks/location.hook.tsx';
-import type { PoblacionRankingItemDto } from './stats.hook.tsx';
 import { formatImpactValue } from './stats-formatters.ts';
 import { StatsRankingPanels } from './stats-ranking-list.component.tsx';
-import { useTranslation } from 'react-i18next';
+import type { PoblacionRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
@@ -29,8 +30,10 @@ export const StatsPoblacionRanking = ({
   const { getCategoryLabel } = useTranslatedEfCategories();
 
   useEffect(() => {
-    location.getProvincias().then((p) => setProvincias(p));
-  }, [location]);
+    location.getProvincias()
+      .then((p) => setProvincias(p))
+      .catch(() => toast.error(t('location.provincesError')));
+  }, [location, t]);
 
   const getValue = (item: PoblacionRankingItemDto) => {
     if (selectedCategory) {
@@ -40,11 +43,11 @@ export const StatsPoblacionRanking = ({
   };
 
   const selectedCategoryData = selectedCategory
-    ? EF_CATEGORIES.find((c) => c.id === selectedCategory)
+    ? getEfCategory(selectedCategory)
     : undefined;
 
   const handleActivate = (item: PoblacionRankingItemDto) => {
-    navigate('/compare', {
+    void navigate('/compare', {
       state: {
         poblacionReferencia: {
           id: item.idPoblacion,

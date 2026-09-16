@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { API_BASE_URL } from '../../common/constants.ts';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from '../../common/api.ts';
+import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
+import { safeString } from '../../common/utils.ts';
+import { useClickOutside } from '../../hooks/use-click-outside.ts';
 
 export interface FkConfig {
   entity: string;
@@ -24,13 +27,11 @@ interface LookupOption {
 export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdLookupFieldProps) => {
   const { t } = useTranslation();
   const [options, setOptions] = useState<LookupOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const token = `Bearer ${localStorage.getItem('token')}`;
 
   const selectedLabel = useMemo(() => {
     if (!value) return '';
@@ -38,48 +39,40 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
     return found?.label ?? value;
   }, [value, options]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchOptions = async () => {
-      setLoading(true);
+  const loadOptions = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const params = new URLSearchParams();
+      params.set('skip', '0');
+      params.set('take', String(ADMIN_LOOKUP_TAKE));
+      const res = await apiRequest(`/admin/${fkConfig.endpoint}?${params}`, { signal });
       setError(false);
-      try {
-        const params = new URLSearchParams();
-        params.set('skip', '0');
-        params.set('take', '1000');
-        const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
-          headers: { Authorization: token },
-        });
-        if (!res.ok) throw new Error();
-        const json = (await res.json()) as { data?: Record<string, unknown>[] };
-        const data = json.data ?? [];
-        if (cancelled) return;
-        const mapped: LookupOption[] = data.map((item) => ({
-          id: String(item.id ?? ''),
-          label: fkConfig.displayFields
-            .map((f) => String(item[f] ?? ''))
-            .filter(Boolean)
-            .join(' '),
-        }));
-        setOptions(mapped);
-      } catch {
-        if (!cancelled) setError(true);
-      }
-      if (!cancelled) setLoading(false);
-    };
-    void fetchOptions();
-    return () => { cancelled = true; };
-  }, [fkConfig.endpoint, fkConfig.displayFields, token]);
+      if (!res.ok) throw new Error();
+      const json = (await res.json()) as { data?: Record<string, unknown>[] };
+      if (signal?.aborted) return;
+      const data = json.data ?? [];
+      const mapped: LookupOption[] = data.map((item) => ({
+        id: safeString(item.id) ?? '',
+        label: fkConfig.displayFields
+          .map((f) => safeString(item[f]) ?? '')
+          .filter(Boolean)
+          .join(' '),
+      }));
+      setOptions(mapped);
+    } catch (err) {
+      if (signal?.aborted || (err instanceof DOMException && err.name === 'AbortError')) return;
+      setError(true);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, [fkConfig.endpoint, fkConfig.displayFields]);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    const controller = new AbortController();
+    void loadOptions(controller.signal);
+    return () => controller.abort();
+  }, [loadOptions]);
+
+  useClickOutside(containerRef, () => setOpen(false));
 
   const filteredOptions = useMemo(() => {
     if (!search) return options;
@@ -136,6 +129,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
               className="input input-bordered input-sm w-full"
               placeholder="Filtrar..."
               value={search}
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: focus search on open
               autoFocus
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -156,36 +150,7 @@ export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdL
                 <button
                   type="button"
                   className="btn btn-ghost btn-xs mt-1"
-                  onClick={() => {
-                    setError(false);
-                    setLoading(true);
-                    const fetchRetry = async () => {
-                      try {
-                        const params = new URLSearchParams();
-                        params.set('skip', '0');
-                        params.set('take', '1000');
-                        const res = await fetch(`${API_BASE_URL}/admin/${fkConfig.endpoint}?${params}`, {
-                          headers: { Authorization: token },
-                        });
-                        if (!res.ok) throw new Error();
-                        const json = (await res.json()) as { data?: Record<string, unknown>[] };
-                        const data = json.data ?? [];
-                        const mapped: LookupOption[] = data.map((item) => ({
-                          id: String(item.id ?? ''),
-                          label: fkConfig.displayFields
-                            .map((f) => String(item[f] ?? ''))
-                            .filter(Boolean)
-                            .join(' '),
-                        }));
-                        setOptions(mapped);
-                        setError(false);
-                      } catch {
-                        setError(true);
-                      }
-                      setLoading(false);
-                    };
-                    void fetchRetry();
-                  }}
+                  onClick={() => { setLoading(true); void loadOptions(); }}
                 >
                   {t('common.actions.retry')}
                 </button>

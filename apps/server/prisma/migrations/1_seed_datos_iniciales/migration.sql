@@ -1,5 +1,3 @@
-select * from "Pais";
-
 -- Países
 insert into "Pais" (id, nombre, codigo) values
                                             (gen_random_uuid(), 'Portugal', 'PT');

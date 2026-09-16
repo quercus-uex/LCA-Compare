@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   ScatterChart,
   Scatter,
@@ -9,9 +10,8 @@ import {
   ReferenceLine,
   ZAxis,
 } from 'recharts';
-import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { formatNumber } from './stats-formatters.ts';
-import { useTranslation } from 'react-i18next';
+import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
@@ -27,7 +27,7 @@ const CustomTooltip = ({
   const { t } = useTranslation();
 
   if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
+  const d = payload[0]!.payload;
   return (
     <div className="card bg-base-100 shadow-lg p-3 text-sm">
       <p className="font-bold">{d.nombreProvincia}</p>

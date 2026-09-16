@@ -22,6 +22,7 @@ export const es = {
     fields: {
       actions: 'Acciones',
       category: 'Categoría',
+      impactArea: 'Área de impacto',
       crop: 'Cultivo',
       cropCycle: 'Ciclo de cultivo',
       cropType: 'Tipo',
@@ -49,9 +50,22 @@ export const es = {
       litersPerHectare: 'L/ha',
       tonsPerHectare: 'T/ha',
     },
+    yes: 'Sí',
+    no: 'No',
+    notFound: {
+      title: 'Página no encontrada',
+      description: 'La página que buscas no existe o se ha movido.',
+      goHome: 'Ir al inicio',
+    },
+    errors: {
+      boundaryTitle: 'Algo salió mal',
+      boundaryDescription: 'Se produjo un error inesperado al mostrar esta sección.',
+      retry: 'Reintentar',
+      goHome: 'Ir al inicio',
+    },
   },
   nav: {
-    appName: 'Comparador ACV',
+    appName: 'LCA Compare',
     compare: 'Comparador',
     documentation: 'Documentación',
     login: 'Iniciar sesión',
@@ -117,6 +131,7 @@ export const es = {
       campaignDate: 'Fecha de campaña',
       selectType: 'Escoge un tipo...',
       range: 'Rango: {{range}} m',
+      referenceOnly: 'Solo parcelas de referencia',
       placeholders: {
         plot: 'Parcela...',
         province: 'Provincia...',
@@ -135,6 +150,7 @@ export const es = {
       insufficientData: 'No existen datos suficientes con los filtros proporcionados',
       generatingReport: 'Generando informe...',
       reportGenerated: 'Informe generado',
+      reportFilename: 'Informe.pdf',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',
@@ -150,11 +166,41 @@ export const es = {
     currentCrop: 'Cultivo actual',
     previousCrops: 'Cultivos anteriores',
     viewImpacts: 'Ver impactos',
+    referenceBadge: 'Referencia',
   },
   resultados: {
     title: 'Resultado de impacto',
     method: 'Método utilizado',
     addToComparison: 'Añadir a comparativa',
+  },
+  landing: {
+    hero: {
+      title: 'LCA Compare',
+      subtitle: 'Analiza y compara el impacto ambiental de tus parcelas agrícolas con datos de Análisis de Ciclo de Vida.',
+      cta: {
+        primary: 'Comparar parcelas',
+        primaryAriaLabel: 'Ir al comparador de parcelas',
+        secondary: 'Ver documentación',
+        secondaryAriaLabel: 'Abrir la documentación de LCA Compare en una pestaña nueva (enlace externo)',
+      },
+    },
+    features: {
+      compare: {
+        title: 'Comparador',
+        description: 'Compara parcelas de referencia y objetivo con datos de Análisis de Ciclo de Vida normalizados.',
+        ariaLabel: 'Ir al comparador de parcelas',
+      },
+      stats: {
+        title: 'Estadísticas',
+        description: 'Explora rankings, evolución temporal y perfiles de impacto por provincia, población y cultivo.',
+        ariaLabel: 'Ir a las estadísticas globales',
+      },
+      plots: {
+        title: 'Mis parcelas',
+        description: 'Gestiona tus parcelas y visualiza sus cultivos e impactos asociados.',
+        ariaLabel: 'Ir a mis parcelas',
+      },
+    },
   },
   admin: {
     title: 'Panel de Administración',
@@ -215,6 +261,7 @@ export const es = {
       idProvincia: 'ID Provincia',
       tipo: 'Tipo',
       inicioCampania: 'Inicio Campaña',
+      esParcelaReferencia: 'Parcela de referencia',
     },
     pagination: {
       summary: '{{total}} resultados - Página {{page}} de {{totalPages}}',

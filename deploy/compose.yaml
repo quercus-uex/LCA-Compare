@@ -1,0 +1,102 @@
+name: lca-platform
+
+x-database-url: &database-url "postgres://${DB_USER:?falta DB_USER}:${DB_PASSWORD:?falta DB_PASSWORD}@db:5432/acv"
+
+services:
+  db:
+    image: postgis/postgis:17-master
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: acv
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d acv"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  migrate:
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    working_dir: /workspace/apps/server
+    command: ["./node_modules/.bin/prisma", "migrate", "deploy", "--config", "prisma.config.ts"]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  lca-compare-backend:
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    environment:
+      DATABASE_URL: *database-url
+      JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?falta OPENROUTER_API_KEY}
+      MAILER_EMAIL: ${MAILER_EMAIL:?falta MAILER_EMAIL}
+      MAILER_PASSWORD: ${MAILER_PASSWORD:?falta MAILER_PASSWORD}
+      DEFAULT_IMPACT_METHOD_UUID: ${DEFAULT_IMPACT_METHOD_UUID:-2f995579-06bd-4681-b07c-cee3b1805b0d}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  lca-compare-frontend:
+    image: ghcr.io/quercus-uex/lca-compare-frontend:${TAG:-main}
+    ports:
+      - "80:80"
+    environment:
+      CALC_API_KEY: ${CALC_API_KEY:?falta CALC_API_KEY}
+    volumes:
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - lca-compare-backend
+    restart: unless-stopped
+
+  lca-bridge:
+    image: ghcr.io/quercus-uex/lca-bridge:${TAG:-main}
+    environment:
+      OLCA_HOST: http://openlca-ipc
+      OLCA_PORT: "8080"
+      LCA_COMPARE_BASE_URL: http://lca-compare-backend:3000
+    depends_on:
+      - openlca-ipc
+    restart: unless-stopped
+
+  openlca-ipc:
+    image: ghcr.io/quercus-uex/openlca-ipc:${TAG:-main}
+    command: ["-db", "ecoinvent"]
+    volumes:
+      - ${OLCA_DATA_DIR:?falta OLCA_DATA_DIR}:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "8"
+    restart: unless-stopped
+
+  db-backup:
+    image: ghcr.io/quercus-uex/lca-compare-backup:${TAG:-main}
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: acv
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 3 * * *}
+      BACKUP_S3_ENABLED: ${BACKUP_S3_ENABLED:-false}
+      BACKUP_LOCAL_ENABLED: ${BACKUP_LOCAL_ENABLED:-true}
+      S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+      AWS_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${BACKUP_S3_REGION:-}
+    volumes:
+      - ${BACKUP_LOCAL_DIR:-./backups}:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres:

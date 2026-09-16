@@ -70,5 +70,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 opencode.json
 
-apps/server/prisma/migrations
 apps/server/src/generated
+
+.agents/
+
+/backups/

@@ -1,6 +1,8 @@
 import {
   IsArray,
+  IsBoolean,
   IsDefined,
+  IsIn,
   IsInt,
   IsLatitude,
   IsLongitude,
@@ -12,7 +14,10 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import type { CompareQueryItemDto as CompareQueryItemShape } from 'common/compare';
+import type {
+  CompareQueryItemDto as CompareQueryItemShape,
+  CompareReportLanguage,
+} from 'common/compare';
 
 export class CompareQueryItemDto implements CompareQueryItemShape {
   @IsOptional()
@@ -63,7 +68,17 @@ export class CompareQueryItemDto implements CompareQueryItemShape {
   @IsNumber()
   @Min(2020)
   anioCampaniaFin?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  soloParcelasReferencia?: boolean;
 }
+
+export const COMPARE_REPORT_LANGUAGES: readonly CompareReportLanguage[] = [
+  'es',
+  'en',
+  'pt',
+];
 
 export class CompareQueryDto {
   @IsDefined()
@@ -74,4 +89,8 @@ export class CompareQueryDto {
   @ValidateNested()
   @Type(() => CompareQueryItemDto)
   target?: CompareQueryItemDto;
+
+  @IsOptional()
+  @IsIn(COMPARE_REPORT_LANGUAGES)
+  language?: CompareReportLanguage;
 }

@@ -1,10 +1,9 @@
 import { useTranslation } from 'react-i18next';
+import { FiGlobe } from 'react-icons/fi';
 import {
   isSupportedLanguage,
   supportedLanguages,
-  type SupportedLanguage,
 } from '../i18n/index.ts';
-import { FiGlobe } from 'react-icons/fi';
 
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
@@ -34,7 +33,7 @@ export const LanguageSelector = () => {
               type="button"
               className={code === currentLanguage ? 'active' : ''}
               onClick={() => {
-                void i18n.changeLanguage(code as SupportedLanguage);
+                void i18n.changeLanguage(code);
               }}
             >
               {code.toUpperCase()}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   PieChart,
   Pie,
@@ -6,28 +7,17 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
+import { colorAt } from './stats-colors.ts';
 import {
   formatInteger,
   formatNumber,
   formatPercent,
 } from './stats-formatters.ts';
-import { useTranslation } from 'react-i18next';
+import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
   data: DistribucionCultivoItemDto[];
 };
-
-const COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#84cc16',
-];
 
 export const StatsCropDonut = ({ data }: Props) => {
   const { t } = useTranslation();
@@ -47,7 +37,7 @@ export const StatsCropDonut = ({ data }: Props) => {
           paddingAngle={2}
         >
           {data.map((_, idx) => (
-            <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+            <Cell key={idx} fill={colorAt(idx)} />
           ))}
         </Pie>
         <Tooltip

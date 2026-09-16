@@ -1,10 +1,11 @@
+import type { CompareFilterDto, CompareResultDto } from 'common/compare';
 import type { Pais, Poblacion, Provincia } from 'common/location';
 import type { Parcela } from 'common/parcela';
-import type { CompareFilterDto, CompareResultDto } from 'common/compare';
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { ApiError, apiRequest } from '../common/api.ts';
+import { isSupportedLanguage, type SupportedLanguage } from '../i18n/index.ts';
 
 export type { CompareFilterDto, CompareResultDto } from 'common/compare';
 export type { CompareResultItemDto } from 'common/compare';
@@ -21,12 +22,14 @@ export type CompareFilterType = {
   tipoCultivo?: string;
   anioCampaniaInicio?: number;
   anioCampaniaFin?: number;
+  soloParcelasReferencia?: boolean;
 };
 
 type CompareContextType = {
   compareSingle: (filters: CompareFilterType) => Promise<CompareResultDto>;
   compare: (left: CompareFilterType, right: CompareFilterType) => Promise<CompareResultDto>;
   generateReport: (left: CompareFilterType, right: CompareFilterType) => Promise<void>;
+  getReportLanguage: () => SupportedLanguage;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -41,40 +44,32 @@ const transformFilters = (filters: CompareFilterType): CompareFilterDto => ({
   tipoCultivo: filters.tipoCultivo,
   anioCampaniaInicio: filters.anioCampaniaInicio,
   anioCampaniaFin: filters.anioCampaniaFin,
-  idPais: filters.pais?.id
+  idPais: filters.pais?.id,
+  soloParcelasReferencia: filters.soloParcelasReferencia,
 });
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const compareSingle = useCallback(async (filters: CompareFilterType) => {
-    const response = await fetch(`${API_BASE_URL}/compare`, {
+    const response = await apiRequest('/compare', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         reference: transformFilters(filters),
       }),
     });
 
     if (!response.ok) {
-      toast.error(
-        t('compare.result.insufficientData'),
-      );
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    return json.data as CompareResultDto;
-
-  }, [t]);
+    const json = (await response.json()) as { data: CompareResultDto };
+    return json.data;
+  }, []);
 
   const compare = useCallback(async (reference: CompareFilterType, target: CompareFilterType) => {
-    const response = await fetch(`${API_BASE_URL}/compare`, {
+    const response = await apiRequest('/compare', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         reference: transformFilters(reference),
         target: transformFilters(target),
@@ -82,26 +77,28 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!response.ok) {
-      toast.error(
-        t('compare.result.insufficientData'),
-      );
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const json = await response.json();
-    return json.data as CompareResultDto;
-  }, [t]);
+    const json = (await response.json()) as { data: CompareResultDto };
+    return json.data;
+  }, []);
+
+  const getReportLanguage = useCallback((): SupportedLanguage => {
+    const current = i18n.language;
+    return isSupportedLanguage(current) ? current : 'es';
+  }, [i18n.language]);
 
   const generateReport = useCallback(async (reference: CompareFilterType, target: CompareFilterType) => {
     toast.info(t('compare.result.generatingReport'));
 
-    const response = await fetch(`${API_BASE_URL}/compare/report`, {
+    const language = getReportLanguage();
+    const response = await apiRequest('/compare/report', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         reference: transformFilters(reference),
         target: transformFilters(target),
+        language,
       }),
     });
 
@@ -109,7 +106,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Report.pdf';
+    link.download = t('compare.result.reportFilename');
     document.body.appendChild(link);
     link.click();
 
@@ -117,9 +114,9 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     window.URL.revokeObjectURL(url);
 
     toast.success(t('compare.result.reportGenerated'));
-  }, [t]);
+  }, [t, getReportLanguage]);
 
-  const value = useMemo(() => ({ compare, compareSingle, generateReport }), [compare, compareSingle, generateReport]);
+  const value = useMemo(() => ({ compare, compareSingle, generateReport, getReportLanguage }), [compare, compareSingle, generateReport, getReportLanguage]);
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>
 }

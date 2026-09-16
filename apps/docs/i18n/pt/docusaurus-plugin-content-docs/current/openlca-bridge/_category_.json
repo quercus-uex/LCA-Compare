@@ -1,8 +1,8 @@
 {
-  "label": "Capture ACV",
+  "label": "LCA Bridge",
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "Documentação sobre o Capture ACV, o serviço ponte entre DTAgro e OpenLCA."
+    "description": "Documentação sobre o LCA Bridge, o serviço ponte entre LCA Capture e OpenLCA."
   }
 }

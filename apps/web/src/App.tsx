@@ -1,13 +1,14 @@
-import './App.css'
 import { Route, Routes } from 'react-router';
-import { NavbarContainer } from './components/navbar-container.component.tsx';
-import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
-import { LoginRoute } from './routes/auth/login.route.tsx';
 import { Toaster } from 'sonner';
+import { NavbarContainer } from './components/navbar-container.component.tsx';
+import { AdminRoute } from './routes/admin/admin.route.tsx';
+import { LoginRoute } from './routes/auth/login.route.tsx';
+import { CompareRoute } from './routes/compare/compare.route.tsx';
+import { LandingRoute } from './routes/landing/landing.route.tsx';
+import { NotFoundRoute } from './routes/not-found.route.tsx';
+import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
 import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
 import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
-import { CompareRoute } from './routes/compare/compare.route.tsx';
-import { AdminRoute } from './routes/admin/admin.route.tsx';
 import { StatsRoute } from './routes/stats/stats.route.tsx';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       <Toaster position="bottom-right" richColors />
       <Routes>
         <Route path="/" element={<NavbarContainer />}>
+          <Route index element={<LandingRoute />} />
           <Route path="/compare" element={<CompareRoute />} />
           <Route path="/auth/login" element={<LoginRoute />} />
           <Route path="/admin" element={<AdminRoute />} />
@@ -27,6 +29,7 @@ function App() {
           <Route path="/resultados">
             <Route path=":id" element={<ResultadoRoute />} />
           </Route>
+          <Route path="*" element={<NotFoundRoute />} />
         </Route>
       </Routes>
     </div>

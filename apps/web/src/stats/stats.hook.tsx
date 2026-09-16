@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { API_BASE_URL } from '../common/constants.ts';
 import type { EfCategoryId } from 'common/impact';
 import type { GlobalStatsDto } from 'common/stats';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from '../common/api.ts';
 
 export type { GlobalStatsDto } from 'common/stats';
 export type {
@@ -25,8 +25,6 @@ export function useStats(
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const params = new URLSearchParams();
       if (anio) params.set('anio', String(anio));
@@ -34,11 +32,12 @@ export function useStats(
       if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
       if (idProvinciaPoblacion) params.set('idProvinciaPoblacion', idProvinciaPoblacion);
       const qs = params.toString() ? `?${params.toString()}` : '';
-      const response = await fetch(`${API_BASE_URL}/stats/global${qs}`);
+      const response = await apiRequest(`/stats/global${qs}`);
+      setError(null);
       if (!response.ok) {
         throw new Error(t('stats.chart.loadError'));
       }
-      const json = await response.json();
+      const json = (await response.json()) as GlobalStatsDto;
       setData(json);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('stats.chart.unknownError'));
@@ -48,7 +47,7 @@ export function useStats(
   }, [anio, categoria, tipoCultivo, idProvinciaPoblacion, t]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };

@@ -1,7 +1,7 @@
-import type { Cultivo } from '../../hooks/parcela.hook.tsx';
 import { DateTime } from 'luxon';
-import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import type { Cultivo } from '../../hooks/parcela.hook.tsx';
 
 export const CultivoCard = ({ cultivo }: { cultivo: Cultivo }) => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export const CultivoCard = ({ cultivo }: { cultivo: Cultivo }) => {
           </div>
           <button
             className="btn btn-primary"
-            onClick={() => navigate(`/resultados/${cultivo.idResultadoImpacto}`)}
+            onClick={() => void navigate(`/resultados/${cultivo.idResultadoImpacto}`)}
           >
             {t('parcelas.viewImpacts')}
           </button>

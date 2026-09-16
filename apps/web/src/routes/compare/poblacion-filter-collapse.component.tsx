@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { toggleInArray } from '../../common/utils.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Poblacion, useLocation } from '../../hooks/location.hook.tsx';
+import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { FilterCollapse } from './filter-collapse.component';
-import { useTranslation } from 'react-i18next';
 
 export const PoblacionFilterCollapse = (
   {
@@ -20,19 +23,18 @@ export const PoblacionFilterCollapse = (
     !!filters.poblaciones?.length,
   );
   const [query, setQuery] = useState<string>('');
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   useEffect(() => {
-    location.getPoblacionesByName(query)
-      .then(p => setPoblaciones(p))
-  }, [location, query]);
+    let cancelled = false;
+    location.getPoblacionesByName(debouncedQuery)
+      .then(p => { if (!cancelled) setPoblaciones(p); })
+      .catch(() => { if (!cancelled) toast.error(t('location.townsError')); });
+    return () => { cancelled = true; };
+  }, [location, debouncedQuery, t]);
 
   const togglePoblacion = (p: Poblacion) => {
-    const selected = filters.poblaciones!;
-    if (selected.find((i) => i.id === p.id)) {
-      setFilters({ ...filters, poblaciones: selected.filter((i) => i.id !== p.id) });
-    } else {
-      setFilters({ ...filters, poblaciones: [...selected, p] });
-    }
+    setFilters({ ...filters, poblaciones: toggleInArray(filters.poblaciones ?? [], p) });
   };
 
   return (
@@ -56,13 +58,18 @@ export const PoblacionFilterCollapse = (
           {poblaciones.map((p) => (
             <li
               key={p.id}
-              className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones!.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
-              onClick={() => togglePoblacion(p)}
+              className={`list-row rounded-none flex items-center hover:bg-base-300 cursor-pointer ${filters.poblaciones?.find((i) => i.id === p.id) ? 'bg-base-300' : ''}`}
             >
-              {p.nombre}
-              <div className="badge badge-md badge-primary w-12">
-                {p.provincia?.pais?.codigo ?? p.provincia?.nombre ?? ''}
-              </div>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between"
+                onClick={() => togglePoblacion(p)}
+              >
+                {p.nombre}
+                <div className="badge badge-md badge-primary w-12">
+                  {p.provincia?.pais?.codigo ?? p.provincia?.nombre ?? ''}
+                </div>
+              </button>
             </li>
           ))}
         </ul>

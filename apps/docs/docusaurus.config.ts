@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Capture ACV / ACV Compare',
+  title: 'LCA Capture / LCA Bridge / LCA Compare',
   tagline: '',
   favicon: '/img/icon.svg',
 
@@ -15,7 +15,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://openlca-acv-compare-docs.netlify.app',
+  url: 'https://acv-compare-docs.netlify.app',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -75,9 +75,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Documentación de Capture ACV y ACV Compare',
+      title: 'Documentación de LCA Capture, LCA Bridge y LCA Compare',
       logo: {
-        alt: 'ACV Compare',
+        alt: 'LCA Compare',
         src: '/img/icon.svg',
       },
       items: [
@@ -88,13 +88,13 @@ const config: Config = {
           label: 'Documentación',
         },
         {
-          href: 'https://github.com/quercus-uex/Ventum-OpenLCA-Service',
-          label: 'Capture ACV',
+          href: 'https://github.com/quercus-uex/LCA-Bridge',
+          label: 'LCA Bridge',
           position: 'right',
         },
         {
-          href: 'https://github.com/quercus-uex/Ventum-ACV-Visualizer',
-          label: 'ACV Compare',
+          href: 'https://github.com/quercus-uex/LCA-Compare',
+          label: 'LCA Compare',
           position: 'right',
         },
         {
@@ -110,7 +110,7 @@ const config: Config = {
         alt: 'TID4Agro',
         src: '/img/tid4agro-banner.png',
       },
-      copyright: `Documentación de Capture ACV y ACV Compare.`,
+      copyright: `Documentación de LCA Capture, LCA Bridge y LCA Compare.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -1,4 +1,9 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ResultadoImpacto } from '../generated/prisma/client';
 import { CompareResultDto } from './dto/compare-result.dto';
@@ -57,6 +62,7 @@ Handlebars.registerHelper('scientific', (value: number, digits: number) => {
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(CompareService.name);
   private readonly reportTemplate: HandlebarsTemplateDelegate;
   private browser: Browser;
 
@@ -232,6 +238,28 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       : COMPARE_REPORT_DEFAULT_LANGUAGE;
   }
 
+  /**
+   * Returns undefined when OpenRouter fails or returns empty content, so the
+   * report omits that section instead of failing.
+   */
+  private async tryGenerateAiText(
+    templateName: string,
+    context: Record<string, string>,
+  ): Promise<string | undefined> {
+    try {
+      const text = await this.aiService.generateFromTemplate(
+        templateName,
+        context,
+      );
+      return text?.trim() ? text : undefined;
+    } catch (error) {
+      this.logger.warn(
+        `AI generation failed for ${templateName}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return undefined;
+    }
+  }
+
   private promptName(base: string, language: CompareReportLanguage): string {
     return language === 'es' ? base : `${base}-${language}`;
   }
@@ -255,14 +283,17 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       reportLanguage,
     );
 
-    const overview = await this.aiService.generateFromTemplate(
+    const overview = await this.tryGenerateAiText(
       this.promptName('compare-overview', reportLanguage),
       { data: JSON.stringify(localizedComparison) },
     );
-    const recommendations = await this.aiService.generateFromTemplate(
-      this.promptName('compare-recommendations', reportLanguage),
-      { data: overview },
-    );
+    // Recommendations are generated from the overview, so skip them without it
+    const recommendations = overview
+      ? await this.tryGenerateAiText(
+          this.promptName('compare-recommendations', reportLanguage),
+          { data: overview },
+        )
+      : undefined;
     const refContext = await this.buildReportContext(
       refResults,
       refFilters,

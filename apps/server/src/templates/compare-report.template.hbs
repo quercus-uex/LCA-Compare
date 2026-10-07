@@ -299,6 +299,7 @@
           </div>
         </div>
 
+        {{#if overview}}
         <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
@@ -317,7 +318,9 @@
             </span>
           </div>
         </div>
+        {{/if}}
 
+        {{#if recommendations}}
         <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
@@ -336,6 +339,7 @@
             </span>
           </div>
         </div>
+        {{/if}}
       </div>
     </div>
 

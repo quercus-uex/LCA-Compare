@@ -509,6 +509,58 @@ describe('CompareService', () => {
       expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
     });
 
+    describe('when OpenRouter fails', () => {
+      const aiDisclaimer = '* Contenido generado por IA. Puede ser inexacto.';
+
+      const generateWithAiMock = async (
+        setupAi: (mock: jest.Mock) => void,
+      ): Promise<string> => {
+        setupAi(aiService.generateFromTemplate as jest.Mock);
+        paisService.findMany.mockResolvedValue([]);
+        provinciaService.findMany.mockResolvedValue([]);
+        poblacionService.findMany.mockResolvedValue([]);
+
+        const pdfBuffer = await service.generateReport(
+          refFilters,
+          [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })],
+          tarFilters,
+          [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })],
+        );
+        expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
+
+        return playwrightMock.__mockPage.setContent.mock.calls[0][0] as string;
+      };
+
+      it('omits overview and recommendations when overview generation throws', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock.mockRejectedValueOnce(new Error('OpenRouter down')),
+        );
+
+        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
+        expect(html).not.toContain(aiDisclaimer);
+      });
+
+      it('omits only recommendations when their generation throws', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock
+            .mockResolvedValueOnce('overview-text')
+            .mockRejectedValueOnce(new Error('OpenRouter down')),
+        );
+
+        expect(html).toContain('overview-text');
+        expect(html.split(aiDisclaimer)).toHaveLength(2);
+      });
+
+      it('omits sections whose generated content is empty', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock.mockResolvedValueOnce('   '),
+        );
+
+        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
+        expect(html).not.toContain(aiDisclaimer);
+      });
+    });
+
     it('marks selected filters as chosen in report context', async () => {
       const refResults = [
         makeResultadoImpacto(makeImpactDto(), {

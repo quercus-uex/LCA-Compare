@@ -5,21 +5,23 @@ sidebar_position: 2
 
 # Despliegue del servicio
 
+En producción, LCA Bridge y el [servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) se despliegan
+junto a LCA Compare con el compose de la plataforma (`deploy/compose.yaml` del repositorio
+[LCA-Compare](https://github.com/quercus-uex/LCA-Compare)), usando las imágenes `ghcr.io/quercus-uex/lca-bridge` y
+`ghcr.io/quercus-uex/openlca-ipc`. Los pasos generales (preparación del servidor, `.env`, arranque y actualización)
+están en [Despliegue de ACV Compare](../acv-compare/despliegue.md).
+
 ## Requisitos previos
 
-Antes de desplegar el servicio puente entre LCA Capture y OpenLCA, necesitas tener descargado:
+- La base de datos de OpenLCA con los procesos necesarios ya definidos. No se incluye en la imagen por licencia.
+- El `.env` de la plataforma con `OLCA_DATA_DIR` apuntando al directorio que contiene esa base de datos.
 
-- el repositorio ([https://github.com/quercus-uex/LCA-Bridge](https://github.com/quercus-uex/LCA-Bridge)) (LCA Bridge).
-- la base de datos en formato **.zolca** con los procesos necesarios ya definidos.
+## Datos de OpenLCA
 
-## Configuración de la base de datos .zolca
-
-El [servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) utiliza la base de datos `.zolca` para
-ejecutar los cálculos de impacto ambiental.
-
-La base de datos de OpenLCA (archivo .zolca) debe existir en la ruta `openlca-docker/data/databases/bafu` antes de
-iniciar el servicio. Modifica el fichero `docker-compose.yml` para que el volumen montado en el servicio `openlca-ipc`
-apunte a la carpeta contenedora de dicha base de datos. A continuación se muestra un gráfico aclaratorio:
+El servidor IPC de OpenLCA utiliza la base de datos para ejecutar los cálculos de impacto ambiental. El directorio
+`OLCA_DATA_DIR` del servidor se monta en el contenedor `openlca-ipc` como `/app/data`, y el servicio arranca con
+`-db ecoinvent`, por lo que la base de datos debe estar en `<OLCA_DATA_DIR>/databases/ecoinvent`. A continuación se
+muestra un gráfico aclaratorio de la estructura del volumen:
 
 <p align="center">
     <img src="/img/openlca-bridge/volumen-olca-ipc.png" alt="Gráfico volumen OpenLCA" width="400"/>
@@ -32,54 +34,64 @@ del servidor IPC de OpenLCA. No tiene relación con el código Python del servic
 
 ## Variables de entorno
 
-El servicio lee su configuración desde un archivo `.env` ubicado en la raíz del proyecto. Como punto de partida,
-copia el archivo `.env.example` incluido en el repositorio y renómbralo a `.env`:
+El servicio lee su configuración de las siguientes variables de entorno. En producción, `deploy/compose.yaml` define
+las tres primeras y el resto toma su valor por defecto:
+
+| Variable | Valor en producción | Descripción |
+|---|---|---|
+| `OLCA_HOST` | `http://openlca-ipc` | Host del servidor IPC de OpenLCA |
+| `OLCA_PORT` | `8080` | Puerto del servidor IPC de OpenLCA |
+| `LCA_COMPARE_BASE_URL` | `http://lca-compare-backend:3000` | URL base de LCA Compare para enviar los resultados |
+| `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | UUID del método de impacto (por defecto, EF 3.1) |
+| `CALCULATION_AMOUNT` | `0.001` | Cantidad del proceso para el cálculo (1000 kg → 0.001 = 1 kg) |
+
+## Red y acceso
+
+LCA Bridge, el servidor IPC y LCA Compare comparten la red del proyecto (`lca-platform_default`) y se comunican por
+nombre de servicio. Ninguno de los dos servicios publica puertos: desde fuera, el cálculo solo es accesible a través de
+la ruta `/calc` del frontend de LCA Compare, que exige la cabecera `x-api-key`.
+
+## Publicación y actualización
+
+El workflow `.github/workflows/build.yml` del repositorio de LCA Bridge publica las imágenes `lca-bridge` y
+`openlca-ipc` en cada push a `main`, con las etiquetas `main` y `sha-<hash>`. Una vez publicadas, actualiza solo estos
+servicios en el servidor:
 
 ```bash
-cp .env.example .env
+cd ~/lca-platform
+docker compose pull lca-bridge openlca-ipc
+docker compose up -d lca-bridge openlca-ipc
 ```
 
-A continuación, ajusta los valores según tu entorno:
+## Ejecución local con Docker Compose
 
-```sh
-OLCA_HOST="openlca-ipc"              # Host del servidor IPC de OpenLCA
-OLCA_PORT="8080"                     # Puerto del servidor IPC de OpenLCA
-ACV_COMPARE_BASE_URL="http://lca-compare-backend:3000"  # URL base de LCA Compare
-
-IMPACT_METHOD_UUID="20629e27-b863-4fbe-bbc2-082d3eefd1e5"  # UUID del método de impacto (por defecto, EF 3.1)
-CALCULATION_AMOUNT="0.001"           # Cantidad del proceso para el cálculo (1000 kg → 0.001 = 1 kg)
-```
-
-:::note
-El archivo `.env.example` contiene todos los valores por defecto necesarios para un despliegue estándar. Solo es
-imprescindible modificar `ACV_COMPARE_BASE_URL` si la URL de LCA Compare difiere de la configuración por defecto.
-:::
-
-## Red compartida con LCA Compare
-
-En el caso de que quieras comunicar este servicio con **LCA Compare**, necesitas crear la red compartida `olca`:
-
-```bash
-docker network create olca
-```
-
-Ambos servicios deben estar conectados a esta red para que LCA Compare pueda recibir los resultados de los cálculos y
-el frontend pueda rutear las peticiones de cálculo a través del proxy inverso hacia el servicio puente.
-
-## Despliegue con Docker Compose
-
-Una vez configurada la base de datos y creada la red `olca`, despliega tanto el servidor IPC de OpenLCA como el
-servicio puente:
+El `docker-compose.yml` del repositorio de LCA Bridge sirve para levantar el servicio en local construyendo las imágenes.
+La base de datos debe estar en `openlca-docker/data/databases/ecoinvent`:
 
 ```bash
 docker compose up -d
 ```
 
-El servicio se desplegará en el puerto **3000**.
+El servicio puente queda en el puerto **3000** y el servidor IPC en el **3333**. Los resultados se envían a
+`http://host.docker.internal:8000` (el backend de LCA Compare en desarrollo), salvo que se defina
+`LCA_COMPARE_BASE_URL`.
 
 ## Verificación
 
-Una vez desplegado, verifica que el servicio responde correctamente:
+En producción, desde fuera del servidor:
+
+```bash
+# Sin clave de API (debe devolver 401)
+curl -i -X POST http://<servidor>/calc
+
+# Cálculo con el ejemplo de entrada del repositorio de LCA Bridge
+curl -X POST http://<servidor>/calc \
+  -H "x-api-key: <CALC_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d @examples/example_in.json
+```
+
+En local:
 
 ```bash
 # Documentación Swagger
@@ -88,5 +100,5 @@ curl http://localhost:3000/docs
 # Endpoint de cálculo
 curl -X POST http://localhost:3000/capture-acv \
   -H "Content-Type: application/json" \
-  -d '{"metadatos": {...}}'
+  -d @examples/example_in.json
 ```

@@ -5,81 +5,77 @@ sidebar_position: 2
 
 # Despliegue del servicio
 
-Antes de desplegar el servicio de comparativa de ACV, necesitas tener clonado el repositorio
-([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)).
+La plataforma completa (LCA Compare, LCA Bridge, servidor IPC de openLCA y copias de seguridad) se despliega con un
+único archivo de Docker Compose, `deploy/compose.yaml`, del repositorio
+([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). El compose usa imágenes ya
+publicadas en GitHub Container Registry (GHCR), por lo que no hace falta clonar el repositorio en el servidor.
+
+## Requisitos previos
+
+- Docker Engine con el plugin Compose.
+- Los datos de openLCA (base de datos `ecoinvent`) en un directorio del servidor. No se incluyen en la imagen por
+  licencia.
+- Si los paquetes de GHCR son privados, iniciar sesión una sola vez con un token *classic* con permiso
+  `read:packages`:
+
+```bash
+echo "$TOKEN" | docker login ghcr.io -u <usuario> --password-stdin
+```
 
 ## Variables de entorno
 
-El servicio lee su configuración desde un archivo `.env` ubicado en la raíz del proyecto. Como punto de partida,
-copia el archivo `.env.example` incluido en el repositorio y renómbralo a `.env`:
+Prepara un directorio con el compose y su archivo `.env`, partiendo de `deploy/compose.yaml` y `deploy/.env.example`:
 
 ```bash
-cp .env.example .env
+mkdir ~/lca-platform && cd ~/lca-platform
+# copiar deploy/compose.yaml como compose.yaml y deploy/.env.example como .env
+chmod 600 .env
 ```
 
-A continuación, ajusta los valores según tu entorno:
+A continuación, ajusta los valores del `.env`:
 
 ```sh
-DATABASE_URL="postgres://user:password@localhost:5432/acv"  # Conexión local usada fuera de Docker
-JWT_SECRET="CHANGEME"                    # Clave secreta para JWT (autenticación)
-OPENROUTER_API_KEY="sk-or-v1-...."       # Clave de API para OpenRouter (IA en informes)
+TAG=main                                 # Etiqueta de las imágenes: main o sha-<hash> para fijar una versión
 
-DB_USER="user"                           # Usuario de la base de datos
-DB_PASSWORD="password"                   # Contraseña de la base de datos
+DB_USER=                                 # Usuario de la base de datos
+DB_PASSWORD=                             # Contraseña de la base de datos
+JWT_SECRET=                              # Clave secreta para JWT (autenticación)
+OPENROUTER_API_KEY=                      # Clave de API para OpenRouter (IA en informes)
+MAILER_EMAIL=                            # Email para envío de notificaciones
+MAILER_PASSWORD=                         # Contraseña del email para notificaciones
+CALC_API_KEY=                            # Clave de API que exige /calc en la cabecera x-api-key
+DEFAULT_IMPACT_METHOD_UUID=2f995579-06bd-4681-b07c-cee3b1805b0d  # Método de impacto por defecto (EF 3.1)
 
-MAILER_EMAIL="example@example.com"       # Email para envío de notificaciones
-MAILER_PASSWORD="Password"               # Contraseña del email para notificaciones
+OLCA_DATA_DIR=/home/ivan/openlca/data    # Directorio con los datos de openLCA
 
-CAPTURE_ACV_EMAIL="email@example.com"    # Email para autenticación en LCA Capture (extracción masiva)
-CAPTURE_ACV_PASSWORD="P@ssw0rd"          # Password para autenticación en LCA Capture (extracción masiva)
-
-DEFAULT_IMPACT_METHOD_UUID="2f995579-06bd-4681-b07c-cee3b1805b0d"  # UUID del método de impacto por defecto (EF 3.1)
-
-PORT=8000                                # Puerto del backend en desarrollo
-
-CALC_API_KEY="calc-api-key"              # Clave de API para realizar un cálculo de ACV
-
-LCA_CAPTURE_CLIENT_ID="..."              # Credenciales de LCA Capture (solo para regenerar los PDFs de la documentación)
-LCA_CAPTURE_CLIENT_SECRET="..."
-
-BACKUP_S3_ENABLED="false"                 # Subir las copias al bucket S3
-BACKUP_LOCAL_ENABLED="false"              # Guardar las copias en un directorio local de la máquina
-BACKUP_LOCAL_DIR="./backups"              # Directorio local para las copias (montado en el contenedor como /backups)
-BACKUP_S3_ENDPOINT=""                    # Vacío para AWS S3; endpoint para proveedores S3-compatibles
-BACKUP_S3_REGION="eu-west-1"             # Región del bucket de backups
-BACKUP_S3_BUCKET="acv-db-backups"        # Bucket S3 para las copias de seguridad
-BACKUP_S3_ACCESS_KEY_ID="..."            # Access key del usuario IAM de backups
-BACKUP_S3_SECRET_ACCESS_KEY="..."        # Secret key del usuario IAM de backups
+BACKUP_SCHEDULE="0 3 * * *"              # Cron de las copias de seguridad
+BACKUP_LOCAL_ENABLED=true                # Guardar las copias en un directorio local de la máquina
+BACKUP_LOCAL_DIR=./backups               # Directorio local para las copias (montado en el contenedor como /backups)
+BACKUP_S3_ENABLED=true                   # Subir las copias al bucket S3
+BACKUP_S3_ENDPOINT=                      # Vacío para AWS S3; endpoint para proveedores S3-compatibles
+BACKUP_S3_REGION=eu-south-2              # Región del bucket de backups
+BACKUP_S3_BUCKET=lca-compare-backup      # Bucket S3 para las copias de seguridad
+BACKUP_S3_ACCESS_KEY_ID=                 # Access key del usuario IAM de backups
+BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key del usuario IAM de backups
 ```
 
-En producción con Docker Compose, `DATABASE_URL` se inyecta automáticamente en el backend como
-`postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. El valor del `.env` queda para comandos locales, pruebas o desarrollo
-fuera del contenedor.
+`DATABASE_URL` no se define: el compose la construye como `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. Si
+falta alguna variable obligatoria, `docker compose` se detiene indicando cuál.
 
-## Inicialización de la base de datos
+## Despliegue
 
-En primer lugar, es necesario desplegar la base de datos. Para ello, levantamos el servicio de base de datos del Docker
-Compose:
+Con el `.env` preparado, descarga las imágenes y levanta la plataforma:
 
 ```bash
-docker compose up -d db
+docker compose pull
+docker compose up -d
+docker compose ps
 ```
 
-Tras desplegar la base de datos, sincroniza el esquema de Prisma desde el paquete `server`. El esquema está dividido en
-`apps/server/prisma/schema/` y la configuración de Prisma está en `apps/server/prisma.config.ts`, por lo que los comandos
-deben ejecutarse mediante los scripts del workspace o pasando explícitamente esa configuración. El despliegue utiliza
-`prisma db push`, que aplica el esquema directamente sin historial de migraciones:
-
-```bash
-pnpm --filter server prisma:db:push
-```
-
-Por último, hay que ejecutar el archivo SQL con los datos iniciales (países, provincias, poblaciones...) disponible en
-`init/dbinit.sql`. Este archivo es un seed SQL manual de datos de referencia de Portugal, no una migración automática:
-
-```bash
-docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
-```
+Al arrancar, el servicio `migrate` espera a que la base de datos esté lista y ejecuta `prisma migrate deploy`. En una
+base de datos vacía crea el esquema (con la extensión PostGIS) y carga los datos iniciales: países, provincias,
+poblaciones y el método de impacto EF 3.1. En los despliegues siguientes solo aplica las migraciones pendientes. El
+backend no arranca hasta que `migrate` termina correctamente; si falla, revisa `docker compose logs migrate`.
 
 ## Crear un usuario administrador
 
@@ -98,10 +94,11 @@ pnpm --filter server admin:create -- --email="admin@example.com" --password="sec
 
 ### En producción con Docker
 
-Una vez levantado el contenedor del backend, ejecútalo dentro de `lca-compare-backend`:
+Tras el primer arranque, ejecútalo en un contenedor puntual con la imagen del backend:
 
 ```bash
-docker compose exec lca-compare-backend pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/create-admin.js \
+  --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
 ```
 
 El script valida el email, exige una contraseña de al menos 8 caracteres y comprueba que no exista ya un usuario con
@@ -109,90 +106,108 @@ el mismo correo.
 
 ## Estructura del Docker Compose
 
-El archivo `docker-compose.yaml` define cuatro servicios. La base de datos se levanta sin perfil y las aplicaciones se
-incluyen únicamente con el perfil `prod`:
+El archivo `deploy/compose.yaml` define el proyecto `lca-platform` con los siguientes servicios:
 
-| Servicio | Imagen | Puerto | Perfil |
+| Servicio | Imagen | Puerto | Función |
 |---|---|---|---|
-| `db` | `postgis/postgis:17-master` | 5432 | *(siempre activo)* |
-| `lca-compare-backend` | Construida desde `apps/server/Dockerfile` | 8080→3000 | `prod` |
-| `lca-compare-frontend` | Construida desde `apps/web/Dockerfile` | 80→80 | `prod` |
-| `db-backup` | Construida desde `docker/backup/Dockerfile` | — | `prod` |
+| `db` | `postgis/postgis:17-master` | — | PostgreSQL con PostGIS |
+| `migrate` | `ghcr.io/quercus-uex/lca-compare-backend` | — | Aplica las migraciones de Prisma y termina |
+| `lca-compare-backend` | `ghcr.io/quercus-uex/lca-compare-backend` | — | API REST (NestJS) |
+| `lca-compare-frontend` | `ghcr.io/quercus-uex/lca-compare-frontend` | 80→80 | SPA y proxy inverso (Nginx) |
+| `lca-bridge` | `ghcr.io/quercus-uex/lca-bridge` | — | Cálculo de ACV |
+| `openlca-ipc` | `ghcr.io/quercus-uex/openlca-ipc` | — | Servidor IPC de openLCA con los datos de `OLCA_DATA_DIR` |
+| `db-backup` | `ghcr.io/quercus-uex/lca-compare-backup` | — | Copias de seguridad de la base de datos |
 
 ### Redes
 
-El compose define dos redes:
-
-- **`lca-compare`**: red interna para la comunicación entre el backend, frontend, base de datos y backups.
-- **`olca`**: red externa compartida con el servicio LCA Bridge. Debe crearse manualmente:
-
-```bash
-docker network create olca
-```
+Todos los servicios comparten la red del proyecto, `lca-platform_default`, y se comunican por su nombre de servicio.
+Solo el frontend publica un puerto (80); la base de datos, el backend, LCA Bridge y openLCA no son accesibles desde
+fuera. Si necesitas acceder a PostgreSQL desde otra máquina, usa un túnel SSH.
 
 ### Proxy inverso (Nginx)
 
 El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente enrutamiento:
 
-| Ruta | Destino |
+| Host / ruta | Destino |
 |---|---|
 | `/api/` | `lca-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
-| `/calc` | `lca-bridge:3000/capture-acv` (cálculo de ACV) |
+| `/calc` | `lca-bridge:3000/capture-acv` (cálculo de ACV; exige la cabecera `x-api-key` con el valor de `CALC_API_KEY`, si no devuelve 401) |
 | `/` | SPA servida estáticamente (`index.html`) |
+| `quercusstatus.duckdns.org` | `uptime-kuma:3001` (Uptime Kuma) |
 
-## Despliegue completo
+Nginx usa upstreams con `resolve` y el DNS interno de Docker (`127.0.0.11`), con una caché DNS válida durante
+10 segundos (`valid=10s`). Así detecta los cambios de IP de los servicios al recrearse y actualiza sus destinos sin
+reiniciar Nginx. Si un servicio no está disponible, su ruta devuelve 502 sin impedir que Nginx arranque.
+Esta configuración requiere Nginx 1.27.3 o superior.
 
-Una vez tengamos la base de datos preparada, desplegamos todos los servicios con el perfil de producción:
+## Uptime Kuma
+
+Uptime Kuma se ejecuta en el mismo servidor, pero fuera del compose. Se conecta a la red de la plataforma para que
+Nginx lo alcance como `uptime-kuma`, por lo que debe levantarse después del primer `docker compose up -d`:
 
 ```bash
-docker compose --profile prod up -d --build
+docker run -d --name uptime-kuma --restart unless-stopped \
+  --network lca-platform_default -v uptime-kuma:/app/data louislam/uptime-kuma:1
 ```
 
-Esto construirá las imágenes del backend, frontend y backup, y levantará los cuatro servicios. La imagen del backend compila
-primero `packages/common`, genera el cliente Prisma y después compila NestJS. Si no sincronizaste el esquema durante la
-preparación previa de la base de datos, hazlo ahora en el contenedor del backend usando el script del workspace `server`:
+Mientras Uptime Kuma esté conectado, `docker compose down` no puede borrar la red `lca-platform_default`: avisa y deja
+el resto de servicios parados. `docker compose up -d` reutiliza la red sin problema.
 
-```bash
-docker compose exec lca-compare-backend pnpm --filter server prisma:db:push
-```
+Para actualizarlo, ejecuta `docker pull louislam/uptime-kuma:1` y `docker rm -f uptime-kuma`, y repite el
+`docker run` anterior.
 
 ## CI/CD
 
-El proyecto incluye un workflow de GitHub Actions (`.github/workflows/deploy.yml`) que se ejecuta en cada push a las
-ramas `main` y `develop`. El pipeline:
+El workflow `.github/workflows/build.yml` se ejecuta en cada push a `main` (y manualmente desde GitHub). Construye y
+publica en GHCR las imágenes `lca-compare-backend`, `lca-compare-frontend` y `lca-compare-backup`, cada una con las
+etiquetas `main` y `sha-<hash>`. El repositorio de LCA Bridge tiene un workflow equivalente que publica `lca-bridge` y
+`openlca-ipc`.
 
-1. Se conecta por SSH al servidor de despliegue.
-2. Clona o actualiza el repositorio en la rama correspondiente.
-3. Reconstruye y levanta los contenedores con `docker compose --profile prod up -d --build`.
-4. Sincroniza el esquema de Prisma con `pnpm --filter server prisma:db:push` dentro del contenedor
-   `lca-compare-backend`.
-
-Las variables de entorno sensibles se inyectan desde los secretos de GitHub (`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`,
-`OPENROUTER_API_KEY`, `CAPTURE_ACV_EMAIL`, `CAPTURE_ACV_PASSWORD`, `MAILER_EMAIL`, `MAILER_PASSWORD`,
-`DEFAULT_IMPACT_METHOD_UUID`, `CALC_API_KEY`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`, `BACKUP_S3_BUCKET`,
-`BACKUP_S3_ACCESS_KEY_ID` y `BACKUP_S3_SECRET_ACCESS_KEY`).
+GitHub Actions no se conecta al servidor: el despliegue es manual.
 
 El repositorio también incluye el workflow `.github/workflows/sonar.yml`, que instala dependencias, compila
 `packages/common`, genera el cliente Prisma y ejecuta la cobertura del backend antes del análisis de SonarCloud.
 
+## Actualización
+
+Una vez publicadas las imágenes nuevas, actualiza el servidor:
+
+```bash
+# desde el equipo local, solo si ha cambiado deploy/compose.yaml
+scp deploy/compose.yaml <usuario>@<servidor>:~/lca-platform/compose.yaml
+
+# en el servidor
+cd ~/lca-platform
+docker compose pull
+docker compose up -d --remove-orphans
+docker image prune -f
+```
+
+Para actualizar solo LCA Bridge:
+
+```bash
+docker compose pull lca-bridge openlca-ipc
+docker compose up -d lca-bridge openlca-ipc
+```
+
+Para volver a una versión anterior, pon `TAG=sha-<hash>` en el `.env` y ejecuta `docker compose up -d`. Las migraciones
+de base de datos ya aplicadas no se deshacen.
+
 ## Copias de seguridad
 
-El servicio `db-backup` (perfil `prod`) realiza copias de seguridad automáticas de la base de datos. Cada día a las
-03:00 UTC lanza `pg_dump` y comprime el resultado con gzip. El destino de las copias se controla con dos variables
-booleanas. Ambas están desactivadas por defecto y hay que activar al menos una de forma explícita (si no, el comando
-`backup` termina con error):
+El servicio `db-backup` realiza copias de seguridad automáticas de la base de datos. Según `BACKUP_SCHEDULE` (por
+defecto, cada día a las 03:00 UTC) lanza `pg_dump` y comprime el resultado con gzip. El destino de las copias se
+controla con dos variables booleanas, y al menos una debe estar activada (si no, el comando `backup` termina con
+error). Si no se definen en el `.env`, el compose deja S3 desactivado y la copia local activada:
 
 - **`BACKUP_S3_ENABLED`**: sube la copia a `s3://<bucket>/lca-compare-db/daily/`. Los domingos copia además el
   backup al prefijo `lca-compare-db/weekly/`.
 - **`BACKUP_LOCAL_ENABLED`**: guarda la copia en un directorio local de la máquina. El directorio se define con
-  `BACKUP_LOCAL_DIR` (por defecto `./backups`, relativo al `docker-compose.yaml`) y se monta en el contenedor como
+  `BACKUP_LOCAL_DIR` (por defecto `./backups`, relativo al `compose.yaml`) y se monta en el contenedor como
   `/backups`. Las copias se organizan igual que en S3: `daily/` y, los domingos, `weekly/`.
 
 Si ambos destinos están activos, el volcado se genera una sola vez y se escribe en los dos. Con solo S3 activo, la
 copia se sube en streaming, sin ocupar disco en el servidor.
-
-El workflow de despliegue (`.github/workflows/deploy.yml`) fuerza ambas variables a `true`, por lo que en el
-servidor se generan las dos copias: en S3 y en `./backups` dentro del directorio de despliegue.
 
 La retención de las copias en S3 la aplican las lifecycle rules del bucket (7 diarias y 4 semanales). Las copias
 locales **no se rotan automáticamente**: hay que purgar `BACKUP_LOCAL_DIR` por otros medios (cron, logrotate...).
@@ -205,9 +220,9 @@ La imagen se construye desde `docker/backup/` (cliente de PostgreSQL 17 + AWS CL
 Esta configuración solo es necesaria si `BACKUP_S3_ENABLED=true`. Antes del primer despliegue con backups en S3 hay
 que preparar tres cosas en la cuenta de AWS:
 
-**1. Crear el bucket S3.** El nombre debe ser único globalmente (p. ej. `acv-db-backups`). Mantén activado el bloqueo
-de acceso público (es el valor por defecto), desactiva el versionado y elige la región que usarás en
-`BACKUP_S3_REGION` (p. ej. `eu-west-1`).
+**1. Crear el bucket S3.** El nombre debe ser único globalmente (p. ej. `lca-compare-backup`). Mantén activado el
+bloqueo de acceso público (es el valor por defecto), desactiva el versionado y elige la región que usarás en
+`BACKUP_S3_REGION` (p. ej. `eu-south-2`).
 
 **2. Crear un usuario IAM con permisos mínimos.** Crea una política con este JSON (ajustando el nombre del bucket):
 
@@ -219,13 +234,13 @@ de acceso público (es el valor por defecto), desactiva el versionado y elige la
       "Sid": "ListBucket",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::acv-db-backups"
+      "Resource": "arn:aws:s3:::lca-compare-backup"
     },
     {
       "Sid": "ReadWriteObjects",
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::acv-db-backups/*"
+      "Resource": "arn:aws:s3:::lca-compare-backup/*"
     }
   ]
 }
@@ -262,7 +277,7 @@ de administrador (no con las del usuario de backups):
 
 ```bash
 aws s3api put-bucket-lifecycle-configuration \
-  --bucket acv-db-backups \
+  --bucket lca-compare-backup \
   --lifecycle-configuration file://lifecycle.json
 ```
 
@@ -275,37 +290,44 @@ El comando `backup` permite lanzar una copia bajo demanda y comprobar que todo f
 
 ```bash
 # Con el contenedor en marcha
-docker compose --profile prod exec db-backup backup
+docker compose exec db-backup backup
 
 # O como ejecución puntual
-docker compose --profile prod run --rm db-backup backup
+docker compose run --rm db-backup backup
 ```
 
 Si todo va bien verás `Backup OK: lca-<fecha>.sql.gz`. Comprueba que la copia está en su destino:
 
 ```bash
 # S3
-aws s3 ls s3://acv-db-backups/lca-compare-db/daily/
+aws s3 ls s3://lca-compare-backup/lca-compare-db/daily/
 
 # Directorio local (la ruta configurada en BACKUP_LOCAL_DIR)
 ls ./backups/daily/
 ```
 
-Las ejecuciones programadas quedan registradas en los logs del contenedor (`docker logs`).
+Las ejecuciones programadas quedan registradas en los logs del contenedor (`docker compose logs db-backup`).
 
 ### Restauración
 
 ```bash
 # 1. Descargar el backup (solo si la copia está en S3; si está en el directorio local, salta este paso y usa esa ruta)
-aws s3 cp s3://acv-db-backups/lca-compare-db/daily/<fichero>.sql.gz .
+aws s3 cp s3://lca-compare-backup/lca-compare-db/daily/<fichero>.sql.gz .
 
-# 2. Recrear la base de datos con la extensión PostGIS (con el backend parado)
-docker compose exec -T db psql -U "$DB_USER" -d postgres -c "DROP DATABASE acv; CREATE DATABASE acv;"
-docker compose exec -T db psql -U "$DB_USER" -d acv -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+# 2. Parar los servicios que usan la base de datos
+docker compose stop lca-compare-backend db-backup
 
-# 3. Restaurar
-gunzip -c <fichero>.sql.gz | docker compose exec -T db psql -U "$DB_USER" -d acv
+# 3. Recrear la base de datos con la extensión PostGIS
+docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE acv" -c "CREATE DATABASE acv"'
+docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d acv -c "CREATE EXTENSION IF NOT EXISTS postgis"'
+
+# 4. Restaurar y volver a levantar los servicios
+gunzip -c <fichero>.sql.gz | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d acv'
+docker compose up -d
 ```
+
+La copia incluye la tabla de migraciones de Prisma, por lo que al volver a levantar los servicios `migrate` solo aplica
+las migraciones posteriores a la copia.
 
 ## Verificación
 
@@ -317,4 +339,7 @@ curl http://localhost/
 
 # API REST (documentación Swagger)
 curl http://localhost/api/docs/
+
+# Cálculo de ACV sin clave de API (debe devolver 401)
+curl -i -X POST http://localhost/calc
 ```

@@ -11,7 +11,7 @@ los datos de un cultivo desde LCA Capture, ejecuta el cálculo de impacto ambien
 [servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) y envía el resultado a
 [LCA Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y comparativa.
 
-La comunicación entre ambos servicios se realiza a través de una red Docker compartida (`olca`), lo que permite
+Ambos servicios se despliegan con el mismo Docker Compose y se comunican a través de su red interna, lo que permite
 orquestar todo el flujo de cálculo y visualización de ACV de forma desacoplada.
 
 ## Flujo de procesamiento
@@ -48,7 +48,7 @@ POST /capture-acv    →    ACVService.execute()
 |---|---|
 | `OLCA_HOST` | Host del servidor IPC de OpenLCA |
 | `OLCA_PORT` | Puerto del servidor IPC de OpenLCA |
-| `ACV_COMPARE_BASE_URL` | URL base del servicio LCA Compare para envío de resultados |
+| `LCA_COMPARE_BASE_URL` | URL base del servicio LCA Compare para envío de resultados |
 | `IMPACT_METHOD_UUID` | UUID del método de impacto para el cálculo (por defecto, EF 3.1) |
 | `CALCULATION_AMOUNT` | Cantidad del proceso usada como referencia en el cálculo (por defecto `0.001`, equivalente a 1 kg) |
 

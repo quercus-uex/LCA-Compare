@@ -8,8 +8,8 @@ sidebar_position: 1
 **LCA Compare** es una aplicación web que permite la visualización, comparación y generación de informes del Análisis de
 Ciclo de Vida (ACV) de cultivos agrícolas. Los resultados de ACV son calculados por
 [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge), un servicio puente entre la plataforma
-LCA Capture y el motor de cálculo openLCA con base de datos en formato .zolca. Ambos servicios se comunican a través de una red
-Docker compartida.
+LCA Capture y el motor de cálculo openLCA con base de datos en formato .zolca. Ambos servicios se despliegan con el mismo
+Docker Compose y se comunican a través de su red interna.
 
 ## Funcionalidades
 
@@ -33,9 +33,9 @@ La aplicación sigue una arquitectura cliente-servidor con dos componentes difer
 
 | Componente | Tecnología | Puerto |
 |---|---|---|
-| **Backend (API REST)** | NestJS 11 + Prisma ORM 7 | 3000 (interno) / 8080 (expuesto) |
-| **Frontend (SPA)** | React 19 + Vite 7 + TailwindCSS 4 + DaisyUI 5 | 80 |
-| **Base de datos** | PostgreSQL 17 + PostGIS | 5432 |
+| **Backend (API REST)** | NestJS 11 + Prisma ORM 7 | 3000 (interno) |
+| **Frontend (SPA)** | React 19 + Vite 7 + TailwindCSS 4 + DaisyUI 5 | 80 (único puerto publicado) |
+| **Base de datos** | PostgreSQL 17 + PostGIS | 5432 (interno) |
 
 El backend expone una API REST documentada con Swagger/OpenAPI en la ruta `/docs`. El frontend se sirve mediante Nginx,
 que actúa como proxy inverso enrutando las peticiones `/api` al backend y sirviendo la SPA para el resto de rutas.

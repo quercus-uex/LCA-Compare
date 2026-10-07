@@ -40,22 +40,22 @@ The Docusaurus documentation SHALL describe the current Prisma and database work
 
 #### Scenario: Developer seeds reference data
 - **WHEN** a developer reads database initialization instructions
-- **THEN** the documentation identifies `init/dbinit.sql` as the manual SQL seed for Portugal reference data and keeps the PostGIS database requirement visible
+- **THEN** the documentation states that applying the versioned migrations (`pnpm server:prisma:migrate:deploy`) creates the schema and loads the reference data from the `1_seed_datos_iniciales` migration, and keeps the PostGIS database requirement visible
 
 ### Requirement: Current deployment documentation
 The Docusaurus documentation SHALL describe the current Docker Compose and CI/CD deployment workflow.
 
 #### Scenario: Operator reviews Docker Compose services
 - **WHEN** an operator reads deployment documentation
-- **THEN** the documented services, Dockerfile paths, exposed ports, production profile, and networks match the current Docker Compose configuration
+- **THEN** the documented services, images, exposed ports, and networks match `deploy/compose.yaml`, including the `migrate` service, the single published port 80, and the absence of profiles and external networks
 
 #### Scenario: Operator deploys production services
 - **WHEN** an operator follows production deployment instructions
-- **THEN** the documented command uses `docker compose --profile prod up -d --build` and describes the external `olca` network requirement
+- **THEN** the documented steps prepare `compose.yaml` and `.env` from `deploy/`, pull the GHCR images with `docker compose pull`, start them with `docker compose up -d`, and describe the manual update procedure and that GitHub Actions only publishes images
 
 #### Scenario: Operator applies production migrations
 - **WHEN** an operator follows migration instructions for a deployed backend container
-- **THEN** the documented command uses the current server workspace migration script or equivalent Prisma command with the server config
+- **THEN** the documentation states that the `migrate` service runs `prisma migrate deploy` with the server config before the backend starts, and that `prisma db push` must not be used
 
 ### Requirement: Removed test workflow documentation
 The Docusaurus documentation SHALL NOT instruct users to run removed frontend or backend test workflows.

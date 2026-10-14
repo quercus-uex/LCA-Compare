@@ -2,13 +2,17 @@ packages:
   - "apps/*"
   - "packages/*"
 
-onlyBuiltDependencies:
-  - "@nestjs/core"
-  - "@openrouter/sdk"
-  - "@prisma/engines"
-  - "@scarf/scarf"
-  - "@swc/core"
-  - "argon2"
-  - "core-js"
-  - "esbuild"
-  - "prisma"
+allowBuilds:
+  '@nestjs/core': true
+  '@openrouter/sdk': true
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  argon2: true
+  core-js: true
+  esbuild: true
+  prisma: true
+
+permissions:
+  dotenv:
+    skills: true

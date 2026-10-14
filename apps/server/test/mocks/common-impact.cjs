@@ -14,15 +14,25 @@ const EF_CATEGORIES = [
     color: '#eab308',
   },
   {
-    id: 'eutrophication',
-    englishNames: [
-      'Eutrophication: freshwater',
-      'Eutrophication: marine',
-      'Eutrophication: terrestrial',
-    ],
-    spanishName: 'Eutrofizacion',
-    unit: 'agregado',
+    id: 'eutrophication_freshwater',
+    englishNames: ['Eutrophication: freshwater'],
+    spanishName: 'Eutrofizacion (agua dulce)',
+    unit: 'kg P eq',
     color: '#22c55e',
+  },
+  {
+    id: 'eutrophication_marine',
+    englishNames: ['Eutrophication: marine'],
+    spanishName: 'Eutrofizacion (marina)',
+    unit: 'kg N eq',
+    color: '#14b8a6',
+  },
+  {
+    id: 'eutrophication_terrestrial',
+    englishNames: ['Eutrophication: terrestrial'],
+    spanishName: 'Eutrofizacion (terrestre)',
+    unit: 'mol N eq',
+    color: '#84cc16',
   },
   {
     id: 'water_use',
@@ -72,4 +82,6 @@ const IMPACT_KEYS = [
   'impacto_total',
 ];
 
-module.exports = { EF_CATEGORIES, IMPACT_KEYS };
+const DEFAULT_EF_CATEGORY = 'climate_change';
+
+module.exports = { EF_CATEGORIES, IMPACT_KEYS, DEFAULT_EF_CATEGORY };

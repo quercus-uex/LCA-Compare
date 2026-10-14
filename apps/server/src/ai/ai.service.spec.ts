@@ -12,11 +12,17 @@ jest.mock('@openrouter/sdk', () => {
 });
 
 describe('AiService', () => {
+  const originalEnv = process.env;
   let service: AiService;
   let sendMock: jest.Mock;
 
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env = { ...originalEnv, OPENROUTER_API_KEY: 'sk-or-test' };
     sendMock = jest.requireMock('@openrouter/sdk').__sendMock as jest.Mock;
     sendMock.mockResolvedValue({
       choices: [{ message: { content: 'generated text' } }],
@@ -68,6 +74,17 @@ describe('AiService', () => {
       service.generateFromTemplate('missing-template', { data: 'x' }),
     ).rejects.toThrow('Template missing-template not found');
 
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it('returns empty text without calling OpenRouter when OPENROUTER_API_KEY is not set', async () => {
+    process.env.OPENROUTER_API_KEY = '';
+
+    const result = await service.generateFromTemplate('compare-overview', {
+      data: '{"impacto_total":[]}',
+    });
+
+    expect(result).toBe('');
     expect(sendMock).not.toHaveBeenCalled();
   });
 });

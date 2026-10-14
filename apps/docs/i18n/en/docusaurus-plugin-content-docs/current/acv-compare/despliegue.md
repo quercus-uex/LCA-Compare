@@ -35,18 +35,20 @@ TAG=main                                 # Image tag: main, or sha-<hash> to pin
 DB_USER=                                 # Database user
 DB_PASSWORD=                             # Database password
 JWT_SECRET=                              # Secret key for JWT (authentication)
-OPENROUTER_API_KEY=                      # API key for OpenRouter (AI in reports)
-MAILER_EMAIL=                            # Email account for notifications
-MAILER_PASSWORD=                         # Password of the notification email account
+OPENROUTER_API_KEY=                      # Optional. API key for OpenRouter (AI in reports)
+MAILER_EMAIL=                            # Optional. Email account for notifications
+MAILER_PASSWORD=                         # Optional. Password of the notification email account
+MAILER_HOST=                             # Optional. SMTP server; empty to use Gmail
+MAILER_PORT=587                          # Optional. SMTP port (465 uses implicit TLS)
 CALC_API_KEY=                            # API key required by /calc in the x-api-key header
 DEFAULT_IMPACT_METHOD_UUID=2f995579-06bd-4681-b07c-cee3b1805b0d  # Default impact method (EF 3.1)
 
-OLCA_DATA_DIR=/home/ivan/openlca/data    # Directory with the OpenLCA data
+OLCA_DATA_DIR=/opt/openlca-data          # Directory with the OpenLCA data
 
 BACKUP_SCHEDULE="0 3 * * *"              # Backup cron schedule
 BACKUP_LOCAL_ENABLED=true                # Save backups to a local directory on the machine
 BACKUP_LOCAL_DIR=./backups               # Local backup directory (mounted into the container as /backups)
-BACKUP_S3_ENABLED=true                   # Upload backups to the S3 bucket
+BACKUP_S3_ENABLED=false                  # Upload backups to the S3 bucket
 BACKUP_S3_ENDPOINT=                      # Empty for AWS S3; endpoint for S3-compatible providers
 BACKUP_S3_REGION=eu-south-2              # Backup bucket region
 BACKUP_S3_BUCKET=lca-compare-backup      # S3 bucket for backups
@@ -55,6 +57,11 @@ BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key of the backup IAM user
 ```
 
 `DATABASE_URL` is not set: the compose file builds it as `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. If a required variable is missing, `docker compose` stops and says which one.
+
+`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`, and `OLCA_DATA_DIR` are required. E-mail (SMTP) and OpenRouter are optional and can be left empty:
+
+- Without `MAILER_EMAIL` and `MAILER_PASSWORD`, no e-mail with the password is sent to users created when their first data arrive; the ingestion is still stored and the warning is written to the backend logs.
+- Without `OPENROUTER_API_KEY`, the PDF report is generated without the AI-written summary and recommendations.
 
 ## Deployment
 

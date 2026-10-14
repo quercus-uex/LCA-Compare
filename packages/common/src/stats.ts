@@ -16,7 +16,6 @@ export type ProvinciaRankingItemDto = {
   superficieTotal: number;
   produccionMedia: number;
   consumoAguaMedio: number;
-  impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
   eficiencia: number;
 };
@@ -26,7 +25,6 @@ export type PoblacionRankingItemDto = {
   nombrePoblacion: string;
   nombreProvincia: string;
   numParcelas: number;
-  impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
 };
 
@@ -34,7 +32,6 @@ export type EvolucionTemporalItemDto = {
   anio: number;
   numCultivos: number;
   categorias: Record<EfCategoryId, number>;
-  totalImpacto: number;
 };
 
 export type DistribucionCultivoItemDto = {

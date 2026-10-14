@@ -35,6 +35,7 @@ type ReportLabels = {
   readonly campaignDate: string;
   readonly from: string;
   readonly to: string;
+  readonly fromData: string;
   readonly unchosenFilters: string;
   readonly keyResults: string;
   readonly summary: string;
@@ -75,6 +76,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     campaignDate: 'Fecha de campaña',
     from: 'Desde',
     to: 'Hasta',
+    fromData: '(según los datos)',
     unchosenFilters: 'Filtros no escogidos por el usuario',
     keyResults: 'RESULTADOS CLAVE',
     summary: 'RESUMEN',
@@ -113,6 +115,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     campaignDate: 'Campaign date',
     from: 'From',
     to: 'To',
+    fromData: '(from the data)',
     unchosenFilters: 'Filters not chosen by the user',
     keyResults: 'KEY RESULTS',
     summary: 'SUMMARY',
@@ -151,6 +154,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     campaignDate: 'Data da campanha',
     from: 'Desde',
     to: 'Até',
+    fromData: '(segundo os dados)',
     unchosenFilters: 'Filtros não escolhidos pelo utilizador',
     keyResults: 'RESULTADOS-CHAVE',
     summary: 'RESUMO',
@@ -226,7 +230,9 @@ const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
   es: {
     climate_change: 'Cambio Climático',
     acidification: 'Acidificación',
-    eutrophication: 'Eutrofización',
+    eutrophication_freshwater: 'Eutrofización (agua dulce)',
+    eutrophication_marine: 'Eutrofización (marina)',
+    eutrophication_terrestrial: 'Eutrofización (terrestre)',
     water_use: 'Uso de Agua',
     land_use: 'Uso del Suelo',
     particulate_matter: 'Partículas',
@@ -236,7 +242,9 @@ const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
   en: {
     climate_change: 'Climate change',
     acidification: 'Acidification',
-    eutrophication: 'Eutrophication',
+    eutrophication_freshwater: 'Eutrophication, freshwater',
+    eutrophication_marine: 'Eutrophication, marine',
+    eutrophication_terrestrial: 'Eutrophication, terrestrial',
     water_use: 'Water use',
     land_use: 'Land use',
     particulate_matter: 'Particulate matter',
@@ -246,12 +254,34 @@ const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
   pt: {
     climate_change: 'Alterações climáticas',
     acidification: 'Acidificação',
-    eutrophication: 'Eutrofização',
+    eutrophication_freshwater: 'Eutrofização (água doce)',
+    eutrophication_marine: 'Eutrofização (marinha)',
+    eutrophication_terrestrial: 'Eutrofização (terrestre)',
     water_use: 'Uso de Água',
     land_use: 'Uso do Solo',
     particulate_matter: 'Partículas',
     ecotoxicity: 'Ecotoxicidade',
     human_toxicity: 'Toxicidade Humana',
+  },
+};
+
+// Indicadores que comparten categoría EF agregada pero deben mostrarse con
+// etiquetas distintas en el informe (cada uno es una fila propia)
+const EF_INDICATOR_LABELS_BY_LANGUAGE: Record<
+  CompareReportLanguage,
+  Record<string, string>
+> = {
+  es: {
+    'Human toxicity: carcinogenic': 'Toxicidad humana (cancerígena)',
+    'Human toxicity: non-carcinogenic': 'Toxicidad humana (no cancerígena)',
+  },
+  en: {
+    'Human toxicity: carcinogenic': 'Human toxicity, cancer',
+    'Human toxicity: non-carcinogenic': 'Human toxicity, non-cancer',
+  },
+  pt: {
+    'Human toxicity: carcinogenic': 'Toxicidade humana (cancerígena)',
+    'Human toxicity: non-carcinogenic': 'Toxicidade humana (não cancerígena)',
   },
 };
 
@@ -269,6 +299,11 @@ const buildCategoryAliasMap = (
       map.set(efCategory.spanishName, label);
       for (const name of efCategory.englishNames) map.set(name, label);
     }
+  }
+  for (const [name, label] of Object.entries(
+    EF_INDICATOR_LABELS_BY_LANGUAGE[language],
+  )) {
+    map.set(name, label);
   }
   return map;
 };

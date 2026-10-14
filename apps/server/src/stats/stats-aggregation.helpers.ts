@@ -1,4 +1,8 @@
-import { EF_CATEGORIES, type EfCategoryId } from 'common/impact';
+import {
+  DEFAULT_EF_CATEGORY,
+  EF_CATEGORIES,
+  type EfCategoryId,
+} from 'common/impact';
 
 export type CategoryAmountRecord = Record<EfCategoryId, number>;
 
@@ -12,7 +16,6 @@ type CultivoWithImpactId = {
 };
 
 type RankedByImpact = {
-  impactoTotalMedio: number;
   impactosPorCategoria: CategoryAmountRecord;
 };
 
@@ -89,26 +92,23 @@ export function meanCategories(
   return means;
 }
 
-export function totalImpact(record: CategoryAmountRecord): number {
-  return EF_CATEGORIES.reduce((sum, cat) => sum + (record[cat.id] ?? 0), 0);
-}
-
 export function round(value: number, decimals = 2): number {
   const factor = Math.pow(10, decimals);
   return Math.round(value * factor) / factor;
 }
 
+/**
+ * Ordena de menor a mayor impacto en una única categoría (por defecto, cambio
+ * climático). No existe ordenación por impacto total: sumar categorías con
+ * unidades distintas no tiene sentido.
+ */
 export function sortByImpact<T extends RankedByImpact>(
   items: T[],
-  categoria?: EfCategoryId,
+  categoria: EfCategoryId = DEFAULT_EF_CATEGORY,
 ): T[] {
-  return [...items].sort((a, b) => {
-    const aValue = categoria
-      ? (a.impactosPorCategoria[categoria] ?? 0)
-      : a.impactoTotalMedio;
-    const bValue = categoria
-      ? (b.impactosPorCategoria[categoria] ?? 0)
-      : b.impactoTotalMedio;
-    return aValue - bValue;
-  });
+  return [...items].sort(
+    (a, b) =>
+      (a.impactosPorCategoria[categoria] ?? 0) -
+      (b.impactosPorCategoria[categoria] ?? 0),
+  );
 }

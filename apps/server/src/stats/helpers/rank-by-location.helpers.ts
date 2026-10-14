@@ -3,7 +3,6 @@ import {
   meanCategories,
   round,
   sortByImpact,
-  totalImpact,
   type CategoryAmountRecord,
 } from '../stats-aggregation.helpers';
 import type {
@@ -76,7 +75,6 @@ export function rankProvincias(
         : 0;
 
     const impactosPorCategoria = meanCategories(entry.categoryRecords);
-    const impactoTotalMedio = round(totalImpact(impactosPorCategoria));
     const eficiencia =
       consumoAguaMedio > 0 ? produccionMedia / consumoAguaMedio : 0;
 
@@ -88,7 +86,6 @@ export function rankProvincias(
       superficieTotal: round(superficieTotal),
       produccionMedia: round(produccionMedia),
       consumoAguaMedio: round(consumoAguaMedio),
-      impactoTotalMedio,
       impactosPorCategoria,
       eficiencia: round(eficiencia * 100) / 100,
     });
@@ -138,14 +135,12 @@ export function rankPoblaciones(
 
   for (const [idPoblacion, entry] of grouped) {
     const impactosPorCategoria = meanCategories(entry.categoryRecords);
-    const impactoTotalMedio = round(totalImpact(impactosPorCategoria));
 
     result.push({
       idPoblacion,
       nombrePoblacion: entry.nombrePoblacion,
       nombreProvincia: entry.nombreProvincia,
       numParcelas: entry.parcelaIds.size,
-      impactoTotalMedio,
       impactosPorCategoria,
     });
   }

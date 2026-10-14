@@ -84,7 +84,9 @@ export const pt = {
   impactCategories: {
     climate_change: 'Alterações climáticas',
     acidification: 'Acidificação',
-    eutrophication: 'Eutrofização',
+    eutrophication_freshwater: 'Eutrofização (água doce)',
+    eutrophication_marine: 'Eutrofização (marinha)',
+    eutrophication_terrestrial: 'Eutrofização (terrestre)',
     water_use: 'Uso de Água',
     land_use: 'Uso do Solo',
     particulate_matter: 'Partículas',
@@ -279,7 +281,6 @@ export const pt = {
     filters: {
       allYears: 'Todos',
       allCrops: 'Todas as culturas',
-      allCategories: 'Todas as categorias',
       allProvinces: 'Todas as províncias',
       searchTown: 'Pesquisar localidade...',
     },

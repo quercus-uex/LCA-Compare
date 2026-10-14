@@ -2,17 +2,19 @@ import { DateTime } from 'luxon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import type { Cultivo } from '../../hooks/parcela.hook.tsx';
+import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 
 export const CultivoCard = ({ cultivo }: { cultivo: Cultivo }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
 
   return (
     <div className="card card-side bg-base-200 shadow-sm grow">
       <div className="card-body">
         <div className="flex gap-5 justify-between flex-col md:flex-row">
           <div className="flex flex-col">
-            <p className="text-lg">{t('common.fields.cropType')}: {cultivo.tipo}</p>
+            <p className="text-lg">{t('common.fields.cropType')}: {getCropTypeLabel(cultivo.tipo)}</p>
             <p className="text-lg">
               {t('common.fields.campaignStartDate')}:{' '}
               {DateTime.fromISO(cultivo.fechaInicioCampania, { zone: 'utc' }).toFormat("dd/LL/yyyy")}

@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDate, safeString } from '../../common/utils.ts';
+import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { CONFIG, TABLE_FK_LINKS, type Entity } from './admin.config.ts';
 
 type Item = Record<string, unknown>;
@@ -35,6 +36,7 @@ export const AdminTable = ({
   getEntityLabel,
 }: Props) => {
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
   const config = CONFIG[activeTab];
 
   return (
@@ -152,7 +154,11 @@ export const AdminTable = ({
                             <tbody>
                               {cultivos.map((c: Item) => (
                                 <tr key={c.id as string}>
-                                  <td>{safeString(c.tipo) ?? '—'}</td>
+                                  <td>
+                                    {typeof c.tipo === 'string'
+                                      ? getCropTypeLabel(c.tipo)
+                                      : '—'}
+                                  </td>
                                   <td>
                                     {c.fechaInicioCampania
                                       ? formatDate(c.fechaInicioCampania as string) ?? '—'

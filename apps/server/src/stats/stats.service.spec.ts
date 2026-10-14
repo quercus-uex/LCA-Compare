@@ -299,6 +299,70 @@ describe('StatsService', () => {
       expect(result.rankingProvincias[1].nombreProvincia).toBe('ProvB');
     });
 
+    it('ranks by climate change by default and never exposes a cross-unit total impact', async () => {
+      const cultivo1 = makeCultivo({
+        id: 'c1',
+        idResultadoImpacto: 'ri-1',
+        parcela: {
+          id: 'par-1',
+          idPoblacion: 'pop-1',
+          poblacion: {
+            id: 'pop-1',
+            nombre: 'A',
+            provincia: { id: 'prov-1', nombre: 'ProvA' },
+          },
+        },
+      });
+      const cultivo2 = makeCultivo({
+        id: 'c2',
+        idResultadoImpacto: 'ri-2',
+        parcela: {
+          id: 'par-2',
+          idPoblacion: 'pop-2',
+          poblacion: {
+            id: 'pop-2',
+            nombre: 'B',
+            provincia: { id: 'prov-2', nombre: 'ProvB' },
+          },
+        },
+      });
+      const withWaterUse = (id: string, climate: number, water: number) => {
+        const record = makeImpactRecord(id, climate);
+        (record.datos.impacto_total as unknown[]).push({
+          category: 'Water use',
+          amount: water,
+          unit: 'm3 world Eq',
+        });
+        return record;
+      };
+
+      prisma.cultivo.findMany.mockResolvedValue([cultivo1, cultivo2]);
+      prisma.resultadoImpacto.findMany.mockResolvedValue([
+        withWaterUse('ri-1', 50, 1),
+        withWaterUse('ri-2', 10, 1000),
+      ]);
+
+      const result = await service.getGlobalStats();
+
+      expect(result.rankingProvincias.map((p) => p.nombreProvincia)).toEqual([
+        'ProvB',
+        'ProvA',
+      ]);
+      expect(result.rankingPoblaciones.map((p) => p.nombrePoblacion)).toEqual([
+        'B',
+        'A',
+      ]);
+      for (const item of [
+        ...result.rankingProvincias,
+        ...result.rankingPoblaciones,
+      ]) {
+        expect(item).not.toHaveProperty('impactoTotalMedio');
+      }
+      for (const item of result.evolucionTemporal) {
+        expect(item).not.toHaveProperty('totalImpacto');
+      }
+    });
+
     it('computes temporal evolution from all cultivations independently of selected-year filter', async () => {
       const cultivo2024 = makeCultivo({
         id: 'c1',

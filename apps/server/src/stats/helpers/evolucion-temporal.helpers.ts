@@ -2,8 +2,6 @@ import {
   buildEfCategoryLookup,
   getCategoryAmounts,
   meanCategories,
-  round,
-  totalImpact,
   type CategoryAmountRecord,
   type ImpactoDatos,
 } from '../stats-aggregation.helpers';
@@ -38,13 +36,11 @@ export function aggregateEvolucionByYear(
 
   for (const [year, records] of categoriesByYear) {
     const categorias = meanCategories(records);
-    const totalImpacto = round(totalImpact(categorias));
 
     result.push({
       anio: year,
       numCultivos: cultivosByYear.get(year) ?? 0,
       categorias,
-      totalImpacto,
     });
   }
 

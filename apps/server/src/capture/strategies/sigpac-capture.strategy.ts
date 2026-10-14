@@ -15,12 +15,13 @@ export class SigpacCaptureStrategy implements CaptureStrategy {
   ) {}
 
   matches(mParcela: ParcelaMetadata): boolean {
-    return Boolean(mParcela.es_sigpac.provincia);
+    return Boolean(mParcela.es_sigpac?.provincia);
   }
 
   async resolveParcela(mParcela: ParcelaMetadata): Promise<ParcelaResolution> {
-    const { provincia, municipio, poligono, parcela } = mParcela.es_sigpac;
-    const polygon = await this.sigpacService.getPolygon(mParcela.es_sigpac);
+    const sigpac = mParcela.es_sigpac!;
+    const { provincia, municipio, poligono, parcela } = sigpac;
+    const polygon = await this.sigpacService.getPolygon(sigpac);
     const poblacion = await this.poblacionService.findByCatastroIds(
       provincia!,
       municipio!,

@@ -91,7 +91,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   async findResults(
     filters: CompareQueryItemDto,
   ): Promise<ResultadoImpactoWithRelations[]> {
-    let locationIds: string[] = [];
+    let locationIds: string[] | undefined;
 
     const { lat, long, range } = filters;
     const hasLocationFilter = lat != null && long != null && range != null;
@@ -102,6 +102,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
           lat,
           long,
           range,
+          CompareQueryBuilder.buildCultivoFilter(filters),
         );
       locationIds = locationResults.map((i) => i.id);
     }
@@ -201,9 +202,17 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
         ...p,
         chosen: poblacionSet.has(p.id),
       })),
+      // Si el usuario filtró por año se muestra el año elegido; si no, el
+      // rango de años de los datos, que la plantilla marca como no escogido
       anioCampania: {
-        inicio: { data: minYear, chosen: !!filters.anioCampaniaInicio },
-        fin: { data: maxYear, chosen: !!filters.anioCampaniaFin },
+        inicio: {
+          data: filters.anioCampaniaInicio || (results.length ? minYear : null),
+          chosen: !!filters.anioCampaniaInicio,
+        },
+        fin: {
+          data: filters.anioCampaniaFin || (results.length ? maxYear : null),
+          chosen: !!filters.anioCampaniaFin,
+        },
       },
       tiposCultivo: [...new Set(results.map((r) => r.cultivo?.tipo))].map(
         (t) => ({

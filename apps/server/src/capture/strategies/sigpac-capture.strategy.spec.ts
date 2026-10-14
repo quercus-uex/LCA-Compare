@@ -51,6 +51,17 @@ describe('SigpacCaptureStrategy', () => {
         ),
       ).toBe(false);
     });
+
+    it('returns false when es_sigpac is omitted', () => {
+      expect(
+        strategy.matches(
+          sigpacParcela({
+            es_sigpac: undefined,
+            pt_id_parcela_predial: '1234-56',
+          }),
+        ),
+      ).toBe(false);
+    });
   });
 
   describe('resolveParcela', () => {

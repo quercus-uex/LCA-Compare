@@ -74,7 +74,7 @@ The test suite SHALL verify exported stats aggregation helpers handle EF categor
 
 #### Scenario: Sorting by impact
 - **WHEN** `sortByImpact` receives ranked items and an optional EF category id
-- **THEN** it SHALL sort by that category's amount when provided, otherwise by `impactoTotalMedio`
+- **THEN** it SHALL sort by that category's amount when provided, otherwise by `climate_change`, and never by a total that adds categories
 
 ### Requirement: StatsService unit coverage
 The test suite SHALL verify `StatsService.getGlobalStats` orchestrates Prisma queries and computes the returned global stats DTO from mocked data.
@@ -94,7 +94,7 @@ The test suite SHALL verify `StatsService.getGlobalStats` orchestrates Prisma qu
 
 #### Scenario: Province ranking aggregation
 - **WHEN** selected cultivations include province, parcel, production, water, surface, and impact data
-- **THEN** `getGlobalStats` SHALL aggregate province ranking entries with parcel count, crop count, total surface, average production, average water consumption, category impacts, total impact, and efficiency
+- **THEN** `getGlobalStats` SHALL aggregate province ranking entries with parcel count, crop count, total surface, average production, average water consumption, category impacts, and efficiency
 
 #### Scenario: Population ranking province filter
 - **WHEN** `getGlobalStats` receives an `idProvinciaPoblacion` filter

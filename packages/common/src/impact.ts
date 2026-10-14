@@ -13,16 +13,28 @@ export const EF_CATEGORIES = [
     unit: 'mol H+ eq',
     color: '#eab308',
   },
+  // Los tres indicadores de eutrofizaci\u00f3n tienen unidades distintas, por lo
+  // que se tratan como categor\u00edas separadas y nunca se suman entre s\u00ed
   {
-    id: 'eutrophication',
-    englishNames: [
-      'Eutrophication: freshwater',
-      'Eutrophication: marine',
-      'Eutrophication: terrestrial',
-    ],
-    spanishName: 'Eutrofizaci\u00f3n',
-    unit: 'agregado',
+    id: 'eutrophication_freshwater',
+    englishNames: ['Eutrophication: freshwater'],
+    spanishName: 'Eutrofizaci\u00f3n (agua dulce)',
+    unit: 'kg P eq',
     color: '#22c55e',
+  },
+  {
+    id: 'eutrophication_marine',
+    englishNames: ['Eutrophication: marine'],
+    spanishName: 'Eutrofizaci\u00f3n (marina)',
+    unit: 'kg N eq',
+    color: '#14b8a6',
+  },
+  {
+    id: 'eutrophication_terrestrial',
+    englishNames: ['Eutrophication: terrestrial'],
+    spanishName: 'Eutrofizaci\u00f3n (terrestre)',
+    unit: 'mol N eq',
+    color: '#84cc16',
   },
   {
     id: 'water_use',
@@ -65,6 +77,10 @@ export const EF_CATEGORIES = [
 ] as const;
 
 export type EfCategoryId = (typeof EF_CATEGORIES)[number]['id'];
+
+// Categoría usada por defecto en rankings y evolución temporal. Las categorías
+// tienen unidades distintas, así que nunca se suman en un impacto "total"
+export const DEFAULT_EF_CATEGORY: EfCategoryId = 'climate_change';
 
 export const IMPACT_KEYS = [
   'impacto_fertilizantes',

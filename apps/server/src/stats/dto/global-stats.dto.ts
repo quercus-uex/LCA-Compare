@@ -16,7 +16,6 @@ export class ProvinciaRankingItemDto {
   superficieTotal: number;
   produccionMedia: number;
   consumoAguaMedio: number;
-  impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
   eficiencia: number;
 }
@@ -26,7 +25,6 @@ export class PoblacionRankingItemDto {
   nombrePoblacion: string;
   nombreProvincia: string;
   numParcelas: number;
-  impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
 }
 
@@ -34,7 +32,6 @@ export class EvolucionTemporalItemDto {
   anio: number;
   numCultivos: number;
   categorias: Record<EfCategoryId, number>;
-  totalImpacto: number;
 }
 
 export class DistribucionCultivoItemDto {

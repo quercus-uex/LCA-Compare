@@ -104,10 +104,15 @@ export class ResultadoImpactoService {
     });
   }
 
+  /**
+   * Resultados de la campaña más reciente de cada parcela dentro del radio,
+   * elegida entre las campañas que cumplen `cultivoWhere` (tipo, años).
+   */
   async findManyAroundPoint(
     lat: number,
     long: number,
     range: number,
+    cultivoWhere: Prisma.CultivoWhereInput = {},
   ): Promise<ResultadoImpacto[]> {
     const parcelas = await this.parcelaService.findManyByPointRange(
       lat,
@@ -116,6 +121,7 @@ export class ResultadoImpactoService {
     );
     const cultivos = await this.cultivoService.findMostRecentByParcelaIdBulk(
       parcelas.map((p) => p.id),
+      cultivoWhere,
     );
     return this.prisma.resultadoImpacto.findMany({
       where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },

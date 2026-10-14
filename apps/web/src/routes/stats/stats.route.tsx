@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { EfCategoryId } from '../../common/constants.ts';
+import { DEFAULT_EF_CATEGORY, type EfCategoryId } from '../../common/constants.ts';
 import { StatsFilters, StatsDashboardContent } from '../../stats/stats-dashboard.component.tsx';
 import { StatsLoadingSkeleton, StatsErrorState, StatsEmptyState } from '../../stats/stats-states.tsx';
 import { useStats } from '../../stats/stats.hook.tsx';
 
 export const StatsRoute = () => {
   const [anio, setAnio] = useState<number | undefined>(undefined);
-  const [selectedCategory, setSelectedCategory] = useState<
-    EfCategoryId | undefined
-  >(undefined);
+  const [selectedCategory, setSelectedCategory] =
+    useState<EfCategoryId>(DEFAULT_EF_CATEGORY);
   const [tipoCultivo, setTipoCultivo] = useState<string | undefined>(undefined);
   const [provinciaFilter, setProvinciaFilter] = useState<string | undefined>(
     undefined,

@@ -35,18 +35,20 @@ TAG=main                                 # Etiqueta das imagens: main ou sha-<ha
 DB_USER=                                 # Utilizador da base de dados
 DB_PASSWORD=                             # Palavra-passe da base de dados
 JWT_SECRET=                              # Chave secreta para JWT (autenticação)
-OPENROUTER_API_KEY=                      # Chave de API do OpenRouter (IA nos relatórios)
-MAILER_EMAIL=                            # Email para envio de notificações
-MAILER_PASSWORD=                         # Palavra-passe do email de notificações
+OPENROUTER_API_KEY=                      # Opcional. Chave de API do OpenRouter (IA nos relatórios)
+MAILER_EMAIL=                            # Opcional. Email para envio de notificações
+MAILER_PASSWORD=                         # Opcional. Palavra-passe do email de notificações
+MAILER_HOST=                             # Opcional. Servidor SMTP; vazio para usar o Gmail
+MAILER_PORT=587                          # Opcional. Porta SMTP (465 usa TLS direto)
 CALC_API_KEY=                            # Chave de API exigida por /calc no cabeçalho x-api-key
 DEFAULT_IMPACT_METHOD_UUID=2f995579-06bd-4681-b07c-cee3b1805b0d  # Método de impacto predefinido (EF 3.1)
 
-OLCA_DATA_DIR=/home/ivan/openlca/data    # Diretório com os dados do OpenLCA
+OLCA_DATA_DIR=/opt/openlca-data          # Diretório com os dados do OpenLCA
 
 BACKUP_SCHEDULE="0 3 * * *"              # Cron das cópias de segurança
 BACKUP_LOCAL_ENABLED=true                # Guardar as cópias num diretório local da máquina
 BACKUP_LOCAL_DIR=./backups               # Diretório local das cópias (montado no contentor como /backups)
-BACKUP_S3_ENABLED=true                   # Carregar as cópias para o bucket S3
+BACKUP_S3_ENABLED=false                  # Carregar as cópias para o bucket S3
 BACKUP_S3_ENDPOINT=                      # Vazio para AWS S3; endpoint para fornecedores compatíveis com S3
 BACKUP_S3_REGION=eu-south-2              # Região do bucket de backups
 BACKUP_S3_BUCKET=lca-compare-backup      # Bucket S3 para as cópias de segurança
@@ -55,6 +57,11 @@ BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key do utilizador IAM de backu
 ```
 
 `DATABASE_URL` não é definida: o compose constrói-a como `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. Se faltar alguma variável obrigatória, o `docker compose` termina indicando qual.
+
+São obrigatórias `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY` e `OLCA_DATA_DIR`. O email (SMTP) e o OpenRouter são opcionais e podem ficar vazios:
+
+- Sem `MAILER_EMAIL` e `MAILER_PASSWORD` não é enviado o email com a palavra-passe aos utilizadores criados ao receber os seus primeiros dados; a ingestão é guardada na mesma e o aviso fica nos logs do backend.
+- Sem `OPENROUTER_API_KEY` o relatório PDF é gerado sem o resumo nem as recomendações redigidos por IA.
 
 ## Implantação
 

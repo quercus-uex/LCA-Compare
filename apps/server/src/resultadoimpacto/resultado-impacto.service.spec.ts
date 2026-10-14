@@ -138,12 +138,28 @@ describe('ResultadoImpactoService', () => {
       );
       expect(cultivoService.findMostRecentByParcelaIdBulk).toHaveBeenCalledWith(
         ['par1'],
+        {},
       );
       expect(prisma.resultadoImpacto.findMany).toHaveBeenCalledWith({
         where: { cultivo: { id: { in: ['c1'] } } },
         include: locationInclude,
       });
       expect(result).toBe(ris);
+    });
+
+    it('passes the campaign filter so the most recent campaign is chosen among matching ones', async () => {
+      parcelaService.findManyByPointRange.mockResolvedValue([
+        { id: 'par1' },
+      ] as never);
+      cultivoService.findMostRecentByParcelaIdBulk.mockResolvedValue([]);
+      prisma.resultadoImpacto.findMany.mockResolvedValue([]);
+
+      await service.findManyAroundPoint(40.0, -3.0, 5000, { tipo: 'Tomate' });
+
+      expect(cultivoService.findMostRecentByParcelaIdBulk).toHaveBeenCalledWith(
+        ['par1'],
+        { tipo: 'Tomate' },
+      );
     });
   });
 

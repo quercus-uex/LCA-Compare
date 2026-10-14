@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { CaptureInputDto, SigpacDto } from './capture-input.dto';
+import { SigpacCaptureStrategy } from '../strategies/sigpac-capture.strategy';
+import { CatastroCaptureStrategy } from '../strategies/catastro-capture.strategy';
+import { PredialCaptureStrategy } from '../strategies/predial-capture.strategy';
 
 function validPayload() {
   const impact = {
@@ -55,6 +58,34 @@ describe('CaptureInputDto', () => {
     expect(dto.metadatos.parcela.es_sigpac).toBeInstanceOf(SigpacDto);
     expect(dto.metadatos.cultivo.constructor.name).toBe('MetadatosCultivoDto');
     expect(dto.resultado.impacto_total[0].constructor.name).toBe('ImpactoDto');
+  });
+
+  it('accepts a Portuguese parcel identified only by pt_id_parcela_predial, without es_sigpac, and only the predial strategy matches it', () => {
+    const payload = validPayload();
+    const parcela: Record<string, unknown> = {
+      ...payload.metadatos.parcela,
+      pt_id_parcela_predial: '1234-56',
+    };
+    delete parcela.es_sigpac;
+    const dto = plainToInstance(CaptureInputDto, {
+      ...payload,
+      metadatos: { ...payload.metadatos, parcela },
+    });
+
+    expect(validateSync(dto)).toEqual([]);
+    expect(dto.metadatos.parcela.es_sigpac).toBeUndefined();
+
+    const mParcela = dto.metadatos.parcela;
+    const sinDependencias = [undefined, undefined] as never[];
+    expect(
+      new SigpacCaptureStrategy(...sinDependencias).matches(mParcela),
+    ).toBe(false);
+    expect(
+      new CatastroCaptureStrategy(...sinDependencias).matches(mParcela),
+    ).toBe(false);
+    expect(
+      new PredialCaptureStrategy(...sinDependencias).matches(mParcela),
+    ).toBe(true);
   });
 
   it('rejects invalid nested metadata and empty impact arrays', () => {

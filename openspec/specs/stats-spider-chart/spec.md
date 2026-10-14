@@ -1,19 +1,19 @@
 ## ADDED Requirements
 
 ### Requirement: Spider chart for province impact profile
-The dashboard SHALL display a spider/radar chart (Recharts `RadarChart`) showing the environmental impact profile of a selected province or population across the 8 EF 3.1 categories.
+The dashboard SHALL display a spider/radar chart (Recharts `RadarChart`) showing the environmental impact profile of a selected province or population across the 10 EF 3.1 categories.
 
 #### Scenario: Render spider chart with province data
 - **WHEN** the location mode is set to "Provincia" and a province is selected
-- **THEN** a spider/radar chart SHALL render with 8 axes (one per EF 3.1 category), each scaled to the category's unit, showing the selected province's mean impact per category
+- **THEN** a spider/radar chart SHALL render with 10 axes (one per EF 3.1 category), each scaled to the category's unit, showing the selected province's mean impact per category
 
 #### Scenario: Render spider chart with population data
 - **WHEN** the location mode is set to "Población" and a population is selected
-- **THEN** a spider/radar chart SHALL render with 8 axes showing the selected population's mean impact per category
+- **THEN** a spider/radar chart SHALL render with 10 axes showing the selected population's mean impact per category
 
 #### Scenario: Default entity selection
 - **WHEN** the dashboard loads and no entity was previously selected
-- **THEN** the spider chart SHALL display the entity (province or population, depending on mode) with the highest total impact, and a searchable selector SHALL allow changing the entity
+- **THEN** the spider chart SHALL display the entity (province or population, depending on mode) with the highest impact in the selected category, and a searchable selector SHALL allow changing the entity
 
 #### Scenario: Compare multiple entities
 - **WHEN** the spider chart renders
@@ -25,7 +25,7 @@ The dashboard SHALL display a spider/radar chart (Recharts `RadarChart`) showing
 
 #### Scenario: Category axis colors match semantic palette
 - **WHEN** the spider chart renders
-- **THEN** each of the 8 axes SHALL use the same color as the corresponding EF 3.1 category KPI card, defined in the shared `EF_CATEGORIES` palette
+- **THEN** each of the 10 axes SHALL use the same color as the corresponding EF 3.1 category KPI card, defined in the shared `EF_CATEGORIES` palette
 
 ### Requirement: Spider chart on dashboard
 The dashboard SHALL include a spider chart section showing the environmental impact profile of a selected province or population normalized against the maximum value across all entities of the same type for each EF 3.1 category.
@@ -56,9 +56,9 @@ The spider chart card SHALL include a toggle control to switch between visualizi
 #### Scenario: Switching to Población mode
 - **WHEN** user clicks the "Población" tab
 - **THEN** the searchable selector SHALL populate with population ranking data
-- **AND** the spider chart SHALL display the population with the highest total impact
+- **AND** the spider chart SHALL display the population with the highest impact in the selected category
 
 #### Scenario: Switching back to Provincia mode
 - **WHEN** user clicks the "Provincia" tab after being in Población mode
 - **THEN** the searchable selector SHALL populate with province ranking data
-- **AND** the spider chart SHALL display the province with the highest total impact
+- **AND** the spider chart SHALL display the province with the highest impact in the selected category

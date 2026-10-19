@@ -9,6 +9,7 @@ import {
   type ResultadoImpacto,
   useResultadoImpacto,
 } from '../../hooks/resultado-impacto.hook.tsx';
+import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { buildResultadoCSV } from './resultado-export.utils.ts';
 import { ResultadoTable } from './resultado-table.component.tsx';
 
@@ -18,6 +19,7 @@ export const ResultadoRoute = () => {
   const resultadoImpacto = useResultadoImpacto();
   const p = useParcela();
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
 
   const [resultado, setResultado] = useState<ResultadoImpacto | undefined>();
   const [parcela, setParcela] = useState<Parcela | undefined>();
@@ -50,7 +52,7 @@ export const ResultadoRoute = () => {
           </div>
           <div className="card bg-base-100 shadow-sm grow">
             <div className="card-body">
-              <h2 className="card-title">{resultado.cultivo.tipo}</h2>
+              <h2 className="card-title">{getCropTypeLabel(resultado.cultivo.tipo)}</h2>
               <div className="flex flex-col gap-1">
                 <p>
                   {t('common.fields.campaignStartDate')}:{' '}

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CaptureInputDto } from './dto/capture-input.dto';
 import { ParcelaService } from '../parcela/parcela.service';
 import { Parcela, Cultivo } from '../generated/prisma/client';
@@ -20,6 +20,7 @@ import { PredialCaptureStrategy } from './strategies/predial-capture.strategy';
 
 @Injectable()
 export class CaptureService {
+  private readonly logger = new Logger(CaptureService.name);
   private readonly strategies: CaptureStrategy[];
 
   constructor(
@@ -71,7 +72,7 @@ export class CaptureService {
     idPropietario: string,
     mParcela: CaptureInputDto['metadatos']['parcela'],
   ) {
-    const sigpac = mParcela.es_sigpac.provincia
+    const sigpac = mParcela.es_sigpac?.provincia
       ? mParcela.es_sigpac
       : undefined;
     const refCat = mParcela.es_referencia_catastral
@@ -124,7 +125,14 @@ export class CaptureService {
         rol: 'usuario',
       });
 
-      await this.mailerService.sendNewUserMail(mUsuario.email, password);
+      // El correo de alta no debe impedir la ingesta: si falla, se registra
+      try {
+        await this.mailerService.sendNewUserMail(mUsuario.email, password);
+      } catch (error) {
+        this.logger.error(
+          `New-user mail failed for user ${usuario.id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     return usuario;

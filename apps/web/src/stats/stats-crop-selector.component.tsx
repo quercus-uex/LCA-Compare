@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
@@ -13,6 +14,7 @@ export const StatsCropSelector = ({
   distribucionCultivos,
 }: Props) => {
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
 
   return (
     <select
@@ -25,7 +27,7 @@ export const StatsCropSelector = ({
       <option value="">{t('stats.filters.allCrops')}</option>
       {distribucionCultivos.map((d) => (
         <option key={d.tipo} value={d.tipo}>
-          {d.tipo}
+          {getCropTypeLabel(d.tipo)}
         </option>
       ))}
     </select>

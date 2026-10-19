@@ -5,7 +5,6 @@ import {
   getCategoryAmounts,
   sumCategories,
   meanCategories,
-  totalImpact,
   sortByImpact,
   type CategoryAmountRecord,
 } from './stats-aggregation.helpers';
@@ -51,12 +50,45 @@ describe('stats-aggregation.helpers', () => {
 
       expect(lookup.get('climate change')).toBe('climate_change');
       expect(lookup.get('acidification')).toBe('acidification');
-      expect(lookup.get('eutrophication: freshwater')).toBe('eutrophication');
+      expect(lookup.get('eutrophication: freshwater')).toBe(
+        'eutrophication_freshwater',
+      );
+      expect(lookup.get('eutrophication: marine')).toBe(
+        'eutrophication_marine',
+      );
+      expect(lookup.get('eutrophication: terrestrial')).toBe(
+        'eutrophication_terrestrial',
+      );
       expect(lookup.get('water use')).toBe('water_use');
     });
   });
 
   describe('getCategoryAmounts', () => {
+    it('keeps the three eutrophication indicators separate instead of summing their different units', () => {
+      const datos = {
+        impacto_total: [
+          {
+            category: 'Eutrophication: freshwater',
+            amount: 0.5,
+            unit: 'kg P eq',
+          },
+          { category: 'Eutrophication: marine', amount: 2, unit: 'kg N eq' },
+          {
+            category: 'Eutrophication: terrestrial',
+            amount: 7,
+            unit: 'mol N eq',
+          },
+        ],
+      };
+
+      const result = getCategoryAmounts(datos);
+
+      expect(result.eutrophication_freshwater).toBe(0.5);
+      expect(result.eutrophication_marine).toBe(2);
+      expect(result.eutrophication_terrestrial).toBe(7);
+      expect(result).not.toHaveProperty('eutrophication');
+    });
+
     it('maps known EF category names to amounts', () => {
       const datos = {
         impacto_total: [
@@ -143,41 +175,21 @@ describe('stats-aggregation.helpers', () => {
     });
   });
 
-  describe('totalImpact', () => {
-    it('sums all category amounts', () => {
-      const record = {
-        climate_change: 10,
-        acidification: 5,
-        eutrophication: 3,
-        water_use: 2,
-        land_use: 1,
-        particulate_matter: 0,
-        ecotoxicity: 0,
-        human_toxicity: 0,
-      };
-
-      expect(totalImpact(record)).toBe(21);
-    });
-  });
-
   describe('sortByImpact', () => {
     const items = [
       {
-        impactoTotalMedio: 30,
         impactosPorCategoria: {
           climate_change: 100,
           acidification: 10,
         } as unknown as CategoryAmountRecord,
       },
       {
-        impactoTotalMedio: 10,
         impactosPorCategoria: {
           climate_change: 50,
           acidification: 20,
         } as unknown as CategoryAmountRecord,
       },
       {
-        impactoTotalMedio: 20,
         impactosPorCategoria: {
           climate_change: 75,
           acidification: 15,
@@ -185,10 +197,12 @@ describe('stats-aggregation.helpers', () => {
       },
     ];
 
-    it('sorts by impactoTotalMedio when no category is provided', () => {
+    it('sorts by climate change when no category is provided, never by a cross-unit total', () => {
       const result = sortByImpact([...items]);
 
-      expect(result.map((i) => i.impactoTotalMedio)).toEqual([10, 20, 30]);
+      expect(result.map((i) => i.impactosPorCategoria.climate_change)).toEqual([
+        50, 75, 100,
+      ]);
     });
 
     it('sorts by specific category amount when category is provided', () => {

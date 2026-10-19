@@ -1,4 +1,8 @@
-import { InternalServerErrorException, Injectable } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { OpenRouter } from '@openrouter/sdk';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -6,6 +10,7 @@ import Handlebars from 'handlebars';
 
 @Injectable()
 export class AiService {
+  private readonly logger = new Logger(AiService.name);
   private readonly templates: Map<string, HandlebarsTemplateDelegate>;
   private readonly openRouter: OpenRouter;
 
@@ -38,6 +43,14 @@ export class AiService {
       throw new InternalServerErrorException(
         `Template ${templateName} not found`,
       );
+    // La IA es opcional: sin clave de OpenRouter se devuelve texto vacío y el
+    // informe omite las secciones generadas
+    if (!process.env.OPENROUTER_API_KEY?.trim()) {
+      this.logger.warn(
+        `OPENROUTER_API_KEY not set: skipping AI generation for ${templateName}`,
+      );
+      return '';
+    }
     const content = template(context);
 
     const response = await this.openRouter.chat.send({

@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: Heatmap of provinces vs EF 3.1 categories
-The dashboard SHALL display a heatmap where rows are provinces and columns are the 8 EF 3.1 categories, with cell color intensity proportional to the impact value, stable React list rendering, and fluid sizing within its card.
+The dashboard SHALL display a heatmap where rows are provinces and columns are the 10 EF 3.1 categories, with cell color intensity proportional to the impact value, stable React list rendering, and fluid sizing within its card.
 
 #### Scenario: Render heatmap with top provinces
 - **WHEN** province ranking data is available
-- **THEN** a heatmap SHALL render showing the top 15 provinces by total impact as rows, with 8 columns (one per EF 3.1 category), where each cell's background color intensity represents the mean impact value for that province-category combination
+- **THEN** a heatmap SHALL render showing the top 15 provinces by impact in the selected EF 3.1 category (default: Climate change) as rows, with 10 columns (one per EF 3.1 category), where each cell's background color intensity represents the mean impact value for that province-category combination
 
 #### Scenario: Color scale
 - **WHEN** the heatmap renders

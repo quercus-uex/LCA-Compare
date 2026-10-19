@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introduction
 
-**LCA Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. LCA results are calculated by [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge), a bridge service between the LCA Capture platform and the openLCA calculation engine using a database in .zolca format. Both services communicate through a shared Docker network.
+**LCA Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. LCA results are calculated by [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge), a bridge service between the LCA Capture platform and the openLCA calculation engine using a database in .zolca format. Both services are deployed with the same Docker Compose file and communicate through its internal network.
 
 ## Features
 
@@ -24,9 +24,9 @@ The application follows a client-server architecture with two distinct component
 
 | Component | Technology | Port |
 |---|---|---|
-| **Backend (REST API)** | NestJS 11 + Prisma ORM 7 | 3000 (internal) / 8080 (exposed) |
-| **Frontend (SPA)** | React 19 + Vite 7 + TailwindCSS 4 + DaisyUI 5 | 80 |
-| **Database** | PostgreSQL 17 + PostGIS | 5432 |
+| **Backend (REST API)** | NestJS 11 + Prisma ORM 7 | 3000 (internal) |
+| **Frontend (SPA)** | React 19 + Vite 7 + TailwindCSS 4 + DaisyUI 5 | 80 (only published port) |
+| **Database** | PostgreSQL 17 + PostGIS | 5432 (internal) |
 
 The backend exposes a REST API documented with Swagger/OpenAPI at `/docs`. The frontend is served through Nginx, which acts as a reverse proxy by routing `/api` requests to the backend and serving the SPA for all other routes.
 

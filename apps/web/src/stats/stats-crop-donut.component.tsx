@@ -7,6 +7,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import { colorAt } from './stats-colors.ts';
 import {
   formatInteger,
@@ -21,6 +22,7 @@ type Props = {
 
 export const StatsCropDonut = ({ data }: Props) => {
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
   const total = data.reduce((sum, d) => sum + d.count, 0);
 
   return (
@@ -57,7 +59,7 @@ export const StatsCropDonut = ({ data }: Props) => {
               const pct = total > 0 ? formatPercent((value / total) * 100) : '0%';
               return (
                 <div className="card bg-base-100 shadow-lg p-3 text-sm">
-                  <p className="font-bold">{item.tipo}</p>
+                  <p className="font-bold">{getCropTypeLabel(item.tipo)}</p>
                   <p>{t('stats.ranking.cropsCount', { count: formatInteger(value) })} ({pct})</p>
                   <p>{formatNumber(item.superficieTotal, 1)} Ha</p>
                 </div>
@@ -77,7 +79,7 @@ export const StatsCropDonut = ({ data }: Props) => {
               item && total > 0
                 ? formatPercent((item.count / total) * 100, 0)
                 : '0%';
-            return `${value} (${pct})`;
+            return `${getCropTypeLabel(value)} (${pct})`;
           }}
         />
       </PieChart>

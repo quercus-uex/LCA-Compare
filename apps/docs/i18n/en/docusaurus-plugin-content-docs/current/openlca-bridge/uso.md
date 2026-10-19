@@ -29,13 +29,13 @@ Both parameters are configurable through environment variables in the service `.
 
 ## Integration with LCA Compare
 
-When **LCA Compare** is deployed on the same Docker network (`olca`), the calculation result is automatically transmitted to the `POST /capture` endpoint of LCA Compare through the `ACV_COMPARE_BASE_URL` environment variable.
+When **LCA Compare** is deployed on the same Docker network (the platform compose file), the calculation result is automatically transmitted to the `POST /capture` endpoint of LCA Compare through the `LCA_COMPARE_BASE_URL` environment variable.
 
 The LCA Compare frontend also routes calculation requests through the Nginx reverse proxy:
 
 | Route | Destination |
 |---|---|
-| `/calc` | `lca-bridge:3000/capture-acv` |
+| `/calc` | `lca-bridge:3000/capture-acv` (requires the `x-api-key` header with the value of `CALC_API_KEY`) |
 
 ## Service Response
 
@@ -117,7 +117,7 @@ LCA Bridge exposes a **Swagger/OpenAPI** interface that allows users to explore 
 | Environment | URL |
 |---|---|
 | Local development | `http://localhost:3000/docs` |
-| Production (Docker) | `http://<server-host>:3000/docs` |
+| Production (Docker) | Not reachable from outside: port 3000 is not published and the calculation is only exposed at `/calc` |
 
 :::tip
 The OpenAPI specification in JSON format is also available at `/openapi.json`, which is useful for generating clients automatically or importing into tools such as Postman or Insomnia.

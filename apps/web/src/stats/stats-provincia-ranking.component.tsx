@@ -8,7 +8,7 @@ import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
-  selectedCategory?: EfCategoryId;
+  selectedCategory: EfCategoryId;
 };
 
 export const StatsProvinciaRanking = ({
@@ -19,16 +19,10 @@ export const StatsProvinciaRanking = ({
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
 
-  const getValue = (item: ProvinciaRankingItemDto) => {
-    if (selectedCategory) {
-      return item.impactosPorCategoria[selectedCategory] ?? 0;
-    }
-    return item.impactoTotalMedio;
-  };
+  const getValue = (item: ProvinciaRankingItemDto) =>
+    item.impactosPorCategoria[selectedCategory] ?? 0;
 
-  const selectedCategoryData = selectedCategory
-    ? getEfCategory(selectedCategory)
-    : undefined;
+  const selectedCategoryData = getEfCategory(selectedCategory);
 
   const handleActivate = (item: ProvinciaRankingItemDto) => {
     void navigate('/compare', {

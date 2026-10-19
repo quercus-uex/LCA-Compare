@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import { CROP_TYPE_OPTIONS } from '../../hooks/use-crop-type-label.ts';
 import { FilterCollapse } from './filter-collapse.component';
-
-const CROP_TYPE_OPTIONS = [
-  { value: 'Tomate', labelKey: 'cropTypes.tomate' },
-  { value: 'Olivo', labelKey: 'cropTypes.olivo' },
-  { value: 'Ciruelo', labelKey: 'cropTypes.ciruelo' },
-  { value: 'Viñedo', labelKey: 'cropTypes.vinedo' },
-  { value: 'Arroz', labelKey: 'cropTypes.arroz' },
-  { value: 'Melocotonero', labelKey: 'cropTypes.melocotonero' },
-] as const;
 
 export const TipocultivoFilterCollapse = (
   {

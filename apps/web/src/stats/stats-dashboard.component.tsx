@@ -15,10 +15,10 @@ import type { GlobalStatsDto } from './stats.hook.tsx';
 type FiltersProps = {
   data: GlobalStatsDto;
   anio: number | undefined;
-  selectedCategory: EfCategoryId | undefined;
+  selectedCategory: EfCategoryId;
   tipoCultivo: string | undefined;
   onAnioChange: (anio: number | undefined) => void;
-  onCategoryChange: (category: EfCategoryId | undefined) => void;
+  onCategoryChange: (category: EfCategoryId) => void;
   onTipoCultivoChange: (tipoCultivo: string | undefined) => void;
 };
 
@@ -61,7 +61,7 @@ export const StatsFilters = ({
 
 type DashboardContentProps = {
   data: GlobalStatsDto;
-  selectedCategory: EfCategoryId | undefined;
+  selectedCategory: EfCategoryId;
   provinciaFilter: string | undefined;
   onProvinciaFilterChange: (provinciaId: string | undefined) => void;
 };
@@ -107,7 +107,10 @@ export const StatsDashboardContent = ({
       <div className="card bg-base-100 shadow-sm">
         <div className="card-body p-4">
           <h2 className="card-title text-lg">{t('stats.sections.timeline')}</h2>
-          <StatsTimeline data={data.evolucionTemporal} />
+          <StatsTimeline
+            data={data.evolucionTemporal}
+            selectedCategory={selectedCategory}
+          />
         </div>
       </div>
     </section>
@@ -119,6 +122,7 @@ export const StatsDashboardContent = ({
           <StatsSpiderChart
             ranking={data.rankingProvincias}
             poblacionRanking={data.rankingPoblaciones}
+            selectedCategory={selectedCategory}
           />
         </div>
       </div>
@@ -127,7 +131,10 @@ export const StatsDashboardContent = ({
           <h2 className="card-title text-lg">
             {t('stats.sections.heatmap')}
           </h2>
-          <StatsHeatmap ranking={data.rankingProvincias} />
+          <StatsHeatmap
+            ranking={data.rankingProvincias}
+            selectedCategory={selectedCategory}
+          />
         </div>
       </div>
     </section>

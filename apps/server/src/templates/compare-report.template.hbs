@@ -144,7 +144,7 @@
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{reference.anioCampania.inicio.data}}
+                            {{labels.from}} {{#if reference.anioCampania.inicio.data}}{{reference.anioCampania.inicio.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
                           </span>
                         {{/if}}
 
@@ -154,7 +154,7 @@
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{reference.anioCampania.fin.data}}
+                            {{labels.to}} {{#if reference.anioCampania.fin.data}}{{reference.anioCampania.fin.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
                           </span>
                         {{/if}}
                       </div>
@@ -252,7 +252,7 @@
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{target.anioCampania.inicio.data}}
+                            {{labels.from}} {{#if target.anioCampania.inicio.data}}{{target.anioCampania.inicio.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
                           </span>
                         {{/if}}
 
@@ -262,7 +262,7 @@
                           </span>
                         {{else}}
                           <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{target.anioCampania.fin.data}}
+                            {{labels.to}} {{#if target.anioCampania.fin.data}}{{target.anioCampania.fin.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
                           </span>
                         {{/if}}
                       </div>
@@ -299,6 +299,7 @@
           </div>
         </div>
 
+        {{#if overview}}
         <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
@@ -317,7 +318,9 @@
             </span>
           </div>
         </div>
+        {{/if}}
 
+        {{#if recommendations}}
         <div class="card w-full avoid-break">
           <div class="card-body bg-gray-100 p-2 rounded-lg">
             <div class="flex gap-2 items-center justify-center">
@@ -336,6 +339,7 @@
             </span>
           </div>
         </div>
+        {{/if}}
       </div>
     </div>
 

@@ -1,0 +1,59 @@
+# LCA Compare demo instance: database, backend and frontend only, without
+# LCA Bridge, openLCA or backups. Managed with ./demo.sh, which generates the
+# .env with the secrets on the first run.
+name: lca-compare-demo
+
+x-database-url: &database-url "postgres://demo:${DB_PASSWORD:?DB_PASSWORD is missing, run ./demo.sh up}@db:5432/acv"
+
+services:
+  db:
+    image: postgis/postgis:17-master
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: acv
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d acv"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  migrate:
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    working_dir: /workspace/apps/server
+    command: ["./node_modules/.bin/prisma", "migrate", "deploy", "--config", "prisma.config.ts"]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  lca-compare-backend:
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    environment:
+      DATABASE_URL: *database-url
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is missing, run ./demo.sh up}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DEFAULT_IMPACT_METHOD_UUID: 2f995579-06bd-4681-b07c-cee3b1805b0d
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  lca-compare-frontend:
+    image: ghcr.io/quercus-uex/lca-compare-frontend:${TAG:-main}
+    ports:
+      - "${DEMO_PORT:-8080}:80"
+    environment:
+      # Required by nginx for /calc; without LCA Bridge that route is unused in the demo
+      CALC_API_KEY: ${CALC_API_KEY:?CALC_API_KEY is missing, run ./demo.sh up}
+    depends_on:
+      - lca-compare-backend
+    restart: unless-stopped
+
+volumes:
+  postgres:

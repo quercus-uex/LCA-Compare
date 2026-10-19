@@ -23,12 +23,12 @@ import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 type Props = {
   ranking: ProvinciaRankingItemDto[];
   poblacionRanking: PoblacionRankingItemDto[];
+  selectedCategory: EfCategoryId;
 };
 
 type UnifiedEntity = {
   id: string;
   nombre: string;
-  impactoTotalMedio: number;
   impactosPorCategoria: Record<EfCategoryId, number>;
 };
 
@@ -45,7 +45,6 @@ const toUnified = (
     return {
       id: prov.idProvincia,
       nombre: prov.nombreProvincia,
-      impactoTotalMedio: prov.impactoTotalMedio,
       impactosPorCategoria: prov.impactosPorCategoria,
     };
   }
@@ -53,12 +52,15 @@ const toUnified = (
   return {
     id: pobl.idPoblacion,
     nombre: pobl.nombrePoblacion,
-    impactoTotalMedio: pobl.impactoTotalMedio,
     impactosPorCategoria: pobl.impactosPorCategoria,
   };
 };
 
-export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
+export const StatsSpiderChart = ({
+  ranking,
+  poblacionRanking,
+  selectedCategory,
+}: Props) => {
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
   const [mode, setMode] = useState<Mode>('province');
@@ -70,8 +72,12 @@ export const StatsSpiderChart = ({ ranking, poblacionRanking }: Props) => {
     const raw = mode === 'province' ? ranking : poblacionRanking;
     return raw
       .map((r) => toUnified(r, mode))
-      .sort((a, b) => b.impactoTotalMedio - a.impactoTotalMedio);
-  }, [ranking, poblacionRanking, mode]);
+      .sort(
+        (a, b) =>
+          (b.impactosPorCategoria[selectedCategory] ?? 0) -
+          (a.impactosPorCategoria[selectedCategory] ?? 0),
+      );
+  }, [ranking, poblacionRanking, mode, selectedCategory]);
 
   const entity1 = useMemo(() => {
     if (hasUserSelected) {

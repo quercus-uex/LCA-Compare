@@ -32,17 +32,23 @@ pnpm --filter common build
 pnpm server:prisma:generate
 ```
 
-The client is generated in `apps/server/src/generated/prisma`, and the backend imports it from that generated path. To create or apply migrations in development, use the `server` package script, which loads `apps/server/prisma.config.ts`:
+The client is generated in `apps/server/src/generated/prisma`, and the backend imports it from that generated path.
+
+Apply the migrations in `apps/server/prisma/migrations/`. On an empty database they create the schema (with the PostGIS extension) and load the initial data: countries, provinces, towns, and the EF 3.1 impact method:
 
 ```bash
-pnpm --filter server prisma:migrate:dev
+pnpm server:prisma:migrate:deploy
 ```
 
-Load the initial data (countries, provinces, towns):
+To change the schema, edit the files in `apps/server/prisma/schema/` and generate a new migration with the development script, which loads `apps/server/prisma.config.ts`:
 
 ```bash
-docker exec -i db psql -U ${DB_USER} -d acv < init/dbinit.sql
+pnpm server:prisma:migrate:dev
 ```
+
+:::warning
+Do not use `prisma db push`: it applies the schema without recording migrations and leaves the database outside the history used by deployments.
+:::
 
 ## Start Development Servers
 
@@ -101,7 +107,8 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 | `pnpm server:test` | Runs the backend unit tests with Jest |
 | `pnpm server:lint` | Runs ESLint with backend rules |
 | `pnpm server:prisma:generate` | Generates the Prisma client using `apps/server/prisma.config.ts` |
-| `pnpm server:prisma:migrate:deploy` | Applies pending migrations in deployed environments |
+| `pnpm server:prisma:migrate:dev` | Creates a new migration from schema changes and applies it locally |
+| `pnpm server:prisma:migrate:deploy` | Applies pending migrations (schema and initial data on an empty database) |
 | `pnpm --filter server admin:create` | Creates a user with the `admin` role (requires `--email`, `--password`, `--nombre`, `--apellidos`) |
 
 ### Frontend (`apps/web`)
@@ -164,7 +171,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   │   ├── schema/            # Prisma schema split into multiple files
 │   │   │   │   ├── schema.prisma
 │   │   │   │   └── poblacion.prisma
-│   │   │   └── migrations/        # Generated migrations
+│   │   │   └── migrations/        # Versioned migrations (0_init, and 1_seed_datos_iniciales with the initial data)
 │   │   └── Dockerfile             # Backend image
 │   ├── web/                       # React frontend
 │   │   ├── src/
@@ -181,9 +188,12 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   └── docs/                      # Docusaurus site
 ├── packages/
 │   └── common/                    # Shared DTOs, types, and constants
-├── init/
-│   └── dbinit.sql                 # Manual SQL seed for countries, provinces, and towns
-├── docker-compose.yaml            # Service orchestration
+├── deploy/
+│   ├── compose.yaml               # Production compose file (GHCR images)
+│   └── .env.example               # Production environment variables
+├── docker/
+│   └── backup/                    # Backup image
+├── docker-compose.yaml            # Database for development
 ├── pnpm-workspace.yaml            # apps/* and packages/* definition
 └── turbo.json                     # Turborepo pipeline
 ```

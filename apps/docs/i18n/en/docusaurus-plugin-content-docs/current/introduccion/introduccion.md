@@ -33,8 +33,8 @@ The service exposes a single endpoint, `POST /capture-acv`, and automatically se
 ## How They Interact
 
 **LCA Capture** is an independent service that starts the flow by sending crop data to **LCA Bridge**. Internal
-communication between **LCA Bridge**, **LCA Compare**, and **openLCA** takes place through a **shared Docker network**
-(`olca`), enabling a decoupled data flow:
+communication between **LCA Bridge**, **LCA Compare**, and **openLCA** takes place through the **platform Docker
+network**, since all three are deployed with the same Docker Compose file, enabling a decoupled data flow:
 
 1. **LCA Capture** sends crop data to the **LCA Bridge** `POST /capture-acv` endpoint.
 2. **LCA Bridge** calculates the environmental impact in **openLCA** and builds the structured result.

@@ -153,6 +153,7 @@ describe('CompareService', () => {
         40.0,
         -3.0,
         50,
+        {},
       );
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: {
@@ -180,9 +181,58 @@ describe('CompareService', () => {
         0,
         0,
         10,
+        {},
       );
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: { AND: [{ OR: [{ id: { in: ['ri-zero'] } }] }] },
+      });
+    });
+
+    it('chooses the most recent campaign per parcel among those matching the crop type and years', async () => {
+      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
+        { id: 'ri-tomate' } as any,
+      ]);
+      resultadoImpactoService.findMany.mockResolvedValue([]);
+
+      await service.findResults({
+        lat: 40.0,
+        long: -3.0,
+        range: 50,
+        tipoCultivo: 'Tomate',
+        anioCampaniaInicio: 2022,
+        anioCampaniaFin: 2024,
+      });
+
+      expect(resultadoImpactoService.findManyAroundPoint).toHaveBeenCalledWith(
+        40.0,
+        -3.0,
+        50,
+        {
+          tipo: 'Tomate',
+          fechaInicioCampania: {
+            gte: new Date('2022-01-01T00:00:00.000Z'),
+            lt: new Date('2025-01-01T00:00:00.000Z'),
+          },
+        },
+      );
+    });
+
+    it('returns an empty set when a radius filter finds no parcels instead of dropping the spatial condition', async () => {
+      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([]);
+      resultadoImpactoService.findMany.mockResolvedValue([]);
+
+      const result = await service.findResults({
+        lat: 40.0,
+        long: -3.0,
+        range: 50,
+        tipoCultivo: 'Tomate',
+      });
+
+      expect(result).toEqual([]);
+      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+        where: {
+          AND: [{ OR: [{ id: { in: [] } }] }, { cultivo: { tipo: 'Tomate' } }],
+        },
       });
     });
 
@@ -507,6 +557,94 @@ describe('CompareService', () => {
         printBackground: true,
       });
       expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
+    });
+
+    it('shows the campaign years chosen in the filter, and labels the data range when no year filter was applied', async () => {
+      aiService.generateFromTemplate.mockResolvedValue('');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+
+      await service.generateReport(
+        { ...refFilters, anioCampaniaInicio: 2020, anioCampaniaFin: 2022 },
+        [
+          makeResultadoImpacto(makeImpactDto(), {
+            id: 'ri-1',
+            fechaInicio: new Date('2021-03-01'),
+          }),
+        ],
+        tarFilters,
+        [
+          makeResultadoImpacto(makeImpactDto(), {
+            id: 'ri-2',
+            fechaInicio: new Date('2023-03-01'),
+          }),
+          makeResultadoImpacto(makeImpactDto(), {
+            id: 'ri-3',
+            fechaInicio: new Date('2024-03-01'),
+          }),
+        ],
+      );
+
+      const html = playwrightMock.__mockPage.setContent.mock
+        .calls[0][0] as string;
+      expect(html).toContain('Desde 2020');
+      expect(html).toContain('Hasta 2022');
+      expect(html).not.toContain('Desde 2021');
+      expect(html).toContain('Desde 2023 (según los datos)');
+      expect(html).toContain('Hasta 2024 (según los datos)');
+    });
+
+    describe('when OpenRouter fails', () => {
+      const aiDisclaimer = '* Contenido generado por IA. Puede ser inexacto.';
+
+      const generateWithAiMock = async (
+        setupAi: (mock: jest.Mock) => void,
+      ): Promise<string> => {
+        setupAi(aiService.generateFromTemplate as jest.Mock);
+        paisService.findMany.mockResolvedValue([]);
+        provinciaService.findMany.mockResolvedValue([]);
+        poblacionService.findMany.mockResolvedValue([]);
+
+        const pdfBuffer = await service.generateReport(
+          refFilters,
+          [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })],
+          tarFilters,
+          [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })],
+        );
+        expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
+
+        return playwrightMock.__mockPage.setContent.mock.calls[0][0] as string;
+      };
+
+      it('omits overview and recommendations when overview generation throws', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock.mockRejectedValueOnce(new Error('OpenRouter down')),
+        );
+
+        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
+        expect(html).not.toContain(aiDisclaimer);
+      });
+
+      it('omits only recommendations when their generation throws', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock
+            .mockResolvedValueOnce('overview-text')
+            .mockRejectedValueOnce(new Error('OpenRouter down')),
+        );
+
+        expect(html).toContain('overview-text');
+        expect(html.split(aiDisclaimer)).toHaveLength(2);
+      });
+
+      it('omits sections whose generated content is empty', async () => {
+        const html = await generateWithAiMock((mock) =>
+          mock.mockResolvedValueOnce('   '),
+        );
+
+        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
+        expect(html).not.toContain(aiDisclaimer);
+      });
     });
 
     it('marks selected filters as chosen in report context', async () => {

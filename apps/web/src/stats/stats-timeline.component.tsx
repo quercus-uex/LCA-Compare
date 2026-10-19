@@ -18,11 +18,15 @@ import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   data: EvolucionTemporalItemDto[];
+  selectedCategory: EfCategoryId;
 };
 
-export const StatsTimeline = ({ data }: Props) => {
+export const StatsTimeline = ({ data, selectedCategory }: Props) => {
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
+  // Una sola categoría en el gráfico principal: las categorías tienen unidades
+  // distintas y no se apilan ni se suman
+  const selected = getEfCategory(selectedCategory);
 
   if (data.length === 0) {
     return (
@@ -48,36 +52,39 @@ export const StatsTimeline = ({ data }: Props) => {
             tick={{ fontSize: 12 }}
             tickFormatter={(v: number) => v.toString()}
           />
-          <YAxis tick={{ fontSize: 12 }} />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            tickFormatter={(v: number) => formatImpactValue(v, '0')}
+            label={{
+              value: selected?.unit ?? '',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fontSize: 12 },
+            }}
+          />
           <Tooltip
             contentStyle={CHART_TOOLTIP_STYLE}
-            formatter={(value, name) => {
+            formatter={(value) => {
               const v = typeof value === 'number' ? value : 0;
-              const n = String(name);
-              const cat = getEfCategory(n as EfCategoryId);
               return [
                 formatImpactValue(v, '0'),
-                cat ? `${getCategoryLabel(cat.id)} (${cat.unit})` : n,
+                `${getCategoryLabel(selectedCategory)} (${selected?.unit ?? ''})`,
               ];
             }}
           />
-          {EF_CATEGORIES.map((cat) => (
-            <Area
-              key={cat.id}
-              dataKey={(entry: EvolucionTemporalItemDto) =>
-                entry.categorias[cat.id] ?? 0
-              }
-              name={getCategoryLabel(cat.id)}
-              stackId="1"
-              stroke={cat.color}
-              fill={cat.color}
-              fillOpacity={0.6}
-            />
-          ))}
+          <Area
+            dataKey={(entry: EvolucionTemporalItemDto) =>
+              entry.categorias[selectedCategory] ?? 0
+            }
+            name={getCategoryLabel(selectedCategory)}
+            stroke={selected?.color}
+            fill={selected?.color}
+            fillOpacity={0.6}
+          />
         </AreaChart>
       </ResponsiveContainer>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {EF_CATEGORIES.map((cat) => (
           <div key={cat.id} className="card bg-base-100 shadow-sm">
             <div className="card-body p-2">

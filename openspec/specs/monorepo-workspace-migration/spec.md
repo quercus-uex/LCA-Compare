@@ -65,16 +65,16 @@ The migration SHALL remove existing frontend and backend tests and their dedicat
 - **THEN** any existing frontend test files and frontend test scripts or test-only dependencies are removed
 
 ### Requirement: Docker And Deployment Compatibility
-The migration SHALL update Docker, Docker Compose, and GitHub Actions so production deployment works from the new pnpm/Turborepo workspace layout.
+The migration SHALL update Docker, Docker Compose, and GitHub Actions so production images are built from the new pnpm/Turborepo workspace layout and deployed from `deploy/compose.yaml`.
 
 #### Scenario: Production Docker builds use workspace paths
-- **WHEN** Docker Compose builds production services
+- **WHEN** the GitHub Actions `Build images` workflow builds production images
 - **THEN** backend and frontend images are built using the new workspace paths and pnpm workspace dependency installation
 
 #### Scenario: Deployment runs migrations from the server workspace package
-- **WHEN** the GitHub Actions deployment workflow runs after updating the remote checkout
-- **THEN** it starts production services and executes Prisma migrations using the migrated server app configuration
+- **WHEN** the production compose file is started on the server
+- **THEN** the `migrate` service executes Prisma migrations using the migrated server app configuration before the backend starts
 
 #### Scenario: Database-only compose usage remains available
-- **WHEN** Docker Compose is started without the production profile
-- **THEN** the database service remains available for local development
+- **WHEN** the root `docker-compose.yaml` is started
+- **THEN** only the database service starts, for local development

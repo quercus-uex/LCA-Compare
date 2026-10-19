@@ -7,7 +7,7 @@ sidebar_position: 1
 
 **LCA Bridge** is a **Python 3.12+** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** Life Cycle Assessment calculation engine using a database in **.zolca** format. It receives crop data from LCA Capture, runs the environmental impact calculation in openLCA through the [OpenLCA IPC server](https://github.com/GreenDelta/olca-ipc-container), and sends the result to [LCA Compare](https://github.com/quercus-uex/LCA-Compare) for visualization and comparison.
 
-Communication between both services happens through a shared Docker network (`olca`), which allows the complete LCA calculation and visualization flow to be orchestrated in a decoupled way.
+Both services are deployed with the same Docker Compose file and communicate through its internal network, which allows the complete LCA calculation and visualization flow to be orchestrated in a decoupled way.
 
 ## Processing Flow
 
@@ -38,7 +38,7 @@ POST /capture-acv    →    ACVService.execute()
 |---|---|
 | `OLCA_HOST` | OpenLCA IPC server host |
 | `OLCA_PORT` | OpenLCA IPC server port |
-| `ACV_COMPARE_BASE_URL` | Base URL of the LCA Compare service for result delivery |
+| `LCA_COMPARE_BASE_URL` | Base URL of the LCA Compare service for result delivery |
 | `IMPACT_METHOD_UUID` | UUID of the impact method for the calculation (default: EF 3.1) |
 | `CALCULATION_AMOUNT` | Process amount used as calculation reference (default `0.001`, equivalent to 1 kg) |
 

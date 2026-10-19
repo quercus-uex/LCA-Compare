@@ -11,7 +11,7 @@ import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: PoblacionRankingItemDto[];
-  selectedCategory?: EfCategoryId;
+  selectedCategory: EfCategoryId;
   provinciaFilter?: string;
   onProvinciaFilterChange: (provinciaId: string | undefined) => void;
 };
@@ -35,16 +35,10 @@ export const StatsPoblacionRanking = ({
       .catch(() => toast.error(t('location.provincesError')));
   }, [location, t]);
 
-  const getValue = (item: PoblacionRankingItemDto) => {
-    if (selectedCategory) {
-      return item.impactosPorCategoria[selectedCategory] ?? 0;
-    }
-    return item.impactoTotalMedio;
-  };
+  const getValue = (item: PoblacionRankingItemDto) =>
+    item.impactosPorCategoria[selectedCategory] ?? 0;
 
-  const selectedCategoryData = selectedCategory
-    ? getEfCategory(selectedCategory)
-    : undefined;
+  const selectedCategoryData = getEfCategory(selectedCategory);
 
   const handleActivate = (item: PoblacionRankingItemDto) => {
     void navigate('/compare', {

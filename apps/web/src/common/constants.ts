@@ -11,6 +11,7 @@ export const UBICACION_RANGE_MIN = 1;
 export const UBICACION_RANGE_MAX = 100000;
 
 export {
+  DEFAULT_EF_CATEGORY,
   EF_CATEGORIES,
   type EfCategoryId,
   IMPACT_KEYS,

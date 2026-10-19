@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Logger } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import generator from 'generate-password';
 import { CaptureService } from './capture.service';
@@ -146,6 +146,38 @@ describe('CaptureService', () => {
     });
   });
 
+  describe('checkUsuario when new-user mail fails', () => {
+    it('still returns the created user when sending the new-user mail throws', async () => {
+      usuarioService.findOnePublic.mockResolvedValue(null);
+      generatorGenerateMock.mockReturnValue('temp-pass');
+      argon2HashMock.mockResolvedValue('hashed-pass');
+      const created = { id: 'u3', email: 'luis@example.com' } as any;
+      usuarioService.create.mockResolvedValue(created);
+      mailerService.sendNewUserMail.mockRejectedValue(
+        new Error('SMTP not configured'),
+      );
+      const loggerError = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => undefined);
+
+      const result = await service.checkUsuario({
+        id: 2,
+        nombre: 'Luis',
+        email: 'luis@example.com',
+      });
+
+      expect(result).toBe(created);
+      expect(usuarioService.create).toHaveBeenCalled();
+      expect(mailerService.sendNewUserMail).toHaveBeenCalledWith(
+        'luis@example.com',
+        'temp-pass',
+      );
+      expect(loggerError).toHaveBeenCalledWith(
+        expect.stringContaining('SMTP not configured'),
+      );
+    });
+  });
+
   describe('checkParcela', () => {
     const idPropietario = 'u1';
 
@@ -176,6 +208,26 @@ describe('CaptureService', () => {
         });
         expect(sigpacStrategy.resolveParcela).not.toHaveBeenCalled();
         expect(parcelaService.createWithGeom).not.toHaveBeenCalled();
+      });
+    });
+
+    it('looks up a Portuguese parcel by ptIdParcela when es_sigpac is omitted', async () => {
+      const mParcela = {
+        es_referencia_catastral: undefined,
+        pt_id_parcela_predial: '1234-56',
+        nombre: 'Parcela PT',
+      } as any;
+      const existing = { id: 'p-pt' } as any;
+      parcelaService.findMany.mockResolvedValue([existing]);
+
+      const result = await service.checkParcela(idPropietario, mParcela);
+
+      expect(result).toBe(existing);
+      expect(parcelaService.findMany).toHaveBeenCalledWith({
+        where: {
+          idPropietario,
+          OR: [{ ptIdParcela: '1234-56' }],
+        },
       });
     });
 

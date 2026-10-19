@@ -33,10 +33,10 @@ class MetadatosParcelaDto {
   @IsInt()
   id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @ValidateNested()
   @Type(() => SigpacDto)
-  es_sigpac: SigpacDto;
+  es_sigpac?: SigpacDto;
 
   @IsOptional()
   @IsString()

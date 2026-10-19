@@ -36,22 +36,26 @@ The dashboard SHALL include a year selector dropdown in the header that filters 
 - **THEN** the year selector SHALL display the unfiltered "Todos" state unless the implementation has selected a latest available year from returned data
 
 ### Requirement: Category selector for rankings
-The dashboard SHALL include a category selector dropdown that filters province and population rankings by a specific EF 3.1 category.
+The dashboard SHALL include a category selector dropdown that filters province and population rankings by a specific EF 3.1 category. There SHALL be no "all categories" option: categories have different units and are never summed. The selector SHALL default to Climate change.
+
+#### Scenario: Default category
+- **WHEN** the dashboard loads
+- **THEN** the category selector SHALL show "Cambio Climático" and all rankings and charts SHALL use climate change values
 
 #### Scenario: Category selector filters all rankings
-- **WHEN** user selects "Eutrofización" from the category selector
-- **THEN** the province ranking table, population ranking cards, spider chart, and heatmap SHALL all re-sort/filter to use eutrophication impact values
+- **WHEN** user selects "Eutrofización (marina)" from the category selector
+- **THEN** the province ranking table, population ranking cards, spider chart, heatmap, and temporal evolution area chart SHALL all re-sort/filter to use marine eutrophication impact values
 
 #### Scenario: Category selector affects KPI cards
 - **WHEN** user selects a category from the selector
-- **THEN** the KPI cards SHALL NOT change (they always display all 8 categories); the category selector SHALL apply only to rankings and charts that support sorting
+- **THEN** the KPI cards SHALL NOT change (they always display all 10 categories); the category selector SHALL apply only to rankings and charts that support sorting
 
 ### Requirement: KPI summary cards
-The dashboard SHALL display 8 KPI summary cards (one per EF 3.1 category) at the top, plus a compact operational stats row below showing total parcels, total cultivations, and total surface.
+The dashboard SHALL display 10 KPI summary cards (one per EF 3.1 category) at the top, plus a compact operational stats row below showing total parcels, total cultivations, and total surface.
 
 #### Scenario: Render EF category KPI cards with data
 - **WHEN** statistics data is loaded
-- **THEN** 8 KPI cards SHALL render in a responsive grid, each displaying the category's Spanish name, its mean value with unit, the category's semantic color as an accent, and the interannual variation percentage
+- **THEN** 10 KPI cards SHALL render in a responsive grid, each displaying the category's Spanish name, its mean value with unit, the category's semantic color as an accent, and the interannual variation percentage
 
 #### Scenario: Interannual variation display
 - **WHEN** `variacionInteranual` is negative (impact decreased)
@@ -61,7 +65,7 @@ The dashboard SHALL display 8 KPI summary cards (one per EF 3.1 category) at the
 
 #### Scenario: Compact operational stats row
 - **WHEN** KPI data is loaded
-- **THEN** a compact row of 3 mini-metrics SHALL render below the 8 category cards showing: total parcels, total cultivations, and total surface area
+- **THEN** a compact row of 3 mini-metrics SHALL render below the 10 category cards showing: total parcels, total cultivations, and total surface area
 
 ### Requirement: Province ranking cards
 The dashboard SHALL display ranking cards for provinces with the lowest and highest impact for the selected EF 3.1 category. Each entry SHALL display its real ranking position number, and the dashboard SHALL avoid presenting duplicate best/worst entries as distinct insights when the ranking has too few items.
@@ -83,19 +87,19 @@ The dashboard SHALL display ranking cards for provinces with the lowest and high
 - **THEN** both province cards SHALL re-sort by that category's impact values
 
 ### Requirement: Temporal evolution visualization
-The dashboard SHALL display a stacked area chart showing the evolution of total impact decomposed by EF 3.1 category contribution over campaign years, plus a grid of 8 sparklines (one per category) for individual trend inspection.
+The dashboard SHALL display an area chart showing the evolution of the selected EF 3.1 category (default: Climate change) over campaign years, plus a grid of 10 sparklines (one per category) for individual trend inspection. Categories SHALL NOT be stacked or summed, because their units differ.
 
-#### Scenario: Stacked area chart with EF categories
+#### Scenario: Area chart for the selected category
 - **WHEN** temporal evolution data is available
-- **THEN** a stacked area chart (Recharts `AreaChart`) SHALL render with years on the X axis, impact values on the Y axis, and one stacked area per EF 3.1 category using the semantic color palette
+- **THEN** an area chart (Recharts `AreaChart`) SHALL render with years on the X axis and the selected category's mean impact on the Y axis, labelled with that category's unit and drawn in its semantic color
 
 #### Scenario: Sparklines grid
 - **WHEN** temporal evolution data is available
-- **THEN** a 4x2 grid of miniature line charts SHALL render below the stacked area chart, each showing the trend of a single EF 3.1 category over time with its semantic color
+- **THEN** a grid of miniature line charts (5 columns on medium screens and up) SHALL render below the area chart, each showing the trend of a single EF 3.1 category over time with its semantic color
 
 #### Scenario: Line chart includes all years
 - **WHEN** a specific year is selected in the filter
-- **THEN** the stacked area chart and sparklines SHALL still display data for all available years
+- **THEN** the area chart and sparklines SHALL still display data for all available years
 
 ### Requirement: Crop type distribution donut chart
 The dashboard SHALL display a donut chart (Recharts `PieChart` with inner radius) showing the distribution of cultivation types.
@@ -120,11 +124,11 @@ The dashboard SHALL display ranking cards for populations with the lowest and hi
 
 #### Scenario: Best populations card
 - **WHEN** population ranking data is available
-- **THEN** the left card SHALL display up to 10 populations with lowest `impactoTotalMedio` in green-styled list items
+- **THEN** the left card SHALL display up to 10 populations with the lowest impact in the selected category in green-styled list items
 
 #### Scenario: Worst populations card
 - **WHEN** population ranking data has enough entries to show a distinct worst list
-- **THEN** the right card SHALL display up to 10 populations with highest `impactoTotalMedio` in red-styled list items
+- **THEN** the right card SHALL display up to 10 populations with the highest impact in the selected category in red-styled list items
 
 #### Scenario: Population ranking has fewer than enough distinct entries
 - **WHEN** the population ranking has too few entries to produce distinct best and worst lists
@@ -151,7 +155,7 @@ The dashboard SHALL include a spider chart section showing the environmental imp
 
 #### Scenario: Spider chart with province selector
 - **WHEN** the dashboard loads
-- **THEN** a spider chart SHALL render with a dropdown allowing selection of a province, defaulting to the province with the highest total impact
+- **THEN** a spider chart SHALL render with a dropdown allowing selection of a province, defaulting to the province with the highest impact in the selected category
 
 #### Scenario: Spider chart compares provinces
 - **WHEN** user selects a second province from the comparison dropdown
@@ -162,7 +166,7 @@ The dashboard SHALL include a heatmap section displaying provinces vs EF 3.1 cat
 
 #### Scenario: Heatmap renders
 - **WHEN** province data is available
-- **THEN** a heatmap SHALL render with top 15 provinces as rows and 8 EF 3.1 categories as columns, with color intensity indicating impact magnitude relative to the column maximum
+- **THEN** a heatmap SHALL render with top 15 provinces as rows and 10 EF 3.1 categories as columns, with color intensity indicating impact magnitude relative to the column maximum
 
 #### Scenario: Heatmap click navigates to spider
 - **WHEN** user clicks a province row label in the heatmap
@@ -263,9 +267,9 @@ The statistics dashboard SHALL display the selected EF 3.1 category's measuremen
 - **WHEN** user selects an EF 3.1 category and searches for a population in the population ranking section
 - **THEN** matching search result values SHALL display the value followed by that category's unit from EF category metadata
 
-#### Scenario: Total ranking avoids misleading category unit
-- **WHEN** no EF 3.1 category is selected in the statistics category selector
-- **THEN** ranking values SHALL NOT display a category-specific unit next to the total impact value
+#### Scenario: Ranking values always show the category unit
+- **WHEN** rankings are displayed
+- **THEN** ranking values SHALL display the selected category's unit, since there is no unitless total impact
 
 ### Requirement: Ranking entries navigate to comparator reference
 The statistics dashboard SHALL allow users to click province and population ranking entries to navigate to the comparator with the clicked location preselected as the reference filter.

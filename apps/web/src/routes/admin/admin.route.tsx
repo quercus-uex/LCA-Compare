@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
 import { formatDate, safeString } from '../../common/utils.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
+import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { AdminModal } from './admin-modal.component.tsx';
 import { AdminTable } from './admin-table.component.tsx';
 import {
@@ -20,6 +21,7 @@ export const AdminRoute = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const getCropTypeLabel = useCropTypeLabel();
 
   const [activeTab, setActiveTab] = useState<Entity>('usuarios');
   const [search, setSearch] = useState('');
@@ -79,6 +81,9 @@ export const AdminRoute = () => {
 
   const formatCell = (field: string, raw: unknown): string | null => {
     if (raw === null || raw === undefined || typeof raw === 'object') return null;
+    if (activeTab === 'cultivos' && field === 'tipo' && typeof raw === 'string') {
+      return getCropTypeLabel(raw);
+    }
     const formField = CONFIG[activeTab].formFields.find((f) => f.name === field);
     if (formField?.type === 'checkbox') {
       return raw === true ? t('common.yes') : t('common.no');

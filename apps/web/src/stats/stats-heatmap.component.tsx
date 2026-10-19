@@ -7,6 +7,7 @@ import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   ranking: ProvinciaRankingItemDto[];
+  selectedCategory: EfCategoryId;
   onProvinceClick?: (provinceId: string) => void;
 };
 
@@ -24,7 +25,11 @@ const cellColor = (value: number, max: number, hex: string) => {
   return `rgba(${rgb.r},${rgb.g},${rgb.b},${Math.max(0.06, ratio * 0.75)})`;
 };
 
-export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
+export const StatsHeatmap = ({
+  ranking,
+  selectedCategory,
+  onProvinceClick,
+}: Props) => {
   const [sortCategory, setSortCategory] = useState<string | null>(null);
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
@@ -37,8 +42,14 @@ export const StatsHeatmap = ({ ranking, onProvinceClick }: Props) => {
     );
   }
 
+  // Las 15 provincias con mayor impacto en la categoría seleccionada (no se
+  // suman categorías con unidades distintas)
   const top15 = [...ranking]
-    .sort((a, b) => b.impactoTotalMedio - a.impactoTotalMedio)
+    .sort(
+      (a, b) =>
+        (b.impactosPorCategoria[selectedCategory] ?? 0) -
+        (a.impactosPorCategoria[selectedCategory] ?? 0),
+    )
     .slice(0, 15);
 
   const sorted = sortCategory

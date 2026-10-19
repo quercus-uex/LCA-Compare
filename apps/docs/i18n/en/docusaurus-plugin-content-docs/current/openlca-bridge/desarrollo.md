@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ## [OpenLCA IPC Server](https://github.com/GreenDelta/olca-ipc-container)
 
-The service requires a running OpenLCA IPC server. The OpenLCA database must be available at `openlca-docker/data/databases/bafu`. To start the IPC server, deploy that Docker Compose service:
+The service requires a running OpenLCA IPC server. The OpenLCA database must be available at `openlca-docker/data/databases/ecoinvent`. To start the IPC server, deploy that Docker Compose service:
 
 ```bash
 docker compose up openlca-ipc
@@ -88,7 +88,7 @@ bash utils/generate_output_model.sh
 │   └── generate_output_model.sh      # Model regeneration script
 ├── test/                             # Tests and fixtures
 ├── openlca-docker/                   # Maven/Java IPC server project (independent)
-│   └── data/databases/bafu/          # .zolca database path
+│   └── data/databases/ecoinvent/     # .zolca database path
 ├── requirements.txt                  # Python dependencies
 ├── Dockerfile                        # Service image
 ├── docker-compose.yml                # Orchestration (openlca-ipc + bridge)

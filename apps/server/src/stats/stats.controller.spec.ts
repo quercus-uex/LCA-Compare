@@ -55,6 +55,13 @@ describe('StatsController', () => {
       expect(statsService.getGlobalStats).not.toHaveBeenCalled();
     });
 
+    it('rejects a "total" category, since categories with different units are never summed', () => {
+      expect(() => controller.getGlobalStats(undefined, 'total')).toThrow(
+        BadRequestException,
+      );
+      expect(statsService.getGlobalStats).not.toHaveBeenCalled();
+    });
+
     it('throws BadRequestException for invalid category', () => {
       expect(() =>
         controller.getGlobalStats(undefined, 'invalid_category'),

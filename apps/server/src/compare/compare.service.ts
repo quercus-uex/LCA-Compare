@@ -29,8 +29,36 @@ import {
 } from './compare-report.i18n';
 import type { CompareReportLanguage } from 'common/compare';
 
-Handlebars.registerHelper('decimals', (value, digits: number) =>
-  Number(value).toFixed(digits),
+/**
+ * Formats an impact amount with `significant` significant digits. Values
+ * below 0.01 use scientific notation so tiny indicators (e.g. CTUh, disease
+ * incidence) do not collapse to 0.
+ */
+export function formatAmount(value: unknown, significant = 4): string {
+  const num = Number(value);
+  if (value == null || !Number.isFinite(num)) return '';
+  if (num === 0) return '0';
+  const abs = Math.abs(num);
+  if (abs < 0.01) {
+    const [mantissa, exponent] = num.toExponential(significant - 1).split('e');
+    return `${mantissa}×10<sup>${Number(exponent)}</sup>`;
+  }
+  if (abs >= 10 ** significant) return num.toFixed(0);
+  return num.toPrecision(significant);
+}
+
+export function formatPercent(
+  value: number | null | undefined,
+  digits: number,
+) {
+  if (value == null) return undefined;
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${Number(value).toFixed(digits)} %`;
+}
+
+Handlebars.registerHelper(
+  'amount',
+  (value: unknown) => new Handlebars.SafeString(formatAmount(value)),
 );
 type PercentHelperOptions = {
   data?: { root?: { labels?: { notAvailable?: string } } };
@@ -44,21 +72,16 @@ Handlebars.registerHelper(
     options: PercentHelperOptions,
   ) {
     const notAvailable = options?.data?.root?.labels?.notAvailable ?? 'n/a';
-    return value == null ? notAvailable : `${Number(value).toFixed(digits)} %`;
+    return formatPercent(value, digits) ?? notAvailable;
   },
 );
-Handlebars.registerHelper('isOdd', (value: number) => value % 2 == 0);
-Handlebars.registerHelper('scientific', (value: number, digits: number) => {
-  const num = Number(value);
-  if (num === 0) return num.toFixed(digits);
-  const abs = Math.abs(num);
-  if (abs < 0.001) {
-    const exp = Math.floor(Math.log10(abs));
-    const mantissa = num / Math.pow(10, exp);
-    return `${mantissa.toFixed(digits)}e${exp}`;
-  }
-  return num.toFixed(digits);
-});
+Handlebars.registerHelper('coords', (lat: number, long: number) =>
+  [lat, long].map((n) => Number(n).toFixed(5)).join(', '),
+);
+// The last argument is Handlebars' options object, not a value to join
+Handlebars.registerHelper('concat', (...args: unknown[]) =>
+  args.slice(0, -1).join(''),
+);
 
 @Injectable()
 export class CompareService implements OnModuleInit, OnModuleDestroy {
@@ -331,11 +354,16 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     });
 
     const page = await this.browser.newPage();
-    await page.setContent(html);
-
-    return await page.pdf({
-      format: 'A4',
-      printBackground: true,
-    });
+    try {
+      // Tailwind and the font load from a CDN; wait for them before printing
+      await page.setContent(html, { waitUntil: 'networkidle' });
+      return await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+      });
+    } finally {
+      await page.close();
+    }
   }
 }

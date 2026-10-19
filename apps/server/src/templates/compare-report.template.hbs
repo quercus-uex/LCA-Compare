@@ -8,31 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-      @page { size: A4 portrait; margin: 20mm; }
-      body { margin: 0; padding: 0; background: #ccc; }
-      .page {
-          width: 210mm;
-          min-height: 297mm;
-          padding: 1mm;
-          margin: 10mm auto;
-          background: white;
-          box-sizing: border-box;
-          box-shadow: 0 0 8px rgba(0,0,0,0.3);
-      }
-      .avoid-break {
-          break-inside: avoid;
-      }
-      @media print {
-          body { background: none; }
-          .page {
-              margin: 0;
-              box-shadow: none;
-              break-after: page;
-          }
-          h1, h2, h3, table, img, .avoid-break {
-              break-inside: avoid;
-          }
-      }
+      /* Los márgenes de la página los fija @page; el contenido ocupa el ancho útil */
+      @page { size: A4 portrait; margin: 15mm; }
+      body { margin: 0; padding: 0; background: white; }
+      .avoid-break, h1, h2, h3, img { break-inside: avoid; }
       .google-sans-all {
           font-family: "Google Sans", sans-serif;
           font-optical-sizing: auto;
@@ -41,436 +20,174 @@
           font-variation-settings:
           "GRAD" 0;
       }
-
+      .impact-table tbody tr:nth-child(odd) { background: var(--color-gray-100); }
+      .impact-table th, .impact-table td { padding: 0.25rem 0.5rem; }
+      .impact-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     </style>
 
   </head>
 
-  <body class="google-sans-all">
-    <div class="page">
-      <div class="flex flex-col gap-5 items-center">
-        <h1 class="text-3xl font-bold">{{labels.reportTitle}}</h1>
-        <h2 class="text-xl">{{labels.comparisonDate}}: {{currentDate}}</h2>
-        <div class="card w-full">
-          <div class="card-body bg-gray-100 rounded-lg p-2 flex flex-col items-center gap-2">
-            <h2 class="text-gray-700 grow font-bold">{{labels.selectedFilters}}</h2>
-            <div class="flex gap-2 w-full">
-              <div class="card w-full">
-                <div class="card-body rounded-xl border border-blue-200">
-                  <div class="w-full bg-blue-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
-                    <div class="rounded-full w-2 h-2 bg-blue-600"></div>
-                    <h3 class="text-blue-600 line-clamp-1 w-fit">{{labels.referenceSet}}</h3>
-                    <p class="text-end line-clamp-1 w-fit text-sm">{{reference.results.length}} {{labels.results}}</p>
-                  </div>
-                  <div class="w-full flex flex-col gap-2 p-5">
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.countries}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each reference.paises}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.provinces}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each reference.provincias}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.towns}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each reference.poblaciones}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    {{#if reference.filters.lat}}
-                      <div class="flex justify-between">
-                        <p>{{labels.location}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{decimals reference.filters.lat 5}}, {{decimals reference.filters.long 5}}</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    {{#if reference.filters.range}}
-                      <div class="flex justify-between">
-                        <p>{{labels.range}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{reference.filters.range}} m</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    <div class="flex justify-between">
-                      <p>{{labels.cropType}}: </p>
-                      <div class="flex gap-2">
-                        {{#each reference.tiposCultivo}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    {{#if reference.filters.soloParcelasReferencia}}
-                      <div class="flex justify-between">
-                        <p>{{labels.referenceOnly}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{labels.yes}}</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    <div class="flex justify-between">
-                      <p>{{labels.campaignDate}}: </p>
-                      <div class="flex gap-2">
-                        {{#if reference.anioCampania.inicio.chosen}}
-                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{reference.anioCampania.inicio.data}}
-                          </span>
-                        {{else}}
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{#if reference.anioCampania.inicio.data}}{{reference.anioCampania.inicio.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
-                          </span>
-                        {{/if}}
+  {{#*inline "chip"}}
+    {{#if chosen}}
+      <span class="inline-flex items-center whitespace-nowrap rounded-md bg-{{color}}-400/10 px-2 py-0.5 text-xs font-medium text-{{color}}-600 inset-ring inset-ring-{{color}}-400/20">{{text}}</span>
+    {{else}}
+      <span class="inline-flex items-center whitespace-nowrap rounded-md bg-gray-400/10 px-2 py-0.5 text-xs font-medium text-gray-500 inset-ring inset-ring-gray-400/20">{{text}}</span>
+    {{/if}}
+  {{/inline}}
 
-                        {{#if reference.anioCampania.fin.chosen}}
-                          <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{reference.anioCampania.fin.data}}
-                          </span>
-                        {{else}}
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{#if reference.anioCampania.fin.data}}{{reference.anioCampania.fin.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
-                          </span>
-                        {{/if}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  {{#*inline "filterRow"}}
+    <div class="grid grid-cols-[6.5rem_1fr] gap-2 items-start">
+      <p class="text-sm">{{label}}:</p>
+      <div class="flex flex-wrap gap-1">{{> @partial-block}}</div>
+    </div>
+  {{/inline}}
 
-              <div class="card w-full">
-                <div class="card-body rounded-xl border border-red-200">
-                  <div class="w-full bg-red-100 p-2 rounded-tl-xl rounded-tr-xl flex gap-2 items-center">
-                    <div class="rounded-full w-2 h-2 bg-red-600"></div>
-                    <h3 class="text-red-600 line-clamp-1 w-fit">{{labels.targetSet}}</h3>
-                    <p class="text-end line-clamp-1 w-fit text-sm">{{target.results.length}} {{labels.results}}</p>
-                  </div>
-                  <div class="w-full flex flex-col gap-2 p-5">
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.countries}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each target.paises}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.provinces}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each target.provincias}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    <div class="flex justify-between gap-2">
-                      <p>{{labels.towns}}: </p>
-                      <div class="flex gap-2 flex-wrap">
-                        {{#each target.poblaciones}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    {{#if target.filters.lat}}
-                      <div class="flex justify-between">
-                        <p>{{labels.location}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{decimals target.filters.lat 5}}, {{decimals target.filters.long 5}}</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    {{#if target.filters.range}}
-                      <div class="flex justify-between">
-                        <p>{{labels.range}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{target.filters.range}} m</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    <div class="flex justify-between">
-                      <p>{{labels.cropType}}: </p>
-                      <div class="flex gap-2">
-                        {{#each target.tiposCultivo}}
-                          {{#if chosen}}
-                            <span class="inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{else}}
-                            <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">{{nombre}}</span>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </div>
-                    {{#if target.filters.soloParcelasReferencia}}
-                      <div class="flex justify-between">
-                        <p>{{labels.referenceOnly}}: </p>
-                        <div class="flex gap-2">
-                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">{{labels.yes}}</span>
-                        </div>
-                      </div>
-                    {{/if}}
-                    <div class="flex justify-between">
-                      <p>{{labels.campaignDate}}: </p>
-                      <div class="flex gap-2">
-                        {{#if target.anioCampania.inicio.chosen}}
-                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{target.anioCampania.inicio.data}}
-                          </span>
-                        {{else}}
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.from}} {{#if target.anioCampania.inicio.data}}{{target.anioCampania.inicio.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
-                          </span>
-                        {{/if}}
-
-                        {{#if target.anioCampania.fin.chosen}}
-                          <span class="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{target.anioCampania.fin.data}}
-                          </span>
-                        {{else}}
-                          <span class="inline-flex items-center rounded-md bg-gray-400/10 px-2 py-1 text-xs font-medium text-gray-400 inset-ring inset-ring-gray-400/20">
-                            {{labels.to}} {{#if target.anioCampania.fin.data}}{{target.anioCampania.fin.data}} {{labels.fromData}}{{else}}{{labels.notAvailable}}{{/if}}
-                          </span>
-                        {{/if}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex gap-1 items-center justify-start w-full">
-              <div class="rounded-full bg-gray-400 w-2 h-2"></div>
-              <p class="text-gray-400">{{labels.unchosenFilters}}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-2 w-full items-center avoid-break">
-          <h2>{{labels.keyResults}}</h2>
-
-          <div class="flex gap-2 w-full">
-            {{#each topImpacts}}
-              <div class="card w-full">
-                <div class="card-body bg-gray-100 rounded-lg p-5 h-full flex flex-col gap-5 justify-between">
-                  <h3 class="card-title line-clamp-2">{{category}}</h3>
-                  <div class="flex flex-col gap-1">
-                    <p class="text-5xl text-center">{{percent diff 2}}</p>
-                    <p class="text-center">
-                      <span class="text-blue-600">{{scientific refAmount 3}}</span> vs. <span class="text-red-600">{{scientific tarAmount 3}}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            {{/each}}
-          </div>
-        </div>
-
-        {{#if overview}}
-        <div class="card w-full avoid-break">
-          <div class="card-body bg-gray-100 p-2 rounded-lg">
-            <div class="flex gap-2 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
-              </svg>
-              <h3>{{labels.summary}}</h3>
-            </div>
-
-            <p class="font-normal">
-              {{overview}}
-            </p>
-
-            <span class="text-sm font-thin text-gray-700">
-              {{labels.aiDisclaimer}}
-            </span>
-          </div>
-        </div>
+  {{#*inline "filterSet"}}
+    <div class="rounded-xl border border-{{color}}-200 bg-white min-w-0 avoid-break">
+      <div class="bg-{{color}}-100 px-3 py-2 rounded-t-xl flex gap-2 items-center">
+        <div class="rounded-full w-2 h-2 bg-{{color}}-600 shrink-0"></div>
+        <h3 class="text-{{color}}-600 truncate">{{title}}</h3>
+        <p class="ml-auto whitespace-nowrap text-sm">{{set.results.length}} {{@root.labels.results}}</p>
+      </div>
+      <div class="flex flex-col gap-2 p-3">
+        {{#> filterRow label=@root.labels.countries}}
+          {{#each set.paises}}{{> chip text=nombre chosen=chosen color=../color}}{{/each}}
+        {{/filterRow}}
+        {{#> filterRow label=@root.labels.provinces}}
+          {{#each set.provincias}}{{> chip text=nombre chosen=chosen color=../color}}{{/each}}
+        {{/filterRow}}
+        {{#> filterRow label=@root.labels.towns}}
+          {{#each set.poblaciones}}{{> chip text=nombre chosen=chosen color=../color}}{{/each}}
+        {{/filterRow}}
+        {{#if set.filters.lat}}
+          {{#> filterRow label=@root.labels.location}}
+            {{> chip text=(coords set.filters.lat set.filters.long) chosen=true color=color}}
+          {{/filterRow}}
         {{/if}}
-
-        {{#if recommendations}}
-        <div class="card w-full avoid-break">
-          <div class="card-body bg-gray-100 p-2 rounded-lg">
-            <div class="flex gap-2 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
-              </svg>
-              <h3>{{labels.recommendations}}</h3>
-            </div>
-
-            <p class="font-normal">
-              {{recommendations}}
-            </p>
-
-            <span class="text-sm font-thin text-gray-700">
-              {{labels.aiDisclaimer}}
-            </span>
-          </div>
-        </div>
+        {{#if set.filters.range}}
+          {{#> filterRow label=@root.labels.range}}
+            {{> chip text=(concat set.filters.range " m") chosen=true color=color}}
+          {{/filterRow}}
         {{/if}}
+        {{#> filterRow label=@root.labels.cropType}}
+          {{#each set.tiposCultivo}}{{> chip text=nombre chosen=chosen color=../color}}{{/each}}
+        {{/filterRow}}
+        {{#if set.filters.soloParcelasReferencia}}
+          {{#> filterRow label=@root.labels.referenceOnly}}
+            {{> chip text=@root.labels.yes chosen=true color=color}}
+          {{/filterRow}}
+        {{/if}}
+        {{#> filterRow label=@root.labels.campaignDate}}
+          {{#if set.anioCampania.inicio.chosen}}
+            {{> chip text=(concat @root.labels.from " " set.anioCampania.inicio.data) chosen=true color=color}}
+          {{else if set.anioCampania.inicio.data}}
+            {{> chip text=(concat @root.labels.from " " set.anioCampania.inicio.data " " @root.labels.fromData) chosen=false}}
+          {{else}}
+            {{> chip text=(concat @root.labels.from " " @root.labels.notAvailable) chosen=false}}
+          {{/if}}
+          {{#if set.anioCampania.fin.chosen}}
+            {{> chip text=(concat @root.labels.to " " set.anioCampania.fin.data) chosen=true color=color}}
+          {{else if set.anioCampania.fin.data}}
+            {{> chip text=(concat @root.labels.to " " set.anioCampania.fin.data " " @root.labels.fromData) chosen=false}}
+          {{else}}
+            {{> chip text=(concat @root.labels.to " " @root.labels.notAvailable) chosen=false}}
+          {{/if}}
+        {{/filterRow}}
       </div>
     </div>
+  {{/inline}}
 
-    <div class="page flex flex-col gap-2 items-center">
-      <p>{{labels.impactTotal}}</p>
-      <table class="table-auto">
-        <thead class="bg-neutral-secondary-soft border-b border-default">
+  {{#*inline "aiCard"}}
+    <div class="w-full rounded-lg bg-gray-100 p-4 flex flex-col gap-2 avoid-break">
+      <div class="flex gap-2 items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+        </svg>
+        <h3>{{title}}</h3>
+      </div>
+      <p class="font-normal text-sm text-justify">{{text}}</p>
+      <span class="text-xs font-normal text-gray-600">{{@root.labels.aiDisclaimer}}</span>
+    </div>
+  {{/inline}}
+
+  {{#*inline "impactTable"}}
+    <section class="w-full flex flex-col gap-2 avoid-break">
+      <h2 class="text-center font-bold uppercase text-gray-700">{{title}}</h2>
+      <table class="impact-table w-full text-sm">
+        <thead class="border-b border-gray-400">
           <tr>
-            <th class="text-start">{{labels.category}}</th>
-            <th class="text-start">{{labels.referenceAmount}}</th>
-            <th class="text-start">{{labels.targetAmount}}</th>
-            <th class="text-start">{{labels.unit}}</th>
-            <th class="text-start">{{labels.difference}}</th>
+            <th class="text-start">{{@root.labels.category}}</th>
+            <th class="text-end">{{@root.labels.referenceAmount}}</th>
+            <th class="text-end">{{@root.labels.targetAmount}}</th>
+            <th class="text-start">{{@root.labels.unit}}</th>
+            <th class="text-end">{{@root.labels.difference}}</th>
           </tr>
         </thead>
         <tbody>
-        {{#each comparison.impacto_total}}
-          <tr {{#if (isOdd @index)}}class="bg-gray-200"{{/if}}>
-            <td class="line-clamp-1">{{category}}</td>
-            <td class="text-blue-600">{{decimals refAmount 5}}</td>
-            <td class="text-red-600">{{decimals tarAmount 5}}</td>
-            <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{percent diff 2}}</td>
+        {{#each rows}}
+          <tr>
+            <td>{{category}}</td>
+            <td class="num text-blue-600">{{amount refAmount}}</td>
+            <td class="num text-red-600">{{amount tarAmount}}</td>
+            <td class="whitespace-nowrap">{{unit}}</td>
+            <td class="num">{{percent diff 2}}</td>
           </tr>
         {{/each}}
         </tbody>
       </table>
-    </div>
+    </section>
+  {{/inline}}
 
-    <div class="page flex flex-col gap-2 items-center">
-      <p>{{labels.impactPesticides}}</p>
-      <table class="table-auto">
-        <thead class="bg-neutral-secondary-soft border-b border-default">
-        <tr>
-          <th class="text-start">{{labels.category}}</th>
-          <th class="text-start">{{labels.referenceAmount}}</th>
-          <th class="text-start">{{labels.targetAmount}}</th>
-          <th class="text-start">{{labels.unit}}</th>
-          <th class="text-start">{{labels.difference}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{#each comparison.impacto_pesticidas}}
-          <tr {{#if (isOdd @index)}}class="bg-gray-200"{{/if}}>
-            <td class="line-clamp-1">{{category}}</td>
-            <td class="text-blue-600">{{decimals refAmount 5}}</td>
-            <td class="text-red-600">{{decimals tarAmount 5}}</td>
-            <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{percent diff 2}}</td>
-          </tr>
-        {{/each}}
-        </tbody>
-      </table>
-    </div>
+  <body class="google-sans-all">
+    <main class="flex flex-col gap-5 items-center">
+      <h1 class="text-3xl font-bold text-center">{{labels.reportTitle}}</h1>
+      <h2 class="text-xl -mt-2">{{labels.comparisonDate}}: {{currentDate}}</h2>
 
-    <div class="page flex flex-col gap-2 items-center">
-      <p>{{labels.impactFertilizers}}</p>
-      <table class="table-auto">
-        <thead class="bg-neutral-secondary-soft border-b border-default">
-        <tr>
-          <th class="text-start">{{labels.category}}</th>
-          <th class="text-start">{{labels.referenceAmount}}</th>
-          <th class="text-start">{{labels.targetAmount}}</th>
-          <th class="text-start">{{labels.unit}}</th>
-          <th class="text-start">{{labels.difference}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{#each comparison.impacto_fertilizantes}}
-          <tr {{#if (isOdd @index)}}class="bg-gray-200"{{/if}}>
-            <td class="line-clamp-1">{{category}}</td>
-            <td class="text-blue-600">{{decimals refAmount 5}}</td>
-            <td class="text-red-600">{{decimals tarAmount 5}}</td>
-            <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{percent diff 2}}</td>
-          </tr>
-        {{/each}}
-        </tbody>
-      </table>
-    </div>
+      <div class="w-full rounded-lg bg-gray-100 p-3 flex flex-col gap-2">
+        <h2 class="text-center text-gray-700 font-bold uppercase">{{labels.selectedFilters}}</h2>
+        <div class="grid grid-cols-2 gap-2 items-start">
+          {{> filterSet set=reference title=labels.referenceSet color="blue"}}
+          {{> filterSet set=target title=labels.targetSet color="red"}}
+        </div>
+        <div class="flex gap-1 items-center">
+          <div class="rounded-full bg-gray-400 w-2 h-2"></div>
+          <p class="text-sm text-gray-500">{{labels.unchosenFilters}}</p>
+        </div>
+      </div>
 
-    <div class="page flex flex-col gap-2 items-center">
-      <p>{{labels.impactIrrigationSystem}}</p>
-      <table class="table-auto">
-        <thead class="bg-neutral-secondary-soft border-b border-default">
-        <tr>
-          <th class="text-start">{{labels.category}}</th>
-          <th class="text-start">{{labels.referenceAmount}}</th>
-          <th class="text-start">{{labels.targetAmount}}</th>
-          <th class="text-start">{{labels.unit}}</th>
-          <th class="text-start">{{labels.difference}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{#each comparison.impacto_sistema_riego}}
-          <tr {{#if (isOdd @index)}}class="bg-gray-200"{{/if}}>
-            <td class="line-clamp-1">{{category}}</td>
-            <td class="text-blue-600">{{decimals refAmount 5}}</td>
-            <td class="text-red-600">{{decimals tarAmount 5}}</td>
-            <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{percent diff 2}}</td>
-          </tr>
-        {{/each}}
-        </tbody>
-      </table>
-    </div>
+      <section class="flex flex-col gap-2 w-full items-center avoid-break">
+        <h2 class="font-bold uppercase text-gray-700">{{labels.keyResults}}</h2>
+        <div class="grid grid-cols-3 gap-2 w-full">
+          {{#each topImpacts}}
+            <div class="rounded-lg bg-gray-100 p-4 flex flex-col gap-4 justify-between">
+              <h3 class="line-clamp-2">{{category}}</h3>
+              <div class="flex flex-col gap-1">
+                <p class="text-4xl text-center">{{percent diff 2}}</p>
+                <p class="text-center text-sm">
+                  <span class="text-blue-600">{{amount refAmount}}</span> vs. <span class="text-red-600">{{amount tarAmount}}</span>
+                </p>
+                <p class="text-center text-xs text-gray-500">{{unit}}</p>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </section>
 
-    <div class="page flex flex-col gap-2 items-center">
-      <p>{{labels.impactCropManagement}}</p>
-      <table class="table-auto">
-        <thead class="bg-neutral-secondary-soft border-b border-default">
-        <tr>
-          <th class="text-start">{{labels.category}}</th>
-          <th class="text-start">{{labels.referenceAmount}}</th>
-          <th class="text-start">{{labels.targetAmount}}</th>
-          <th class="text-start">{{labels.unit}}</th>
-          <th class="text-start">{{labels.difference}}</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{#each comparison.impacto_manejo_cultivo}}
-          <tr {{#if (isOdd @index)}}class="bg-gray-200"{{/if}}>
-            <td class="line-clamp-1">{{category}}</td>
-            <td class="text-blue-600">{{decimals refAmount 5}}</td>
-            <td class="text-red-600">{{decimals tarAmount 5}}</td>
-            <td class="line-clamp-1">{{unit}}</td>
-            <td class="">{{percent diff 2}}</td>
-          </tr>
-        {{/each}}
-        </tbody>
-      </table>
+      {{#if overview}}
+        {{> aiCard title=labels.summary text=overview}}
+      {{/if}}
+
+      {{#if recommendations}}
+        {{> aiCard title=labels.recommendations text=recommendations}}
+      {{/if}}
+    </main>
+
+    <div class="flex flex-col gap-8 mt-8">
+      {{> impactTable title=labels.impactTotal rows=comparison.impacto_total}}
+      {{> impactTable title=labels.impactPesticides rows=comparison.impacto_pesticidas}}
+      {{> impactTable title=labels.impactFertilizers rows=comparison.impacto_fertilizantes}}
+      {{> impactTable title=labels.impactIrrigationSystem rows=comparison.impacto_sistema_riego}}
+      {{> impactTable title=labels.impactCropManagement rows=comparison.impacto_manejo_cultivo}}
     </div>
   </body>
 </html>

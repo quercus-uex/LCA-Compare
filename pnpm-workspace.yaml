@@ -15,4 +15,4 @@ allowBuilds:
 
 permissions:
   dotenv:
-    skills: true
+    skills: false

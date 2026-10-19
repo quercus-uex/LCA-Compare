@@ -1,5 +1,5 @@
 import * as fs from 'node:fs';
-import { CompareService } from './compare.service';
+import { CompareService, formatAmount, formatPercent } from './compare.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
@@ -13,6 +13,7 @@ jest.mock('playwright', () => {
   const page = {
     setContent: jest.fn().mockResolvedValue(undefined),
     pdf: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')),
+    close: jest.fn().mockResolvedValue(undefined),
   };
   const browser = {
     newPage: jest.fn().mockResolvedValue(page),
@@ -551,11 +552,14 @@ describe('CompareService', () => {
       expect(playwrightMock.__mockBrowser.newPage).toHaveBeenCalled();
       expect(playwrightMock.__mockPage.setContent).toHaveBeenCalledWith(
         expect.any(String),
+        { waitUntil: 'networkidle' },
       );
       expect(playwrightMock.__mockPage.pdf).toHaveBeenCalledWith({
         format: 'A4',
         printBackground: true,
+        preferCSSPageSize: true,
       });
+      expect(playwrightMock.__mockPage.close).toHaveBeenCalled();
       expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
     });
 
@@ -818,5 +822,34 @@ describe('CompareService', () => {
       expect(htmlArg).toContain('<html lang="es">');
       expect(htmlArg).toContain('Informe de comparativa de ACV');
     });
+  });
+});
+
+describe('report formatters', () => {
+  it('formats amounts with significant digits', () => {
+    expect(formatAmount(45.17419)).toBe('45.17');
+    expect(formatAmount(0.81506)).toBe('0.8151');
+    expect(formatAmount(0.01382)).toBe('0.01382');
+    expect(formatAmount(123456.7)).toBe('123457');
+    expect(formatAmount(0)).toBe('0');
+  });
+
+  it('uses scientific notation for values below 0.01 instead of rounding them to 0', () => {
+    expect(formatAmount(2.1e-9)).toBe('2.100×10<sup>-9</sup>');
+    expect(formatAmount(0.00214)).toBe('2.140×10<sup>-3</sup>');
+    expect(formatAmount(-0.0005)).toBe('-5.000×10<sup>-4</sup>');
+  });
+
+  it('returns an empty string for missing or non-numeric amounts', () => {
+    expect(formatAmount(undefined)).toBe('');
+    expect(formatAmount(null)).toBe('');
+    expect(formatAmount('abc')).toBe('');
+  });
+
+  it('prefixes positive percentages with a sign', () => {
+    expect(formatPercent(36.184, 2)).toBe('+36.18 %');
+    expect(formatPercent(-12, 2)).toBe('-12.00 %');
+    expect(formatPercent(0, 2)).toBe('0.00 %');
+    expect(formatPercent(null, 2)).toBeUndefined();
   });
 });

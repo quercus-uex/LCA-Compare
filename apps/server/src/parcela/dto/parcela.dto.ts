@@ -19,7 +19,7 @@ export class ParcelaDto implements Parcela {
   idPropietario: string;
 
   @ApiProperty({ format: 'uuid' })
-  idPoblacion: string;
+  idPoblacion: string | null;
 
   @ApiProperty()
   esParcelaReferencia: boolean;
@@ -28,5 +28,5 @@ export class ParcelaDto implements Parcela {
 export class ParcelaWithGeomDto extends ParcelaDto {
   cultivo: CultivoDto;
 
-  geom: Polygon;
+  geom: Polygon | null;
 }

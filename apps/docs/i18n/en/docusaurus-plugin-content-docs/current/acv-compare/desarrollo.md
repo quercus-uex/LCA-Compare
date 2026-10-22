@@ -219,6 +219,6 @@ The Prisma schema defines these main models:
 
 The main relationships are: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
-Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` hierarchy, where each plot is assigned to a town and stores its polygon in a PostGIS `geometry(Polygon, 4326)` column.
+Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` hierarchy, where each plot is assigned to a town and stores its polygon in a PostGIS `geometry(Polygon, 4326)` column. Both fields are optional: if the polygon cannot be obtained during ingestion (wrong SIGPAC, Catastro or predial identifier, unavailable service or invalid geometry) or the town is not found, the plot is still saved without them and the failure is logged as a warning by the backend.
 
 The `esParcelaReferencia` flag (default `false`) can only be set by an administrator and lets the comparator restrict a set to these plots through the `soloParcelasReferencia` filter.

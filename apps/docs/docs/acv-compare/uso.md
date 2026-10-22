@@ -30,7 +30,9 @@ Para visualizar las parcelas de tu usuario, con la sesión iniciada selecciona l
 
 Desde el listado de parcelas, puedes acceder al detalle de cada una, donde se muestra su identificador SIGPAC, referencia
 catastral, un mapa con el polígono de la parcela, y los cultivos asociados ordenados por campaña. Las parcelas marcadas
-por un administrador como **parcelas de referencia** se identifican con la etiqueta «Referencia» junto a su nombre.
+por un administrador como **parcelas de referencia** se identifican con la etiqueta «Referencia» junto a su nombre. Si
+no se pudo determinar la ubicación de la parcela al ingestarla, en lugar del mapa se muestra «Ubicación no disponible»;
+esas parcelas no aparecen en los filtros por ubicación geográfica del comparador.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Ejemplo de parcela" width="600"/>

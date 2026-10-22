@@ -169,6 +169,7 @@ export const pt = {
     previousCrops: 'Culturas anteriores',
     viewImpacts: 'Ver impactos',
     referenceBadge: 'Referência',
+    noLocation: 'Localização não disponível',
   },
   resultados: {
     title: 'Resultado de impacto',

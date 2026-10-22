@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PredialService } from '../../predial/predial.service';
 import { PoblacionService } from '../../poblacion/poblacion.service';
 import type {
@@ -6,9 +6,15 @@ import type {
   ParcelaMetadata,
   ParcelaResolution,
 } from './capture-strategy.interface';
+import {
+  findPoblacionSafely,
+  resolvePolygonSafely,
+} from './geolocation.helpers';
 
 @Injectable()
 export class PredialCaptureStrategy implements CaptureStrategy {
+  private readonly logger = new Logger(PredialCaptureStrategy.name);
+
   constructor(
     private readonly predialService: PredialService,
     private readonly poblacionService: PoblacionService,
@@ -20,21 +26,23 @@ export class PredialCaptureStrategy implements CaptureStrategy {
 
   async resolveParcela(mParcela: ParcelaMetadata): Promise<ParcelaResolution> {
     const ptId = mParcela.pt_id_parcela_predial!;
-    const polygon = await this.predialService.getPolygon(ptId);
-
-    const provinciaCatastro = polygon.properties!.provincia as number;
-    const poblacionCatastro = polygon.properties!.poblacion as number;
-    const poblacion = await this.poblacionService.findByCatastroIds(
-      provinciaCatastro,
-      poblacionCatastro,
-      'PT',
+    const polygon = await resolvePolygonSafely(
+      this.logger,
+      `predial ${ptId}`,
+      () => this.predialService.getPolygon(ptId),
     );
 
-    if (!poblacion) {
-      throw new BadRequestException(
-        'No se encontró la población para la parcela predial indicada',
-      );
-    }
+    // Los códigos de la población solo llegan en la respuesta del predial
+    const poblacion = polygon
+      ? await findPoblacionSafely(
+          this.logger,
+          `predial ${ptId}`,
+          this.poblacionService,
+          polygon.properties?.provincia as number | undefined,
+          polygon.properties?.poblacion as number | undefined,
+          'PT',
+        )
+      : null;
 
     return {
       polygon,

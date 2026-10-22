@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { CatastroCaptureStrategy } from './catastro-capture.strategy';
 import { CatastroService } from '../../catastro/catastro.service';
 import { PoblacionService } from '../../poblacion/poblacion.service';
@@ -26,7 +25,17 @@ describe('CatastroCaptureStrategy', () => {
   >;
   const polygon: Feature<Polygon> = {
     type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [] },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-6.0, 39.0],
+          [-6.1, 39.1],
+          [-6.2, 39.0],
+          [-6.0, 39.0],
+        ],
+      ],
+    },
     properties: {},
   };
 
@@ -75,13 +84,35 @@ describe('CatastroCaptureStrategy', () => {
       );
     });
 
-    it('throws BadRequestException when the poblacion is not found', async () => {
+    it('keeps the polygon and returns a null poblacion when it is not found', async () => {
       catastroService.getPolygon.mockResolvedValue(polygon);
       poblacionService.findByCatastroIds.mockResolvedValue(undefined);
 
-      await expect(strategy.resolveParcela(mParcela)).rejects.toThrow(
-        BadRequestException,
-      );
+      const result = await strategy.resolveParcela(mParcela);
+
+      expect(result.polygon).toBe(polygon);
+      expect(result.poblacion).toBeNull();
+    });
+
+    it('returns a null polygon but still resolves the poblacion when the polygon lookup fails', async () => {
+      catastroService.getPolygon.mockRejectedValue(new Error('Request failed'));
+      const poblacion = { id: 'pop1' } as any;
+      poblacionService.findByCatastroIds.mockResolvedValue(poblacion);
+
+      const result = await strategy.resolveParcela(mParcela);
+
+      expect(result.polygon).toBeNull();
+      expect(result.poblacion).toBe(poblacion);
+    });
+
+    it('returns a null polygon when the service returns no valid geometry', async () => {
+      catastroService.getPolygon.mockResolvedValue(undefined as any);
+      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
+
+      const result = await strategy.resolveParcela(mParcela);
+
+      expect(result.polygon).toBeNull();
+      expect(result.poblacion).toBeNull();
     });
   });
 });

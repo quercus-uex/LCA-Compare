@@ -129,7 +129,7 @@ export const ResultadoRoute = () => {
         </div>
         <MapPreview
           className="h-full rounded-box aspect-square"
-          polygon={parcela.geom}
+          polygon={parcela.geom ?? undefined}
         />
       </div>
       <ResultadoTable resultado={resultado} />

@@ -231,7 +231,10 @@ El esquema de Prisma define los siguientes modelos principales:
 Las relaciones principales son: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 La ubicación geográfica se modela con la jerarquía `Pais` → `Provincia` → `Poblacion`, donde cada parcela se asigna a
-una población y almacena su polígono en una columna `geometry(Polygon, 4326)` de PostGIS.
+una población y almacena su polígono en una columna `geometry(Polygon, 4326)` de PostGIS. Ambos campos son opcionales:
+si durante la ingesta no se puede obtener el polígono (SIGPAC, Catastro o predial incorrectos, servicio no disponible o
+geometría no válida) o no se encuentra la población, la parcela se guarda igualmente sin ellos y el fallo queda
+registrado como aviso en los logs del backend.
 
 La marca `esParcelaReferencia` (por defecto `false`) solo puede asignarla un administrador y permite que el comparador
 restrinja un conjunto a estas parcelas mediante el filtro `soloParcelasReferencia`.

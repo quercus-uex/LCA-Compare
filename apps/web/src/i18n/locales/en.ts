@@ -169,6 +169,7 @@ export const en = {
     previousCrops: 'Previous crops',
     viewImpacts: 'View impacts',
     referenceBadge: 'Reference',
+    noLocation: 'Location not available',
   },
   resultados: {
     title: 'Impact result',

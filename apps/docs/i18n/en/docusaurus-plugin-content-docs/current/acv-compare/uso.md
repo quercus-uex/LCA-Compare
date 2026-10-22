@@ -25,7 +25,7 @@ To view the plots for your user, sign in, select the profile image, and choose *
     <img src="/img/acv-compare/mis_parcelas_ruta.png" alt="My plots view" width="600"/>
 </p>
 
-From the plot list, you can open the details for each plot, where its SIGPAC identifier, cadastral reference, a map with the plot polygon, and associated crops ordered by campaign are shown. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name.
+From the plot list, you can open the details for each plot, where its SIGPAC identifier, cadastral reference, a map with the plot polygon, and associated crops ordered by campaign are shown. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the comparator's geographic location filters.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Plot example" width="600"/>

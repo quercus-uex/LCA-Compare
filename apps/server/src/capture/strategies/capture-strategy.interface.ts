@@ -5,8 +5,9 @@ import type { CaptureInputDto } from '../dto/capture-input.dto';
 export type ParcelaMetadata = CaptureInputDto['metadatos']['parcela'];
 
 export interface ParcelaResolution {
-  polygon: Feature<Polygon>;
-  poblacion: Poblacion;
+  // null cuando no se pudo geolocalizar la parcela
+  polygon: Feature<Polygon> | null;
+  poblacion: Poblacion | null;
   sigpacKey: string | null;
 }
 

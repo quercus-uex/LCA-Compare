@@ -5,7 +5,7 @@ import * as React from 'react';
 import { apiFetch } from '../common/api.ts';
 
 export type Parcela = ParcelaBase & {
-  geom?: Polygon;
+  geom?: Polygon | null;
   cultivos?: Cultivo[];
 };
 

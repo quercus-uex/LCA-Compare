@@ -21,14 +21,14 @@ export const ParcelaRoute = () => {
       .catch(() => { void navigate('/404') });
   }, [id, navigate, p])
 
-  if (!parcela || !parcela.cultivos || !parcela.geom) return <div className="skeleton w-full h-full" />
+  if (!parcela || !parcela.cultivos) return <div className="skeleton w-full h-full" />
 
   return (
     <div className="flex flex-col gap-5 max-w-6xl">
       <div className="card w-full md:w-auto lg:card-side bg-base-100 shadow-sm">
         <figure>
           <MapPreview
-            polygon={parcela.geom}
+            polygon={parcela.geom ?? undefined}
             className="w-full md:w-96 aspect-square rounded-tl-md rounded-tb-md"
           />
         </figure>

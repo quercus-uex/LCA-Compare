@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { PredialCaptureStrategy } from './predial-capture.strategy';
 import { PredialService } from '../../predial/predial.service';
 import { PoblacionService } from '../../poblacion/poblacion.service';
@@ -26,7 +25,17 @@ describe('PredialCaptureStrategy', () => {
   >;
   const polygon: Feature<Polygon> = {
     type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [] },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-6.0, 39.0],
+          [-6.1, 39.1],
+          [-6.2, 39.0],
+          [-6.0, 39.0],
+        ],
+      ],
+    },
     properties: { provincia: 10, poblacion: 20 },
   };
 
@@ -73,13 +82,27 @@ describe('PredialCaptureStrategy', () => {
       );
     });
 
-    it('throws BadRequestException when the poblacion is not found', async () => {
+    it('keeps the polygon and returns a null poblacion when it is not found', async () => {
       predialService.getPolygon.mockResolvedValue(polygon);
       poblacionService.findByCatastroIds.mockResolvedValue(undefined);
 
-      await expect(strategy.resolveParcela(mParcela)).rejects.toThrow(
-        BadRequestException,
-      );
+      const result = await strategy.resolveParcela(mParcela);
+
+      expect(result.polygon).toBe(polygon);
+      expect(result.poblacion).toBeNull();
+    });
+
+    it('returns null polygon and poblacion when the predial lookup fails', async () => {
+      predialService.getPolygon.mockRejectedValue(new Error('Request failed'));
+
+      const result = await strategy.resolveParcela(mParcela);
+
+      expect(result).toEqual({
+        polygon: null,
+        poblacion: null,
+        sigpacKey: null,
+      });
+      expect(poblacionService.findByCatastroIds).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SigpacService } from '../../sigpac/sigpac.service';
 import { PoblacionService } from '../../poblacion/poblacion.service';
 import type {
@@ -6,9 +6,15 @@ import type {
   ParcelaMetadata,
   ParcelaResolution,
 } from './capture-strategy.interface';
+import {
+  findPoblacionSafely,
+  resolvePolygonSafely,
+} from './geolocation.helpers';
 
 @Injectable()
 export class SigpacCaptureStrategy implements CaptureStrategy {
+  private readonly logger = new Logger(SigpacCaptureStrategy.name);
+
   constructor(
     private readonly sigpacService: SigpacService,
     private readonly poblacionService: PoblacionService,
@@ -21,23 +27,22 @@ export class SigpacCaptureStrategy implements CaptureStrategy {
   async resolveParcela(mParcela: ParcelaMetadata): Promise<ParcelaResolution> {
     const sigpac = mParcela.es_sigpac!;
     const { provincia, municipio, poligono, parcela } = sigpac;
-    const polygon = await this.sigpacService.getPolygon(sigpac);
-    const poblacion = await this.poblacionService.findByCatastroIds(
-      provincia!,
-      municipio!,
+    const sigpacKey = `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`;
+
+    const polygon = await resolvePolygonSafely(
+      this.logger,
+      `SIGPAC ${sigpacKey}`,
+      () => this.sigpacService.getPolygon(sigpac),
+    );
+    const poblacion = await findPoblacionSafely(
+      this.logger,
+      `SIGPAC ${sigpacKey}`,
+      this.poblacionService,
+      provincia,
+      municipio,
       'ES',
     );
 
-    if (!poblacion) {
-      throw new BadRequestException(
-        'No se encontró la población para la parcela SIGPAC indicada',
-      );
-    }
-
-    return {
-      polygon,
-      poblacion,
-      sigpacKey: `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`,
-    };
+    return { polygon, poblacion, sigpacKey };
   }
 }

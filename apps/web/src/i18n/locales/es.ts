@@ -169,6 +169,7 @@ export const es = {
     previousCrops: 'Cultivos anteriores',
     viewImpacts: 'Ver impactos',
     referenceBadge: 'Referencia',
+    noLocation: 'Ubicación no disponible',
   },
   resultados: {
     title: 'Resultado de impacto',

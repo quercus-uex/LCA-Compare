@@ -85,10 +85,8 @@ describe('ParcelaService', () => {
     });
   });
 
-  describe('createWithGeom', () => {
-    it('creates the parcel in a transaction and executes geometry update', async () => {
-      const data = { nombre: 'Parcel A' } as never;
-      const createdParcela = { id: 'par1', nombre: 'Parcel A' } as never;
+  describe('setGeom', () => {
+    it('executes the geometry update for the given parcel', async () => {
       const geoJson = {
         type: 'Polygon',
         coordinates: [
@@ -99,22 +97,17 @@ describe('ParcelaService', () => {
             [-3.0, 40.0],
           ],
         ],
-      };
+      } as const;
+      prisma.$executeRaw.mockResolvedValue(1);
 
-      const tx = {
-        parcela: { create: jest.fn().mockResolvedValue(createdParcela) },
-        $executeRaw: jest.fn().mockResolvedValue(undefined),
-      };
-      prisma.$transaction.mockImplementation(
-        (cb: (tx: typeof tx) => Promise<unknown>) => cb(tx),
+      await service.setGeom('par1', geoJson as never);
+
+      expect(prisma.$executeRaw).toHaveBeenCalled();
+      expect(prisma.$executeRaw).toHaveBeenCalledWith(
+        expect.anything(),
+        JSON.stringify(geoJson),
+        'par1',
       );
-
-      const result = await service.createWithGeom(data, geoJson);
-
-      expect(prisma.$transaction).toHaveBeenCalled();
-      expect(tx.parcela.create).toHaveBeenCalledWith({ data });
-      expect(tx.$executeRaw).toHaveBeenCalled();
-      expect(result).toBe(createdParcela);
     });
   });
 

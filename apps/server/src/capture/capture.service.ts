@@ -55,17 +55,27 @@ export class CaptureService {
     const { polygon, poblacion, sigpacKey } =
       await strategy.resolveParcela(mParcela);
 
-    return this.parcelaService.createWithGeom(
-      {
-        sigpac: sigpacKey,
-        refCat: mParcela.es_referencia_catastral,
-        ptIdParcela: mParcela.pt_id_parcela_predial,
-        nombre: mParcela.nombre,
-        propietario: { connect: { id: idPropietario } },
-        poblacion: { connect: { id: poblacion.id } },
-      },
-      polygon.geometry,
-    );
+    const parcela = await this.parcelaService.create({
+      sigpac: sigpacKey,
+      refCat: mParcela.es_referencia_catastral,
+      ptIdParcela: mParcela.pt_id_parcela_predial,
+      nombre: mParcela.nombre,
+      propietario: { connect: { id: idPropietario } },
+      poblacion: poblacion ? { connect: { id: poblacion.id } } : undefined,
+    });
+
+    // La parcela se guarda aunque PostGIS rechace la geometría
+    if (polygon) {
+      try {
+        await this.parcelaService.setGeom(parcela.id, polygon.geometry);
+      } catch (error) {
+        this.logger.warn(
+          `Geometry could not be stored for parcela ${parcela.id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    return parcela;
   }
 
   async checkParcela(

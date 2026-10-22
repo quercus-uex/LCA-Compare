@@ -1,184 +1,203 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { apiRequest } from '../../common/api.ts';
+import { FiChevronDown, FiSearch, FiX } from 'react-icons/fi';
 import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
 import { safeString } from '../../common/utils.ts';
 import { useClickOutside } from '../../hooks/use-click-outside.ts';
+import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
+import { fetchOne, fetchPage } from './admin-api.ts';
+import { ENTITY_DISPLAY, type Entity, type Item } from './admin.config.ts';
 
-export interface FkConfig {
-  entity: string;
-  displayFields: string[];
-  endpoint: string;
-}
-
-interface IdLookupFieldProps {
-  name: string;
-  value: string;
-  onChange: (name: string, value: string) => void;
-  fkConfig: FkConfig;
-  disabled?: boolean;
-}
-
-interface LookupOption {
+type Props = {
   id: string;
-  label: string;
-}
+  entity: Entity;
+  value: string;
+  initialLabel?: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  invalid?: boolean;
+  clearable?: boolean;
+};
 
-export const IdLookupField = ({ name, value, onChange, fkConfig, disabled }: IdLookupFieldProps) => {
+type Option = { id: string; label: string; detail: string };
+
+const toOption = (entity: Entity, item: Item): Option => ({
+  id: safeString(item.id) ?? '',
+  label: ENTITY_DISPLAY[entity].label(item),
+  detail: ENTITY_DISPLAY[entity].detail?.(item) ?? '',
+});
+
+/** Selector de un registro relacionado con búsqueda en el servidor */
+export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disabled, invalid, clearable }: Props) => {
   const { t } = useTranslation();
-  const [options, setOptions] = useState<LookupOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query, 250);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [active, setActive] = useState(0);
+  const [labels, setLabels] = useState<Record<string, string>>(() =>
+    value && initialLabel ? { [value]: initialLabel } : {},
+  );
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const selectedLabel = useMemo(() => {
-    if (!value) return '';
-    const found = options.find((o) => o.id === value);
-    return found?.label ?? value;
-  }, [value, options]);
-
-  const loadOptions = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const params = new URLSearchParams();
-      params.set('skip', '0');
-      params.set('take', String(ADMIN_LOOKUP_TAKE));
-      const res = await apiRequest(`/admin/${fkConfig.endpoint}?${params}`, { signal });
-      setError(false);
-      if (!res.ok) throw new Error();
-      const json = (await res.json()) as { data?: Record<string, unknown>[] };
-      if (signal?.aborted) return;
-      const data = json.data ?? [];
-      const mapped: LookupOption[] = data.map((item) => ({
-        id: safeString(item.id) ?? '',
-        label: fkConfig.displayFields
-          .map((f) => safeString(item[f]) ?? '')
-          .filter(Boolean)
-          .join(' '),
-      }));
-      setOptions(mapped);
-    } catch (err) {
-      if (signal?.aborted || (err instanceof DOMException && err.name === 'AbortError')) return;
-      setError(true);
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [fkConfig.endpoint, fkConfig.displayFields]);
+  // Etiqueta del valor actual cuando no viene con el registro (p. ej. tras un cambio externo)
+  useEffect(() => {
+    if (!value || labels[value]) return;
+    const controller = new AbortController();
+    void fetchOne(entity, value, controller.signal)
+      .then((item) => {
+        if (item) setLabels((prev) => ({ ...prev, [value]: ENTITY_DISPLAY[entity].label(item) }));
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [entity, value, labels]);
 
   useEffect(() => {
+    if (!open) return;
     const controller = new AbortController();
-    void loadOptions(controller.signal);
+    setLoading(true);
+    setError(false);
+    fetchPage(entity, { search: debouncedQuery.trim(), skip: 0, take: ADMIN_LOOKUP_TAKE }, controller.signal)
+      .then(({ data }) => {
+        setOptions(data.map((item) => toOption(entity, item)));
+        setActive(0);
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setError(true);
+        setLoading(false);
+      });
     return () => controller.abort();
-  }, [loadOptions]);
+  }, [entity, debouncedQuery, open, reloadKey]);
 
-  useClickOutside(containerRef, () => setOpen(false));
-
-  const filteredOptions = useMemo(() => {
-    if (!search) return options;
-    const q = search.toLowerCase();
-    return options.filter((o) => o.label.toLowerCase().includes(q));
-  }, [options, search]);
-
-  const handleSelect = (option: LookupOption) => {
-    onChange(name, option.id);
+  const close = useCallback(() => {
     setOpen(false);
-    setSearch('');
+    setQuery('');
+  }, []);
+  useClickOutside(containerRef, close);
+
+  const select = (option: Option) => {
+    setLabels((prev) => ({ ...prev, [option.id]: option.label }));
+    onChange(option.id);
+    close();
   };
 
-  const handleClear = () => {
-    onChange(name, '');
-    setSearch('');
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!open && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+      e.preventDefault();
+      setOpen(true);
+      return;
+    }
+    if (!open) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, options.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const option = options[active];
+      if (option) select(option);
+    } else if (e.key === 'Escape') {
+      // Evita que el Escape cierre también el modal que contiene el campo
+      e.stopPropagation();
+      close();
+    }
   };
+
+  const currentLabel = value ? (labels[value] ?? t('admin.lookup.loading')) : '';
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex gap-1">
+      <label className={`input w-full ${invalid ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}>
+        {open && <FiSearch className="opacity-50 shrink-0" aria-hidden />}
         <input
+          id={id}
           type="text"
-          className="input input-bordered w-full cursor-pointer"
-          placeholder={t('common.actions.search')}
-          value={open ? search : selectedLabel}
-          readOnly={!open}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          autoComplete="off"
+          className="grow min-w-0"
+          placeholder={open ? t('admin.lookup.searchPlaceholder') : t('admin.lookup.selectPlaceholder')}
+          value={open ? query : currentLabel}
           disabled={disabled}
-          onClick={() => {
-            if (!disabled) {
-              setOpen(true);
-              setSearch('');
-            }
+          onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
           }}
-          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={onKeyDown}
         />
-        {value && !disabled && !open && (
+        {value && clearable && !disabled && !open && (
           <button
             type="button"
-            className="btn btn-ghost btn-sm btn-square shrink-0"
-            onClick={handleClear}
+            className="btn btn-ghost btn-xs btn-circle"
+            onClick={() => onChange('')}
+            aria-label={t('common.actions.clearSelection')}
             title={t('common.actions.clearSelection')}
           >
-            ✕
+            <FiX aria-hidden />
           </button>
         )}
-      </div>
+        <FiChevronDown className="opacity-50 shrink-0" aria-hidden />
+      </label>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-base-100 border border-base-300 rounded-box shadow-lg max-h-60 overflow-hidden">
-          <div className="px-2 pt-2 pb-1">
-            <input
-              type="text"
-              className="input input-bordered input-sm w-full"
-              placeholder="Filtrar..."
-              value={search}
-              // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: focus search on open
-              autoFocus
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="overflow-y-auto max-h-48">
-            {loading && (
-              <div className="p-4">
-                <div className="skeleton w-full h-8 mb-1" />
-                <div className="skeleton w-full h-8 mb-1" />
-                <div className="skeleton w-3/4 h-8" />
-              </div>
-            )}
-
-            {error && (
-              <div className="p-4 text-center text-error text-sm">
-                <p>{t('admin.messages.optionsError')}</p>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-xs mt-1"
-                  onClick={() => { setLoading(true); void loadOptions(); }}
-                >
-                  {t('common.actions.retry')}
-                </button>
-              </div>
-            )}
-
-            {!loading && !error && filteredOptions.length === 0 && (
-              <p className="p-3 text-center text-base-content/50 text-sm">
-                {search ? t('common.empty.noResults') : t('common.empty.noOptions')}
-              </p>
-            )}
-
-            {!loading &&
-              !error &&
-              filteredOptions.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-base-200 transition-colors ${
-                    option.id === value ? 'bg-base-200 font-semibold' : ''
-                  }`}
-                  onClick={() => handleSelect(option)}
-                >
-                  <span className="text-base-content/50 text-xs mr-2">#{option.id}</span>
-                  {option.label}
-                </button>
-              ))}
-          </div>
+        <div
+          id={listId}
+          role="listbox"
+          className="absolute z-50 mt-1 w-full bg-base-100 border border-base-300 rounded-box shadow-lg max-h-64 overflow-y-auto"
+        >
+          {loading && options.length === 0 && (
+            <div className="p-3 flex flex-col gap-2">
+              <div className="skeleton h-6 w-full" />
+              <div className="skeleton h-6 w-3/4" />
+            </div>
+          )}
+          {error && (
+            <div className="p-3 text-center text-sm">
+              <p>{t('admin.messages.optionsError')}</p>
+              <button type="button" className="btn btn-ghost btn-xs mt-1" onClick={() => setReloadKey((k) => k + 1)}>
+                {t('common.actions.retry')}
+              </button>
+            </div>
+          )}
+          {!loading && !error && options.length === 0 && (
+            <p className="p-3 text-center text-sm text-base-content/60">
+              {query ? t('common.empty.noResults') : t('common.empty.noOptions')}
+            </p>
+          )}
+          {!error &&
+            options.map((option, index) => (
+              <button
+                key={option.id}
+                type="button"
+                role="option"
+                aria-selected={option.id === value}
+                className={`w-full text-left px-3 py-2 text-sm flex flex-col transition-colors ${
+                  index === active ? 'bg-base-200' : ''
+                } ${option.id === value ? 'font-semibold' : ''} ${loading ? 'opacity-60' : ''}`}
+                onMouseEnter={() => setActive(index)}
+                onClick={() => select(option)}
+              >
+                <span>{option.label}</span>
+                {option.detail && <span className="text-xs text-base-content/60">{option.detail}</span>}
+              </button>
+            ))}
+          {!loading && !error && options.length === ADMIN_LOOKUP_TAKE && (
+            <p className="px-3 py-2 text-xs text-base-content/60 border-t border-base-200">
+              {t('admin.lookup.refine')}
+            </p>
+          )}
         </div>
       )}
     </div>

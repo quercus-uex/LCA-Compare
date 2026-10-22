@@ -5,6 +5,11 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+// Un texto vacío equivale a no tener identificador (los índices son únicos)
+const emptyToNull = ({ value }: { value: unknown }) =>
+  typeof value === 'string' && value.trim() === '' ? null : value;
 
 export class CreateParcelaDto {
   @IsString()
@@ -12,14 +17,17 @@ export class CreateParcelaDto {
   nombre: string;
 
   @IsOptional()
+  @Transform(emptyToNull)
   @IsString()
   sigpac?: string | null;
 
   @IsOptional()
+  @Transform(emptyToNull)
   @IsString()
   refCat?: string | null;
 
   @IsOptional()
+  @Transform(emptyToNull)
   @IsString()
   ptIdParcela?: string | null;
 
@@ -28,6 +36,7 @@ export class CreateParcelaDto {
   idPropietario: string;
 
   @IsOptional()
+  @Transform(emptyToNull)
   @IsUUID()
   idPoblacion?: string | null;
 

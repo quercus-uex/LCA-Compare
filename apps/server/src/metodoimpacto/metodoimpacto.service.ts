@@ -21,7 +21,9 @@ export class MetodoImpactoService {
     take?: number;
     cursor?: Prisma.MetodoImpactoWhereUniqueInput;
     where?: Prisma.MetodoImpactoWhereInput;
-    orderBy?: Prisma.MetodoImpactoOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.MetodoImpactoOrderByWithRelationInput
+      | Prisma.MetodoImpactoOrderByWithRelationInput[];
   }): Promise<MetodoImpacto[]> {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.metodoImpacto.findMany({

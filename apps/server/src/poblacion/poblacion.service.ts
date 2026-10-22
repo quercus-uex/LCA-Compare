@@ -25,7 +25,9 @@ export class PoblacionService {
     take?: number;
     cursor?: Prisma.PoblacionWhereUniqueInput;
     where?: Prisma.PoblacionWhereInput;
-    orderBy?: Prisma.PoblacionOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.PoblacionOrderByWithRelationInput
+      | Prisma.PoblacionOrderByWithRelationInput[];
   }): Promise<Poblacion[]> {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.poblacion.findMany({

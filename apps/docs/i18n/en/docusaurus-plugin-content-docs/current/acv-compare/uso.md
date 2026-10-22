@@ -91,7 +91,17 @@ You can also generate a detailed comparison report in **PDF** by clicking **Gene
 
 ## Administration
 
-If the signed-in user has the administrator role, they are automatically redirected to the administration panel. From there, they can manage users, plots, crops, impact methods, countries, provinces, and towns. The panel includes search, pagination, create, edit, delete, and helpers for selecting related entity identifiers. In addition, the plot management section allows marking or unmarking a plot as a **reference plot**.
+If the signed-in user has the administrator role, they are automatically redirected to the administration panel. The side menu groups the sections into **Data** (users, plots and crops) and **Catalogs** (impact methods, countries, provinces and towns), with the number of records in each one. Each section allows searching, paginating, creating, editing and deleting records. Related records (owner, town, plot...) are shown by name, are chosen with a search box and, when clicked, open their section filtered by that record. The section and the filters are kept in the page address, so they can be reloaded or shared.
+
+The plot management section allows marking or unmarking a plot as a **reference plot** and assigning a town to plots that have none: the panel shows how many there are and lets you filter them with **Only without town**. A plot without a town does not appear in the comparator's country, province or town filters.
+
+When deleting:
+
+- a plot, its crops and their impact results are also deleted;
+- a crop, its impact result is also deleted;
+- a user with plots, a country with provinces, a province with towns, a town with plots or an impact method with results, the panel prevents it and explains why.
+
+An administrator cannot delete their own account or remove their own administrator role.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Administration panel" width="600"/>

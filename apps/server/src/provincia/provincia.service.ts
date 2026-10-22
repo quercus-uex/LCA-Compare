@@ -21,15 +21,19 @@ export class ProvinciaService {
     take?: number;
     cursor?: Prisma.ProvinciaWhereUniqueInput;
     where?: Prisma.ProvinciaWhereInput;
-    orderBy?: Prisma.ProvinciaOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.ProvinciaOrderByWithRelationInput
+      | Prisma.ProvinciaOrderByWithRelationInput[];
+    include?: Prisma.ProvinciaInclude;
   }): Promise<Provincia[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.provincia.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 

@@ -108,9 +108,24 @@ la interfaz.
 ## Administración
 
 Si el usuario que inicia sesión tiene rol de administrador, será redirigido automáticamente al panel de administración.
-Desde allí podrá gestionar usuarios, parcelas, cultivos, métodos de impacto, países, provincias y poblaciones. El panel
-incluye búsqueda, paginación, creación, edición, borrado y ayudas para seleccionar identificadores de entidades
-relacionadas. Además, desde la gestión de parcelas se puede marcar o desmarcar una parcela como **parcela de referencia**.
+El menú lateral agrupa las secciones en **Datos** (usuarios, parcelas y cultivos) y **Catálogos** (métodos de impacto,
+países, provincias y poblaciones), con el número de registros de cada una. En cada sección se puede buscar, paginar,
+crear, editar y eliminar registros. Los registros relacionados (propietario, población, parcela...) se muestran por su
+nombre, se eligen con un buscador y, al pulsarlos, abren su sección filtrada por ese registro. La sección y los filtros se
+guardan en la dirección de la página, por lo que se pueden recargar o compartir.
+
+Desde la gestión de parcelas se puede marcar o desmarcar una parcela como **parcela de referencia** y asignar la
+población a las parcelas que no la tienen: el panel avisa de cuántas hay y permite filtrarlas con **Solo sin población**.
+Una parcela sin población no aparece en los filtros por país, provincia o población del comparador.
+
+Al eliminar:
+
+- una parcela, se eliminan también sus cultivos y sus resultados de impacto;
+- un cultivo, se elimina también su resultado de impacto;
+- un usuario con parcelas, un país con provincias, una provincia con poblaciones, una población con parcelas o un método
+  de impacto con resultados, el panel lo impide y explica el motivo.
+
+Un administrador no puede eliminar su propia cuenta ni quitarse el rol de administrador.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Panel de administración" width="600"/>

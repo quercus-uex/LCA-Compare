@@ -21,7 +21,9 @@ export class PaisService {
     take?: number;
     cursor?: Prisma.PaisWhereUniqueInput;
     where?: Prisma.PaisWhereInput;
-    orderBy?: Prisma.PaisOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.PaisOrderByWithRelationInput
+      | Prisma.PaisOrderByWithRelationInput[];
   }): Promise<Pais[]> {
     const { skip, take, cursor, where, orderBy } = params;
 

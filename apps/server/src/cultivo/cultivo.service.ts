@@ -50,9 +50,12 @@ export class CultivoService {
     take?: number;
     cursor?: Prisma.CultivoWhereUniqueInput;
     where?: Prisma.CultivoWhereInput;
-    orderBy?: Prisma.CultivoOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.CultivoOrderByWithRelationInput
+      | Prisma.CultivoOrderByWithRelationInput[];
+    include?: Prisma.CultivoInclude;
   }): Promise<Cultivo[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    const { skip, take, cursor, where, orderBy, include } = params;
 
     return this.prisma.cultivo.findMany({
       skip,
@@ -60,6 +63,7 @@ export class CultivoService {
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 
@@ -85,6 +89,19 @@ export class CultivoService {
 
   async delete(where: Prisma.CultivoWhereUniqueInput): Promise<Cultivo> {
     return this.prisma.cultivo.delete({ where });
+  }
+
+  /** Elimina el cultivo y su resultado de impacto, que no tiene sentido sin él */
+  async deleteWithResultado(id: string): Promise<Cultivo> {
+    return this.prisma.$transaction(async (tx) => {
+      const cultivo = await tx.cultivo.delete({ where: { id } });
+      if (cultivo.idResultadoImpacto) {
+        await tx.resultadoImpacto.delete({
+          where: { id: cultivo.idResultadoImpacto },
+        });
+      }
+      return cultivo;
+    });
   }
 
   async count(where?: Prisma.CultivoWhereInput): Promise<number> {

@@ -25,7 +25,9 @@ export class ParcelaService {
     take?: number;
     cursor?: Prisma.ParcelaWhereUniqueInput;
     where?: Prisma.ParcelaWhereInput;
-    orderBy?: Prisma.ParcelaOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.ParcelaOrderByWithRelationInput
+      | Prisma.ParcelaOrderByWithRelationInput[];
     include?: Prisma.ParcelaInclude;
   }): Promise<Parcela[]> {
     const { skip, take, cursor, where, orderBy, include } = params;
@@ -108,6 +110,25 @@ export class ParcelaService {
 
   async delete(where: Prisma.ParcelaWhereUniqueInput): Promise<Parcela> {
     return this.prisma.parcela.delete({ where });
+  }
+
+  /** Elimina la parcela junto con sus cultivos y los resultados de estos */
+  async deleteWithCultivos(id: string): Promise<Parcela> {
+    return this.prisma.$transaction(async (tx) => {
+      const cultivos = await tx.cultivo.findMany({
+        where: { idParcela: id },
+        select: { idResultadoImpacto: true },
+      });
+      const idsResultado = cultivos
+        .map((c) => c.idResultadoImpacto)
+        .filter((idResultado): idResultado is string => idResultado !== null);
+
+      await tx.cultivo.deleteMany({ where: { idParcela: id } });
+      await tx.resultadoImpacto.deleteMany({
+        where: { id: { in: idsResultado } },
+      });
+      return tx.parcela.delete({ where: { id } });
+    });
   }
 
   async count(where?: Prisma.ParcelaWhereInput): Promise<number> {

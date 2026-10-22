@@ -30,7 +30,9 @@ export class UsuarioService {
     take?: number;
     cursor?: Prisma.UsuarioWhereUniqueInput;
     where?: Prisma.UsuarioWhereInput;
-    orderBy?: Prisma.UsuarioOrderByWithRelationInput;
+    orderBy?:
+      | Prisma.UsuarioOrderByWithRelationInput
+      | Prisma.UsuarioOrderByWithRelationInput[];
   }): Promise<UsuarioPublico[]> {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.usuario.findMany({

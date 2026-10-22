@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,9 +9,12 @@ import {
   Post,
   Put,
   Query,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from './admin.guard';
+import { AdminPrismaExceptionFilter } from './admin-prisma-exception.filter';
+import { AuthUser, type UserJwt } from '../auth/auth-user.decorator';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -53,7 +57,9 @@ import {
   poblacionAdminSearch,
   provinciaAdminSearch,
   usuarioAdminSearch,
+  andWhere,
 } from './helpers/admin-search.helpers';
+import { parseAdminPagination } from './helpers/admin-pagination.helpers';
 import { UsuarioService } from '../usuario/usuario.service';
 import { ParcelaService } from '../parcela/parcela.service';
 import { CultivoService } from '../cultivo/cultivo.service';
@@ -74,9 +80,20 @@ import * as argon2 from 'argon2';
 
 type Paginated<T> = { data: T[]; total: number };
 
+const PARCELA_ADMIN_INCLUDE = {
+  cultivos: { orderBy: { fechaInicioCampania: 'desc' } },
+  propietario: {
+    select: { id: true, nombre: true, apellidos: true, email: true },
+  },
+  poblacion: {
+    select: { id: true, nombre: true, provincia: { select: { nombre: true } } },
+  },
+} as const;
+
 @ApiTags('Admin')
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
+@UseFilters(AdminPrismaExceptionFilter)
 @Controller('/admin')
 export class AdminController {
   constructor(
@@ -88,6 +105,44 @@ export class AdminController {
     private readonly provinciaService: ProvinciaService,
     private readonly poblacionService: PoblacionService,
   ) {}
+
+  // ─── Resumen ───
+
+  @Get('/resumen')
+  @ApiOperation({ summary: 'Número de registros de cada entidad del panel' })
+  async getResumen() {
+    const [
+      usuarios,
+      parcelas,
+      parcelasSinPoblacion,
+      cultivos,
+      metodosImpacto,
+      paises,
+      provincias,
+      poblaciones,
+    ] = await Promise.all([
+      this.usuarioService.count(),
+      this.parcelaService.count(),
+      this.parcelaService.count({ idPoblacion: null }),
+      this.cultivoService.count(),
+      this.metodoImpactoService.count(),
+      this.paisService.count(),
+      this.provinciaService.count(),
+      this.poblacionService.count(),
+    ]);
+    return {
+      data: {
+        usuarios,
+        parcelas,
+        parcelasSinPoblacion,
+        cultivos,
+        'metodos-impacto': metodosImpacto,
+        paises,
+        provincias,
+        poblaciones,
+      },
+    };
+  }
 
   // ─── Usuarios ───
 
@@ -111,8 +166,8 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.usuarioService.findAll({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        orderBy: [{ nombre: 'asc' }, { apellidos: 'asc' }, { id: 'asc' }],
+        ...parseAdminPagination(skip, take),
       }),
       this.usuarioService.count(where),
     ]);
@@ -147,9 +202,15 @@ export class AdminController {
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(UsuarioDto) })
   async updateUsuario(
+    @AuthUser() user: UserJwt,
     @Param('id') id: string,
     @Body() body: UpdateUsuarioAdminDto,
   ) {
+    if (id === user.sub && body.rol && body.rol !== 'admin') {
+      throw new BadRequestException(
+        'No puedes quitarte el rol de administrador a ti mismo',
+      );
+    }
     const data = { ...body };
     if (typeof body.passwordHash === 'string') {
       data.passwordHash = await argon2.hash(body.passwordHash, {
@@ -168,7 +229,10 @@ export class AdminController {
   @ApiOperation({ summary: 'Eliminar un usuario' })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(UsuarioDto) })
-  async deleteUsuario(@Param('id') id: string) {
+  async deleteUsuario(@AuthUser() user: UserJwt, @Param('id') id: string) {
+    if (id === user.sub) {
+      throw new BadRequestException('No puedes eliminar tu propia cuenta');
+    }
     return { data: await this.usuarioService.delete({ id }) };
   }
 
@@ -179,19 +243,29 @@ export class AdminController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
+  @ApiQuery({
+    name: 'sinPoblacion',
+    required: false,
+    type: Boolean,
+    description: 'Solo parcelas sin población asignada',
+  })
   @ApiOkResponse({ type: ApiResponseArrayDto(ParcelaDto) })
   async getParcelas(
     @Query('search') search?: string,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
+    @Query('sinPoblacion') sinPoblacion?: string,
   ): Promise<Paginated<Parcela>> {
-    const where = parcelaAdminSearch(search);
+    const where = andWhere(
+      parcelaAdminSearch(search),
+      sinPoblacion === 'true' ? { idPoblacion: null } : undefined,
+    );
     const [data, total] = await Promise.all([
       this.parcelaService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
-        include: { cultivos: { orderBy: { fechaInicioCampania: 'desc' } } },
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+        include: PARCELA_ADMIN_INCLUDE,
       }),
       this.parcelaService.count(where),
     ]);
@@ -229,11 +303,13 @@ export class AdminController {
   }
 
   @Delete('/parcelas/:id')
-  @ApiOperation({ summary: 'Eliminar una parcela' })
+  @ApiOperation({
+    summary: 'Eliminar una parcela con sus cultivos y resultados de impacto',
+  })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(ParcelaDto) })
   async deleteParcela(@Param('id') id: string) {
-    return { data: await this.parcelaService.delete({ id }) };
+    return { data: await this.parcelaService.deleteWithCultivos(id) };
   }
 
   // ─── Cultivos ───
@@ -253,8 +329,9 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.cultivoService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ fechaInicioCampania: 'desc' }, { id: 'asc' }],
+        include: { parcela: { select: { id: true, nombre: true } } },
       }),
       this.cultivoService.count(where),
     ]);
@@ -292,11 +369,11 @@ export class AdminController {
   }
 
   @Delete('/cultivos/:id')
-  @ApiOperation({ summary: 'Eliminar un cultivo' })
+  @ApiOperation({ summary: 'Eliminar un cultivo y su resultado de impacto' })
   @ApiNotFoundResponse({ type: ApiErrorDto })
   @ApiOkResponse({ type: ApiResponseDto(CultivoDto) })
   async deleteCultivo(@Param('id') id: string) {
-    return { data: await this.cultivoService.delete({ id }) };
+    return { data: await this.cultivoService.deleteWithResultado(id) };
   }
 
   // ─── Métodos de Impacto ───
@@ -318,8 +395,8 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.metodoImpactoService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
       }),
       this.metodoImpactoService.count(where),
     ]);
@@ -384,8 +461,8 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.paisService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
       }),
       this.paisService.count(where),
     ]);
@@ -444,8 +521,9 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.provinciaService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+        include: { pais: { select: { id: true, nombre: true } } },
       }),
       this.provinciaService.count(where),
     ]);
@@ -510,8 +588,8 @@ export class AdminController {
     const [data, total] = await Promise.all([
       this.poblacionService.findMany({
         where,
-        skip: skip ? Number(skip) : undefined,
-        take: take ? Number(take) : undefined,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
       }),
       this.poblacionService.count(where),
     ]);

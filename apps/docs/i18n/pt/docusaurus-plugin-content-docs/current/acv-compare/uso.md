@@ -91,7 +91,17 @@ Também pode gerar um relatório detalhado da comparação em **PDF** clicando e
 
 ## Administração
 
-Se o utilizador que inicia sessão tiver o papel de administrador, será redirecionado automaticamente para o painel de administração. A partir daí poderá gerir utilizadores, parcelas, culturas, métodos de impacto, países, províncias e localidades. O painel inclui pesquisa, paginação, criação, edição, eliminação e ajudas para selecionar identificadores de entidades relacionadas. Além disso, a gestão de parcelas permite marcar ou desmarcar uma parcela como **parcela de referência**.
+Se o utilizador que inicia sessão tiver o papel de administrador, será redirecionado automaticamente para o painel de administração. O menu lateral agrupa as secções em **Dados** (utilizadores, parcelas e culturas) e **Catálogos** (métodos de impacto, países, províncias e localidades), com o número de registos de cada uma. Em cada secção é possível pesquisar, paginar, criar, editar e eliminar registos. Os registos relacionados (proprietário, localidade, parcela...) são apresentados pelo nome, escolhem-se com uma caixa de pesquisa e, ao clicar neles, abrem a sua secção filtrada por esse registo. A secção e os filtros ficam guardados no endereço da página, pelo que podem ser recarregados ou partilhados.
+
+A gestão de parcelas permite marcar ou desmarcar uma parcela como **parcela de referência** e atribuir a localidade às parcelas que não a têm: o painel indica quantas existem e permite filtrá-las com **Só sem localidade**. Uma parcela sem localidade não aparece nos filtros por país, província ou localidade do comparador.
+
+Ao eliminar:
+
+- uma parcela, são eliminadas também as suas culturas e os seus resultados de impacto;
+- uma cultura, é eliminado também o seu resultado de impacto;
+- um utilizador com parcelas, um país com províncias, uma província com localidades, uma localidade com parcelas ou um método de impacto com resultados, o painel impede-o e explica o motivo.
+
+Um administrador não pode eliminar a sua própria conta nem retirar a si próprio o papel de administrador.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Painel de administração" width="600"/>

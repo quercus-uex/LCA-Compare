@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { AdminController } from './admin.controller';
 
@@ -44,17 +44,29 @@ type ResourceConfig = {
   updateMethod: keyof AdminController;
   deleteMethod: keyof AdminController;
   searchFields: string[];
+  relatedSearch?: Record<string, unknown>[];
   notFoundMessage: string;
+  orderBy: unknown;
   include?: unknown;
+  deleteServiceMethod?: string;
 };
 
 const hashMock = jest.mocked(argon2.hash);
 
-const textSearch = (fields: string[], search: string) => ({
-  OR: fields.map((field) => ({
-    [field]: { contains: search, mode: 'insensitive' },
-  })),
+const contains = (search: string) => ({
+  contains: search,
+  mode: 'insensitive',
 });
+
+const textSearch = (
+  fields: string[],
+  search: string,
+  related: Record<string, unknown>[] = [],
+) => ({
+  OR: [...fields.map((field) => ({ [field]: contains(search) })), ...related],
+});
+
+const admin = { sub: 'admin-1', email: 'admin@example.com' };
 
 const createMockService = (methods: string[]): MockService =>
   Object.fromEntries(methods.map((method) => [method, jest.fn()]));
@@ -75,8 +87,28 @@ const resourceConfigs: ResourceConfig[] = [
       'ptIdParcela',
       'idPropietario',
     ],
+    relatedSearch: [
+      { propietario: { nombre: contains('search-term') } },
+      { propietario: { apellidos: contains('search-term') } },
+      { propietario: { email: contains('search-term') } },
+      { poblacion: { nombre: contains('search-term') } },
+    ],
     notFoundMessage: 'Parcela no encontrada',
-    include: { cultivos: { orderBy: { fechaInicioCampania: 'desc' } } },
+    orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+    include: {
+      cultivos: { orderBy: { fechaInicioCampania: 'desc' } },
+      propietario: {
+        select: { id: true, nombre: true, apellidos: true, email: true },
+      },
+      poblacion: {
+        select: {
+          id: true,
+          nombre: true,
+          provincia: { select: { nombre: true } },
+        },
+      },
+    },
+    deleteServiceMethod: 'deleteWithCultivos',
   },
   {
     name: 'cultivos',
@@ -87,7 +119,11 @@ const resourceConfigs: ResourceConfig[] = [
     updateMethod: 'updateCultivo',
     deleteMethod: 'deleteCultivo',
     searchFields: ['tipo', 'idParcela'],
+    relatedSearch: [{ parcela: { nombre: contains('search-term') } }],
     notFoundMessage: 'Cultivo no encontrado',
+    orderBy: [{ fechaInicioCampania: 'desc' }, { id: 'asc' }],
+    include: { parcela: { select: { id: true, nombre: true } } },
+    deleteServiceMethod: 'deleteWithResultado',
   },
   {
     name: 'metodos de impacto',
@@ -99,6 +135,7 @@ const resourceConfigs: ResourceConfig[] = [
     deleteMethod: 'deleteMetodoImpacto',
     searchFields: ['id', 'nombre'],
     notFoundMessage: 'Método de impacto no encontrado',
+    orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
   },
   {
     name: 'paises',
@@ -110,6 +147,7 @@ const resourceConfigs: ResourceConfig[] = [
     deleteMethod: 'deletePais',
     searchFields: ['nombre', 'codigo'],
     notFoundMessage: 'País no encontrado',
+    orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
   },
   {
     name: 'provincias',
@@ -120,7 +158,10 @@ const resourceConfigs: ResourceConfig[] = [
     updateMethod: 'updateProvincia',
     deleteMethod: 'deleteProvincia',
     searchFields: ['nombre', 'idPais'],
+    relatedSearch: [{ pais: { nombre: contains('search-term') } }],
     notFoundMessage: 'Provincia no encontrada',
+    orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+    include: { pais: { select: { id: true, nombre: true } } },
   },
   {
     name: 'poblaciones',
@@ -131,7 +172,9 @@ const resourceConfigs: ResourceConfig[] = [
     updateMethod: 'updatePoblacion',
     deleteMethod: 'deletePoblacion',
     searchFields: ['nombre', 'idProvincia'],
+    relatedSearch: [{ provincia: { nombre: contains('search-term') } }],
     notFoundMessage: 'Población no encontrada',
+    orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
   },
 ];
 
@@ -161,6 +204,7 @@ describe('AdminController', () => {
       'create',
       'update',
       'delete',
+      'deleteWithCultivos',
     ]);
     cultivoService = createMockService([
       'findMany',
@@ -169,6 +213,7 @@ describe('AdminController', () => {
       'create',
       'update',
       'delete',
+      'deleteWithResultado',
     ]);
     metodoImpactoService = createMockService([
       'findMany',
@@ -231,6 +276,7 @@ describe('AdminController', () => {
       );
       expect(usuarioService.findAll).toHaveBeenCalledWith({
         where,
+        orderBy: [{ nombre: 'asc' }, { apellidos: 'asc' }, { id: 'asc' }],
         skip: 5,
         take: 10,
       });
@@ -288,7 +334,9 @@ describe('AdminController', () => {
       hashMock.mockResolvedValue('hashed-password');
       usuarioService.update.mockResolvedValue(updated);
 
-      await expect(controller.updateUsuario('user-1', body)).resolves.toEqual({
+      await expect(
+        controller.updateUsuario(admin, 'user-1', body),
+      ).resolves.toEqual({
         data: updated,
       });
       expect(hashMock).toHaveBeenCalledWith('plain-password', {
@@ -304,10 +352,67 @@ describe('AdminController', () => {
       const deleted = { id: 'user-1' };
       usuarioService.delete.mockResolvedValue(deleted);
 
-      await expect(controller.deleteUsuario('user-1')).resolves.toEqual({
+      await expect(controller.deleteUsuario(admin, 'user-1')).resolves.toEqual({
         data: deleted,
       });
       expect(usuarioService.delete).toHaveBeenCalledWith({ id: 'user-1' });
+    });
+
+    it('refuses to delete the logged-in admin', async () => {
+      await expect(controller.deleteUsuario(admin, admin.sub)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(usuarioService.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuses to remove the admin role from the logged-in admin', async () => {
+      await expect(
+        controller.updateUsuario(admin, admin.sub, { rol: 'usuario' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(usuarioService.update).not.toHaveBeenCalled();
+    });
+
+    it('matches users by exact id when the search is a UUID', async () => {
+      const id = '0f8fad5b-d9cb-469f-a165-70867728950e';
+      usuarioService.findAll.mockResolvedValue([]);
+      usuarioService.count.mockResolvedValue(0);
+
+      await controller.getUsuarios(id);
+
+      expect(usuarioService.count).toHaveBeenCalledWith({
+        OR: [
+          ...['nombre', 'apellidos', 'email', 'rol'].map((field) => ({
+            [field]: contains(id),
+          })),
+          { id },
+        ],
+      });
+    });
+
+    it('also searches the term without accents', async () => {
+      usuarioService.findAll.mockResolvedValue([]);
+      usuarioService.count.mockResolvedValue(0);
+
+      await controller.getUsuarios('José');
+
+      const fields = ['nombre', 'apellidos', 'email', 'rol'];
+      expect(usuarioService.count).toHaveBeenCalledWith({
+        OR: [
+          ...fields.map((field) => ({ [field]: contains('José') })),
+          ...fields.map((field) => ({ [field]: contains('Jose') })),
+        ],
+      });
+    });
+
+    it('ignores invalid pagination values and caps take', async () => {
+      usuarioService.findAll.mockResolvedValue([]);
+      usuarioService.count.mockResolvedValue(0);
+
+      await controller.getUsuarios(undefined, 'abc', '5000');
+
+      expect(usuarioService.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: undefined, take: 100 }),
+      );
     });
   });
 
@@ -317,9 +422,14 @@ describe('AdminController', () => {
       async (config) => {
         const service = serviceFor(config.serviceName);
         const data = [{ id: `${config.name}-1` }];
-        const where = textSearch(config.searchFields, 'search-term');
+        const where = textSearch(
+          config.searchFields,
+          'search-term',
+          config.relatedSearch,
+        );
         const expectedFindManyArgs: Record<string, unknown> = {
           where,
+          orderBy: config.orderBy,
           skip: 2,
           take: 20,
         };
@@ -335,18 +445,44 @@ describe('AdminController', () => {
       },
     );
 
-    it('requests parcelas with cultivos ordered by descending campaign start date', async () => {
+    it('filters parcelas without poblacion, combined with the search', async () => {
       parcelaService.findMany.mockResolvedValue([]);
       parcelaService.count.mockResolvedValue(0);
 
-      await controller.getParcelas('field', '0', '5');
-      expect(parcelaService.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: {
-            cultivos: { orderBy: { fechaInicioCampania: 'desc' } },
-          },
-        }),
-      );
+      await controller.getParcelas(undefined, '0', '5', 'true');
+      expect(parcelaService.count).toHaveBeenCalledWith({ idPoblacion: null });
+
+      await controller.getParcelas('field', '0', '5', 'true');
+      expect(parcelaService.count).toHaveBeenLastCalledWith({
+        AND: [
+          expect.objectContaining({ OR: expect.any(Array) }),
+          { idPoblacion: null },
+        ],
+      });
+    });
+
+    it('returns the record count of every entity', async () => {
+      usuarioService.count.mockResolvedValue(3);
+      parcelaService.count.mockResolvedValueOnce(10).mockResolvedValueOnce(2);
+      cultivoService.count.mockResolvedValue(20);
+      metodoImpactoService.count.mockResolvedValue(1);
+      paisService.count.mockResolvedValue(2);
+      provinciaService.count.mockResolvedValue(70);
+      poblacionService.count.mockResolvedValue(8000);
+
+      await expect(controller.getResumen()).resolves.toEqual({
+        data: {
+          usuarios: 3,
+          parcelas: 10,
+          parcelasSinPoblacion: 2,
+          cultivos: 20,
+          'metodos-impacto': 1,
+          paises: 2,
+          provincias: 70,
+          poblaciones: 8000,
+        },
+      });
+      expect(parcelaService.count).toHaveBeenCalledWith({ idPoblacion: null });
     });
 
     it.each(resourceConfigs)(
@@ -417,14 +553,19 @@ describe('AdminController', () => {
       async (config) => {
         const service = serviceFor(config.serviceName);
         const deleted = { id: `${config.name}-1` };
-        service.delete.mockResolvedValue(deleted);
+        const deleteMock = config.deleteServiceMethod
+          ? service[config.deleteServiceMethod]
+          : service.delete;
+        deleteMock.mockResolvedValue(deleted);
 
         await expect(
           callController(config.deleteMethod, deleted.id),
         ).resolves.toEqual({
           data: deleted,
         });
-        expect(service.delete).toHaveBeenCalledWith({ id: deleted.id });
+        expect(deleteMock).toHaveBeenCalledWith(
+          config.deleteServiceMethod ? deleted.id : { id: deleted.id },
+        );
       },
     );
   });

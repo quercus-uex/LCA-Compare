@@ -205,6 +205,41 @@ describe('ParcelaService', () => {
     });
   });
 
+  describe('deleteWithCultivos', () => {
+    it('deletes the cultivos, their results and the parcel in one transaction', async () => {
+      const parcela = { id: 'par1' } as never;
+      const tx = {
+        cultivo: {
+          findMany: jest
+            .fn()
+            .mockResolvedValue([
+              { idResultadoImpacto: 'r1' },
+              { idResultadoImpacto: null },
+            ]),
+          deleteMany: jest.fn().mockResolvedValue({ count: 2 }),
+        },
+        resultadoImpacto: {
+          deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+        parcela: { delete: jest.fn().mockResolvedValue(parcela) },
+      };
+      prisma.$transaction.mockImplementation(
+        (cb: (t: typeof tx) => Promise<unknown>) => cb(tx),
+      );
+
+      const result = await service.deleteWithCultivos('par1');
+
+      expect(tx.cultivo.deleteMany).toHaveBeenCalledWith({
+        where: { idParcela: 'par1' },
+      });
+      expect(tx.resultadoImpacto.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['r1'] } },
+      });
+      expect(tx.parcela.delete).toHaveBeenCalledWith({ where: { id: 'par1' } });
+      expect(result).toBe(parcela);
+    });
+  });
+
   describe('count', () => {
     it('calls prisma.parcela.count with the given where filter', async () => {
       prisma.parcela.count.mockResolvedValue(15);

@@ -1,81 +1,65 @@
+import { EF_CATEGORIES } from 'common/impact';
+import type { CategoryValues } from 'common/stats';
 import { aggregateEvolucionByYear } from './evolucion-temporal.helpers';
-import { buildEfCategoryLookup } from '../stats-aggregation.helpers';
-import type { ImpactoDatos } from '../stats-aggregation.helpers';
-import type { CultivoWithFecha } from './stats.types';
+import type { StatsRow } from './stats-rows.helpers';
 
-function makeCultivo(
-  year: number,
-  idResultadoImpacto: string | null = 'ri-1',
-): CultivoWithFecha {
+function categorias(values: Partial<CategoryValues>): CategoryValues {
+  const record = {} as CategoryValues;
+  for (const cat of EF_CATEGORIES) record[cat.id] = values[cat.id] ?? 0;
+  return record;
+}
+
+function makeRow(anio: number, climateChange?: number): StatsRow {
   return {
-    idResultadoImpacto,
-    fechaInicioCampania: new Date(year, 5, 1),
+    idParcela: 'par-1',
+    tipo: 'trigo',
+    anio,
+    superficie: 10,
+    produccion: 1000,
+    consumoAgua: 500,
+    categorias:
+      climateChange === undefined
+        ? null
+        : categorias({ climate_change: climateChange }),
+    poblacion: null,
+    provincia: null,
   };
 }
 
-function makeImpactoMap(
-  entries: Record<
-    string,
-    { impacto_total: Array<{ category: string; amount: number }> }
-  >,
-): Map<string, ImpactoDatos> {
-  const map = new Map<string, ImpactoDatos>();
-  for (const [id, datos] of Object.entries(entries)) {
-    map.set(id, datos);
-  }
-  return map;
-}
-
 describe('evolucion-temporal.helpers', () => {
-  const lookup = buildEfCategoryLookup();
+  describe('aggregateEvolucionByYear', () => {
+    it('returns one point per year sorted ascending', () => {
+      const result = aggregateEvolucionByYear([
+        makeRow(2024, 10),
+        makeRow(2022, 30),
+        makeRow(2023, 20),
+      ]);
 
-  it('returns an empty array when there are no cultivos', () => {
-    expect(aggregateEvolucionByYear([], new Map(), lookup)).toEqual([]);
-  });
-
-  it('groups cultivos by year and computes mean categories', () => {
-    const cultivos = [
-      makeCultivo(2023, 'ri-1'),
-      makeCultivo(2024, 'ri-2'),
-      makeCultivo(2024, 'ri-3'),
-    ];
-    const impactoMap = makeImpactoMap({
-      'ri-1': { impacto_total: [{ category: 'Climate change', amount: 30 }] },
-      'ri-2': { impacto_total: [{ category: 'Climate change', amount: 50 }] },
-      'ri-3': { impacto_total: [{ category: 'Climate change', amount: 70 }] },
+      expect(result.map((r) => r.anio)).toEqual([2022, 2023, 2024]);
     });
 
-    const result = aggregateEvolucionByYear(cultivos, impactoMap, lookup);
+    it('counts every crop of the year but averages only those with impacts', () => {
+      const [point] = aggregateEvolucionByYear([
+        makeRow(2024, 10),
+        makeRow(2024, 30),
+        makeRow(2024),
+      ]);
 
-    expect(result).toHaveLength(2);
-    expect(result[0].anio).toBe(2023);
-    expect(result[0].numCultivos).toBe(1);
-    expect(result[0].categorias.climate_change).toBe(30);
-    expect(result[1].anio).toBe(2024);
-    expect(result[1].numCultivos).toBe(2);
-    expect(result[1].categorias.climate_change).toBe(60);
-  });
-
-  it('counts cultivos without impacto in numCultivos but excludes them from categorias', () => {
-    const cultivos = [makeCultivo(2024, null), makeCultivo(2024, 'ri-2')];
-    const impactoMap = makeImpactoMap({
-      'ri-2': { impacto_total: [{ category: 'Climate change', amount: 80 }] },
+      expect(point.numCultivos).toBe(3);
+      expect(point.categorias.climate_change).toBe(20);
     });
 
-    const result = aggregateEvolucionByYear(cultivos, impactoMap, lookup);
+    it('skips years without impact results', () => {
+      const result = aggregateEvolucionByYear([
+        makeRow(2023),
+        makeRow(2024, 5),
+      ]);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].numCultivos).toBe(2);
-    expect(result[0].categorias.climate_change).toBe(80);
-  });
-
-  it('sorts results by year ascending', () => {
-    const cultivos = [makeCultivo(2025), makeCultivo(2023), makeCultivo(2024)];
-    const impactoMap = makeImpactoMap({
-      'ri-1': { impacto_total: [{ category: 'Climate change', amount: 10 }] },
+      expect(result.map((r) => r.anio)).toEqual([2024]);
     });
 
-    const result = aggregateEvolucionByYear(cultivos, impactoMap, lookup);
-    expect(result.map((r) => r.anio)).toEqual([2023, 2024, 2025]);
+    it('returns an empty list without rows', () => {
+      expect(aggregateEvolucionByYear([])).toEqual([]);
+    });
   });
 });

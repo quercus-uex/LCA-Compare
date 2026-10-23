@@ -1,191 +1,204 @@
+import { EF_CATEGORIES } from 'common/impact';
+import { STATS_MIN_PARCELAS, type CategoryValues } from 'common/stats';
 import { rankPoblaciones, rankProvincias } from './rank-by-location.helpers';
-import {
-  EMPTY_CATEGORY_RECORD,
-  type CategoryAmountRecord,
-} from '../stats-aggregation.helpers';
-import type { CultivoWithGeo } from './stats.types';
+import type { StatsRow } from './stats-rows.helpers';
 
-function makeCultivo(overrides?: Partial<CultivoWithGeo>): CultivoWithGeo {
+function categorias(climateChange: number): CategoryValues {
+  const record = {} as CategoryValues;
+  for (const cat of EF_CATEGORIES) record[cat.id] = 0;
+  record.climate_change = climateChange;
+  return record;
+}
+
+const BADAJOZ = { id: 'prov-ba', nombre: 'Badajoz' };
+const CACERES = { id: 'prov-cc', nombre: 'Cáceres' };
+const DON_BENITO = { id: 'pob-db', nombre: 'Don Benito' };
+const ZAFRA = { id: 'pob-za', nombre: 'Zafra' };
+const CORIA = { id: 'pob-co', nombre: 'Coria' };
+
+function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
-    id: 'c1',
-    superficieCultivada: 10,
-    produccion: 100,
-    consumoAgua: 50,
-    ciclo: 1,
-    tipo: 'trigo',
     idParcela: 'par-1',
-    idResultadoImpacto: 'ri-1',
-    fechaInicioCampania: new Date('2024-01-01'),
-    parcela: {
-      id: 'par-1',
-      sigpac: null,
-      refCat: null,
-      ptIdParcela: null,
-      nombre: 'P',
-      idPropietario: 'u1',
-      idPoblacion: 'pop-1',
-      cultivos: [],
-      geom: null,
-      poblacion: {
-        id: 'pop-1',
-        idProvincia: 'prov-1',
-        idCatastro: 1,
-        nombre: 'Madrid',
-        parcelas: [],
-        provincia: {
-          id: 'prov-1',
-          nombre: 'Madrid',
-          idCatastro: 1,
-          idPais: 'es',
-          poblaciones: [],
-          pais: { id: 'es', nombre: 'España', codigo: 'ES', provincias: [] },
-        },
-      },
-    },
+    tipo: 'trigo',
+    anio: 2024,
+    superficie: 10,
+    produccion: 1000,
+    consumoAgua: 500,
+    categorias: categorias(1),
+    poblacion: DON_BENITO,
+    provincia: BADAJOZ,
     ...overrides,
-  } as unknown as CultivoWithGeo;
+  };
 }
 
-function makeCategoryMap(
-  records: Record<string, CategoryAmountRecord>,
-): Map<string, CategoryAmountRecord> {
-  const map = new Map<string, CategoryAmountRecord>();
-  for (const [id, rec] of Object.entries(records)) {
-    map.set(id, rec);
-  }
-  return map;
+/** Una fila por parcela, todas con impacto, en la zona indicada */
+function zonaRows(
+  count: number,
+  zona: Pick<StatsRow, 'poblacion' | 'provincia'>,
+  climateChange = 1,
+  prefix = zona.poblacion?.id ?? 'x',
+): StatsRow[] {
+  return Array.from({ length: count }, (_, i) =>
+    makeRow({
+      ...zona,
+      idParcela: `${prefix}-${i}`,
+      categorias: categorias(climateChange),
+    }),
+  );
 }
-
-const emptyCategoryRecord: CategoryAmountRecord = { ...EMPTY_CATEGORY_RECORD };
 
 describe('rank-by-location.helpers', () => {
+  it('uses a minimum of 3 plots', () => {
+    expect(STATS_MIN_PARCELAS).toBe(3);
+  });
+
   describe('rankProvincias', () => {
-    it('returns an empty array when there are no cultivos', () => {
-      expect(rankProvincias([], new Map())).toEqual([]);
+    it('aggregates plots, crops, area and mean impacts per province', () => {
+      const rows = [
+        ...zonaRows(3, { poblacion: DON_BENITO, provincia: BADAJOZ }, 10),
+        makeRow({ idParcela: 'pob-db-0', categorias: categorias(30) }),
+      ];
+
+      const { ranking, ocultas } = rankProvincias(rows);
+
+      expect(ocultas).toBe(0);
+      expect(ranking).toHaveLength(1);
+      expect(ranking[0]).toMatchObject({
+        idProvincia: 'prov-ba',
+        nombreProvincia: 'Badajoz',
+        numParcelas: 3,
+        numCultivos: 4,
+        superficieTotal: 40,
+      });
+      expect(ranking[0].impactosPorCategoria.climate_change).toBe(15);
     });
 
-    it('skips cultivos without provincia', () => {
-      const c = makeCultivo({
-        parcela: { id: 'p', idPoblacion: null, poblacion: null } as any,
-      });
-      expect(rankProvincias([c], new Map())).toEqual([]);
+    it('hides provinces with fewer plots with impact results than the minimum', () => {
+      const rows = [
+        ...zonaRows(3, { poblacion: DON_BENITO, provincia: BADAJOZ }),
+        ...zonaRows(2, { poblacion: CORIA, provincia: CACERES }),
+        // Tercera parcela de Cáceres, pero sin resultado: no cuenta
+        makeRow({
+          idParcela: 'pob-co-sin',
+          poblacion: CORIA,
+          provincia: CACERES,
+          categorias: null,
+        }),
+      ];
+
+      const { ranking, ocultas } = rankProvincias(rows);
+
+      expect(ranking.map((r) => r.idProvincia)).toEqual(['prov-ba']);
+      expect(ocultas).toBe(1);
     });
 
-    it('groups cultivos by provincia and computes metrics', () => {
-      const c1 = makeCultivo({
-        id: 'c1',
-        idParcela: 'par-1',
-        superficieCultivada: 10,
-        produccion: 100,
-        consumoAgua: 50,
-        idResultadoImpacto: 'ri-1',
-      });
-      const c2 = makeCultivo({
-        id: 'c2',
-        idParcela: 'par-2',
-        superficieCultivada: 20,
-        produccion: 200,
-        consumoAgua: 100,
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          ...c1.parcela,
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            idProvincia: 'prov-2',
-            idCatastro: 2,
-            nombre: 'Barcelona',
-            parcelas: [],
-            provincia: {
-              id: 'prov-2',
-              nombre: 'Cataluna',
-              idCatastro: 2,
-              idPais: 'es',
-              poblaciones: [],
-              pais: {
-                id: 'es',
-                nombre: 'España',
-                codigo: 'ES',
-                provincias: [],
-              },
-            },
-          },
-        } as any,
-      });
+    it('ignores crops without a province', () => {
+      const rows = [
+        ...zonaRows(3, { poblacion: DON_BENITO, provincia: BADAJOZ }),
+        makeRow({ idParcela: 'huerfana', poblacion: null, provincia: null }),
+      ];
 
-      const map = makeCategoryMap({
-        'ri-1': { ...emptyCategoryRecord, climate_change: 30 },
-        'ri-2': { ...emptyCategoryRecord, climate_change: 60 },
-      });
+      const { ranking, ocultas } = rankProvincias(rows);
 
-      const result = rankProvincias([c1, c2], map, 'climate_change');
+      expect(ranking).toHaveLength(1);
+      expect(ranking[0].numCultivos).toBe(3);
+      expect(ocultas).toBe(0);
+    });
 
-      expect(result).toHaveLength(2);
-      expect(result[0].nombreProvincia).toBe('Madrid');
-      expect(result[0].numParcelas).toBe(1);
-      expect(result[0].numCultivos).toBe(1);
-      expect(result[0].superficieTotal).toBe(10);
+    it('computes yield, water allocation and water productivity as ratios of totals', () => {
+      const rows = [
+        makeRow({
+          idParcela: 'a',
+          superficie: 1,
+          produccion: 1000,
+          consumoAgua: 100,
+        }),
+        makeRow({
+          idParcela: 'b',
+          superficie: 2,
+          produccion: 5000,
+          consumoAgua: 400,
+        }),
+        makeRow({
+          idParcela: 'c',
+          superficie: 3,
+          produccion: 0,
+          consumoAgua: 500,
+        }),
+      ];
+
+      const [provincia] = rankProvincias(rows).ranking;
+
+      expect(provincia.rendimiento).toBe(1000);
+      expect(provincia.dotacionAgua).toBe(166.7);
+      expect(provincia.productividadAgua).toBe(6);
+    });
+
+    it('returns null ratios when a denominator is 0', () => {
+      const rows = zonaRows(3, {
+        poblacion: DON_BENITO,
+        provincia: BADAJOZ,
+      }).map((r) => ({ ...r, superficie: 0, consumoAgua: 0 }));
+
+      const [provincia] = rankProvincias(rows).ranking;
+
+      expect(provincia.rendimiento).toBeNull();
+      expect(provincia.dotacionAgua).toBeNull();
+      expect(provincia.productividadAgua).toBeNull();
+    });
+
+    it('sorts from lower to higher climate change impact', () => {
+      const rows = [
+        ...zonaRows(3, { poblacion: DON_BENITO, provincia: BADAJOZ }, 50),
+        ...zonaRows(3, { poblacion: CORIA, provincia: CACERES }, 20),
+      ];
+
+      expect(rankProvincias(rows).ranking.map((r) => r.idProvincia)).toEqual([
+        'prov-cc',
+        'prov-ba',
+      ]);
     });
   });
 
   describe('rankPoblaciones', () => {
-    it('filters by idProvinciaPoblacion when provided', () => {
-      const c1 = makeCultivo();
-      const c2 = makeCultivo({
-        id: 'c2',
-        idParcela: 'par-2',
-        parcela: {
-          ...c1.parcela,
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            idProvincia: 'prov-2',
-            idCatastro: 2,
-            nombre: 'Barcelona',
-            parcelas: [],
-            provincia: {
-              id: 'prov-2',
-              nombre: 'Cataluna',
-              idCatastro: 2,
-              idPais: 'es',
-              poblaciones: [],
-              pais: {
-                id: 'es',
-                nombre: 'España',
-                codigo: 'ES',
-                provincias: [],
-              },
-            },
-          },
-        } as any,
+    it('includes the province of each town', () => {
+      const { ranking } = rankPoblaciones(
+        zonaRows(3, { poblacion: CORIA, provincia: CACERES }),
+      );
+
+      expect(ranking[0]).toMatchObject({
+        idPoblacion: 'pob-co',
+        nombrePoblacion: 'Coria',
+        idProvincia: 'prov-cc',
+        nombreProvincia: 'Cáceres',
+        numParcelas: 3,
+        numCultivos: 3,
+        superficieTotal: 30,
       });
-
-      const result = rankPoblaciones([c1, c2], new Map(), undefined, 'prov-1');
-
-      expect(result).toHaveLength(1);
-      expect(result[0].nombrePoblacion).toBe('Madrid');
     });
 
-    it('preserves poblacion entries without province name', () => {
-      const c = makeCultivo({
-        parcela: {
-          id: 'p',
-          idPoblacion: 'pop-x',
-          poblacion: {
-            id: 'pop-x',
-            idProvincia: 'prov-x',
-            idCatastro: 9,
-            nombre: 'Sin provincia',
-            parcelas: [],
-            provincia: null,
-          },
-        } as any,
-      });
+    it('hides towns below the minimum even if their province is shown', () => {
+      const rows = [
+        ...zonaRows(2, { poblacion: DON_BENITO, provincia: BADAJOZ }),
+        ...zonaRows(1, { poblacion: ZAFRA, provincia: BADAJOZ }),
+      ];
 
-      const result = rankPoblaciones([c], new Map());
+      expect(rankProvincias(rows).ranking).toHaveLength(1);
+      const poblaciones = rankPoblaciones(rows);
+      expect(poblaciones.ranking).toEqual([]);
+      expect(poblaciones.ocultas).toBe(2);
+    });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].nombreProvincia).toBe('');
+    it('sorts from lower to higher climate change impact', () => {
+      const rows = [
+        ...zonaRows(3, { poblacion: DON_BENITO, provincia: BADAJOZ }, 9),
+        ...zonaRows(3, { poblacion: ZAFRA, provincia: BADAJOZ }, 3),
+      ];
+
+      expect(rankPoblaciones(rows).ranking.map((r) => r.idPoblacion)).toEqual([
+        'pob-za',
+        'pob-db',
+      ]);
     });
   });
 });

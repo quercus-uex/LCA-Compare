@@ -1,550 +1,288 @@
-import { StatsService } from './stats.service';
+import { STATS_DATASET_TTL_MS, StatsService } from './stats.service';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { StatsCultivo } from './helpers/stats-rows.helpers';
 
-type FindManyArgs = {
-  where?: Record<string, unknown>;
-  include?: Record<string, unknown>;
-  select?: Record<string, unknown>;
-};
+const BADAJOZ = { id: 'prov-ba', nombre: 'Badajoz' };
+const CACERES = { id: 'prov-cc', nombre: 'Cáceres' };
 
 function makeCultivo(
-  overrides?: Partial<{
-    id: string;
-    superficieCultivada: number;
-    produccion: number;
-    consumoAgua: number;
-    tipo: string;
+  overrides: Partial<{
     idParcela: string;
-    idResultadoImpacto: string | null;
-    fechaInicioCampania: Date;
-    parcela: any;
-  }>,
-): any {
+    tipo: string;
+    anio: number;
+    climateChange: number | null;
+    poblacion: { id: string; nombre: string };
+    provincia: { id: string; nombre: string };
+  }> = {},
+): StatsCultivo {
+  const climateChange =
+    overrides.climateChange === undefined ? 10 : overrides.climateChange;
   return {
-    id: overrides?.id ?? 'cult-1',
-    superficieCultivada: overrides?.superficieCultivada ?? 10,
-    produccion: overrides?.produccion ?? 100,
-    consumoAgua: overrides?.consumoAgua ?? 50,
-    ciclo: 1,
-    tipo: overrides?.tipo ?? 'trigo',
-    idParcela: overrides?.idParcela ?? 'par-1',
-    idResultadoImpacto: overrides?.idResultadoImpacto ?? 'ri-1',
-    fechaInicioCampania:
-      overrides?.fechaInicioCampania ?? new Date('2024-01-01'),
-    parcela: overrides?.parcela ?? {
-      id: 'par-1',
-      idPoblacion: 'pop-1',
+    idParcela: overrides.idParcela ?? 'par-1',
+    tipo: overrides.tipo ?? 'trigo',
+    fechaInicioCampania: new Date(Date.UTC(overrides.anio ?? 2024, 2, 1)),
+    superficieCultivada: 10,
+    produccion: 1000,
+    consumoAgua: 500,
+    resultadoImpacto:
+      climateChange === null
+        ? null
+        : {
+            datos: {
+              impacto_total: [
+                { category: 'Climate change', amount: climateChange },
+              ],
+            },
+          },
+    parcela: {
       poblacion: {
-        id: 'pop-1',
-        nombre: 'Madrid',
-        provincia: { id: 'prov-1', nombre: 'Madrid' },
+        ...(overrides.poblacion ?? { id: 'pob-db', nombre: 'Don Benito' }),
+        provincia: overrides.provincia ?? BADAJOZ,
       },
     },
   };
 }
 
-function makeImpactRecord(
-  id: string,
-  climateChangeAmount: number,
-): { id: string; datos: Record<string, unknown> } {
-  return {
-    id,
-    datos: {
-      impacto_total: [
-        {
-          category: 'Climate change',
-          amount: climateChangeAmount,
-          unit: 'kg CO2 eq',
-        },
-      ],
-    },
-  };
+/** Tres parcelas con impacto: lo justo para aparecer en los rankings */
+function zona(
+  prefix: string,
+  overrides: Parameters<typeof makeCultivo>[0] = {},
+): StatsCultivo[] {
+  return [0, 1, 2].map((i) =>
+    makeCultivo({ ...overrides, idParcela: `${prefix}-${i}` }),
+  );
 }
 
 describe('StatsService', () => {
   let service: StatsService;
-  let prisma: jest.Mocked<{
-    cultivo: {
-      findMany: jest.Mock;
-      groupBy: jest.Mock;
-    };
-    resultadoImpacto: {
-      findMany: jest.Mock;
-    };
-  }>;
+  let findMany: jest.Mock<Promise<StatsCultivo[]>, [Record<string, unknown>]>;
+
+  const mockDataset = (cultivos: StatsCultivo[]) =>
+    findMany.mockResolvedValue(cultivos);
 
   beforeEach(() => {
-    prisma = {
-      cultivo: {
-        findMany: jest.fn().mockResolvedValue([]),
-        groupBy: jest.fn().mockResolvedValue([]),
-      },
-      resultadoImpacto: {
-        findMany: jest.fn().mockResolvedValue([]),
-      },
-    };
-    service = new StatsService(prisma as unknown as PrismaService);
+    findMany = jest.fn<Promise<StatsCultivo[]>, [Record<string, unknown>]>();
+    findMany.mockResolvedValue([]);
+    service = new StatsService({
+      cultivo: { findMany },
+    } as unknown as PrismaService);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('getGlobalStats', () => {
-    it('returns zero KPIs, empty rankings, temporal evolution, crop distribution, and available years for empty data', async () => {
+    it('returns an empty response when there is no data', async () => {
       const result = await service.getGlobalStats();
 
-      expect(result.kpis).toEqual({
-        totalParcelas: 0,
-        totalCultivos: 0,
-        superficieTotal: 0,
-        impactosPorCategoria: expect.objectContaining({
-          climate_change: 0,
-          acidification: 0,
-        }),
-        variacionInteranual: null,
+      expect(result).toMatchObject({
+        kpis: {
+          totalParcelas: 0,
+          totalCultivos: 0,
+          cultivosConImpacto: 0,
+          superficieTotal: 0,
+          variacionInteranual: null,
+        },
+        rankingProvincias: [],
+        rankingPoblaciones: [],
+        zonasOcultas: { provincias: 0, poblaciones: 0 },
+        evolucionTemporal: [],
+        distribucionCultivos: [],
+        aniosDisponibles: [],
+        tiposCultivoDisponibles: [],
       });
-      expect(result.rankingProvincias).toEqual([]);
-      expect(result.rankingPoblaciones).toEqual([]);
-      expect(result.evolucionTemporal).toEqual([]);
-      expect(result.distribucionCultivos).toEqual([]);
-      expect(result.aniosDisponibles).toEqual([]);
     });
 
-    it('queries cultivations using campaign-year range and crop type filter', async () => {
-      await service.getGlobalStats(2024, undefined, 'trigo');
+    it('loads the dataset with a single select query', async () => {
+      await service.getGlobalStats();
 
-      expect(prisma.cultivo.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            tipo: 'trigo',
-            fechaInicioCampania: expect.objectContaining({
-              gte: new Date('2024-01-01T00:00:00.000Z'),
-              lt: new Date('2025-01-01T00:00:00.000Z'),
-            }),
-          }),
-        }),
-      );
+      expect(findMany).toHaveBeenCalledTimes(1);
+      const [args] = findMany.mock.calls[0];
+      expect(args).not.toHaveProperty('where');
+      expect(args).not.toHaveProperty('include');
+      expect(args).toHaveProperty('select.resultadoImpacto');
+      expect(args).toHaveProperty('select.parcela.select.poblacion');
     });
 
-    it('computes KPIs, rankings, crop distribution, and available years from mocked data', async () => {
-      const cultivo = makeCultivo();
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania) return Promise.resolve([cultivo]);
-        return Promise.resolve([
-          { fechaInicioCampania: new Date('2024-06-01') },
-        ]);
-      });
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 50),
-      ]);
-      prisma.cultivo.groupBy.mockResolvedValue([
-        { tipo: 'trigo', _count: { id: 1 }, _sum: { superficieCultivada: 10 } },
+    it('applies year and crop filters to KPIs and rankings', async () => {
+      mockDataset([
+        ...zona('a', { anio: 2024, tipo: 'trigo' }),
+        ...zona('b', { anio: 2023, tipo: 'trigo' }),
+        ...zona('c', { anio: 2024, tipo: 'maiz' }),
       ]);
 
-      const result = await service.getGlobalStats(2024);
+      const result = await service.getGlobalStats({
+        anio: 2024,
+        tipoCultivo: 'trigo',
+      });
 
-      expect(result.kpis.totalCultivos).toBe(1);
-      expect(result.kpis.totalParcelas).toBe(1);
-      expect(result.kpis.superficieTotal).toBe(10);
-      expect(result.rankingProvincias).toHaveLength(1);
-      expect(result.rankingProvincias[0].nombreProvincia).toBe('Madrid');
-      expect(result.distribucionCultivos).toHaveLength(1);
-      expect(result.distribucionCultivos[0].tipo).toBe('trigo');
-      expect(result.aniosDisponibles).toEqual([2024]);
+      expect(result.kpis.totalCultivos).toBe(3);
+      expect(result.rankingProvincias[0].numCultivos).toBe(3);
+      expect(result.rankingPoblaciones[0].numCultivos).toBe(3);
     });
 
-    it('skips current impact lookup when selected cultivations have no impact result ids', async () => {
-      const cultivoSinImpacto = makeCultivo({ idResultadoImpacto: null });
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania)
-          return Promise.resolve([cultivoSinImpacto]);
-        return Promise.resolve([]);
+    it('applies only the crop filter to the timeline', async () => {
+      mockDataset([
+        ...zona('a', { anio: 2023, tipo: 'trigo' }),
+        ...zona('b', { anio: 2024, tipo: 'trigo' }),
+        ...zona('c', { anio: 2024, tipo: 'maiz' }),
+      ]);
+
+      const { evolucionTemporal } = await service.getGlobalStats({
+        anio: 2024,
+        tipoCultivo: 'trigo',
       });
 
-      const result = await service.getGlobalStats(2024);
-
-      expect(result.kpis.totalCultivos).toBe(1);
-      expect(result.kpis.impactosPorCategoria.climate_change).toBe(0);
+      expect(evolucionTemporal.map((e) => [e.anio, e.numCultivos])).toEqual([
+        [2023, 3],
+        [2024, 3],
+      ]);
     });
 
-    it('aggregates province ranking with parcel count, crop count, surface, production, water, impacts, and efficiency', async () => {
-      const cultivo1 = makeCultivo({
-        id: 'c1',
-        idParcela: 'par-1',
-        superficieCultivada: 10,
-        produccion: 100,
-        consumoAgua: 50,
-        idResultadoImpacto: 'ri-1',
-        parcela: {
-          id: 'par-1',
-          idPoblacion: 'pop-1',
-          poblacion: {
-            id: 'pop-1',
-            nombre: 'Madrid',
-            provincia: { id: 'prov-1', nombre: 'Madrid' },
-          },
-        },
-      });
-      const cultivo2 = makeCultivo({
-        id: 'c2',
-        idParcela: 'par-2',
-        superficieCultivada: 20,
-        produccion: 200,
-        consumoAgua: 100,
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          id: 'par-2',
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            nombre: 'Barcelona',
-            provincia: { id: 'prov-2', nombre: 'Cataluna' },
-          },
-        },
+    it('applies only the year filter to the crop distribution', async () => {
+      mockDataset([
+        ...zona('a', { anio: 2024, tipo: 'trigo' }),
+        ...zona('b', { anio: 2023, tipo: 'trigo' }),
+        makeCultivo({ idParcela: 'c', anio: 2024, tipo: 'maiz' }),
+      ]);
+
+      const { distribucionCultivos } = await service.getGlobalStats({
+        anio: 2024,
+        tipoCultivo: 'trigo',
       });
 
-      prisma.cultivo.findMany.mockResolvedValue([cultivo1, cultivo2]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 30),
-        makeImpactRecord('ri-2', 60),
+      expect(distribucionCultivos).toEqual([
+        { tipo: 'trigo', count: 3, superficieTotal: 30 },
+        { tipo: 'maiz', count: 1, superficieTotal: 10 },
+      ]);
+    });
+
+    it('lists available years and crop types from the whole dataset', async () => {
+      mockDataset([
+        makeCultivo({ anio: 2024, tipo: 'trigo' }),
+        makeCultivo({ anio: 2022, tipo: 'maiz' }),
+        makeCultivo({ anio: 2024, tipo: 'olivo' }),
+      ]);
+
+      const result = await service.getGlobalStats({
+        anio: 2022,
+        tipoCultivo: 'maiz',
+      });
+
+      expect(result.aniosDisponibles).toEqual([2022, 2024]);
+      expect(result.tiposCultivoDisponibles).toEqual([
+        'maiz',
+        'olivo',
+        'trigo',
+      ]);
+    });
+
+    it('hides zones below the plot minimum and reports how many', async () => {
+      mockDataset([
+        ...zona('a'),
+        makeCultivo({
+          idParcela: 'solitaria',
+          poblacion: { id: 'pob-co', nombre: 'Coria' },
+          provincia: CACERES,
+        }),
       ]);
 
       const result = await service.getGlobalStats();
 
-      expect(result.rankingProvincias).toHaveLength(2);
-      const sorted = result.rankingProvincias;
-      expect(sorted[0].numParcelas).toBeGreaterThanOrEqual(1);
-      expect(sorted[0].superficieTotal).toBeGreaterThan(0);
+      expect(result.rankingProvincias.map((r) => r.idProvincia)).toEqual([
+        'prov-ba',
+      ]);
+      expect(result.rankingPoblaciones.map((r) => r.idPoblacion)).toEqual([
+        'pob-db',
+      ]);
+      expect(result.zonasOcultas).toEqual({ provincias: 1, poblaciones: 1 });
+      // Los KPIs sí incluyen las zonas ocultas
+      expect(result.kpis.totalParcelas).toBe(4);
     });
 
-    it('filters population ranking by idProvinciaPoblacion', async () => {
-      const cultivoProv1 = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-1',
-        parcela: {
-          id: 'par-1',
-          idPoblacion: 'pop-1',
-          poblacion: {
-            id: 'pop-1',
-            nombre: 'Madrid',
-            provincia: { id: 'prov-1', nombre: 'Madrid' },
-          },
-        },
-      });
-      const cultivoProv2 = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          id: 'par-2',
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            nombre: 'Barcelona',
-            provincia: { id: 'prov-2', nombre: 'Cataluna' },
-          },
-        },
-      });
-
-      prisma.cultivo.findMany.mockResolvedValue([cultivoProv1, cultivoProv2]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 30),
-        makeImpactRecord('ri-2', 60),
+    it('compares against the previous year with the same crop filter', async () => {
+      mockDataset([
+        ...zona('a', { anio: 2024, climateChange: 90 }),
+        ...zona('b', { anio: 2023, climateChange: 100 }),
+        ...zona('c', { anio: 2023, tipo: 'maiz', climateChange: 1 }),
       ]);
 
-      const result = await service.getGlobalStats(
-        undefined,
-        undefined,
-        undefined,
-        'prov-1',
-      );
+      const { kpis } = await service.getGlobalStats({
+        anio: 2024,
+        tipoCultivo: 'trigo',
+      });
 
-      expect(result.rankingPoblaciones).toHaveLength(1);
-      expect(result.rankingPoblaciones[0].nombreProvincia).toBe('Madrid');
+      expect(kpis.variacionInteranual?.climate_change).toBe(-10);
+      expect(kpis.variacionInteranual?.acidification).toBeNull();
     });
 
-    it('sorts province ranking by specific EF category when categoria is provided', async () => {
-      const cultivo1 = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-1',
-        parcela: {
-          id: 'par-1',
-          idPoblacion: 'pop-1',
-          poblacion: {
-            id: 'pop-1',
-            nombre: 'A',
-            provincia: { id: 'prov-1', nombre: 'ProvA' },
-          },
-        },
-      });
-      const cultivo2 = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          id: 'par-2',
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            nombre: 'B',
-            provincia: { id: 'prov-2', nombre: 'ProvB' },
-          },
-        },
-      });
+    it('returns a null year-on-year change without a selected year', async () => {
+      mockDataset([...zona('a', { anio: 2024 }), ...zona('b', { anio: 2023 })]);
 
-      prisma.cultivo.findMany.mockResolvedValue([cultivo1, cultivo2]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 10),
-        makeImpactRecord('ri-2', 50),
+      const { kpis } = await service.getGlobalStats();
+
+      expect(kpis.variacionInteranual).toBeNull();
+    });
+  });
+
+  describe('dataset cache', () => {
+    it('reuses the dataset within the TTL and reloads after it', async () => {
+      jest.useFakeTimers();
+
+      await service.getGlobalStats();
+      await service.getGlobalStats({ anio: 2024 });
+      expect(findMany).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(STATS_DATASET_TTL_MS);
+      await service.getGlobalStats();
+      expect(findMany).toHaveBeenCalledTimes(2);
+    });
+
+    it('shares a single load between concurrent requests', async () => {
+      await Promise.all([
+        service.getGlobalStats(),
+        service.getGlobalStats({ anio: 2024 }),
+        service.getGlobalStats({ tipoCultivo: 'trigo' }),
       ]);
 
-      const result = await service.getGlobalStats(undefined, 'climate_change');
-
-      expect(result.rankingProvincias[0].nombreProvincia).toBe('ProvA');
-      expect(result.rankingProvincias[1].nombreProvincia).toBe('ProvB');
+      expect(findMany).toHaveBeenCalledTimes(1);
     });
 
-    it('ranks by climate change by default and never exposes a cross-unit total impact', async () => {
-      const cultivo1 = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-1',
-        parcela: {
-          id: 'par-1',
-          idPoblacion: 'pop-1',
-          poblacion: {
-            id: 'pop-1',
-            nombre: 'A',
-            provincia: { id: 'prov-1', nombre: 'ProvA' },
-          },
-        },
-      });
-      const cultivo2 = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          id: 'par-2',
-          idPoblacion: 'pop-2',
-          poblacion: {
-            id: 'pop-2',
-            nombre: 'B',
-            provincia: { id: 'prov-2', nombre: 'ProvB' },
-          },
-        },
-      });
-      const withWaterUse = (id: string, climate: number, water: number) => {
-        const record = makeImpactRecord(id, climate);
-        (record.datos.impacto_total as unknown[]).push({
-          category: 'Water use',
-          amount: water,
-          unit: 'm3 world Eq',
-        });
-        return record;
-      };
+    it('does not cache a failed load', async () => {
+      findMany.mockRejectedValueOnce(new Error('db down'));
 
-      prisma.cultivo.findMany.mockResolvedValue([cultivo1, cultivo2]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        withWaterUse('ri-1', 50, 1),
-        withWaterUse('ri-2', 10, 1000),
-      ]);
-
-      const result = await service.getGlobalStats();
-
-      expect(result.rankingProvincias.map((p) => p.nombreProvincia)).toEqual([
-        'ProvB',
-        'ProvA',
-      ]);
-      expect(result.rankingPoblaciones.map((p) => p.nombrePoblacion)).toEqual([
-        'B',
-        'A',
-      ]);
-      for (const item of [
-        ...result.rankingProvincias,
-        ...result.rankingPoblaciones,
-      ]) {
-        expect(item).not.toHaveProperty('impactoTotalMedio');
-      }
-      for (const item of result.evolucionTemporal) {
-        expect(item).not.toHaveProperty('totalImpacto');
-      }
+      await expect(service.getGlobalStats()).rejects.toThrow('db down');
+      await expect(service.getGlobalStats()).resolves.toBeDefined();
+      expect(findMany).toHaveBeenCalledTimes(2);
     });
 
-    it('computes temporal evolution from all cultivations independently of selected-year filter', async () => {
-      const cultivo2024 = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-1',
-        fechaInicioCampania: new Date('2024-01-01'),
-      });
-      const cultivo2023 = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-2',
-        fechaInicioCampania: new Date('2023-01-01'),
-      });
+    it('reloads after invalidateCache', async () => {
+      await service.getGlobalStats();
+      service.invalidateCache();
+      await service.getGlobalStats();
 
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania)
-          return Promise.resolve([cultivo2024]);
-        return Promise.resolve([cultivo2024, cultivo2023]);
-      });
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 50),
-        makeImpactRecord('ri-2', 30),
-      ]);
-
-      const result = await service.getGlobalStats(2024);
-
-      expect(result.evolucionTemporal).toHaveLength(2);
-      const years = result.evolucionTemporal.map((e) => e.anio);
-      expect(years).toContain(2023);
-      expect(years).toContain(2024);
+      expect(findMany).toHaveBeenCalledTimes(2);
     });
 
-    it('returns rounded interannual variation when previous-year impact data exists', async () => {
-      const cultivoCurrent = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-current',
-        fechaInicioCampania: new Date('2024-06-01'),
-      });
-      const cultivoPrev = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-prev',
-        fechaInicioCampania: new Date('2023-06-01'),
-      });
-
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania) {
-          const gte = args.where.fechaInicioCampania.gte as Date;
-          if (gte.getFullYear() === 2023) return Promise.resolve([cultivoPrev]);
-          return Promise.resolve([cultivoCurrent]);
-        }
-        return Promise.resolve([cultivoCurrent, cultivoPrev]);
-      });
-      prisma.resultadoImpacto.findMany.mockImplementation(
-        (args: FindManyArgs) => {
-          const ids = (args?.where?.id as { in?: string[] })?.in ?? [];
-          const result: Array<{ id: string; datos: Record<string, unknown> }> =
-            [];
-          if (ids.includes('ri-current'))
-            result.push(makeImpactRecord('ri-current', 120));
-          if (ids.includes('ri-prev'))
-            result.push(makeImpactRecord('ri-prev', 100));
-          return Promise.resolve(result);
-        },
-      );
-
-      const result = await service.getGlobalStats(2024);
-
-      expect(result.kpis.variacionInteranual).toBe(20);
-    });
-
-    it('returns null interannual variation when previous year has no impact data', async () => {
-      const cultivoCurrent = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-current',
-        fechaInicioCampania: new Date('2024-06-01'),
-      });
-
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania) {
-          const gte = args.where.fechaInicioCampania.gte as Date;
-          if (gte.getFullYear() === 2023) return Promise.resolve([]);
-          return Promise.resolve([cultivoCurrent]);
-        }
-        return Promise.resolve([cultivoCurrent]);
-      });
-      prisma.resultadoImpacto.findMany.mockImplementation(
-        (args: FindManyArgs) => {
-          const ids = (args?.where?.id as { in?: string[] })?.in ?? [];
-          if (ids.includes('ri-current'))
-            return Promise.resolve([makeImpactRecord('ri-current', 50)]);
-          return Promise.resolve([]);
-        },
-      );
-
-      const result = await service.getGlobalStats(2024);
-
-      expect(result.kpis.variacionInteranual).toBeNull();
-    });
-
-    it('applies crop filter to previous-year lookup and returns null when previous impact is zero', async () => {
-      const cultivoCurrent = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-current',
-        fechaInicioCampania: new Date('2024-06-01'),
-      });
-      const cultivoPrev = makeCultivo({
-        id: 'c2',
-        idResultadoImpacto: 'ri-prev',
-        fechaInicioCampania: new Date('2023-06-01'),
-      });
-
-      prisma.cultivo.findMany.mockImplementation((args: FindManyArgs) => {
-        if (args?.where?.fechaInicioCampania) {
-          const gte = args.where.fechaInicioCampania.gte as Date;
-          if (gte.getFullYear() === 2023) return Promise.resolve([cultivoPrev]);
-          return Promise.resolve([cultivoCurrent]);
-        }
-        return Promise.resolve([cultivoCurrent, cultivoPrev]);
-      });
-      prisma.resultadoImpacto.findMany.mockImplementation(
-        (args: FindManyArgs) => {
-          const ids = (args?.where?.id as { in?: string[] })?.in ?? [];
-          if (ids.includes('ri-current')) {
-            return Promise.resolve([makeImpactRecord('ri-current', 50)]);
-          }
-          if (ids.includes('ri-prev')) {
-            return Promise.resolve([makeImpactRecord('ri-prev', 0)]);
-          }
-          return Promise.resolve([]);
-        },
-      );
-
-      const result = await service.getGlobalStats(2024, undefined, 'trigo');
-
-      expect(result.kpis.variacionInteranual).toBeNull();
-      expect(prisma.cultivo.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            tipo: 'trigo',
-            fechaInicioCampania: expect.objectContaining({
-              gte: new Date('2023-01-01T00:00:00.000Z'),
-              lt: new Date('2024-01-01T00:00:00.000Z'),
-            }),
-          }),
+    it('does not store a load that was in flight when the cache was invalidated', async () => {
+      let resolveStale: (value: StatsCultivo[]) => void = () => undefined;
+      findMany.mockReturnValueOnce(
+        new Promise<StatsCultivo[]>((resolve) => {
+          resolveStale = resolve;
         }),
       );
-    });
 
-    it('skips records without population for rankings and preserves population entries without province names', async () => {
-      const cultivoWithoutPopulation = makeCultivo({
-        id: 'c1',
-        idResultadoImpacto: 'ri-1',
-        parcela: { id: 'par-1', idPoblacion: null, poblacion: null },
-      });
-      const cultivoWithoutProvince = makeCultivo({
-        id: 'c2',
-        idParcela: 'par-2',
-        idResultadoImpacto: 'ri-2',
-        parcela: {
-          id: 'par-2',
-          idPoblacion: 'pop-2',
-          poblacion: { id: 'pop-2', nombre: 'Sin provincia', provincia: null },
-        },
-      });
+      const stale = service.getGlobalStats();
+      service.invalidateCache();
+      mockDataset(zona('nuevo'));
+      const fresh = await service.getGlobalStats();
+      resolveStale([]);
+      await stale;
 
-      prisma.cultivo.findMany.mockResolvedValue([
-        cultivoWithoutPopulation,
-        cultivoWithoutProvince,
-      ]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([
-        makeImpactRecord('ri-1', 10),
-        makeImpactRecord('ri-2', 20),
-      ]);
-
-      const result = await service.getGlobalStats();
-
-      expect(result.rankingProvincias).toEqual([]);
-      expect(result.rankingPoblaciones).toEqual([
-        expect.objectContaining({
-          nombrePoblacion: 'Sin provincia',
-          nombreProvincia: '',
-          numParcelas: 1,
-        }),
-      ]);
+      expect(fresh.kpis.totalCultivos).toBe(3);
+      expect((await service.getGlobalStats()).kpis.totalCultivos).toBe(3);
+      expect(findMany).toHaveBeenCalledTimes(2);
     });
   });
 });

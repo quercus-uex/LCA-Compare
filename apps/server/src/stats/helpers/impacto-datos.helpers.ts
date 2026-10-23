@@ -1,10 +1,4 @@
-import type { Prisma } from '../../generated/prisma/client';
-import type { ImpactoDatos } from '../stats-aggregation.helpers';
-
-export type ImpactoRecord = {
-  id: string;
-  datos: ImpactoDatos;
-};
+import type { ImpactoDatos } from './stats-aggregation.helpers';
 
 type ImpactoItem = { category: string; amount: number; unit?: string };
 
@@ -23,17 +17,7 @@ function isImpactoDatos(value: unknown): value is ImpactoDatos {
   return Array.isArray(total) && total.every(isImpactoItem);
 }
 
-type ResultadoImpactoRow = Prisma.ResultadoImpactoGetPayload<true>;
-
-export function parseImpactoRecord(r: ResultadoImpactoRow): ImpactoRecord {
-  return {
-    id: r.id,
-    datos: isImpactoDatos(r.datos) ? r.datos : null,
-  };
-}
-
-export function parseImpactoRecords(
-  rs: ResultadoImpactoRow[],
-): ImpactoRecord[] {
-  return rs.map(parseImpactoRecord);
+/** Valida el JSON de `ResultadoImpacto.datos`; si no tiene la forma esperada devuelve `null` */
+export function parseImpactoDatos(value: unknown): ImpactoDatos {
+  return isImpactoDatos(value) ? value : null;
 }

@@ -1,6 +1,14 @@
-import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { StatsController } from './stats.controller';
 import type { StatsService } from './stats.service';
+import { GlobalStatsQueryDto } from './dto/global-stats-query.dto';
+
+async function parseQuery(query: Record<string, string>) {
+  const dto = plainToInstance(GlobalStatsQueryDto, query);
+  const errors = await validate(dto, { whitelist: true });
+  return { dto, errors: errors.map((e) => e.property) };
+}
 
 describe('StatsController', () => {
   let controller: StatsController;
@@ -13,60 +21,53 @@ describe('StatsController', () => {
     controller = new StatsController(statsService as unknown as StatsService);
   });
 
-  describe('getGlobalStats', () => {
-    it('forwards parsed year, category, crop type, and province id to StatsService', async () => {
-      await controller.getGlobalStats(
-        '2024',
-        'climate_change',
-        'trigo',
-        'prov-1',
-      );
+  it('forwards the year and crop type to StatsService', async () => {
+    const { dto } = await parseQuery({ anio: '2024', tipoCultivo: 'trigo' });
 
-      expect(statsService.getGlobalStats).toHaveBeenCalledWith(
-        2024,
-        'climate_change',
-        'trigo',
-        'prov-1',
-      );
+    await controller.getGlobalStats(dto);
+
+    expect(statsService.getGlobalStats).toHaveBeenCalledWith({
+      anio: 2024,
+      tipoCultivo: 'trigo',
     });
+  });
 
-    it('forwards undefined for empty optional string filters', async () => {
-      await controller.getGlobalStats(undefined, '  ', '', undefined);
+  it('forwards undefined filters when the query is empty', async () => {
+    await controller.getGlobalStats(new GlobalStatsQueryDto());
 
-      expect(statsService.getGlobalStats).toHaveBeenCalledWith(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-      );
+    expect(statsService.getGlobalStats).toHaveBeenCalledWith({
+      anio: undefined,
+      tipoCultivo: undefined,
     });
+  });
+});
 
-    it('throws BadRequestException for non-numeric year', () => {
-      expect(() => controller.getGlobalStats('abc')).toThrow(
-        BadRequestException,
-      );
-      expect(statsService.getGlobalStats).not.toHaveBeenCalled();
-    });
+describe('GlobalStatsQueryDto', () => {
+  it('accepts an empty query', async () => {
+    expect((await parseQuery({})).errors).toEqual([]);
+  });
 
-    it('throws BadRequestException for out-of-range year', () => {
-      expect(() => controller.getGlobalStats('5000')).toThrow(
-        BadRequestException,
-      );
-      expect(statsService.getGlobalStats).not.toHaveBeenCalled();
-    });
+  it('converts the year to a number', async () => {
+    const { dto, errors } = await parseQuery({ anio: '2024' });
 
-    it('rejects a "total" category, since categories with different units are never summed', () => {
-      expect(() => controller.getGlobalStats(undefined, 'total')).toThrow(
-        BadRequestException,
-      );
-      expect(statsService.getGlobalStats).not.toHaveBeenCalled();
-    });
+    expect(errors).toEqual([]);
+    expect(dto.anio).toBe(2024);
+  });
 
-    it('throws BadRequestException for invalid category', () => {
-      expect(() =>
-        controller.getGlobalStats(undefined, 'invalid_category'),
-      ).toThrow(BadRequestException);
-      expect(statsService.getGlobalStats).not.toHaveBeenCalled();
-    });
+  it.each(['abc', '2024.5', '1899', '2101'])(
+    'rejects the year %s',
+    async (anio) => {
+      expect((await parseQuery({ anio })).errors).toEqual(['anio']);
+    },
+  );
+
+  it('trims the crop type and treats a blank one as no filter', async () => {
+    expect(
+      (await parseQuery({ tipoCultivo: '  trigo ' })).dto.tipoCultivo,
+    ).toBe('trigo');
+
+    const blank = await parseQuery({ tipoCultivo: '   ' });
+    expect(blank.errors).toEqual([]);
+    expect(blank.dto.tipoCultivo).toBeUndefined();
   });
 });

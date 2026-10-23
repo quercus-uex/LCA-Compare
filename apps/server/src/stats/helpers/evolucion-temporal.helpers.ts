@@ -1,48 +1,29 @@
-import {
-  buildEfCategoryLookup,
-  getCategoryAmounts,
-  meanCategories,
-  type CategoryAmountRecord,
-  type ImpactoDatos,
-} from '../stats-aggregation.helpers';
-import type { EvolucionTemporalItemDto } from '../dto/global-stats.dto';
-import type { CultivoWithFecha } from './stats.types';
+import type { CategoryValues, EvolucionTemporalItemDto } from 'common/stats';
+import { meanCategories } from './stats-aggregation.helpers';
+import type { StatsRow } from './stats-rows.helpers';
 
 export function aggregateEvolucionByYear(
-  cultivos: CultivoWithFecha[],
-  impactoMap: Map<string, ImpactoDatos>,
-  lookup: ReturnType<typeof buildEfCategoryLookup>,
+  rows: StatsRow[],
 ): EvolucionTemporalItemDto[] {
-  const cultivosByYear = new Map<number, number>();
-  const categoriesByYear = new Map<number, CategoryAmountRecord[]>();
+  const byYear = new Map<
+    number,
+    { numCultivos: number; categorias: CategoryValues[] }
+  >();
 
-  for (const c of cultivos) {
-    const year = c.fechaInicioCampania.getFullYear();
-    cultivosByYear.set(year, (cultivosByYear.get(year) ?? 0) + 1);
-
-    if (c.idResultadoImpacto && impactoMap.has(c.idResultadoImpacto)) {
-      const catAmounts = getCategoryAmounts(
-        impactoMap.get(c.idResultadoImpacto),
-        lookup,
-      );
-      if (!categoriesByYear.has(year)) {
-        categoriesByYear.set(year, []);
-      }
-      categoriesByYear.get(year)!.push(catAmounts);
-    }
+  for (const r of rows) {
+    const entry = byYear.get(r.anio) ?? { numCultivos: 0, categorias: [] };
+    entry.numCultivos += 1;
+    if (r.categorias) entry.categorias.push(r.categorias);
+    byYear.set(r.anio, entry);
   }
 
-  const result: EvolucionTemporalItemDto[] = [];
-
-  for (const [year, records] of categoriesByYear) {
-    const categorias = meanCategories(records);
-
-    result.push({
-      anio: year,
-      numCultivos: cultivosByYear.get(year) ?? 0,
-      categorias,
-    });
-  }
-
-  return result.sort((a, b) => a.anio - b.anio);
+  // Los años sin ningún resultado de impacto no aportan punto a la serie
+  return [...byYear]
+    .filter(([, entry]) => entry.categorias.length > 0)
+    .map(([anio, entry]) => ({
+      anio,
+      numCultivos: entry.numCultivos,
+      categorias: meanCategories(entry.categorias),
+    }))
+    .sort((a, b) => a.anio - b.anio);
 }

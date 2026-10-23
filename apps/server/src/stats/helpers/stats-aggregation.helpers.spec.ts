@@ -1,5 +1,4 @@
 import {
-  collectImpactoIds,
   normalizeCategoryName,
   buildEfCategoryLookup,
   getCategoryAmounts,
@@ -10,31 +9,6 @@ import {
 } from './stats-aggregation.helpers';
 
 describe('stats-aggregation.helpers', () => {
-  describe('collectImpactoIds', () => {
-    it('returns unique non-null impact ids', () => {
-      const cultivos = [
-        { idResultadoImpacto: 'a' },
-        { idResultadoImpacto: 'b' },
-        { idResultadoImpacto: 'a' },
-        { idResultadoImpacto: null },
-        { idResultadoImpacto: 'b' },
-      ];
-
-      const result = collectImpactoIds(cultivos);
-
-      expect(result).toEqual(['a', 'b']);
-    });
-
-    it('returns empty array when all ids are null', () => {
-      const cultivos = [
-        { idResultadoImpacto: null },
-        { idResultadoImpacto: null },
-      ];
-
-      expect(collectImpactoIds(cultivos)).toEqual([]);
-    });
-  });
-
   describe('normalizeCategoryName', () => {
     it('trims whitespace and lowercases', () => {
       expect(normalizeCategoryName('  Climate Change  ')).toBe(

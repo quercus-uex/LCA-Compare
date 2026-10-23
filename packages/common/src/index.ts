@@ -5,7 +5,11 @@ export {
   type ImpactKey,
 } from './impact.js';
 
+export { STATS_MIN_PARCELAS } from './stats.js';
+
 export type {
+  CategoryValues,
+  GlobalStatsQuery,
   KpiDto,
   ProvinciaRankingItemDto,
   PoblacionRankingItemDto,

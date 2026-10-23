@@ -1,209 +1,174 @@
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FiArrowRight } from 'react-icons/fi';
 import { formatImpactValue } from './stats-formatters.ts';
-import {
-  deriveRankingLists,
-  type RankedEntry,
-} from './stats-ranking.helpers.ts';
+import { RANKING_PAGE_SIZE, type RankedEntry } from './stats-ranking.helpers.ts';
+import { StatsPlaceholder } from './stats-section.component.tsx';
 
-type RankingPanelsProps<T> = {
-  ranking: T[];
+type Props<T> = {
+  /** Ranking completo, de menor a mayor impacto */
+  entries: RankedEntry<T>[];
   getId: (item: T) => string;
+  getName: (item: T) => string;
+  getDetail: (item: T) => string;
   getValue: (item: T) => number;
-  renderPrimary: (item: T) => string;
-  renderSecondary: (item: T) => string;
-  categoryLabel?: string;
-  impactUnit?: string;
-  emptyLabel?: string;
-  onActivate?: (item: T) => void;
+  unit?: string;
+  color?: string;
+  emptyLabel: string;
+  searchPlaceholder?: string;
+  toolbar?: ReactNode;
+  onActivate: (item: T) => void;
 };
 
-function RankingEntryContent<T>({
-  item,
-  position,
-  getValue,
-  renderPrimary,
-  renderSecondary,
-  impactUnit,
-}: Pick<
-  RankingPanelsProps<T>,
-  'getValue' | 'renderPrimary' | 'renderSecondary' | 'impactUnit'
-> & {
-  item: T;
-  position: number;
-}) {
-  return (
-    <>
-      <span className="font-mono text-xs font-bold w-6">{position}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{renderPrimary(item)}</p>
-        <p className="text-xs opacity-70">{renderSecondary(item)}</p>
-      </div>
-      <span className="text-sm font-mono font-bold whitespace-nowrap">
-        {formatImpactValue(getValue(item))}
-        {impactUnit && (
-          <span className="ml-1 text-xs font-normal opacity-75">
-            {impactUnit}
-          </span>
-        )}
-      </span>
-    </>
-  );
-}
+type View = 'best' | 'worst';
 
-function RankingCard<T>({
-  title,
-  tone,
+const normalize = (value: string) =>
+  value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+export function StatsRankingList<T>({
   entries,
   getId,
+  getName,
+  getDetail,
   getValue,
-  renderPrimary,
-  renderSecondary,
-  categoryLabel,
-  impactUnit,
+  unit,
+  color,
   emptyLabel,
+  searchPlaceholder,
+  toolbar,
   onActivate,
-}: RankingPanelsProps<T> & {
-  title: string;
-  tone: 'success' | 'error' | 'neutral';
-  entries: RankedEntry<T>[];
-}) {
+}: Props<T>) {
   const { t } = useTranslation();
-  const toneClasses =
-    tone === 'success'
-      ? 'bg-success text-success-content'
-      : tone === 'error'
-        ? 'bg-error text-error-content'
-        : 'bg-base-200 text-base-content';
-  const titleClass =
-    tone === 'success'
-      ? 'text-success'
-      : tone === 'error'
-        ? 'text-error'
-        : 'text-base-content';
+  const [view, setView] = useState<View>('best');
+  const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const isPaged = entries.length > RANKING_PAGE_SIZE;
+  const searchTerm = normalize(query.trim());
+
+  let visible: RankedEntry<T>[];
+  if (searchTerm) {
+    visible = entries.filter(({ item }) =>
+      normalize(getName(item)).includes(searchTerm),
+    );
+  } else if (!isPaged || expanded) {
+    visible = view === 'worst' ? [...entries].reverse() : entries;
+  } else {
+    visible =
+      view === 'worst'
+        ? entries.slice(-RANKING_PAGE_SIZE).reverse()
+        : entries.slice(0, RANKING_PAGE_SIZE);
+  }
+
+  const maxAbs = Math.max(...entries.map(({ item }) => Math.abs(getValue(item))), 0);
 
   return (
-    <div className="card bg-base-100 shadow-sm">
-      <div className="card-body p-4">
-        <h3 className={`card-title ${titleClass} text-base`}>
-          {title}
-          {categoryLabel && (
-            <span className="text-xs font-normal text-base-content/50">
-              ({categoryLabel})
-            </span>
+    <div className="flex flex-col gap-3">
+      {(toolbar || searchPlaceholder) && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {toolbar}
+          {searchPlaceholder && (
+            <input
+              type="search"
+              className="input input-bordered input-sm w-full"
+              placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
           )}
-        </h3>
-        <ul className="space-y-1 mt-2">
-          {entries.map(({ item, position }) => {
-            const entryClasses = `flex w-full items-center gap-2 p-2 rounded text-left ${toneClasses}`;
+        </div>
+      )}
 
+      {isPaged && !searchTerm && (
+        <div role="tablist" className="tabs tabs-box tabs-sm w-fit">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'best'}
+            className={`tab ${view === 'best' ? 'tab-active' : ''}`}
+            onClick={() => setView('best')}
+          >
+            {t('stats.ranking.lowerImpact')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'worst'}
+            className={`tab ${view === 'worst' ? 'tab-active' : ''}`}
+            onClick={() => setView('worst')}
+          >
+            {t('stats.ranking.higherImpact')}
+          </button>
+        </div>
+      )}
+
+      {searchTerm && (
+        <p className="text-xs text-base-content/60">
+          {t('stats.ranking.searchResults', { count: visible.length })}
+        </p>
+      )}
+
+      {visible.length === 0 ? (
+        <StatsPlaceholder className="h-40">{emptyLabel}</StatsPlaceholder>
+      ) : (
+        <ol className={`space-y-1 ${expanded ? 'max-h-[32rem] overflow-y-auto pr-1' : ''}`}>
+          {visible.map(({ item, position }) => {
+            const value = getValue(item);
+            const width = maxAbs > 0 ? (Math.abs(value) / maxAbs) * 100 : 0;
             return (
               <li key={getId(item)}>
-                {onActivate ? (
-                  <button
-                    type="button"
-                    className={`${entryClasses} cursor-pointer transition hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}
-                    onClick={() => onActivate(item)}
-                  >
-                    <RankingEntryContent
-                      item={item}
-                      position={position}
-                      getValue={getValue}
-                      renderPrimary={renderPrimary}
-                      renderSecondary={renderSecondary}
-                      impactUnit={impactUnit}
-                    />
-                  </button>
-                ) : (
-                  <div className={entryClasses}>
-                    <RankingEntryContent
-                      item={item}
-                      position={position}
-                      getValue={getValue}
-                      renderPrimary={renderPrimary}
-                      renderSecondary={renderSecondary}
-                      impactUnit={impactUnit}
-                    />
-                  </div>
-                )}
+                <button
+                  type="button"
+                  title={t('stats.ranking.compare')}
+                  className="group flex w-full items-center gap-3 rounded-field bg-base-200/60 px-3 py-2 text-left transition hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  onClick={() => onActivate(item)}
+                >
+                  <span className="w-7 shrink-0 text-right font-mono text-xs font-bold text-base-content/60">
+                    {position}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{getName(item)}</span>
+                    <span className="block truncate text-xs text-base-content/60">
+                      {getDetail(item)}
+                    </span>
+                    <span className="mt-1 block h-1 rounded-full bg-base-300">
+                      <span
+                        className="block h-1 rounded-full"
+                        style={{ width: `${width}%`, backgroundColor: color }}
+                      />
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right font-mono text-sm font-bold whitespace-nowrap">
+                    {formatImpactValue(value, '0')}
+                    {unit && (
+                      <span className="block text-[10px] font-normal text-base-content/60">
+                        {unit}
+                      </span>
+                    )}
+                  </span>
+                  <FiArrowRight
+                    aria-hidden
+                    className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-primary"
+                  />
+                </button>
               </li>
             );
           })}
-          {entries.length === 0 && (
-            <p className="text-sm text-base-content/50 p-2">{emptyLabel ?? t('common.empty.noData')}</p>
-          )}
-        </ul>
-      </div>
-    </div>
-  );
-}
+        </ol>
+      )}
 
-export function StatsRankingPanels<T>({
-  ranking,
-  getId,
-  getValue,
-  renderPrimary,
-  renderSecondary,
-  categoryLabel,
-  impactUnit,
-  emptyLabel,
-  onActivate,
-}: RankingPanelsProps<T>) {
-  const { best, worst } = deriveRankingLists(ranking);
-  const { t } = useTranslation();
-
-  if (ranking.length < 20) {
-    return (
-      <RankingCard
-        title={t('stats.ranking.top10')}
-        tone="neutral"
-        entries={best}
-        ranking={ranking}
-        getId={getId}
-        getValue={getValue}
-        renderPrimary={renderPrimary}
-        renderSecondary={renderSecondary}
-        categoryLabel={categoryLabel}
-        impactUnit={impactUnit}
-        emptyLabel={emptyLabel}
-        onActivate={onActivate}
-      />
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <RankingCard
-        title={t('stats.ranking.lowerImpact')}
-        tone="success"
-        entries={best}
-        ranking={ranking}
-        getId={getId}
-        getValue={getValue}
-        renderPrimary={renderPrimary}
-        renderSecondary={renderSecondary}
-        categoryLabel={categoryLabel}
-        impactUnit={impactUnit}
-        emptyLabel={emptyLabel}
-        onActivate={onActivate}
-      />
-      <RankingCard
-        title={t('stats.ranking.higherImpact')}
-        tone="error"
-        entries={worst}
-        ranking={ranking}
-        getId={getId}
-        getValue={getValue}
-        renderPrimary={renderPrimary}
-        renderSecondary={renderSecondary}
-        categoryLabel={categoryLabel}
-        impactUnit={impactUnit}
-        emptyLabel={
-          ranking.length > 0
-            ? t('stats.ranking.notEnoughData')
-            : emptyLabel
-        }
-        onActivate={onActivate}
-      />
+      {isPaged && !searchTerm && (
+        <button
+          type="button"
+          className="btn btn-ghost btn-xs self-center"
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          {expanded
+            ? t('stats.ranking.showLess')
+            : t('stats.ranking.showAll', { count: entries.length })}
+        </button>
+      )}
     </div>
   );
 }

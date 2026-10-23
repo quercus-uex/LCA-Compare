@@ -1,42 +1,47 @@
-import {
-  meanCategories,
-  round,
-  type CategoryAmountRecord,
-} from '../stats-aggregation.helpers';
-import type { KpiDto } from '../dto/global-stats.dto';
-import type { CultivoWithGeo } from './stats.types';
+import { EF_CATEGORIES, type EfCategoryId } from 'common/impact';
+import type { CategoryValues, KpiDto } from 'common/stats';
+import { meanCategories, round } from './stats-aggregation.helpers';
+import { collectCategorias, type StatsRow } from './stats-rows.helpers';
 
-export type KpiSummary = Pick<
-  KpiDto,
-  'totalParcelas' | 'totalCultivos' | 'superficieTotal' | 'impactosPorCategoria'
->;
-
-export function computeKpiSummary(
-  cultivos: CultivoWithGeo[],
-  categoryMap: Map<string, CategoryAmountRecord>,
-): KpiSummary {
-  const totalCultivos = cultivos.length;
-  const parcelaIds = [...new Set(cultivos.map((c) => c.idParcela))];
-  const totalParcelas = parcelaIds.length;
-
-  const superficieTotal = cultivos.reduce(
-    (sum, c) => sum + (c.superficieCultivada ?? 0),
-    0,
-  );
-
-  const categoryRecords: CategoryAmountRecord[] = [];
-  for (const c of cultivos) {
-    if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
-      categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
-    }
-  }
-
-  const impactosPorCategoria = meanCategories(categoryRecords);
+/**
+ * `previousRows` son los cultivos del año anterior con los mismos filtros, o
+ * `null` si no hay año seleccionado.
+ */
+export function computeKpis(
+  rows: StatsRow[],
+  previousRows: StatsRow[] | null,
+): KpiDto {
+  const categorias = collectCategorias(rows);
+  const impactosPorCategoria = meanCategories(categorias);
 
   return {
-    totalParcelas,
-    totalCultivos,
-    superficieTotal: round(superficieTotal),
+    totalParcelas: new Set(rows.map((r) => r.idParcela)).size,
+    totalCultivos: rows.length,
+    cultivosConImpacto: categorias.length,
+    superficieTotal: round(rows.reduce((sum, r) => sum + r.superficie, 0)),
     impactosPorCategoria,
+    variacionInteranual:
+      previousRows && categorias.length > 0
+        ? computeVariacionInteranual(impactosPorCategoria, previousRows)
+        : null,
   };
+}
+
+function computeVariacionInteranual(
+  current: CategoryValues,
+  previousRows: StatsRow[],
+): Record<EfCategoryId, number | null> | null {
+  const previousCategorias = collectCategorias(previousRows);
+  if (previousCategorias.length === 0) return null;
+
+  const previous = meanCategories(previousCategorias);
+  const variacion = {} as Record<EfCategoryId, number | null>;
+  for (const cat of EF_CATEGORIES) {
+    const prev = previous[cat.id];
+    variacion[cat.id] =
+      prev === 0
+        ? null
+        : round(((current[cat.id] - prev) / Math.abs(prev)) * 100, 1);
+  }
+  return variacion;
 }

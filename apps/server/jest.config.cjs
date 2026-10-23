@@ -15,6 +15,7 @@ module.exports = {
   moduleNameMapper: {
     '^@openrouter/sdk$': '<rootDir>/test/mocks/openrouter-sdk.cjs',
     '^common/impact$': '<rootDir>/test/mocks/common-impact.cjs',
+    '^common/stats$': '<rootDir>/test/mocks/common-stats.cjs',
     '^common/(.*)$': '<rootDir>/../../packages/common/src/$1.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

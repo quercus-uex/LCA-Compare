@@ -1,125 +1,143 @@
 import { useTranslation } from 'react-i18next';
 import {
-  AreaChart,
-  Area,
+  Bar,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
 } from 'recharts';
-import { EF_CATEGORIES, getEfCategory, type EfCategoryId } from '../common/constants.ts';
-import { CHART_TOOLTIP_STYLE } from './stats-colors.ts';
-import { formatImpactValue } from './stats-formatters.ts';
+import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
+import {
+  CHART_GRID_STROKE,
+  CHART_MUTED_FILL,
+  CHART_REFERENCE_STROKE,
+  CHART_SELECTED_FILL,
+  CHART_TICK,
+} from './stats-chart-theme.ts';
+import { formatAxisValue, formatImpactValue } from './stats-formatters.ts';
+import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
 type Props = {
   data: EvolucionTemporalItemDto[];
   selectedCategory: EfCategoryId;
+  anio?: number;
 };
 
-export const StatsTimeline = ({ data, selectedCategory }: Props) => {
+type TooltipProps = {
+  active?: boolean;
+  payload?: Array<{ payload: EvolucionTemporalItemDto }>;
+  selectedCategory: EfCategoryId;
+};
+
+const TimelineTooltip = ({ active, payload, selectedCategory }: TooltipProps) => {
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
-  // Una sola categoría en el gráfico principal: las categorías tienen unidades
-  // distintas y no se apilan ni se suman
-  const selected = getEfCategory(selectedCategory);
+  const item = payload?.[0]?.payload;
+  if (!active || !item) return null;
+  const category = getEfCategory(selectedCategory);
+
+  return (
+    <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
+      <p className="font-bold">{item.anio}</p>
+      <p style={{ color: category?.color }}>
+        {getCategoryLabel(selectedCategory)}:{' '}
+        <span className="font-mono font-semibold">
+          {formatImpactValue(item.categorias[selectedCategory] ?? 0, '0')}
+        </span>{' '}
+        {category?.unit}
+      </p>
+      <p className="text-base-content/70">
+        {t('stats.chart.cropsCount', { count: item.numCultivos })}
+      </p>
+    </div>
+  );
+};
+
+// Una sola categoría: las categorías tienen unidades distintas y no se apilan
+export const StatsTimeline = ({ data, selectedCategory, anio }: Props) => {
+  const { t } = useTranslation();
+  const { getCategoryLabel } = useTranslatedEfCategories();
+  const category = getEfCategory(selectedCategory);
 
   if (data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-80 text-base-content/50">
-        {t('stats.chart.noTimelineData')}
-      </div>
-    );
+    return <StatsPlaceholder>{t('stats.chart.noTimelineData')}</StatsPlaceholder>;
   }
 
   return (
-    <div className="space-y-4">
-      <ResponsiveContainer width="100%" height={350}>
-        <AreaChart
-          data={data}
-          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="hsl(var(--bc) / 0.1)"
-          />
-          <XAxis
-            dataKey="anio"
-            tick={{ fontSize: 12 }}
-            tickFormatter={(v: number) => v.toString()}
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-base-content/70">
+        <span className="flex items-center gap-1.5">
+          <span className="h-0.5 w-4 rounded" style={{ backgroundColor: category?.color }} />
+          {getCategoryLabel(selectedCategory)} ({category?.unit})
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: CHART_MUTED_FILL }} />
+          {t('stats.chart.sampleSize')}
+        </span>
+      </div>
+      <ResponsiveContainer width="100%" height={320}>
+        <ComposedChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+          <XAxis dataKey="anio" tick={CHART_TICK} />
+          <YAxis
+            yAxisId="impact"
+            tick={CHART_TICK}
+            width={72}
+            tickFormatter={formatAxisValue}
           />
           <YAxis
-            tick={{ fontSize: 12 }}
-            tickFormatter={(v: number) => formatImpactValue(v, '0')}
-            label={{
-              value: selected?.unit ?? '',
-              angle: -90,
-              position: 'insideLeft',
-              style: { fontSize: 12 },
-            }}
+            yAxisId="count"
+            orientation="right"
+            tick={CHART_TICK}
+            allowDecimals={false}
+            width={40}
           />
           <Tooltip
-            contentStyle={CHART_TOOLTIP_STYLE}
-            formatter={(value) => {
-              const v = typeof value === 'number' ? value : 0;
-              return [
-                formatImpactValue(v, '0'),
-                `${getCategoryLabel(selectedCategory)} (${selected?.unit ?? ''})`,
-              ];
-            }}
+            cursor={{ fill: CHART_MUTED_FILL }}
+            content={<TimelineTooltip selectedCategory={selectedCategory} />}
           />
-          <Area
+          {anio !== undefined && (
+            <ReferenceLine
+              yAxisId="impact"
+              x={anio}
+              stroke={CHART_REFERENCE_STROKE}
+              strokeDasharray="4 4"
+            />
+          )}
+          <Bar
+            yAxisId="count"
+            dataKey="numCultivos"
+            fill={CHART_MUTED_FILL}
+            radius={[4, 4, 0, 0]}
+            maxBarSize={48}
+          >
+            {data.map((item) => (
+              <Cell
+                key={item.anio}
+                fill={item.anio === anio ? CHART_SELECTED_FILL : CHART_MUTED_FILL}
+              />
+            ))}
+          </Bar>
+          <Line
+            yAxisId="impact"
+            type="monotone"
             dataKey={(entry: EvolucionTemporalItemDto) =>
               entry.categorias[selectedCategory] ?? 0
             }
-            name={getCategoryLabel(selectedCategory)}
-            stroke={selected?.color}
-            fill={selected?.color}
-            fillOpacity={0.6}
+            stroke={category?.color}
+            strokeWidth={3}
+            dot={{ r: 4, fill: category?.color }}
+            activeDot={{ r: 6 }}
           />
-        </AreaChart>
+        </ComposedChart>
       </ResponsiveContainer>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        {EF_CATEGORIES.map((cat) => (
-          <div key={cat.id} className="card bg-base-100 shadow-sm">
-            <div className="card-body p-2">
-              <div
-                className="text-[11px] font-semibold truncate"
-                style={{ color: cat.color }}
-              >
-                {getCategoryLabel(cat.id)}
-              </div>
-              <ResponsiveContainer width="100%" height={60}>
-                <LineChart data={data}>
-                  <Line
-                    type="monotone"
-                    dataKey={(entry: EvolucionTemporalItemDto) =>
-                      entry.categorias[cat.id] ?? 0
-                    }
-                    stroke={cat.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <div className="text-[10px] text-base-content/50 text-right">
-                {data.length > 0
-                  ? formatImpactValue(
-                      data[data.length - 1]?.categorias[cat.id] ?? 0,
-                      '0',
-                    )
-                  : '—'}{' '}
-                {cat.unit.split(' ')[0]}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

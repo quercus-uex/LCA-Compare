@@ -1,149 +1,121 @@
-import type { EfCategoryId } from 'common/impact';
+import { STATS_MIN_PARCELAS } from 'common/stats';
+import type {
+  CategoryValues,
+  PoblacionRankingItemDto,
+  ProvinciaRankingItemDto,
+} from 'common/stats';
 import {
   meanCategories,
   round,
   sortByImpact,
-  type CategoryAmountRecord,
-} from '../stats-aggregation.helpers';
-import type {
-  PoblacionRankingItemDto,
-  ProvinciaRankingItemDto,
-} from '../dto/global-stats.dto';
-import type { CultivoWithGeo } from './stats.types';
+} from './stats-aggregation.helpers';
+import { collectCategorias, type StatsRow } from './stats-rows.helpers';
 
-type GroupedProvincia = {
-  nombreProvincia: string;
-  parcelaIds: Set<string>;
-  cultivos: CultivoWithGeo[];
-  categoryRecords: CategoryAmountRecord[];
+export type ZonaRanking<T> = {
+  ranking: T[];
+  /** Zonas con datos que no llegan al mínimo de parcelas */
+  ocultas: number;
 };
 
-type GroupedPoblacion = {
-  nombrePoblacion: string;
-  nombreProvincia: string;
-  parcelaIds: Set<string>;
-  categoryRecords: CategoryAmountRecord[];
+type ZonaGroup = {
+  rows: StatsRow[];
+  numParcelas: number;
+  /** Media por cultivo */
+  impactosPorCategoria: CategoryValues;
 };
 
-export function rankProvincias(
-  cultivos: CultivoWithGeo[],
-  categoryMap: Map<string, CategoryAmountRecord>,
-  categoria?: EfCategoryId,
-): ProvinciaRankingItemDto[] {
-  const grouped = new Map<string, GroupedProvincia>();
-
-  for (const c of cultivos) {
-    const provincia = c.parcela?.poblacion?.provincia;
-    if (!provincia) continue;
-
-    let entry = grouped.get(provincia.id);
-    if (!entry) {
-      entry = {
-        nombreProvincia: provincia.nombre,
-        parcelaIds: new Set(),
-        cultivos: [],
-        categoryRecords: [],
-      };
-      grouped.set(provincia.id, entry);
-    }
-
-    entry.parcelaIds.add(c.idParcela);
-    entry.cultivos.push(c);
-
-    if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
-      entry.categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
-    }
+/**
+ * Agrupa los cultivos por zona y descarta las que tienen menos de
+ * `STATS_MIN_PARCELAS` parcelas con resultado de impacto: son las que aportan
+ * las medias, así que el umbral protege a esas explotaciones y evita rankings
+ * decididos por una o dos parcelas.
+ */
+function groupZonas(
+  rows: StatsRow[],
+  getZonaId: (row: StatsRow) => string | undefined,
+): { visibles: Map<string, ZonaGroup>; ocultas: number } {
+  const grouped = new Map<string, StatsRow[]>();
+  for (const r of rows) {
+    const id = getZonaId(r);
+    if (id === undefined) continue;
+    const zona = grouped.get(id);
+    if (zona) zona.push(r);
+    else grouped.set(id, [r]);
   }
 
-  const result: ProvinciaRankingItemDto[] = [];
-
-  for (const [idProvincia, entry] of grouped) {
-    const numCultivos = entry.cultivos.length;
-    const superficieTotal = entry.cultivos.reduce(
-      (sum, c) => sum + (c.superficieCultivada ?? 0),
-      0,
+  const visibles = new Map<string, ZonaGroup>();
+  let ocultas = 0;
+  for (const [id, zonaRows] of grouped) {
+    const parcelasConImpacto = new Set(
+      zonaRows.filter((r) => r.categorias).map((r) => r.idParcela),
     );
-    const produccionMedia =
-      numCultivos > 0
-        ? entry.cultivos.reduce((sum, c) => sum + (c.produccion ?? 0), 0) /
-          numCultivos
-        : 0;
-    const consumoAguaMedio =
-      numCultivos > 0
-        ? entry.cultivos.reduce((sum, c) => sum + (c.consumoAgua ?? 0), 0) /
-          numCultivos
-        : 0;
-
-    const impactosPorCategoria = meanCategories(entry.categoryRecords);
-    const eficiencia =
-      consumoAguaMedio > 0 ? produccionMedia / consumoAguaMedio : 0;
-
-    result.push({
-      idProvincia,
-      nombreProvincia: entry.nombreProvincia,
-      numParcelas: entry.parcelaIds.size,
-      numCultivos,
-      superficieTotal: round(superficieTotal),
-      produccionMedia: round(produccionMedia),
-      consumoAguaMedio: round(consumoAguaMedio),
-      impactosPorCategoria,
-      eficiencia: round(eficiencia * 100) / 100,
+    if (parcelasConImpacto.size < STATS_MIN_PARCELAS) {
+      ocultas += 1;
+      continue;
+    }
+    visibles.set(id, {
+      rows: zonaRows,
+      numParcelas: new Set(zonaRows.map((r) => r.idParcela)).size,
+      impactosPorCategoria: meanCategories(collectCategorias(zonaRows)),
     });
   }
 
-  return sortByImpact(result, categoria);
+  return { visibles, ocultas };
+}
+
+const sum = (rows: StatsRow[], get: (r: StatsRow) => number) =>
+  rows.reduce((acc, r) => acc + get(r), 0);
+
+const ratio = (numerator: number, denominator: number, decimals: number) =>
+  denominator > 0 ? round(numerator / denominator, decimals) : null;
+
+export function rankProvincias(
+  rows: StatsRow[],
+): ZonaRanking<ProvinciaRankingItemDto> {
+  const { visibles, ocultas } = groupZonas(rows, (r) => r.provincia?.id);
+
+  const ranking: ProvinciaRankingItemDto[] = [];
+  for (const [idProvincia, zona] of visibles) {
+    const superficie = sum(zona.rows, (r) => r.superficie);
+    const produccion = sum(zona.rows, (r) => r.produccion);
+    const consumoAgua = sum(zona.rows, (r) => r.consumoAgua);
+
+    ranking.push({
+      idProvincia,
+      nombreProvincia: zona.rows[0]?.provincia?.nombre ?? '',
+      numParcelas: zona.numParcelas,
+      numCultivos: zona.rows.length,
+      superficieTotal: round(superficie),
+      impactosPorCategoria: zona.impactosPorCategoria,
+      // Cocientes de totales: ponderan cada cultivo por su tamaño
+      rendimiento: ratio(produccion, superficie, 1),
+      dotacionAgua: ratio(consumoAgua, superficie, 1),
+      productividadAgua: ratio(produccion, consumoAgua, 2),
+    });
+  }
+
+  return { ranking: sortByImpact(ranking), ocultas };
 }
 
 export function rankPoblaciones(
-  cultivos: CultivoWithGeo[],
-  categoryMap: Map<string, CategoryAmountRecord>,
-  categoria?: EfCategoryId,
-  idProvinciaPoblacion?: string,
-): PoblacionRankingItemDto[] {
-  const grouped = new Map<string, GroupedPoblacion>();
+  rows: StatsRow[],
+): ZonaRanking<PoblacionRankingItemDto> {
+  const { visibles, ocultas } = groupZonas(rows, (r) => r.poblacion?.id);
 
-  for (const c of cultivos) {
-    const poblacion = c.parcela?.poblacion;
-    if (!poblacion) continue;
-
-    if (
-      idProvinciaPoblacion &&
-      poblacion.provincia?.id !== idProvinciaPoblacion
-    ) {
-      continue;
-    }
-
-    let entry = grouped.get(poblacion.id);
-    if (!entry) {
-      entry = {
-        nombrePoblacion: poblacion.nombre,
-        nombreProvincia: poblacion.provincia?.nombre ?? '',
-        parcelaIds: new Set(),
-        categoryRecords: [],
-      };
-      grouped.set(poblacion.id, entry);
-    }
-
-    entry.parcelaIds.add(c.idParcela);
-
-    if (c.idResultadoImpacto && categoryMap.has(c.idResultadoImpacto)) {
-      entry.categoryRecords.push(categoryMap.get(c.idResultadoImpacto)!);
-    }
-  }
-
-  const result: PoblacionRankingItemDto[] = [];
-
-  for (const [idPoblacion, entry] of grouped) {
-    const impactosPorCategoria = meanCategories(entry.categoryRecords);
-
-    result.push({
+  const ranking: PoblacionRankingItemDto[] = [];
+  for (const [idPoblacion, zona] of visibles) {
+    const first = zona.rows[0];
+    ranking.push({
       idPoblacion,
-      nombrePoblacion: entry.nombrePoblacion,
-      nombreProvincia: entry.nombreProvincia,
-      numParcelas: entry.parcelaIds.size,
-      impactosPorCategoria,
+      nombrePoblacion: first?.poblacion?.nombre ?? '',
+      idProvincia: first?.provincia?.id ?? '',
+      nombreProvincia: first?.provincia?.nombre ?? '',
+      numParcelas: zona.numParcelas,
+      numCultivos: zona.rows.length,
+      superficieTotal: round(sum(zona.rows, (r) => r.superficie)),
+      impactosPorCategoria: zona.impactosPorCategoria,
     });
   }
 
-  return sortByImpact(result, categoria);
+  return { ranking: sortByImpact(ranking), ocultas };
 }

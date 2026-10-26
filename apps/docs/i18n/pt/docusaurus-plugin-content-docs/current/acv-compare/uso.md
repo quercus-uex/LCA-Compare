@@ -31,7 +31,7 @@ A partir da lista de parcelas, pode aceder ao detalhe de cada uma, onde são apr
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Exemplo de parcela" width="600"/>
 </p>
 
-Ao selecionar uma cultura, são apresentados os resultados de ACV discriminados por categoria de impacto: fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total. A partir desta vista também pode usar **Adicionar à comparação** para abrir o comparador com essa parcela pré-carregada como conjunto de Referência ou Objetivo.
+Ao selecionar uma cultura, são apresentados os resultados de ACV discriminados por categoria de impacto: fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total. A partir desta vista também pode usar **Adicionar à comparação** para abrir o comparador com essa parcela pré-carregada como conjunto de Referência ou Alvo.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="ACV de uma parcela" width="600"/>
@@ -58,7 +58,17 @@ Nele, pode comparar dois conjuntos de culturas, filtrando por:
 
 Este filtro pode ser aplicado a qualquer um dos dois conjuntos e combina-se com os restantes filtros. Uma **parcela de referência** é uma parcela que um administrador marcou como dado validado; não deve ser confundida com o **conjunto de Referência**, que é o conjunto obrigatório da comparação.
 
-O conjunto de **Referência** é obrigatório. Se apenas for especificada a referência, serão apresentados os valores médios de impacto do conjunto. Se também for especificado um conjunto **Objetivo**, será calculada a diferença percentual entre ambos para cada categoria.
+O conjunto de **Referência** é obrigatório. Se apenas for especificada a referência, serão apresentados os valores médios de impacto do conjunto. Se também for especificado um conjunto **Alvo**, será calculada para cada categoria a diferença percentual do alvo em relação à referência.
+
+A **Referência** atua sempre como linha de base e o **Alvo** é o conjunto que se avalia em relação a ela:
+
+```
+Diferença (%) = (alvo − referência) / referência × 100
+```
+
+- Um valor **positivo** (a vermelho) indica que o alvo tem **mais** impacto do que a referência. Por exemplo, +20 % significa que o impacto do alvo supera em 20 % o da referência.
+- Um valor **negativo** (a verde) indica que o alvo tem **menos** impacto do que a referência.
+- É apresentado **n/a** quando o valor de referência é 0 ou a categoria não tem dados no alvo.
 
 <p align="center">
     <img src="/img/acv-compare/ejemplo_comparativa_acv.png" alt="Exemplo de comparação de ACV" width="800"/>
@@ -75,11 +85,11 @@ No comparador, as opções disponíveis são:
 
 - **Exportar comparação**: exporta os resultados de ambos os conjuntos com os metadados dos filtros aplicados.
 - **Exportar referência**: exporta apenas os valores do conjunto de referência.
-- **Exportar objetivo**: exporta apenas os valores do conjunto objetivo.
+- **Exportar alvo**: exporta apenas os valores do conjunto alvo.
 
 ### Gerar Relatório
 
-Também pode gerar um relatório detalhado da comparação em **PDF** clicando em **Gerar relatório**. O relatório contém um resumo da comparação gerado por IA, recomendações para o conjunto objetivo, os três impactos com maior diferença e a discriminação completa da comparação por categorias. O relatório é gerado no idioma ativo da interface.
+Também pode gerar um relatório detalhado da comparação em **PDF** clicando em **Gerar relatório**. O relatório contém um resumo da comparação gerado por IA, recomendações para o conjunto alvo, os três impactos com maior diferença e a discriminação completa da comparação por categorias. O relatório é gerado no idioma ativo da interface.
 
 <p align="center">
     <img src="/img/acv-compare/boton_generar_informe.png" alt="Botão para gerar relatório de ACV" width="400"/>

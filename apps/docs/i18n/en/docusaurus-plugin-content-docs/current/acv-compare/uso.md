@@ -58,7 +58,17 @@ There, you can compare two crop sets, filtering by:
 
 This filter can be applied to either set and is combined with the other filters. A **reference plot** is a plot that an administrator has marked as validated data; it should not be confused with the **Reference** set, which is the mandatory set in the comparison.
 
-The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference between both sets is calculated for each category.
+The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference of the target relative to the reference is calculated for each category.
+
+The **Reference** always acts as the baseline and the **Target** is the set being evaluated against it:
+
+```
+Difference (%) = (target − reference) / reference × 100
+```
+
+- A **positive** value (in red) means the target has a **higher** impact than the reference. For example, +20 % means the target's impact is 20 % above the reference.
+- A **negative** value (in green) means the target has a **lower** impact than the reference.
+- **n/a** is shown when the reference value is 0 or the category has no data in the target.
 
 <p align="center">
     <img src="/img/acv-compare/ejemplo_comparativa_acv.png" alt="LCA comparison example" width="800"/>

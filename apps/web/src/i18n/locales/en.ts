@@ -153,6 +153,8 @@ export const en = {
       generatingReport: 'Generating report...',
       reportGenerated: 'Report generated',
       reportFilename: 'Report.pdf',
+      differenceNote:
+        'Difference = (target − reference) / reference × 100. Red means the target has a higher impact than the reference; green, a lower one.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticides',

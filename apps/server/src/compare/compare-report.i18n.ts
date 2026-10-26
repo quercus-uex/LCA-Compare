@@ -51,6 +51,7 @@ type ReportLabels = {
   readonly targetAmount: string;
   readonly unit: string;
   readonly difference: string;
+  readonly differenceNote: string;
   readonly notAvailable: string;
   readonly referenceOnly: string;
   readonly yes: string;
@@ -92,6 +93,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     targetAmount: 'Cantidad objetivo',
     unit: 'Unidad',
     difference: 'Diferencia',
+    differenceNote:
+      'Diferencia = (objetivo − referencia) / referencia × 100. Un valor positivo indica que el conjunto objetivo tiene más impacto que el de referencia; uno negativo, menos.',
     notAvailable: 'n/a',
     referenceOnly: 'Solo parcelas de referencia',
     yes: 'Sí',
@@ -131,6 +134,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     targetAmount: 'Target amount',
     unit: 'Unit',
     difference: 'Difference',
+    differenceNote:
+      'Difference = (target − reference) / reference × 100. A positive value means the target set has a higher impact than the reference set; a negative value, a lower one.',
     notAvailable: 'n/a',
     referenceOnly: 'Only reference plots',
     yes: 'Yes',
@@ -170,6 +175,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     targetAmount: 'Quantidade alvo',
     unit: 'Unidade',
     difference: 'Diferença',
+    differenceNote:
+      'Diferença = (alvo − referência) / referência × 100. Um valor positivo indica que o conjunto alvo tem mais impacto do que o de referência; um negativo, menos.',
     notAvailable: 'n/a',
     referenceOnly: 'Apenas parcelas de referência',
     yes: 'Sim',

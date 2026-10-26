@@ -153,6 +153,8 @@ export const es = {
       generatingReport: 'Generando informe...',
       reportGenerated: 'Informe generado',
       reportFilename: 'Informe.pdf',
+      differenceNote:
+        'Diferencia = (objetivo − referencia) / referencia × 100. En rojo, el objetivo tiene más impacto que la referencia; en verde, menos.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',

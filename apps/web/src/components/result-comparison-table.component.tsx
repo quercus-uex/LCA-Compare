@@ -10,6 +10,7 @@ export const ResultComparisonTable = ({
   selectedImpact: ImpactKey;
 }) => {
   const { t } = useTranslation();
+  const hasTarget = result.impacto_total[0]?.tarAmount != null;
 
   return (
     <div className="overflow-x-auto">
@@ -18,11 +19,9 @@ export const ResultComparisonTable = ({
           <tr>
             <th>{t('common.fields.category')}</th>
             <th>{t('common.fields.referenceAmount')}</th>
-            {result.impacto_total[0]?.tarAmount != null && (
-              <th>{t('common.fields.targetAmount')}</th>
-            )}
+            {hasTarget && <th>{t('common.fields.targetAmount')}</th>}
             <th>{t('common.fields.unit')}</th>
-            {result.impacto_total[0]?.tarAmount != null && <th>{t('common.fields.difference')}</th>}
+            {hasTarget && <th>{t('common.fields.difference')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -49,6 +48,9 @@ export const ResultComparisonTable = ({
           ))}
         </tbody>
       </table>
+      {hasTarget && (
+        <p className="text-xs text-base-content/60 mt-2">{t('compare.result.differenceNote')}</p>
+      )}
     </div>
   );
 };

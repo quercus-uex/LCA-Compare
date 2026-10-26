@@ -13,7 +13,7 @@ sidebar_position: 1
 - **Visualização de resultados de ACV** por parcela e campanha, discriminados em categorias de impacto (fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total).
 - **Comparador de ACV** entre dois conjuntos de culturas filtrando por país, província, localidade, localização geográfica (raio em metros), tipo de cultura e ano de campanha.
 - **Geração de relatórios em PDF** com resumo e recomendações geradas por IA através do OpenRouter.
-- **Exportação de resultados para JSON** tanto do conjunto de referência como do objetivo.
+- **Exportação de resultados para JSON** tanto do conjunto de referência como do alvo.
 - **Dashboard de estatísticas** com KPIs globais, evolução temporal, rankings por província e localidade, mapas de calor, perfis de impacto e distribuição de culturas.
 - **Painel de administração** para gestão de utilizadores, parcelas, culturas, métodos de impacto, países, províncias e localidades.
 - **Autenticação JWT** com envio automático de credenciais por correio eletrónico no primeiro cálculo de ACV.

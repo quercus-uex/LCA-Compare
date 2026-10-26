@@ -121,7 +121,7 @@ export const pt = {
   },
   compare: {
     filters: {
-      reference: 'Referencia',
+      reference: 'Referência',
       target: 'Alvo',
       and: 'E',
       country: 'País',
@@ -153,6 +153,8 @@ export const pt = {
       generatingReport: 'A gerar relatório...',
       reportGenerated: 'Relatório gerado',
       reportFilename: 'Relatorio.pdf',
+      differenceNote:
+        'Diferença = (alvo − referência) / referência × 100. A vermelho, o alvo tem mais impacto do que a referência; a verde, menos.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',

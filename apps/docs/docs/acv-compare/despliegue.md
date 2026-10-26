@@ -174,9 +174,6 @@ etiquetas `main` y `sha-<hash>`. El repositorio de LCA Bridge tiene un workflow 
 
 GitHub Actions no se conecta al servidor: el despliegue es manual.
 
-El repositorio también incluye el workflow `.github/workflows/sonar.yml`, que instala dependencias, compila
-`packages/common`, genera el cliente Prisma y ejecuta la cobertura del backend antes del análisis de SonarCloud.
-
 ## Actualización
 
 Una vez publicadas las imágenes nuevas, actualiza el servidor:

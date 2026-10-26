@@ -67,43 +67,6 @@ export class ResultadoImpactoService {
     });
   }
 
-  async findManyAroundParcela(
-    parcelaId: string,
-    range: number,
-  ): Promise<
-    Prisma.ResultadoImpactoGetPayload<{
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } };
-            };
-          };
-        };
-      };
-    }>[]
-  > {
-    const parcelas = await this.parcelaService.findManyByRange(
-      parcelaId,
-      range,
-    );
-    const cultivos = await this.cultivoService.findMostRecentByParcelaIdBulk(
-      parcelas.map((p) => p.id),
-    );
-    return this.prisma.resultadoImpacto.findMany({
-      where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } },
-            },
-          },
-        },
-      },
-    });
-  }
-
   /**
    * Resultados de la campaña más reciente de cada parcela dentro del radio,
    * elegida entre las campañas que cumplen `cultivoWhere` (tipo, años).
@@ -134,13 +97,6 @@ export class ResultadoImpactoService {
           },
         },
       },
-    });
-  }
-
-  async findManyByTipoCultivo(tipo: string): Promise<ResultadoImpacto[]> {
-    const cultivos = await this.cultivoService.findMany({ where: { tipo } });
-    return this.prisma.resultadoImpacto.findMany({
-      where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },
     });
   }
 

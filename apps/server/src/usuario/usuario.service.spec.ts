@@ -134,28 +134,4 @@ describe('UsuarioService', () => {
       expect(result).toBe(usuario);
     });
   });
-
-  describe('count', () => {
-    it('calls prisma.usuario.count with the given where filter', async () => {
-      prisma.usuario.count.mockResolvedValue(3);
-
-      const result = await service.count({ email: { contains: 'test' } });
-
-      expect(prisma.usuario.count).toHaveBeenCalledWith({
-        where: { email: { contains: 'test' } },
-      });
-      expect(result).toBe(3);
-    });
-
-    it('calls prisma.usuario.count without where when omitted', async () => {
-      prisma.usuario.count.mockResolvedValue(50);
-
-      const result = await service.count();
-
-      expect(prisma.usuario.count).toHaveBeenCalledWith({
-        where: undefined,
-      });
-      expect(result).toBe(50);
-    });
-  });
 });

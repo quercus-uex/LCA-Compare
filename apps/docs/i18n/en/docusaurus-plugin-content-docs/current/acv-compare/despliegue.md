@@ -149,8 +149,6 @@ The `.github/workflows/build.yml` workflow runs on every push to `main` (and man
 
 GitHub Actions does not connect to the server: deployment is manual.
 
-The repository also includes the `.github/workflows/sonar.yml` workflow, which installs dependencies, builds `packages/common`, generates the Prisma client, and runs backend coverage before SonarCloud analysis.
-
 ## Updating
 
 Once the new images are published, update the server:

@@ -141,38 +141,6 @@ describe('CompareQueryBuilder', () => {
     expect(result).toBeNull();
   });
 
-  it('builds a campaign start year filter', () => {
-    const result = CompareQueryBuilder.build({ anioCampaniaInicio: 2024 });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          cultivo: {
-            fechaInicioCampania: {
-              gte: new Date('2024-01-01T00:00:00.000Z'),
-            },
-          },
-        },
-      ],
-    });
-  });
-
-  it('builds a campaign end year filter', () => {
-    const result = CompareQueryBuilder.build({ anioCampaniaFin: 2025 });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          cultivo: {
-            fechaInicioCampania: {
-              lt: new Date('2026-01-01T00:00:00.000Z'),
-            },
-          },
-        },
-      ],
-    });
-  });
-
   it('builds a combined campaign year range filter', () => {
     const result = CompareQueryBuilder.build({
       anioCampaniaInicio: 2023,

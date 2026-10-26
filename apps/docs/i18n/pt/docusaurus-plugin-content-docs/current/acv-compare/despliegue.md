@@ -149,8 +149,6 @@ O workflow `.github/workflows/build.yml` é executado em cada push para `main` (
 
 O GitHub Actions não se liga ao servidor: a implantação é manual.
 
-O repositório também inclui o workflow `.github/workflows/sonar.yml`, que instala dependências, compila `packages/common`, gera o cliente Prisma e executa a cobertura do backend antes da análise do SonarCloud.
-
 ## Atualização
 
 Depois de publicadas as novas imagens, atualize o servidor:

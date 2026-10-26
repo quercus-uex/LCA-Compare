@@ -27,6 +27,5 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
-  reporters: ['default', '<rootDir>/jest.sonar-reporter.cjs'],
   clearMocks: true,
 };

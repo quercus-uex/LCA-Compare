@@ -14,13 +14,6 @@ export class CultivoService {
     });
   }
 
-  async findMostRecentByParcelaId(id: string): Promise<Cultivo | null> {
-    return this.prisma.cultivo.findFirst({
-      where: { idParcela: id },
-      orderBy: { fechaInicioCampania: 'desc' },
-    });
-  }
-
   /**
    * Devuelve solo la campaña más reciente de cada parcela indicada, elegida
    * entre las campañas que cumplen `where` (p. ej. tipo de cultivo y años).

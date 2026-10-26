@@ -5,12 +5,12 @@ sidebar_position: 2
 
 # Service Deployment
 
-The whole platform (LCA Compare, LCA Bridge, the OpenLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
+The whole platform (LCA Compare, LCA Bridge, the openLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
 
 ## Prerequisites
 
 - Docker Engine with the Compose plugin.
-- The OpenLCA data (`ecoinvent` database) in a directory on the server. It is not included in the image for licensing reasons.
+- The openLCA data (`ecoinvent` database) in a directory on the server. It is not included in the image for licensing reasons.
 - If the GHCR packages are private, log in once with a *classic* token with the `read:packages` scope:
 
 ```bash
@@ -43,7 +43,7 @@ MAILER_PORT=587                          # Optional. SMTP port (465 uses implici
 CALC_API_KEY=                            # API key required by /calc in the x-api-key header
 DEFAULT_IMPACT_METHOD_UUID=2f995579-06bd-4681-b07c-cee3b1805b0d  # Default impact method (EF 3.1)
 
-OLCA_DATA_DIR=/opt/openlca-data          # Directory with the OpenLCA data
+OLCA_DATA_DIR=/opt/openlca-data          # Directory with the openLCA data
 
 BACKUP_SCHEDULE="0 3 * * *"              # Backup cron schedule
 BACKUP_LOCAL_ENABLED=true                # Save backups to a local directory on the machine
@@ -110,12 +110,12 @@ The `deploy/compose.yaml` file defines the `lca-platform` project with the follo
 | `lca-compare-backend` | `ghcr.io/quercus-uex/lca-compare-backend` | — | REST API (NestJS) |
 | `lca-compare-frontend` | `ghcr.io/quercus-uex/lca-compare-frontend` | 80→80 | SPA and reverse proxy (Nginx) |
 | `lca-bridge` | `ghcr.io/quercus-uex/lca-bridge` | — | LCA calculation |
-| `openlca-ipc` | `ghcr.io/quercus-uex/openlca-ipc` | — | OpenLCA IPC server using the data in `OLCA_DATA_DIR` |
+| `openlca-ipc` | `ghcr.io/quercus-uex/openlca-ipc` | — | openLCA IPC server using the data in `OLCA_DATA_DIR` |
 | `db-backup` | `ghcr.io/quercus-uex/lca-compare-backup` | — | Database backups |
 
 ### Networks
 
-All services share the project network, `lca-platform_default`, and reach each other by service name. Only the frontend publishes a port (80); the database, backend, LCA Bridge, and OpenLCA are not reachable from outside. If you need to access PostgreSQL from another machine, use an SSH tunnel.
+All services share the project network, `lca-platform_default`, and reach each other by service name. Only the frontend publishes a port (80); the database, backend, LCA Bridge, and openLCA are not reachable from outside. If you need to access PostgreSQL from another machine, use an SSH tunnel.
 
 ### Reverse Proxy (Nginx)
 
@@ -148,8 +148,6 @@ To update it, run `docker pull louislam/uptime-kuma:1` and `docker rm -f uptime-
 The `.github/workflows/build.yml` workflow runs on every push to `main` (and manually from GitHub). It builds and publishes the `lca-compare-backend`, `lca-compare-frontend`, and `lca-compare-backup` images to GHCR, each tagged `main` and `sha-<hash>`. The LCA Bridge repository has an equivalent workflow that publishes `lca-bridge` and `openlca-ipc`.
 
 GitHub Actions does not connect to the server: deployment is manual.
-
-The repository also includes the `.github/workflows/sonar.yml` workflow, which installs dependencies, builds `packages/common`, generates the Prisma client, and runs backend coverage before SonarCloud analysis.
 
 ## Updating
 

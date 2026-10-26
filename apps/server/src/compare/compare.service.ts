@@ -169,8 +169,13 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.getMeanOfResults(results);
   }
 
-  private readonly percentageDiff = (a: number, b: number): number | null =>
-    b === 0 ? null : ((a - b) / b) * 100;
+  // Relative change of the target set with respect to the reference (baseline):
+  // positive means the target has a higher impact than the reference.
+  private readonly percentageDiff = (
+    refAmount: number,
+    tarAmount: number,
+  ): number | null =>
+    refAmount === 0 ? null : ((tarAmount - refAmount) / refAmount) * 100;
 
   compareResults(
     refResults: ResultadoImpactoDto,
@@ -190,7 +195,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
             refAmount: r.amount,
             ...(tarResults && {
               tarAmount,
-              diff: this.percentageDiff(r.amount, tarAmount),
+              // A category missing from the target has no value to compare
+              diff: tarItem ? this.percentageDiff(r.amount, tarAmount) : null,
             }),
           };
         }),

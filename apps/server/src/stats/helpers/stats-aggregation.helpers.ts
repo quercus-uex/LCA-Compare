@@ -3,17 +3,14 @@ import {
   EF_CATEGORIES,
   type EfCategoryId,
 } from 'common/impact';
+import type { CategoryValues } from 'common/stats';
 
-export type CategoryAmountRecord = Record<EfCategoryId, number>;
+export type CategoryAmountRecord = CategoryValues;
 
 export type ImpactoDatos =
   | Record<string, Array<{ category: string; amount: number; unit?: string }>>
   | null
   | undefined;
-
-type CultivoWithImpactId = {
-  idResultadoImpacto: string | null;
-};
 
 type RankedByImpact = {
   impactosPorCategoria: CategoryAmountRecord;
@@ -23,16 +20,6 @@ export const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
   acc[cat.id] = 0;
   return acc;
 }, {} as CategoryAmountRecord);
-
-export function collectImpactoIds(cultivos: CultivoWithImpactId[]): string[] {
-  return [
-    ...new Set(
-      cultivos
-        .map((cultivo) => cultivo.idResultadoImpacto)
-        .filter((id): id is string => id !== null),
-    ),
-  ];
-}
 
 export function normalizeCategoryName(name: string): string {
   return name.trim().toLowerCase();

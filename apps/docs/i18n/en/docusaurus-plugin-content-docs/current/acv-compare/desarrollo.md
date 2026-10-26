@@ -210,9 +210,9 @@ The Prisma schema defines these main models:
 |---|---|
 | `Usuario` | Users with role (`admin` or standard user) |
 | `Parcela` | Plots with SIGPAC, cadastral reference, PostGIS geometry, and a reference plot flag |
-| `Cultivo` | Crop campaigns with metrics (area, production, water consumption) |
+| `Cultivo` | Crop seasons with metrics (area, production, water consumption) |
 | `ResultadoImpacto` | LCA results in JSON format by impact method |
-| `MetodoImpacto` | Registered impact methods (identified by OpenLCA UUID) |
+| `MetodoImpacto` | Registered impact methods (identified by openLCA UUID) |
 | `Pais` | Reference countries for locating plots |
 | `Provincia` | Provinces associated with a country and its cadastral code |
 | `Poblacion` | Towns associated with a province and its cadastral code |

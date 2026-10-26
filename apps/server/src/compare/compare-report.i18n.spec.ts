@@ -37,6 +37,19 @@ describe('compare report i18n', () => {
       );
     });
 
+    it('translates the human toxicity indicators with their own labels', () => {
+      expect(translateCategory('Human toxicity: carcinogenic', 'es')).toBe(
+        'Toxicidad humana (cancerígena)',
+      );
+      expect(translateCategory('Human toxicity: non-carcinogenic', 'en')).toBe(
+        'Human toxicity, non-cancer',
+      );
+    });
+
+    it('translates legacy Spanish category names', () => {
+      expect(translateCategory('Uso de Agua', 'pt')).toBe('Uso da água');
+    });
+
     it('returns unknown categories unchanged', () => {
       expect(translateCategory('Ozone depletion', 'es')).toBe(
         'Ozone depletion',

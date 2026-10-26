@@ -69,17 +69,6 @@ export class ParcelaService {
     return (rows?.[0]?.geojson as Polygon) ?? null;
   }
 
-  async findManyByRange(id: string, range: number): Promise<Parcela[]> {
-    return this.prisma.$queryRaw<Array<Parcela>>`
-      WITH target AS (SELECT geom::geography AS geo FROM "Parcela" WHERE id = ${id})
-      SELECT p.*
-      FROM "Parcela" p
-      JOIN target t ON TRUE
-      WHERE p.id <> ${id}
-        AND ST_DWithin(p.geom::geography, t.geo, ${range})
-    `;
-  }
-
   async findManyByPointRange(
     lat: number,
     long: number,

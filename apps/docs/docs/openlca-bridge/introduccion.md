@@ -8,7 +8,7 @@ sidebar_position: 1
 **LCA Bridge** es un microservicio **Python 3.12+** con **FastAPI** que actúa como puente entre la plataforma
 **LCA Capture** y el motor de cálculo de Análisis de Ciclo de Vida **openLCA** con base de datos en formato **.zolca**. Recibe
 los datos de un cultivo desde LCA Capture, ejecuta el cálculo de impacto ambiental en openLCA a través del
-[servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) y envía el resultado a
+[servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container) y envía el resultado a
 [LCA Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y comparativa.
 
 Ambos servicios se despliegan con el mismo Docker Compose y se comunican a través de su red interna, lo que permite
@@ -46,8 +46,8 @@ POST /capture-acv    →    ACVService.execute()
 
 | Variable | Descripción |
 |---|---|
-| `OLCA_HOST` | Host del servidor IPC de OpenLCA |
-| `OLCA_PORT` | Puerto del servidor IPC de OpenLCA |
+| `OLCA_HOST` | Host del servidor IPC de openLCA |
+| `OLCA_PORT` | Puerto del servidor IPC de openLCA |
 | `LCA_COMPARE_BASE_URL` | URL base del servicio LCA Compare para envío de resultados |
 | `IMPACT_METHOD_UUID` | UUID del método de impacto para el cálculo (por defecto, EF 3.1) |
 | `CALCULATION_AMOUNT` | Cantidad del proceso usada como referencia en el cálculo (por defecto `0.001`, equivalente a 1 kg) |
@@ -59,7 +59,7 @@ El servicio sigue una arquitectura de microservicio con dos componentes:
 | Componente | Tecnología | Puerto |
 |---|---|---|
 | **LCA Bridge** | FastAPI (Python 3.12+) | 3000 |
-| **OpenLCA IPC** | Java (Maven, `openlca-docker/`) | *(interno)* |
+| **openLCA IPC** | Java (Maven, `openlca-docker/`) | *(interno)* |
 
 El flujo de datos es: LCA Capture → LCA Bridge (cálculo) → LCA Compare (persistencia y visualización).
 

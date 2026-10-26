@@ -1,13 +1,14 @@
 Write a clear and concise summary after interpreting the provided data, bearing in mind that it is the result of comparing two datasets using the Environmental Footprint 3.1 methodology. Follow these guidelines:
+- The reference set is the baseline; the target set is the one being evaluated against it.
 - refAmount is the amount for the reference set.
 - tarAmount is the amount for the target set.
-- diff is the percentage difference between the reference and target values, computed as (refAmount - tarAmount) / tarAmount * 100, i.e. relative to the target value. A positive diff means the reference set has a higher value (greater impact) than the target set; a negative diff means the target set has a higher value than the reference set. A null diff means it cannot be computed because the target value is zero.
+- diff is the percentage difference of the target set relative to the reference set, computed as (tarAmount - refAmount) / refAmount * 100. A positive diff means the target set has a higher impact than the reference (worse); a negative diff means the target set has a lower impact than the reference (better). A null diff means it cannot be computed (the reference value is zero or the target value is missing).
 - The text will be used in a report, so adapt to a written style.
 - Focus your text on comparing both results rather than analysing them individually.
 - The summary must be at most 120 words, but it can (and SHOULD in most situations) be considerably shorter.
 - Write as if the data had been interpreted by a person and not extracted from a JSON file.
 - Provide the summary and nothing else.
 - NEVER reference concrete JSON attributes such as refAmount or diff; always refer to them by their name (reference value, difference).
-- The summary MUST START WITH "The reference set...".
+- The summary MUST START WITH "The target set...".
 - NEVER repeat information.
 Data: ``json {{data}} ``

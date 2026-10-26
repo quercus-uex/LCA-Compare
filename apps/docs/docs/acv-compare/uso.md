@@ -70,8 +70,19 @@ referencia** es una parcela que un administrador ha marcado como dato validado; 
 **conjunto de Referencia**, que es el conjunto obligatorio de la comparativa.
 
 El conjunto de **Referencia** es obligatorio. Si solo se especifica la referencia, se mostrarán los valores medios de
-impacto del conjunto. Si también se especifica un conjunto **Objetivo**, se calculará la diferencia porcentual entre
-ambos para cada categoría.
+impacto del conjunto. Si también se especifica un conjunto **Objetivo**, se calculará para cada categoría la diferencia
+porcentual del objetivo respecto a la referencia.
+
+La **Referencia** actúa siempre como línea base y el **Objetivo** es el conjunto que se evalúa frente a ella:
+
+```
+Diferencia (%) = (objetivo − referencia) / referencia × 100
+```
+
+- Un valor **positivo** (en rojo) indica que el objetivo tiene **más** impacto que la referencia. Por ejemplo, +20 %
+  significa que el objetivo supera en un 20 % el impacto de la referencia.
+- Un valor **negativo** (en verde) indica que el objetivo tiene **menos** impacto que la referencia.
+- Se muestra **n/a** cuando el valor de referencia es 0 o la categoría no tiene datos en el objetivo.
 
 <p align="center">
     <img src="/img/acv-compare/ejemplo_comparativa_acv.png" alt="Ejemplo de comparativa de ACV" width="800"/>

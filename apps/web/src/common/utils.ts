@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/index.ts';
+import { getEfLabelId } from './constants.ts';
 
 export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -6,6 +7,12 @@ export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<
       ([, value]) => value !== null && value !== undefined && (Array.isArray(value) ? value.length !== 0 : true),
     ),
   ) as Partial<T>;
+}
+
+// Category names arrive from openLCA in English; unknown ones are shown as is
+export function translateEfCategory(name: string): string {
+  const id = getEfLabelId(name);
+  return id ? i18n.t(`impactCategories.${id}`) : name;
 }
 
 export function safeString(value: unknown): string | null {

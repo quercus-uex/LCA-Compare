@@ -1,11 +1,9 @@
-import type { EfCategoryId } from 'common/impact';
-import type { GlobalStatsDto } from 'common/stats';
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { GlobalStatsDto, GlobalStatsQuery } from 'common/stats';
+import { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../common/api.ts';
 
-export type { GlobalStatsDto } from 'common/stats';
 export type {
+  GlobalStatsDto,
   KpiDto,
   ProvinciaRankingItemDto,
   PoblacionRankingItemDto,
@@ -13,42 +11,60 @@ export type {
   DistribucionCultivoItemDto,
 } from 'common/stats';
 
-export function useStats(
-  anio?: number,
-  categoria?: EfCategoryId,
-  tipoCultivo?: string,
-  idProvinciaPoblacion?: string,
-) {
-  const { t } = useTranslation();
-  const [data, setData] = useState<GlobalStatsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type StatsState = {
+  /** Petición a la que corresponden `data`/`failed`; `null` antes de la primera */
+  requestKey: string | null;
+  data: GlobalStatsDto | null;
+  failed: boolean;
+};
 
-  const fetchData = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (anio) params.set('anio', String(anio));
-      if (categoria) params.set('categoria', categoria);
-      if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
-      if (idProvinciaPoblacion) params.set('idProvinciaPoblacion', idProvinciaPoblacion);
-      const qs = params.toString() ? `?${params.toString()}` : '';
-      const response = await apiRequest(`/stats/global${qs}`);
-      setError(null);
-      if (!response.ok) {
-        throw new Error(t('stats.chart.loadError'));
-      }
-      const json = (await response.json()) as GlobalStatsDto;
-      setData(json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('stats.chart.unknownError'));
-    } finally {
-      setLoading(false);
-    }
-  }, [anio, categoria, tipoCultivo, idProvinciaPoblacion, t]);
+const buildQueryString = ({ anio, tipoCultivo }: GlobalStatsQuery) => {
+  const params = new URLSearchParams();
+  if (anio) params.set('anio', String(anio));
+  if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+};
+
+/**
+ * Carga las estadísticas globales. Al cambiar los filtros conserva los datos
+ * anteriores mientras llega la respuesta (`isFetching`) y aborta la petición
+ * en curso, para que una respuesta lenta no pise a otra más reciente.
+ */
+export function useStats(query: GlobalStatsQuery) {
+  const [reloadCount, setReloadCount] = useState(0);
+  const [state, setState] = useState<StatsState>({
+    requestKey: null,
+    data: null,
+    failed: false,
+  });
+
+  const queryString = buildQueryString(query);
+  const requestKey = `${queryString}#${reloadCount}`;
 
   useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+    const controller = new AbortController();
 
-  return { data, loading, error, refetch: fetchData };
+    apiRequest(`/stats/global${queryString}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = (await response.json()) as GlobalStatsDto;
+        setState({ requestKey, data, failed: false });
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setState((prev) => ({ requestKey, data: prev.data, failed: true }));
+      });
+
+    return () => controller.abort();
+  }, [queryString, requestKey]);
+
+  const refetch = useCallback(() => setReloadCount((n) => n + 1), []);
+
+  return {
+    data: state.data,
+    failed: state.failed,
+    isFetching: state.requestKey !== requestKey,
+    refetch,
+  };
 }

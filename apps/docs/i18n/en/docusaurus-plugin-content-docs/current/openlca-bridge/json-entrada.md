@@ -54,8 +54,8 @@ At least one of the three geographic identifiers (`es_sigpac`, `es_referencia_ca
 | `superficie_cultivada` | `number` | Yes | Cultivated area in hectares (ha). |
 | `produccion` | `number` | Yes | Total production in kilograms (kg). |
 | `consumo_agua` | `number` | Yes | Water consumption in cubic meters (m³). |
-| `fecha_inicio_campania` | `integer` | Yes | Campaign start date in `YYYYMMDD` format. |
-| `fecha_fin_campania` | `integer` | Yes | Campaign end date in `YYYYMMDD` format. |
+| `fecha_inicio_campania` | `integer` | Yes | Season start date in `YYYYMMDD` format. |
+| `fecha_fin_campania` | `integer` | Yes | Season end date in `YYYYMMDD` format. |
 | `ciclo` | `integer` | Yes | Crop cycle duration in days. |
 
 ### `metadatos.usuario`

@@ -78,6 +78,31 @@ export const EF_CATEGORIES = [
 
 export type EfCategoryId = (typeof EF_CATEGORIES)[number]['id'];
 
+// Indicadores que comparten categor\u00eda EF agregada pero se muestran como filas
+// propias en las tablas de resultados, cada uno con su etiqueta
+export const EF_INDICATORS = [
+  { id: 'human_toxicity_cancer', englishName: 'Human toxicity: carcinogenic' },
+  {
+    id: 'human_toxicity_non_cancer',
+    englishName: 'Human toxicity: non-carcinogenic',
+  },
+] as const;
+
+export type EfIndicatorId = (typeof EF_INDICATORS)[number]['id'];
+
+// Identificador de la etiqueta traducible de una fila de resultados
+export type EfLabelId = EfCategoryId | EfIndicatorId;
+
+// Resuelve el nombre de una categor\u00eda tal como llega de openLCA (o su nombre
+// en espa\u00f1ol heredado) a su etiqueta traducible; undefined si no se conoce
+export const getEfLabelId = (name: string): EfLabelId | undefined =>
+  EF_INDICATORS.find((i) => i.englishName === name)?.id ??
+  EF_CATEGORIES.find(
+    (c) =>
+      c.spanishName === name ||
+      (c.englishNames as readonly string[]).includes(name),
+  )?.id;
+
 // Categoría usada por defecto en rankings y evolución temporal. Las categorías
 // tienen unidades distintas, así que nunca se suman en un impacto "total"
 export const DEFAULT_EF_CATEGORY: EfCategoryId = 'climate_change';

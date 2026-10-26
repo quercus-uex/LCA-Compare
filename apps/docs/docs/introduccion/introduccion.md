@@ -21,7 +21,7 @@ JWT y pueden filtrarse por rangos de fechas.
 **LCA Bridge** es un microservicio desarrollado en **Python** con **FastAPI** que actúa como puente entre la plataforma
 **LCA Capture** y el motor de cálculo de ACV **openLCA** con base de datos en formato **.zolca**. Su responsabilidad es recibir los
 datos agronómicos de un cultivo (parcela, tipo de cultivo, insumos, riego, maquinaria, etc.), ejecutar el cálculo de
-impacto ambiental delegando en el [servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container) y enviar
+impacto ambiental delegando en el [servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container) y enviar
 el resultado estructurado a LCA Compare.
 
 El servicio expone un único endpoint, `POST /capture-acv`, y selecciona automáticamente el proceso de cálculo adecuado

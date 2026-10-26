@@ -212,7 +212,7 @@ O esquema Prisma define os seguintes modelos principais:
 | `Parcela` | Parcelas com referência SIGPAC, cadastral, geometria PostGIS e marca de parcela de referência |
 | `Cultivo` | Campanhas de cultura com métricas (superfície, produção, consumo de água) |
 | `ResultadoImpacto` | Resultados de ACV em formato JSON por método de impacto |
-| `MetodoImpacto` | Métodos de impacto registados (identificados por UUID de OpenLCA) |
+| `MetodoImpacto` | Métodos de impacto registados (identificados por UUID de openLCA) |
 | `Pais` | Países de referência para localizar parcelas |
 | `Provincia` | Províncias associadas a um país e ao seu código cadastral |
 | `Poblacion` | Localidades associadas a uma província e ao seu código cadastral |

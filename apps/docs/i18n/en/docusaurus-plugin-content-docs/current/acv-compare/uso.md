@@ -25,7 +25,7 @@ To view the plots for your user, sign in, select the profile image, and choose *
     <img src="/img/acv-compare/mis_parcelas_ruta.png" alt="My plots view" width="600"/>
 </p>
 
-From the plot list, you can open the details for each plot, where its SIGPAC identifier, cadastral reference, a map with the plot polygon, and associated crops ordered by campaign are shown. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the comparator's geographic location filters.
+From the plot list, you can open the details for each plot, where its SIGPAC identifier, cadastral reference, a map with the plot polygon, and associated crops ordered by season are shown. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the comparator's geographic location filters.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Plot example" width="600"/>
@@ -53,12 +53,22 @@ There, you can compare two crop sets, filtering by:
 - Plots (your own plots; requires signing in)
 - Location (point selected on a map and radius in meters)
 - Crop type
-- Campaign year (start or end; from 2020 onwards)
+- Season year (start or end; from 2020 onwards)
 - **Only reference plots**: limits the set to plots marked as reference
 
 This filter can be applied to either set and is combined with the other filters. A **reference plot** is a plot that an administrator has marked as validated data; it should not be confused with the **Reference** set, which is the mandatory set in the comparison.
 
-The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference between both sets is calculated for each category.
+The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference of the target relative to the reference is calculated for each category.
+
+The **Reference** always acts as the baseline and the **Target** is the set being evaluated against it:
+
+```
+Difference (%) = (target − reference) / reference × 100
+```
+
+- A **positive** value (in red) means the target has a **higher** impact than the reference. For example, +20 % means the target's impact is 20 % above the reference.
+- A **negative** value (in green) means the target has a **lower** impact than the reference.
+- **n/a** is shown when the reference value is 0 or the category has no data in the target.
 
 <p align="center">
     <img src="/img/acv-compare/ejemplo_comparativa_acv.png" alt="LCA comparison example" width="800"/>

@@ -1,291 +1,205 @@
-import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  RadarChart,
-  PolarGrid,
+  Legend,
   PolarAngleAxis,
+  PolarGrid,
   PolarRadiusAxis,
   Radar,
+  RadarChart,
   ResponsiveContainer,
-  Legend,
   Tooltip,
 } from 'recharts';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { SearchableLocationSelect } from './searchable-location-select.component.tsx';
-import { CHART_TOOLTIP_STYLE } from './stats-colors.ts';
-import { formatImpactValue } from './stats-formatters.ts';
-import type {
-  ProvinciaRankingItemDto,
-  PoblacionRankingItemDto,
-} from './stats.hook.tsx';
+import {
+  CHART_GRID_STROKE,
+  CHART_SMALL_TICK,
+  PROFILE_COLORS,
+} from './stats-chart-theme.ts';
+import { formatImpactValue, formatNumber } from './stats-formatters.ts';
+import { StatsPlaceholder } from './stats-section.component.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
-type Props = {
-  ranking: ProvinciaRankingItemDto[];
-  poblacionRanking: PoblacionRankingItemDto[];
-  selectedCategory: EfCategoryId;
-};
+export type ProfileMode = 'province' | 'town';
 
-type UnifiedEntity = {
+export type ProfileEntity = {
   id: string;
   nombre: string;
   impactosPorCategoria: Record<EfCategoryId, number>;
 };
 
-const COLORS = ['#ef4444', '#3b82f6'];
-const MODE_LABELS = ['province', 'town'] as const;
-type Mode = (typeof MODE_LABELS)[number];
+type Props = {
+  mode: ProfileMode;
+  entities: ProfileEntity[];
+  primary: ProfileEntity | null;
+  secondary: ProfileEntity | null;
+  onModeChange: (mode: ProfileMode) => void;
+  onPrimaryChange: (entity: ProfileEntity | null) => void;
+  onSecondaryChange: (entity: ProfileEntity | null) => void;
+};
 
-const toUnified = (
-  p: ProvinciaRankingItemDto | PoblacionRankingItemDto,
-  mode: Mode,
-): UnifiedEntity => {
-  if (mode === 'province') {
-    const prov = p as ProvinciaRankingItemDto;
-    return {
-      id: prov.idProvincia,
-      nombre: prov.nombreProvincia,
-      impactosPorCategoria: prov.impactosPorCategoria,
-    };
-  }
-  const pobl = p as PoblacionRankingItemDto;
-  return {
-    id: pobl.idPoblacion,
-    nombre: pobl.nombrePoblacion,
-    impactosPorCategoria: pobl.impactosPorCategoria,
-  };
+const MODES: ProfileMode[] = ['province', 'town'];
+
+type ChartRow = {
+  category: string;
+  unit: string;
+  primary: number;
+  primaryRaw: number;
+  secondary?: number;
+  secondaryRaw?: number;
 };
 
 export const StatsSpiderChart = ({
-  ranking,
-  poblacionRanking,
-  selectedCategory,
+  mode,
+  entities,
+  primary,
+  secondary,
+  onModeChange,
+  onPrimaryChange,
+  onSecondaryChange,
 }: Props) => {
   const { t } = useTranslation();
   const { getCategoryLabel } = useTranslatedEfCategories();
-  const [mode, setMode] = useState<Mode>('province');
-  const [selected1, setSelected1] = useState<UnifiedEntity | null>(null);
-  const [selected2, setSelected2] = useState<UnifiedEntity | null>(null);
-  const [hasUserSelected, setHasUserSelected] = useState(false);
+  const entityLabel = t(`stats.chart.${mode}`).toLowerCase();
 
-  const entities = useMemo(() => {
-    const raw = mode === 'province' ? ranking : poblacionRanking;
-    return raw
-      .map((r) => toUnified(r, mode))
-      .sort(
-        (a, b) =>
-          (b.impactosPorCategoria[selectedCategory] ?? 0) -
-          (a.impactosPorCategoria[selectedCategory] ?? 0),
-      );
-  }, [ranking, poblacionRanking, mode, selectedCategory]);
-
-  const entity1 = useMemo(() => {
-    if (hasUserSelected) {
-      return (
-        (selected1 && entities.some((e) => e.id === selected1.id)
-          ? selected1
-          : null)
-      );
-    }
-    return entities[0] ?? null;
-  }, [selected1, entities, hasUserSelected]);
-
-  const entity2 = useMemo(() => {
-    return (
-      (selected2 && entities.some((e) => e.id === selected2.id)
-        ? selected2
-        : null)
-    );
-  }, [selected2, entities]);
-
-  const handleSelect1 = (item: UnifiedEntity | null) => {
-    setSelected1(item);
-    setHasUserSelected(true);
+  // Cada eje se normaliza respecto a la zona con mayor impacto en esa categoría
+  const maxByCategory = Object.fromEntries(
+    EF_CATEGORIES.map((cat) => [
+      cat.id,
+      Math.max(...entities.map((e) => e.impactosPorCategoria[cat.id] ?? 0), 0),
+    ]),
+  ) as Record<EfCategoryId, number>;
+  const normalize = (catId: EfCategoryId, value: number) => {
+    const max = maxByCategory[catId];
+    return max > 0 ? Math.max(value / max, 0) : 0;
   };
 
-  const handleSelect2 = (item: UnifiedEntity | null) => {
-    setSelected2(item);
-  };
-
-  const handleModeChange = (newMode: Mode) => {
-    setMode(newMode);
-    setSelected1(null);
-    setSelected2(null);
-    setHasUserSelected(false);
-  };
-
-  const maxByCategory = useMemo(() => {
-    const maxes: Record<string, number> = {};
-    for (const cat of EF_CATEGORIES) {
-      maxes[cat.id] = Math.max(
-        ...entities.map((p) => p.impactosPorCategoria[cat.id] ?? 0),
-      );
-    }
-    return maxes;
-  }, [entities]);
-
-  const normalize = (catId: string, value: number) => {
-    const max = maxByCategory[catId] ?? 0;
-    return max > 0 ? value / max : 0;
-  };
-
-  if (entities.length === 0) {
-    return (
-        <div className="flex items-center justify-center h-80 text-base-content/50">
-        {t('stats.chart.noImpactData')}
-      </div>
-    );
-  }
-
-  if (!entity1) {
-    return (
-      <div className="space-y-3">
-        <div className="flex justify-center">
-          <div className="join">
-            {MODE_LABELS.map((label) => (
-              <button
-                key={label}
-                type="button"
-                className={`btn btn-xs join-item ${
-                  mode === label ? 'btn-primary' : 'btn-ghost'
-                }`}
-                onClick={() => handleModeChange(label)}
-              >
-                {t(`stats.chart.${label}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2 items-start">
-          <SearchableLocationSelect<UnifiedEntity>
-            items={entities}
-            value={null}
-            onChange={handleSelect1}
-            getLabel={(e) => e.nombre}
-            getId={(e) => e.id}
-            placeholder={t('stats.chart.searchEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
-            emptyMessage={t('common.empty.noResults')}
-          />
-        </div>
-        <div className="flex items-center justify-center h-60 text-base-content/50">
-          {t('stats.chart.selectEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
-        </div>
-      </div>
-    );
-  }
-
-  const chartData = EF_CATEGORIES.map((cat) => {
-    const raw1 = entity1.impactosPorCategoria[cat.id] ?? 0;
-    const entry: Record<string, unknown> = {
-      category: getCategoryLabel(cat.id),
-      prov1: normalize(cat.id, raw1),
-      prov1_raw: raw1,
-    };
-    if (entity2) {
-      const raw2 = entity2.impactosPorCategoria[cat.id] ?? 0;
-      entry.prov2 = normalize(cat.id, raw2);
-      entry.prov2_raw = raw2;
-    }
-    return entry;
-  });
-
-  const comparisonItems = entities.filter((e) => e.id !== entity1.id);
+  const chartData: ChartRow[] = primary
+    ? EF_CATEGORIES.map((cat) => {
+        const primaryRaw = primary.impactosPorCategoria[cat.id] ?? 0;
+        const secondaryRaw = secondary?.impactosPorCategoria[cat.id];
+        return {
+          category: getCategoryLabel(cat.id),
+          unit: cat.unit,
+          primary: normalize(cat.id, primaryRaw),
+          primaryRaw,
+          ...(secondaryRaw !== undefined && {
+            secondary: normalize(cat.id, secondaryRaw),
+            secondaryRaw,
+          }),
+        };
+      })
+    : [];
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-center">
-        <div className="join">
-          {MODE_LABELS.map((label) => (
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="tablist" className="tabs tabs-box tabs-sm">
+          {MODES.map((m) => (
             <button
-              key={label}
+              key={m}
               type="button"
-              className={`btn btn-xs join-item ${
-                mode === label ? 'btn-primary' : 'btn-ghost'
-              }`}
-              onClick={() => handleModeChange(label)}
+              role="tab"
+              aria-selected={mode === m}
+              className={`tab ${mode === m ? 'tab-active' : ''}`}
+              onClick={() => onModeChange(m)}
             >
-              {t(`stats.chart.${label}`)}
+              {t(`stats.chart.${m}`)}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="flex gap-2 items-start">
-        <SearchableLocationSelect<UnifiedEntity>
-          items={entities}
-          value={entity1}
-          onChange={handleSelect1}
-          getLabel={(e) => e.nombre}
-          getId={(e) => e.id}
-          placeholder={t('stats.chart.searchEntity', { entity: t(`stats.chart.${mode}`).toLowerCase() })}
-          emptyMessage={t('common.empty.noResults')}
-        />
-        <SearchableLocationSelect<UnifiedEntity>
-          items={comparisonItems}
-          value={entity2}
-          onChange={handleSelect2}
-          getLabel={(e) => e.nombre}
-          getId={(e) => e.id}
-          placeholder={t('stats.chart.compareWith')}
-          emptyMessage={t('common.empty.noResults')}
-        />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-1 items-center gap-2">
+          <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: PROFILE_COLORS[0] }} />
+          <SearchableLocationSelect<ProfileEntity>
+            items={entities}
+            value={primary}
+            onChange={onPrimaryChange}
+            getLabel={(e) => e.nombre}
+            getId={(e) => e.id}
+            placeholder={t('stats.chart.searchEntity', { entity: entityLabel })}
+            emptyMessage={t('common.empty.noResults')}
+          />
+        </div>
+        <div className="flex flex-1 items-center gap-2">
+          <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: PROFILE_COLORS[1] }} />
+          <SearchableLocationSelect<ProfileEntity>
+            items={entities.filter((e) => e.id !== primary?.id)}
+            value={secondary}
+            onChange={onSecondaryChange}
+            getLabel={(e) => e.nombre}
+            getId={(e) => e.id}
+            placeholder={t('stats.chart.compareWith')}
+            emptyMessage={t('common.empty.noResults')}
+          />
+        </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <RadarChart
-          cx="50%"
-          cy="50%"
-          outerRadius="75%"
-          data={chartData}
-        >
-          <PolarGrid stroke="hsl(var(--bc) / 0.2)" />
-          <PolarAngleAxis
-            dataKey="category"
-            tick={{ fontSize: 10, fill: 'hsl(var(--bc))' }}
-          />
-          <PolarRadiusAxis
-            angle={90}
-            domain={[0, 1]}
-            tick={{ fontSize: 10, fill: 'hsl(var(--bc) / 0.5)' }}
-            tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
-          />
-          <Tooltip
-            contentStyle={CHART_TOOLTIP_STYLE}
-            formatter={(_value, _name, entry) => {
-              const dk = entry?.dataKey as string | undefined;
-              const rawKey = dk === 'prov1' ? 'prov1_raw' : 'prov2_raw';
-              const payload = entry?.payload as Record<string, unknown> | undefined;
-              const rawVal = payload?.[rawKey] as number | undefined;
-              return [
-                rawVal !== undefined ? formatImpactValue(rawVal, '0') : '—',
-                dk === 'prov1'
-                  ? entity1.nombre
-                  : entity2?.nombre ?? '',
-              ];
-            }}
-          />
-          <Radar
-            name={entity1.nombre}
-            dataKey="prov1"
-            stroke={COLORS[0]}
-            fill={COLORS[0]}
-            fillOpacity={0.25}
-            strokeWidth={2}
-          />
-          {entity2 && (
+      {entities.length === 0 ? (
+        <StatsPlaceholder className="h-80">{t('stats.chart.noImpactData')}</StatsPlaceholder>
+      ) : !primary ? (
+        <StatsPlaceholder className="h-80">
+          {t('stats.chart.selectEntity', { entity: entityLabel })}
+        </StatsPlaceholder>
+      ) : (
+        <ResponsiveContainer width="100%" height={340}>
+          <RadarChart cx="50%" cy="50%" outerRadius="72%" data={chartData}>
+            <PolarGrid stroke={CHART_GRID_STROKE} />
+            <PolarAngleAxis dataKey="category" tick={CHART_SMALL_TICK} />
+            <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} tickCount={5} />
+            <Tooltip
+              content={({ active, payload }) => {
+                const row = payload?.[0]?.payload as ChartRow | undefined;
+                if (!active || !row) return null;
+                const lines = [
+                  { entity: primary, raw: row.primaryRaw, ratio: row.primary, color: PROFILE_COLORS[0] },
+                  ...(secondary && row.secondaryRaw !== undefined
+                    ? [{ entity: secondary, raw: row.secondaryRaw, ratio: row.secondary ?? 0, color: PROFILE_COLORS[1] }]
+                    : []),
+                ];
+                return (
+                  <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
+                    <p className="font-bold">{row.category}</p>
+                    {lines.map((line) => (
+                      <p key={line.entity.id} style={{ color: line.color }}>
+                        {line.entity.nombre}:{' '}
+                        <span className="font-mono font-semibold">
+                          {formatImpactValue(line.raw, '0')}
+                        </span>{' '}
+                        {row.unit}{' '}
+                        <span className="text-base-content/60">
+                          ({t('stats.chart.percentOfMax', { value: formatNumber(line.ratio * 100) })})
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                );
+              }}
+            />
             <Radar
-              key={`comp-${entity2.id}`}
-              name={entity2.nombre}
-              dataKey="prov2"
-              stroke={COLORS[1]}
-              fill={COLORS[1]}
+              name={primary.nombre}
+              dataKey="primary"
+              stroke={PROFILE_COLORS[0]}
+              fill={PROFILE_COLORS[0]}
               fillOpacity={0.25}
               strokeWidth={2}
             />
-          )}
-          <Legend wrapperStyle={{ fontSize: '12px' }} />
-        </RadarChart>
-      </ResponsiveContainer>
+            {secondary && (
+              <Radar
+                name={secondary.nombre}
+                dataKey="secondary"
+                stroke={PROFILE_COLORS[1]}
+                fill={PROFILE_COLORS[1]}
+                fillOpacity={0.2}
+                strokeWidth={2}
+              />
+            )}
+            <Legend wrapperStyle={{ fontSize: '12px' }} />
+          </RadarChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 };

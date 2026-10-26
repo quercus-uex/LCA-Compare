@@ -1,4 +1,5 @@
 import { IMPACT_KEYS, type ImpactKey } from '../../common/constants.ts';
+import { translateEfCategory } from '../../common/utils.ts';
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
 
 export type CompareExportMode = 'full' | 'reference' | 'target';
@@ -65,7 +66,7 @@ export const buildCompareCSV = (
       if (mode === 'full') {
         rows.push([
           label,
-          item.category,
+          translateEfCategory(item.category),
           num(item.refAmount),
           num(item.tarAmount ?? null),
           item.unit,
@@ -73,7 +74,7 @@ export const buildCompareCSV = (
         ]);
       } else {
         const amount = mode === 'target' ? item.tarAmount : item.refAmount;
-        rows.push([label, item.category, num(amount ?? null), item.unit]);
+        rows.push([label, translateEfCategory(item.category), num(amount ?? null), item.unit]);
       }
     }
   }

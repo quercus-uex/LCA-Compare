@@ -21,9 +21,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## [Servidor IPC de OpenLCA](https://github.com/GreenDelta/olca-ipc-container)
+## [Servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container)
 
-El servicio necesita un servidor IPC de OpenLCA en ejecución. La base de datos de OpenLCA debe estar disponible en
+El servicio necesita un servidor IPC de openLCA en ejecución. La base de datos de openLCA debe estar disponible en
 `openlca-docker/data/databases/ecoinvent`. Para iniciar el servidor IPC, despliega dicho servicio del Docker Compose:
 
 ```bash
@@ -57,7 +57,7 @@ pytest test_main.py::test_dtagro_acv_valid
 
 :::note
 El test de entrada válida (`test_dtagro_acv_valid`) espera un código **HTTP 500** en lugar de 200, porque el servidor
-de OpenLCA no está disponible en el entorno de CI.
+de openLCA no está disponible en el entorno de CI.
 :::
 
 No hay linter, formateador ni typechecker configurados.

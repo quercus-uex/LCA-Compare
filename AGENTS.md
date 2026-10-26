@@ -28,7 +28,7 @@ pnpm server:dev                   # Nest watch mode
 pnpm server:build                 # Nest build
 pnpm server:lint                  # eslint with --fix and type-aware rules
 pnpm server:test                  # Jest backend unit tests
-pnpm --filter server test:cov     # backend coverage; used by Sonar workflow
+pnpm --filter server test:cov     # backend coverage
 pnpm web:dev                      # Vite --host
 pnpm web:build                    # tsc -b then vite build
 pnpm web:lint                     # eslint .
@@ -40,7 +40,6 @@ pnpm docs:typecheck
 - To run one backend spec, use Jest after the filter, e.g. `pnpm --filter server test -- stats.service.spec.ts`.
 - Only `apps/server` has tests; `web` and `docs` have no test scripts.
 - Clean backend verification needs `pnpm --filter common build` before server tests/build, and `pnpm server:prisma:generate` before anything that imports `src/generated/prisma`.
-- The Sonar workflow order is `pnpm --filter common build` -> `pnpm server:prisma:generate` -> `pnpm --filter server test:cov`.
 
 ## Prisma And Database
 

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ImpactKey } from '../common/constants.ts';
+import { translateEfCategory } from '../common/utils.ts';
 import type { CompareResult } from '../hooks/compare.hook.tsx';
 
 export const ResultComparisonTable = ({
@@ -27,7 +28,7 @@ export const ResultComparisonTable = ({
         <tbody>
           {result[selectedImpact].map((i, index) => (
             <tr key={index}>
-              <th>{i.category}</th>
+              <th>{translateEfCategory(i.category)}</th>
               <th>{i.refAmount.toFixed(4)}</th>
               {i.tarAmount != null && <th>{i.tarAmount.toFixed(4)}</th>}
               <th>{i.unit}</th>

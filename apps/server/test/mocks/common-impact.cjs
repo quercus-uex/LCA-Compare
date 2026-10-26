@@ -84,4 +84,24 @@ const IMPACT_KEYS = [
 
 const DEFAULT_EF_CATEGORY = 'climate_change';
 
-module.exports = { EF_CATEGORIES, IMPACT_KEYS, DEFAULT_EF_CATEGORY };
+const EF_INDICATORS = [
+  { id: 'human_toxicity_cancer', englishName: 'Human toxicity: carcinogenic' },
+  {
+    id: 'human_toxicity_non_cancer',
+    englishName: 'Human toxicity: non-carcinogenic',
+  },
+];
+
+const getEfLabelId = (name) =>
+  EF_INDICATORS.find((i) => i.englishName === name)?.id ??
+  EF_CATEGORIES.find(
+    (c) => c.spanishName === name || c.englishNames.includes(name),
+  )?.id;
+
+module.exports = {
+  EF_CATEGORIES,
+  EF_INDICATORS,
+  IMPACT_KEYS,
+  DEFAULT_EF_CATEGORY,
+  getEfLabelId,
+};

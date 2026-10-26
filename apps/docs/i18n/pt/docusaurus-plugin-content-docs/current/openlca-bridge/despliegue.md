@@ -5,23 +5,23 @@ sidebar_position: 2
 
 # Implantação do Serviço
 
-Em produção, o LCA Bridge e o [servidor IPC do OpenLCA](https://github.com/GreenDelta/olca-ipc-container) são implantados juntamente com o LCA Compare através do compose da plataforma (`deploy/compose.yaml` do repositório [LCA-Compare](https://github.com/quercus-uex/LCA-Compare)), usando as imagens `ghcr.io/quercus-uex/lca-bridge` e `ghcr.io/quercus-uex/openlca-ipc`. Os passos gerais (preparação do servidor, `.env`, arranque e atualização) estão em [Implantação do ACV Compare](../acv-compare/despliegue.md).
+Em produção, o LCA Bridge e o [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) são implantados juntamente com o LCA Compare através do compose da plataforma (`deploy/compose.yaml` do repositório [LCA-Compare](https://github.com/quercus-uex/LCA-Compare)), usando as imagens `ghcr.io/quercus-uex/lca-bridge` e `ghcr.io/quercus-uex/openlca-ipc`. Os passos gerais (preparação do servidor, `.env`, arranque e atualização) estão em [Implantação do ACV Compare](../acv-compare/despliegue.md).
 
 ## Pré-requisitos
 
-- A base de dados do OpenLCA com os processos necessários já definidos. Não está incluída na imagem por motivos de licença.
+- A base de dados do openLCA com os processos necessários já definidos. Não está incluída na imagem por motivos de licença.
 - O `.env` da plataforma com `OLCA_DATA_DIR` a apontar para o diretório que contém essa base de dados.
 
-## Dados do OpenLCA
+## Dados do openLCA
 
-O servidor IPC do OpenLCA utiliza a base de dados para executar os cálculos de impacto ambiental. O diretório `OLCA_DATA_DIR` do servidor é montado no contentor `openlca-ipc` como `/app/data`, e o serviço arranca com `-db ecoinvent`, pelo que a base de dados deve estar em `<OLCA_DATA_DIR>/databases/ecoinvent`. Em seguida é mostrado um gráfico explicativo da estrutura do volume:
+O servidor IPC do openLCA utiliza a base de dados para executar os cálculos de impacto ambiental. O diretório `OLCA_DATA_DIR` do servidor é montado no contentor `openlca-ipc` como `/app/data`, e o serviço arranca com `-db ecoinvent`, pelo que a base de dados deve estar em `<OLCA_DATA_DIR>/databases/ecoinvent`. Em seguida é mostrado um gráfico explicativo da estrutura do volume:
 
 <p align="center">
-    <img src="/img/openlca-bridge/volumen-olca-ipc.png" alt="Gráfico do volume OpenLCA" width="400"/>
+    <img src="/img/openlca-bridge/volumen-olca-ipc.png" alt="Gráfico do volume openLCA" width="400"/>
 </p>
 
 :::note
-O subdiretório `openlca-docker/` é um projeto **Maven/Java** independente que constrói a imagem do contentor do servidor IPC do OpenLCA. Não tem relação com o código Python do serviço ponte.
+O subdiretório `openlca-docker/` é um projeto **Maven/Java** independente que constrói a imagem do contentor do servidor IPC do openLCA. Não tem relação com o código Python do serviço ponte.
 :::
 
 ## Variáveis de Ambiente
@@ -30,8 +30,8 @@ O serviço lê a sua configuração das seguintes variáveis de ambiente. Em pro
 
 | Variável | Valor em produção | Descrição |
 |---|---|---|
-| `OLCA_HOST` | `http://openlca-ipc` | Host do servidor IPC do OpenLCA |
-| `OLCA_PORT` | `8080` | Porta do servidor IPC do OpenLCA |
+| `OLCA_HOST` | `http://openlca-ipc` | Host do servidor IPC do openLCA |
+| `OLCA_PORT` | `8080` | Porta do servidor IPC do openLCA |
 | `LCA_COMPARE_BASE_URL` | `http://lca-compare-backend:3000` | URL base do LCA Compare para envio dos resultados |
 | `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | UUID do método de impacto (por defeito, EF 3.1) |
 | `CALCULATION_AMOUNT` | `0.001` | Quantidade do processo para o cálculo (1000 kg → 0.001 = 1 kg) |

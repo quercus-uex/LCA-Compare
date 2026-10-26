@@ -1,6 +1,7 @@
 import type { ResultadoImpactoItemDto } from 'common/api';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { translateEfCategory } from '../../common/utils.ts';
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 
 const byCategory = (items: ResultadoImpactoItemDto[]) =>
@@ -40,7 +41,7 @@ export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) =
         <tbody>
           {resultado.datos.impacto_total.map((i) => (
             <tr key={i.category}>
-              <th>{i.category}</th>
+              <th>{translateEfCategory(i.category)}</th>
               <th>{fmt(lookup.pesticidas, i.category)}</th>
               <th>{fmt(lookup.fertilizantes, i.category)}</th>
               <th>{fmt(lookup.sistemaRiego, i.category)}</th>

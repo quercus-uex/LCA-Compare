@@ -15,7 +15,7 @@ The system is made up of three independent services that work together to provid
 
 ### LCA Bridge
 
-**LCA Bridge** is a **Python** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** LCA calculation engine, using a database in **.zolca** format. It receives agronomic crop data (plot, crop type, inputs, irrigation, machinery, and so on), runs the environmental impact calculation by delegating to the [OpenLCA IPC server](https://github.com/GreenDelta/olca-ipc-container), and sends the structured result to LCA Compare.
+**LCA Bridge** is a **Python** microservice built with **FastAPI** that acts as a bridge between the **LCA Capture** platform and the **openLCA** LCA calculation engine, using a database in **.zolca** format. It receives agronomic crop data (plot, crop type, inputs, irrigation, machinery, and so on), runs the environmental impact calculation by delegating to the [openLCA IPC server](https://github.com/GreenDelta/olca-ipc-container), and sends the structured result to LCA Compare.
 
 The service exposes a single endpoint, `POST /capture-acv`, and automatically selects the appropriate calculation process according to the crop type (`TomateProcess`, `OlivoProcess`, or `VinedoProcess`).
 
@@ -25,7 +25,7 @@ The service exposes a single endpoint, `POST /capture-acv`, and automatically se
 
 - Plot management with **SIGPAC**, **Catastro**, and Portuguese property identifier integration for geospatial representation.
 - LCA result visualization broken down by impact category (fertilizers, crop management, pesticides, irrigation system, and total impact).
-- Comparison between two crop sets with filters by location, crop type, campaign, and more.
+- Comparison between two crop sets with filters by location, crop type, season, and more.
 - Global statistics dashboard with KPIs, time evolution, territorial rankings, and crop distribution.
 - PDF report generation with summaries and recommendations assisted by **AI** (OpenRouter).
 - Administration panel for users, plots, crops, impact methods, and territorial data, with JWT authentication.

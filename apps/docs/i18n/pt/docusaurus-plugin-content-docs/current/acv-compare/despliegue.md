@@ -5,12 +5,12 @@ sidebar_position: 2
 
 # Implantação do Serviço
 
-A plataforma completa (LCA Compare, LCA Bridge, servidor IPC do OpenLCA e cópias de segurança) é implantada com um único ficheiro de Docker Compose, `deploy/compose.yaml`, do repositório ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). O compose usa imagens já publicadas no GitHub Container Registry (GHCR), pelo que não é necessário clonar o repositório no servidor.
+A plataforma completa (LCA Compare, LCA Bridge, servidor IPC do openLCA e cópias de segurança) é implantada com um único ficheiro de Docker Compose, `deploy/compose.yaml`, do repositório ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). O compose usa imagens já publicadas no GitHub Container Registry (GHCR), pelo que não é necessário clonar o repositório no servidor.
 
 ## Requisitos prévios
 
 - Docker Engine com o plugin Compose.
-- Os dados do OpenLCA (base de dados `ecoinvent`) num diretório do servidor. Não estão incluídos na imagem por motivos de licença.
+- Os dados do openLCA (base de dados `ecoinvent`) num diretório do servidor. Não estão incluídos na imagem por motivos de licença.
 - Se os pacotes do GHCR forem privados, iniciar sessão uma única vez com um token *classic* com a permissão `read:packages`:
 
 ```bash
@@ -43,7 +43,7 @@ MAILER_PORT=587                          # Opcional. Porta SMTP (465 usa TLS dir
 CALC_API_KEY=                            # Chave de API exigida por /calc no cabeçalho x-api-key
 DEFAULT_IMPACT_METHOD_UUID=2f995579-06bd-4681-b07c-cee3b1805b0d  # Método de impacto predefinido (EF 3.1)
 
-OLCA_DATA_DIR=/opt/openlca-data          # Diretório com os dados do OpenLCA
+OLCA_DATA_DIR=/opt/openlca-data          # Diretório com os dados do openLCA
 
 BACKUP_SCHEDULE="0 3 * * *"              # Cron das cópias de segurança
 BACKUP_LOCAL_ENABLED=true                # Guardar as cópias num diretório local da máquina
@@ -110,12 +110,12 @@ O ficheiro `deploy/compose.yaml` define o projeto `lca-platform` com os seguinte
 | `lca-compare-backend` | `ghcr.io/quercus-uex/lca-compare-backend` | — | API REST (NestJS) |
 | `lca-compare-frontend` | `ghcr.io/quercus-uex/lca-compare-frontend` | 80→80 | SPA e proxy inverso (Nginx) |
 | `lca-bridge` | `ghcr.io/quercus-uex/lca-bridge` | — | Cálculo de ACV |
-| `openlca-ipc` | `ghcr.io/quercus-uex/openlca-ipc` | — | Servidor IPC do OpenLCA com os dados de `OLCA_DATA_DIR` |
+| `openlca-ipc` | `ghcr.io/quercus-uex/openlca-ipc` | — | Servidor IPC do openLCA com os dados de `OLCA_DATA_DIR` |
 | `db-backup` | `ghcr.io/quercus-uex/lca-compare-backup` | — | Cópias de segurança da base de dados |
 
 ### Redes
 
-Todos os serviços partilham a rede do projeto, `lca-platform_default`, e comunicam pelo nome do serviço. Apenas o frontend publica uma porta (80); a base de dados, o backend, o LCA Bridge e o OpenLCA não são acessíveis a partir do exterior. Se precisar de aceder ao PostgreSQL a partir de outra máquina, use um túnel SSH.
+Todos os serviços partilham a rede do projeto, `lca-platform_default`, e comunicam pelo nome do serviço. Apenas o frontend publica uma porta (80); a base de dados, o backend, o LCA Bridge e o openLCA não são acessíveis a partir do exterior. Se precisar de aceder ao PostgreSQL a partir de outra máquina, use um túnel SSH.
 
 ### Proxy Inverso (Nginx)
 

@@ -1,6 +1,6 @@
 import type { CompareReportLanguage } from 'common/compare';
-import type { EfCategoryId } from 'common/impact';
-import { EF_CATEGORIES } from 'common/impact';
+import type { EfLabelId } from 'common/impact';
+import { getEfLabelId } from 'common/impact';
 
 export const COMPARE_REPORT_DEFAULT_LANGUAGE: CompareReportLanguage = 'es';
 
@@ -72,7 +72,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     provinces: 'Provincias',
     towns: 'Poblaciones',
     location: 'Ubicación',
-    range: 'Rango',
+    range: 'Radio',
     cropType: 'Tipo de cultivo',
     campaignDate: 'Fecha de campaña',
     from: 'Desde',
@@ -89,7 +89,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     impactIrrigationSystem: 'IMPACTO DEL SISTEMA DE RIEGO',
     impactCropManagement: 'IMPACTO DEL MANEJO DEL CULTIVO',
     category: 'Categoría',
-    referenceAmount: 'Cantidad referencia',
+    referenceAmount: 'Cantidad de referencia',
     targetAmount: 'Cantidad objetivo',
     unit: 'Unidad',
     difference: 'Diferencia',
@@ -113,9 +113,9 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     provinces: 'Provinces',
     towns: 'Towns',
     location: 'Location',
-    range: 'Range',
+    range: 'Radius',
     cropType: 'Crop type',
-    campaignDate: 'Campaign date',
+    campaignDate: 'Season',
     from: 'From',
     to: 'To',
     fromData: '(from the data)',
@@ -143,8 +143,8 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
   pt: {
     htmlLang: 'pt',
     dateLocale: 'pt-PT',
-    documentTitle: 'Relatório de comparativa',
-    reportTitle: 'Relatório de comparativa de ACV',
+    documentTitle: 'Relatório de comparação',
+    reportTitle: 'Relatório de comparação de ACV',
     comparisonDate: 'Data de comparação',
     selectedFilters: 'FILTROS SELECIONADOS',
     referenceSet: 'Conjunto de referência',
@@ -169,7 +169,7 @@ const LABELS_BY_LANGUAGE: Record<CompareReportLanguage, ReportLabels> = {
     impactPesticides: 'IMPACTO DE PESTICIDAS',
     impactFertilizers: 'IMPACTO DE FERTILIZANTES',
     impactIrrigationSystem: 'IMPACTO DO SISTEMA DE REGA',
-    impactCropManagement: 'IMPACTO DO MANEJO DA CULTURA',
+    impactCropManagement: 'IMPACTO DO MANEIO DA CULTURA',
     category: 'Categoria',
     referenceAmount: 'Quantidade de referência',
     targetAmount: 'Quantidade alvo',
@@ -230,21 +230,23 @@ export const translateCropType = (
   return CROP_TYPE_LABELS_BY_LANGUAGE[language]?.[tipoCultivo] ?? tipoCultivo;
 };
 
-const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
+const EF_LABELS_BY_LANGUAGE: Record<
   CompareReportLanguage,
-  Record<EfCategoryId, string>
+  Record<EfLabelId, string>
 > = {
   es: {
-    climate_change: 'Cambio Climático',
+    climate_change: 'Cambio climático',
     acidification: 'Acidificación',
     eutrophication_freshwater: 'Eutrofización (agua dulce)',
     eutrophication_marine: 'Eutrofización (marina)',
     eutrophication_terrestrial: 'Eutrofización (terrestre)',
-    water_use: 'Uso de Agua',
-    land_use: 'Uso del Suelo',
-    particulate_matter: 'Partículas',
+    water_use: 'Uso del agua',
+    land_use: 'Uso del suelo',
+    particulate_matter: 'Partículas en suspensión',
     ecotoxicity: 'Ecotoxicidad',
-    human_toxicity: 'Toxicidad Humana',
+    human_toxicity: 'Toxicidad humana',
+    human_toxicity_cancer: 'Toxicidad humana (cancerígena)',
+    human_toxicity_non_cancer: 'Toxicidad humana (no cancerígena)',
   },
   en: {
     climate_change: 'Climate change',
@@ -257,6 +259,8 @@ const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
     particulate_matter: 'Particulate matter',
     ecotoxicity: 'Ecotoxicity',
     human_toxicity: 'Human toxicity',
+    human_toxicity_cancer: 'Human toxicity, cancer',
+    human_toxicity_non_cancer: 'Human toxicity, non-cancer',
   },
   pt: {
     climate_change: 'Alterações climáticas',
@@ -264,71 +268,21 @@ const EF_CATEGORY_LABELS_BY_LANGUAGE: Record<
     eutrophication_freshwater: 'Eutrofização (água doce)',
     eutrophication_marine: 'Eutrofização (marinha)',
     eutrophication_terrestrial: 'Eutrofização (terrestre)',
-    water_use: 'Uso de Água',
-    land_use: 'Uso do Solo',
-    particulate_matter: 'Partículas',
+    water_use: 'Uso da água',
+    land_use: 'Uso do solo',
+    particulate_matter: 'Partículas em suspensão',
     ecotoxicity: 'Ecotoxicidade',
-    human_toxicity: 'Toxicidade Humana',
+    human_toxicity: 'Toxicidade humana',
+    human_toxicity_cancer: 'Toxicidade humana (cancerígena)',
+    human_toxicity_non_cancer: 'Toxicidade humana (não cancerígena)',
   },
 };
-
-// Indicadores que comparten categoría EF agregada pero deben mostrarse con
-// etiquetas distintas en el informe (cada uno es una fila propia)
-const EF_INDICATOR_LABELS_BY_LANGUAGE: Record<
-  CompareReportLanguage,
-  Record<string, string>
-> = {
-  es: {
-    'Human toxicity: carcinogenic': 'Toxicidad humana (cancerígena)',
-    'Human toxicity: non-carcinogenic': 'Toxicidad humana (no cancerígena)',
-  },
-  en: {
-    'Human toxicity: carcinogenic': 'Human toxicity, cancer',
-    'Human toxicity: non-carcinogenic': 'Human toxicity, non-cancer',
-  },
-  pt: {
-    'Human toxicity: carcinogenic': 'Toxicidade humana (cancerígena)',
-    'Human toxicity: non-carcinogenic': 'Toxicidade humana (não cancerígena)',
-  },
-};
-
-const buildCategoryAliasMap = (
-  language: CompareReportLanguage,
-): Map<string, string> => {
-  const map = new Map<string, string>();
-  for (const [id, label] of Object.entries(
-    EF_CATEGORY_LABELS_BY_LANGUAGE[language],
-  )) {
-    const typedId = id as EfCategoryId;
-    map.set(typedId, label);
-    const efCategory = EF_CATEGORIES.find((c) => c.id === typedId);
-    if (efCategory) {
-      map.set(efCategory.spanishName, label);
-      for (const name of efCategory.englishNames) map.set(name, label);
-    }
-  }
-  for (const [name, label] of Object.entries(
-    EF_INDICATOR_LABELS_BY_LANGUAGE[language],
-  )) {
-    map.set(name, label);
-  }
-  return map;
-};
-
-const categoryAliasCache = new Map<
-  CompareReportLanguage,
-  Map<string, string>
->();
 
 export const translateCategory = (
   category: string | undefined,
   language: CompareReportLanguage,
 ): string => {
   if (!category) return '';
-  let aliasMap = categoryAliasCache.get(language);
-  if (!aliasMap) {
-    aliasMap = buildCategoryAliasMap(language);
-    categoryAliasCache.set(language, aliasMap);
-  }
-  return aliasMap.get(category) ?? category;
+  const id = getEfLabelId(category);
+  return id ? EF_LABELS_BY_LANGUAGE[language][id] : category;
 };

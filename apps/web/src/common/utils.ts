@@ -1,5 +1,6 @@
+import type { CompareResultDto } from 'common/compare';
 import { i18n } from '../i18n/index.ts';
-import { getEfLabelId } from './constants.ts';
+import { getEfCategoryId } from './constants.ts';
 
 export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(
@@ -11,8 +12,14 @@ export function omitNullish<T extends Record<string, unknown>>(obj: T): Partial<
 
 // Category names arrive from openLCA in English; unknown ones are shown as is
 export function translateEfCategory(name: string): string {
-  const id = getEfLabelId(name);
+  const id = getEfCategoryId(name);
   return id ? i18n.t(`impactCategories.${id}`) : name;
+}
+
+// `diff` existe (aunque sea null) en cuanto hay conjunto objetivo; `tarAmount`
+// falta en las categorías que el objetivo no tiene, así que no sirve para esto
+export function hasTargetSet(result: CompareResultDto): boolean {
+  return result.impacto_total.some((i) => i.diff !== undefined);
 }
 
 export function safeString(value: unknown): string | null {

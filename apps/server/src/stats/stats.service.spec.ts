@@ -204,8 +204,9 @@ describe('StatsService', () => {
     it('compares against the previous year with the same crop filter', async () => {
       mockDataset([
         ...zona('a', { anio: 2024, climateChange: 90 }),
-        ...zona('b', { anio: 2023, climateChange: 100 }),
-        ...zona('c', { anio: 2023, tipo: 'maiz', climateChange: 1 }),
+        ...zona('a', { anio: 2023, climateChange: 100 }),
+        // Mismas parcelas con otro cultivo: el filtro las deja fuera
+        ...zona('a', { anio: 2023, tipo: 'maiz', climateChange: 1 }),
       ]);
 
       const { kpis } = await service.getGlobalStats({
@@ -213,6 +214,7 @@ describe('StatsService', () => {
         tipoCultivo: 'trigo',
       });
 
+      expect(kpis.parcelasComparables).toBe(3);
       expect(kpis.variacionInteranual?.climate_change).toBe(-10);
       expect(kpis.variacionInteranual?.acidification).toBeNull();
     });

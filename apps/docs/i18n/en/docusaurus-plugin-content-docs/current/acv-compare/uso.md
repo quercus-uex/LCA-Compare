@@ -51,7 +51,7 @@ There, you can compare two crop sets, filtering by:
 - Province
 - Town
 - Plots (your own plots; requires signing in)
-- Location (point selected on a map and radius in meters)
+- Location (point selected on a map and radius in meters; includes every campaign of the plots within the radius)
 - Crop type
 - Season year (start or end; from 2020 onwards)
 - **Only reference plots**: limits the set to plots marked as reference
@@ -60,10 +60,12 @@ This filter can be applied to either set and is combined with the other filters.
 
 The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference of the target relative to the reference is calculated for each category.
 
+Values are per kg of product. Each set's value is the **simple mean** of its campaigns: every campaign counts the same, without weighting by production or area. Each category is averaged only over the campaigns that include it, so a category missing from a campaign does not count as 0.
+
 The **Reference** always acts as the baseline and the **Target** is the set being evaluated against it:
 
 ```
-Difference (%) = (target − reference) / reference × 100
+Difference (%) = (target − reference) / |reference| × 100
 ```
 
 - A **positive** value (in red) means the target has a **higher** impact than the reference. For example, +20 % means the target's impact is 20 % above the reference.
@@ -121,7 +123,9 @@ An administrator cannot delete their own account or remove their own administrat
 
 The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by year, impact category, crop type, and province, and displays:
 
-- Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of the climate change impact.
+- Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of each category. The year-over-year variation compares only the plots with a result in both the selected year and the previous one (at least 3), so farms joining or leaving do not affect it.
+- Human toxicity is shown as two categories, cancer and non-cancer, as in EF 3.1.
+- Water allocation (m³/ha) and water productivity (kg/m³) use only irrigated crops (water consumption above 0); yield (kg/ha) includes all of them.
 - Province and town ranking. Clicking an entry opens the comparator with that province or town preloaded as the Reference set. The town ranking includes a search box that shows the town's position in the ranking.
 - Time evolution of impacts, with a trend (sparkline) chart per category.
 - Impact profile: a radar chart that allows comparing two provinces or two towns.

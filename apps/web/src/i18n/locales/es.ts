@@ -91,7 +91,6 @@ export const es = {
     land_use: 'Uso del suelo',
     particulate_matter: 'Partículas en suspensión',
     ecotoxicity: 'Ecotoxicidad',
-    human_toxicity: 'Toxicidad humana',
     human_toxicity_cancer: 'Toxicidad humana (cancerígena)',
     human_toxicity_non_cancer: 'Toxicidad humana (no cancerígena)',
   },
@@ -155,8 +154,10 @@ export const es = {
       generatingReport: 'Generando informe…',
       reportGenerated: 'Informe generado',
       reportFilename: 'Informe.pdf',
+      meanNote:
+        'Valores medios por kg de producto: media simple de las campañas del conjunto, sin ponderar por producción ni superficie. Cada categoría se promedia solo con las campañas que la incluyen.',
       differenceNote:
-        'Diferencia = (objetivo − referencia) / referencia × 100. En rojo, el objetivo tiene más impacto que la referencia; en verde, menos.',
+        'Diferencia = (objetivo − referencia) / |referencia| × 100. En rojo, el objetivo tiene más impacto que la referencia; en verde, menos.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',
@@ -434,7 +435,7 @@ export const es = {
       cropDistribution: 'Distribución por cultivo',
       cropDistributionHint: 'Pulsa un cultivo para filtrar la página',
       waterProductivity: 'Rendimiento y uso del agua',
-      waterProductivityHint: 'Por provincia; el tamaño de cada punto es la superficie cultivada',
+      waterProductivityHint: 'Por provincia y solo con cultivos de regadío; el tamaño de cada punto es la superficie cultivada',
     },
     kpis: {
       plots: 'Parcelas',
@@ -449,7 +450,9 @@ export const es = {
       inProvinces_other: 'En {{count}} provincias',
       meanPerCrop: 'Media por cultivo',
       vsYear: 'vs {{year}}',
-      noPreviousYear: 'Sin datos de {{year}} para comparar',
+      noPreviousYear: 'Sin parcelas suficientes con datos también en {{year}} para comparar',
+      comparablePlots_one: '{{count}} parcela comparable',
+      comparablePlots_other: '{{count}} parcelas comparables',
       yoyHint: 'Elige una campaña para ver la variación interanual',
       allCategories: 'Todas las categorías',
     },

@@ -171,24 +171,31 @@ export class CaptureService {
       },
     });
 
+    const datosCultivo = {
+      produccion: mCultivo.produccion,
+      tipo: mCultivo.tipo,
+      ciclo: mCultivo.ciclo,
+      superficieCultivada: mCultivo.superficie_cultivada,
+      consumoAgua: mCultivo.consumo_agua,
+      resultadoImpacto: { connect: { id: idResultadoImpacto } },
+    };
+
     if (cultivo) {
-      await this.cultivoService.update({
+      // Un reenvío corrige la campaña: se actualizan también sus datos, que
+      // usan las estadísticas (rendimiento, agua, superficie)
+      const idResultadoAnterior = cultivo.idResultadoImpacto;
+      cultivo = await this.cultivoService.update({
         where: { id: cultivo.id },
-        data: { resultadoImpacto: { connect: { id: idResultadoImpacto } } },
+        data: datosCultivo,
       });
-      await this.resultadoImpactoService.delete({
-        id: cultivo.idResultadoImpacto!,
-      });
+      if (idResultadoAnterior) {
+        await this.resultadoImpactoService.delete({ id: idResultadoAnterior });
+      }
     } else {
       cultivo = await this.cultivoService.create({
-        produccion: mCultivo.produccion,
-        tipo: mCultivo.tipo,
-        ciclo: mCultivo.ciclo,
+        ...datosCultivo,
         fechaInicioCampania: fechaCultivo.toJSDate(),
         parcela: { connect: { id: idParcela } },
-        superficieCultivada: mCultivo.superficie_cultivada,
-        consumoAgua: mCultivo.consumo_agua,
-        resultadoImpacto: { connect: { id: idResultadoImpacto } },
       });
     }
 

@@ -14,30 +14,6 @@ export class CultivoService {
     });
   }
 
-  /**
-   * Devuelve solo la campaña más reciente de cada parcela indicada, elegida
-   * entre las campañas que cumplen `where` (p. ej. tipo de cultivo y años).
-   */
-  async findMostRecentByParcelaIdBulk(
-    ids: string[],
-    where: Prisma.CultivoWhereInput = {},
-  ): Promise<Cultivo[]> {
-    const cultivos = await this.prisma.cultivo.findMany({
-      where: { ...where, idParcela: { in: ids } },
-      orderBy: [{ idParcela: 'asc' }, { fechaInicioCampania: 'desc' }],
-    });
-
-    // Al venir ordenados por fecha descendente dentro de cada parcela, el
-    // primer cultivo de cada parcela es su campaña más reciente
-    const masRecientes = new Map<string, Cultivo>();
-    for (const cultivo of cultivos) {
-      if (!masRecientes.has(cultivo.idParcela)) {
-        masRecientes.set(cultivo.idParcela, cultivo);
-      }
-    }
-    return [...masRecientes.values()];
-  }
-
   async findMany(params: {
     skip?: number;
     take?: number;

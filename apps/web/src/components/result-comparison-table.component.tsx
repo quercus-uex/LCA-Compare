@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { ImpactKey } from '../common/constants.ts';
-import { translateEfCategory } from '../common/utils.ts';
+import { hasTargetSet, translateEfCategory } from '../common/utils.ts';
 import type { CompareResult } from '../hooks/compare.hook.tsx';
+import { formatImpactValue } from '../stats/stats-formatters.ts';
 
 export const ResultComparisonTable = ({
   result,
@@ -11,7 +12,7 @@ export const ResultComparisonTable = ({
   selectedImpact: ImpactKey;
 }) => {
   const { t } = useTranslation();
-  const hasTarget = result.impacto_total[0]?.tarAmount != null;
+  const hasTarget = hasTargetSet(result);
 
   return (
     <div className="overflow-x-auto">
@@ -29,10 +30,12 @@ export const ResultComparisonTable = ({
           {result[selectedImpact].map((i, index) => (
             <tr key={index}>
               <th>{translateEfCategory(i.category)}</th>
-              <th>{i.refAmount.toFixed(4)}</th>
-              {i.tarAmount != null && <th>{i.tarAmount.toFixed(4)}</th>}
+              <th>{formatImpactValue(i.refAmount, '0')}</th>
+              {hasTarget && (
+                <th>{i.tarAmount != null ? formatImpactValue(i.tarAmount, '0') : '—'}</th>
+              )}
               <th>{i.unit}</th>
-              {i.tarAmount != null && (
+              {hasTarget && (
                 <th
                   className={
                     i.diff != null
@@ -49,8 +52,9 @@ export const ResultComparisonTable = ({
           ))}
         </tbody>
       </table>
+      <p className="text-xs text-base-content/60 mt-2">{t('compare.result.meanNote')}</p>
       {hasTarget && (
-        <p className="text-xs text-base-content/60 mt-2">{t('compare.result.differenceNote')}</p>
+        <p className="text-xs text-base-content/60 mt-1">{t('compare.result.differenceNote')}</p>
       )}
     </div>
   );

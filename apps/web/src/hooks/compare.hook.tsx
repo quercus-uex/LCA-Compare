@@ -102,6 +102,11 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       }),
     });
 
+    // Sin esto, un error del servidor se descargaría como si fuera el PDF
+    if (!response.ok) {
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
+    }
+
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');

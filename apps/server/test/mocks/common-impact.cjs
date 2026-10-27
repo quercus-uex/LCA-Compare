@@ -15,21 +15,24 @@ const EF_CATEGORIES = [
   },
   {
     id: 'eutrophication_freshwater',
-    englishNames: ['Eutrophication: freshwater'],
+    englishNames: ['Eutrophication: freshwater', 'Eutrophication, freshwater'],
     spanishName: 'Eutrofizacion (agua dulce)',
     unit: 'kg P eq',
     color: '#22c55e',
   },
   {
     id: 'eutrophication_marine',
-    englishNames: ['Eutrophication: marine'],
+    englishNames: ['Eutrophication: marine', 'Eutrophication, marine'],
     spanishName: 'Eutrofizacion (marina)',
     unit: 'kg N eq',
     color: '#14b8a6',
   },
   {
     id: 'eutrophication_terrestrial',
-    englishNames: ['Eutrophication: terrestrial'],
+    englishNames: [
+      'Eutrophication: terrestrial',
+      'Eutrophication, terrestrial',
+    ],
     spanishName: 'Eutrofizacion (terrestre)',
     unit: 'mol N eq',
     color: '#84cc16',
@@ -50,27 +53,34 @@ const EF_CATEGORIES = [
   },
   {
     id: 'particulate_matter',
-    englishNames: ['Particulate matter formation'],
+    englishNames: ['Particulate matter formation', 'Particulate matter'],
     spanishName: 'Particulas',
     unit: 'disease inc.',
     color: '#6b7280',
   },
   {
     id: 'ecotoxicity',
-    englishNames: ['Ecotoxicity: freshwater'],
+    englishNames: ['Ecotoxicity: freshwater', 'Ecotoxicity, freshwater'],
     spanishName: 'Ecotoxicidad',
     unit: 'CTUe',
     color: '#a855f7',
   },
   {
-    id: 'human_toxicity',
-    englishNames: [
-      'Human toxicity: carcinogenic',
-      'Human toxicity: non-carcinogenic',
-    ],
-    spanishName: 'Toxicidad Humana',
+    id: 'human_toxicity_cancer',
+    englishNames: ['Human toxicity: carcinogenic', 'Human toxicity, cancer'],
+    spanishName: 'Toxicidad humana (cancerigena)',
     unit: 'CTUh',
     color: '#f97316',
+  },
+  {
+    id: 'human_toxicity_non_cancer',
+    englishNames: [
+      'Human toxicity: non-carcinogenic',
+      'Human toxicity, non-cancer',
+    ],
+    spanishName: 'Toxicidad humana (no cancerigena)',
+    unit: 'CTUh',
+    color: '#ec4899',
   },
 ];
 
@@ -84,24 +94,32 @@ const IMPACT_KEYS = [
 
 const DEFAULT_EF_CATEGORY = 'climate_change';
 
-const EF_INDICATORS = [
-  { id: 'human_toxicity_cancer', englishName: 'Human toxicity: carcinogenic' },
-  {
-    id: 'human_toxicity_non_cancer',
-    englishName: 'Human toxicity: non-carcinogenic',
-  },
-];
+const normalizeEfName = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 
-const getEfLabelId = (name) =>
-  EF_INDICATORS.find((i) => i.englishName === name)?.id ??
-  EF_CATEGORIES.find(
-    (c) => c.spanishName === name || c.englishNames.includes(name),
-  )?.id;
+const EF_NAME_LOOKUP = new Map(
+  EF_CATEGORIES.flatMap((c) =>
+    [...c.englishNames, c.spanishName].map((name) => [
+      normalizeEfName(name),
+      c.id,
+    ]),
+  ),
+);
+
+const getEfCategoryId = (name) => EF_NAME_LOOKUP.get(normalizeEfName(name));
+
+const getEfCategory = (id) => EF_CATEGORIES.find((c) => c.id === id);
 
 module.exports = {
   EF_CATEGORIES,
-  EF_INDICATORS,
   IMPACT_KEYS,
   DEFAULT_EF_CATEGORY,
-  getEfLabelId,
+  normalizeEfName,
+  getEfCategoryId,
+  getEfCategory,
 };

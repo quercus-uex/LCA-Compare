@@ -14,7 +14,9 @@ const IMPACT_LABEL_KEYS: Readonly<Record<ImpactKey, string>> = {
   impacto_manejo_cultivo: 'common.fields.cropManagement',
 };
 
-const num = (n: number | null | undefined) => (n == null ? '' : n.toFixed(4));
+// Sin redondear: con decimales fijos los indicadores pequeños (CTUh, ~1e-10)
+// se exportarían como 0
+const num = (n: number | null | undefined) => n ?? '';
 
 type ExportItem = { unit: string; category: string; amount: number | undefined };
 type ExportPayload = Record<ImpactKey, ExportItem[]>;

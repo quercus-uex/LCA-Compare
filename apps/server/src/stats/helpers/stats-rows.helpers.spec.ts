@@ -65,7 +65,8 @@ describe('stats-rows.helpers', () => {
         provincia: { id: 'prov-1', nombre: 'Badajoz' },
       });
       expect(row.categorias?.climate_change).toBe(4);
-      expect(row.categorias?.acidification).toBe(0);
+      // Una categoría que no trae el resultado no vale 0
+      expect(row.categorias).not.toHaveProperty('acidification');
     });
 
     it('takes the campaign year in UTC', () => {
@@ -84,12 +85,12 @@ describe('stats-rows.helpers', () => {
       expect(row.categorias).toBeNull();
     });
 
-    it('treats malformed impact data as zero amounts', () => {
+    it('treats malformed impact data as a result without amounts', () => {
       const [row] = toStatsRows([
         makeCultivo({ resultadoImpacto: { datos: 'oops' } }),
       ]);
 
-      expect(row.categorias?.climate_change).toBe(0);
+      expect(row.categorias).toEqual({});
     });
 
     it('leaves zones null when the plot has no town', () => {

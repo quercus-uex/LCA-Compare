@@ -17,19 +17,6 @@ describe('CompareQueryBuilder', () => {
     expect(result).toEqual({ AND: [{ OR: [{ id: { in: [] } }] }] });
   });
 
-  it('builds the campaign-level filter (crop type and years) used to pick the most recent campaign', () => {
-    expect(
-      CompareQueryBuilder.buildCultivoFilter({
-        tipoCultivo: 'Tomate',
-        anioCampaniaInicio: 2023,
-      }),
-    ).toEqual({
-      tipo: 'Tomate',
-      fechaInicioCampania: { gte: new Date('2023-01-01T00:00:00.000Z') },
-    });
-    expect(CompareQueryBuilder.buildCultivoFilter({})).toEqual({});
-  });
-
   it('builds a location filter from nearby result ids', () => {
     const result = CompareQueryBuilder.build(
       { lat: 40.0, long: -3.0, range: 50 },

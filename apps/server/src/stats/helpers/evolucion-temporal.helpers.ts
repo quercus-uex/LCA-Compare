@@ -1,5 +1,8 @@
-import type { CategoryValues, EvolucionTemporalItemDto } from 'common/stats';
-import { meanCategories } from './stats-aggregation.helpers';
+import type { EvolucionTemporalItemDto } from 'common/stats';
+import {
+  meanCategories,
+  type PartialCategoryAmounts,
+} from './stats-aggregation.helpers';
 import type { StatsRow } from './stats-rows.helpers';
 
 export function aggregateEvolucionByYear(
@@ -7,7 +10,7 @@ export function aggregateEvolucionByYear(
 ): EvolucionTemporalItemDto[] {
   const byYear = new Map<
     number,
-    { numCultivos: number; categorias: CategoryValues[] }
+    { numCultivos: number; categorias: PartialCategoryAmounts[] }
   >();
 
   for (const r of rows) {

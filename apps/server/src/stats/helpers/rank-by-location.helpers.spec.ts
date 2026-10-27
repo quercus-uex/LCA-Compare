@@ -134,6 +134,36 @@ describe('rank-by-location.helpers', () => {
       expect(provincia.productividadAgua).toBe(6);
     });
 
+    it('computes water allocation and productivity only from irrigated crops', () => {
+      const rows = [
+        makeRow({
+          idParcela: 'a',
+          superficie: 2,
+          produccion: 4000,
+          consumoAgua: 1000,
+        }),
+        makeRow({
+          idParcela: 'b',
+          superficie: 2,
+          produccion: 6000,
+          consumoAgua: 1000,
+        }),
+        // Secano: cuenta para el rendimiento, no para el agua
+        makeRow({
+          idParcela: 'c',
+          superficie: 6,
+          produccion: 2000,
+          consumoAgua: 0,
+        }),
+      ];
+
+      const [provincia] = rankProvincias(rows).ranking;
+
+      expect(provincia.rendimiento).toBe(1200);
+      expect(provincia.dotacionAgua).toBe(500);
+      expect(provincia.productividadAgua).toBe(5);
+    });
+
     it('returns null ratios when a denominator is 0', () => {
       const rows = zonaRows(3, {
         poblacion: DON_BENITO,

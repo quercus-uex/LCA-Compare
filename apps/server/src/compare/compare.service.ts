@@ -19,7 +19,10 @@ import { AiService } from '../ai/ai.service';
 import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
 import { CompareQueryBuilder } from './compare-query.builder';
 import { extractLocationData } from './compare.helpers';
-import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
+import {
+  ResultadoImpactoDto,
+  type ResultadoImpactoItemDto,
+} from '../resultadoimpacto/dto/resultado-impacto.dto';
 import {
   COMPARE_REPORT_DEFAULT_LANGUAGE,
   getReportLabels,
@@ -28,6 +31,12 @@ import {
   translateCropType,
 } from './compare-report.i18n';
 import type { CompareReportLanguage } from 'common/compare';
+import { getEfCategoryId, normalizeEfName } from 'common/impact';
+
+// openLCA no siempre escribe igual el nombre de una categoría; se comparan por
+// su categoría EF o, si no es una conocida, por el nombre normalizado
+const getCategoryKey = (name: string): string =>
+  getEfCategoryId(name) ?? normalizeEfName(name);
 
 /**
  * Formats an impact amount with `significant` significant digits. Values
@@ -125,7 +134,6 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
           lat,
           long,
           range,
-          CompareQueryBuilder.buildCultivoFilter(filters),
         );
       locationIds = locationResults.map((i) => i.id);
     }
@@ -139,29 +147,43 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return this.resultadoImpactoService.findMany({ where });
   }
 
+  /**
+   * Media de cada categoría entre los resultados que la incluyen. Una
+   * categoría ausente en un resultado no cuenta como 0, porque bajaría la
+   * media.
+   */
   getMeanOfResults(
     results: ResultadoImpacto[],
   ): ResultadoImpactoDto | undefined {
     if (!results.length) return undefined;
-    if (results.length === 1)
-      return results[0].datos as unknown as ResultadoImpactoDto;
 
-    const base = structuredClone(
-      results[0].datos,
-    ) as unknown as ResultadoImpactoDto;
-
+    const mean = {} as ResultadoImpactoDto;
     for (const key of IMPACT_KEYS) {
-      base[key] = base[key].map((item) => {
-        const sum = results.reduce((acc, r) => {
-          const data = r.datos as unknown as ResultadoImpactoDto;
-          const found = data[key]?.find((i) => i.category === item.category);
-          return acc + (found?.amount ?? 0);
-        }, 0);
-        return { ...item, amount: sum / results.length };
-      });
+      const byCategory = new Map<
+        string,
+        { item: ResultadoImpactoItemDto; sum: number; count: number }
+      >();
+      for (const r of results) {
+        const data = r.datos as unknown as ResultadoImpactoDto;
+        for (const item of data[key] ?? []) {
+          if (!Number.isFinite(item.amount)) continue;
+          const categoryKey = getCategoryKey(item.category);
+          const entry = byCategory.get(categoryKey);
+          if (entry) {
+            entry.sum += item.amount;
+            entry.count += 1;
+          } else {
+            byCategory.set(categoryKey, { item, sum: item.amount, count: 1 });
+          }
+        }
+      }
+      mean[key] = [...byCategory.values()].map(({ item, sum, count }) => ({
+        category: item.category,
+        unit: item.unit,
+        amount: sum / count,
+      }));
     }
-
-    return base;
+    return mean;
   }
 
   async getMeanByFilters(filters: CompareQueryItemDto) {
@@ -170,12 +192,15 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Relative change of the target set with respect to the reference (baseline):
-  // positive means the target has a higher impact than the reference.
+  // positive means the target has a higher impact than the reference. Dividing
+  // by |ref| keeps that sign meaning when the reference is negative.
   private readonly percentageDiff = (
     refAmount: number,
     tarAmount: number,
   ): number | null =>
-    refAmount === 0 ? null : ((tarAmount - refAmount) / refAmount) * 100;
+    refAmount === 0
+      ? null
+      : ((tarAmount - refAmount) / Math.abs(refAmount)) * 100;
 
   compareResults(
     refResults: ResultadoImpactoDto,
@@ -185,18 +210,20 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       IMPACT_KEYS.map((key) => [
         key,
         refResults[key].map((r) => {
+          const categoryKey = getCategoryKey(r.category);
           const tarItem = tarResults?.[key]?.find(
-            (i) => i.category === r.category,
+            (i) => getCategoryKey(i.category) === categoryKey,
           );
-          const tarAmount = tarItem?.amount ?? 0;
           return {
             category: r.category,
             unit: r.unit,
             refAmount: r.amount,
             ...(tarResults && {
-              tarAmount,
               // A category missing from the target has no value to compare
-              diff: tarItem ? this.percentageDiff(r.amount, tarAmount) : null,
+              tarAmount: tarItem?.amount,
+              diff: tarItem
+                ? this.percentageDiff(r.amount, tarItem.amount)
+                : null,
             }),
           };
         }),

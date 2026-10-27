@@ -76,7 +76,7 @@ describe('CaptureInputDto', () => {
     expect(dto.metadatos.parcela.es_sigpac).toBeUndefined();
 
     const mParcela = dto.metadatos.parcela;
-    const sinDependencias = [undefined, undefined] as never[];
+    const sinDependencias = [undefined, undefined] as [never, never];
     expect(
       new SigpacCaptureStrategy(...sinDependencias).matches(mParcela),
     ).toBe(false);
@@ -103,5 +103,31 @@ describe('CaptureInputDto', () => {
         expect.objectContaining({ property: 'resultado' }),
       ]),
     );
+  });
+
+  it.each([
+    ['superficie_cultivada', 0],
+    ['produccion', 0],
+    ['consumo_agua', -1],
+  ] as const)(
+    'rejects %s = %d, which would break per-hectare and per-kg ratios',
+    (field, value) => {
+      const payload = validPayload();
+      payload.metadatos.cultivo[field] = value;
+
+      const errors = validateSync(plainToInstance(CaptureInputDto, payload));
+      const cultivoErrors = errors[0]?.children?.find(
+        (e) => e.property === 'cultivo',
+      )?.children;
+
+      expect(cultivoErrors?.map((e) => e.property)).toEqual([field]);
+    },
+  );
+
+  it('accepts rain-fed crops with zero water consumption', () => {
+    const payload = validPayload();
+    payload.metadatos.cultivo.consumo_agua = 0;
+
+    expect(validateSync(plainToInstance(CaptureInputDto, payload))).toEqual([]);
   });
 });

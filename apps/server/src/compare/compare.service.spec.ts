@@ -1,4 +1,3 @@
-import * as fs from 'node:fs';
 import { CompareService, formatAmount, formatPercent } from './compare.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ProvinciaService } from '../provincia/provincia.service';
@@ -28,7 +27,17 @@ jest.mock('playwright', () => {
   };
 });
 
-const playwrightMock = jest.requireMock('playwright');
+type PlaywrightMock = {
+  chromium: { launch: jest.Mock };
+  __mockPage: {
+    setContent: jest.Mock<Promise<void>, [html: string, options?: unknown]>;
+    pdf: jest.Mock;
+    close: jest.Mock;
+  };
+  __mockBrowser: { newPage: jest.Mock; close: jest.Mock };
+};
+
+const playwrightMock = jest.requireMock<PlaywrightMock>('playwright');
 
 function makeImpactItems(
   overrides?: { category: string; amount: number; unit: string }[],
@@ -154,7 +163,6 @@ describe('CompareService', () => {
         40.0,
         -3.0,
         50,
-        {},
       );
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: {
@@ -170,7 +178,7 @@ describe('CompareService', () => {
 
     it('treats zero latitude and longitude as valid location filters', async () => {
       resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
-        { id: 'ri-zero' } as any,
+        { id: 'ri-zero' },
       ]);
       resultadoImpactoService.findMany.mockResolvedValue([
         { id: 'ri-zero' },
@@ -182,16 +190,16 @@ describe('CompareService', () => {
         0,
         0,
         10,
-        {},
       );
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: { AND: [{ OR: [{ id: { in: ['ri-zero'] } }] }] },
       });
     });
 
-    it('chooses the most recent campaign per parcel among those matching the crop type and years', async () => {
+    it('keeps every campaign within the radius and applies crop type and years like the other location filters', async () => {
       resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
-        { id: 'ri-tomate' } as any,
+        { id: 'ri-2023' },
+        { id: 'ri-2024' },
       ]);
       resultadoImpactoService.findMany.mockResolvedValue([]);
 
@@ -204,18 +212,22 @@ describe('CompareService', () => {
         anioCampaniaFin: 2024,
       });
 
-      expect(resultadoImpactoService.findManyAroundPoint).toHaveBeenCalledWith(
-        40.0,
-        -3.0,
-        50,
-        {
-          tipo: 'Tomate',
-          fechaInicioCampania: {
-            gte: new Date('2022-01-01T00:00:00.000Z'),
-            lt: new Date('2025-01-01T00:00:00.000Z'),
-          },
+      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+        where: {
+          AND: [
+            { OR: [{ id: { in: ['ri-2023', 'ri-2024'] } }] },
+            { cultivo: { tipo: 'Tomate' } },
+            {
+              cultivo: {
+                fechaInicioCampania: {
+                  gte: new Date('2022-01-01T00:00:00.000Z'),
+                  lt: new Date('2025-01-01T00:00:00.000Z'),
+                },
+              },
+            },
+          ],
         },
-      );
+      });
     });
 
     it('returns an empty set when a radius filter finds no parcels instead of dropping the spatial condition', async () => {
@@ -276,6 +288,55 @@ describe('CompareService', () => {
       expect(result!.impacto_total).toEqual([
         { category: 'GWP', amount: 20, unit: 'kg CO2 eq' },
         { category: 'AP', amount: 30, unit: 'mol H+ eq' },
+      ]);
+    });
+
+    it('averages each category only over the results that include it', () => {
+      const r1Impact = makeImpactDto({
+        impacto_total: [{ category: 'GWP', amount: 10, unit: 'kg CO2 eq' }],
+      });
+      const r2Impact = makeImpactDto({
+        impacto_total: [
+          { category: 'GWP', amount: 30, unit: 'kg CO2 eq' },
+          { category: 'AP', amount: 6, unit: 'mol H+ eq' },
+        ],
+      });
+
+      const result = service.getMeanOfResults([
+        makeResultadoImpacto(r1Impact),
+        makeResultadoImpacto(r2Impact),
+      ]);
+
+      // AP is not dropped because the first result lacks it, nor halved
+      expect(result!.impacto_total).toEqual([
+        { category: 'GWP', amount: 20, unit: 'kg CO2 eq' },
+        { category: 'AP', amount: 6, unit: 'mol H+ eq' },
+      ]);
+    });
+
+    it('groups categories spelled differently by openLCA', () => {
+      const r1Impact = makeImpactDto({
+        impacto_total: [
+          { category: 'Particulate matter', amount: 1, unit: 'disease inc.' },
+        ],
+      });
+      const r2Impact = makeImpactDto({
+        impacto_total: [
+          {
+            category: 'Particulate matter formation',
+            amount: 3,
+            unit: 'disease inc.',
+          },
+        ],
+      });
+
+      const result = service.getMeanOfResults([
+        makeResultadoImpacto(r1Impact),
+        makeResultadoImpacto(r2Impact),
+      ]);
+
+      expect(result!.impacto_total).toEqual([
+        { category: 'Particulate matter', amount: 2, unit: 'disease inc.' },
       ]);
     });
   });
@@ -370,14 +431,53 @@ describe('CompareService', () => {
       expect(gwp.tarAmount).toBe(10);
       expect(gwp.diff).toBeNull();
 
+      // A category missing from the target has no amount, not a 0
       const ap = result.impacto_total.find((i) => i.category === 'AP')!;
-      expect(ap.tarAmount).toBe(0);
+      expect(ap.tarAmount).toBeUndefined();
       expect(ap.diff).toBeNull();
 
       // A real zero in the target is a 100 % reduction
       const eu = result.impacto_total.find((i) => i.category === 'EU')!;
       expect(eu.tarAmount).toBe(0);
       expect(eu.diff).toBe(-100);
+    });
+
+    it('keeps the sign meaning (positive = higher target impact) with a negative reference', () => {
+      const refImpact = makeImpactDto({
+        impacto_total: [{ category: 'GWP', amount: -4, unit: 'kg CO2 eq' }],
+      });
+      const tarImpact = makeImpactDto({
+        impacto_total: [{ category: 'GWP', amount: -2, unit: 'kg CO2 eq' }],
+      });
+
+      const result = service.compareResults(refImpact, tarImpact);
+
+      expect(result.impacto_total[0].diff).toBe(50);
+    });
+
+    it('matches categories spelled differently by openLCA', () => {
+      const refImpact = makeImpactDto({
+        impacto_total: [
+          {
+            category: 'Eutrophication: freshwater',
+            amount: 2,
+            unit: 'kg P eq',
+          },
+        ],
+      });
+      const tarImpact = makeImpactDto({
+        impacto_total: [
+          {
+            category: 'Eutrophication, freshwater',
+            amount: 3,
+            unit: 'kg P eq',
+          },
+        ],
+      });
+
+      const result = service.compareResults(refImpact, tarImpact);
+
+      expect(result.impacto_total[0]).toMatchObject({ tarAmount: 3, diff: 50 });
     });
   });
 
@@ -520,8 +620,7 @@ describe('CompareService', () => {
         ],
       );
 
-      const html = playwrightMock.__mockPage.setContent.mock
-        .calls[0][0] as string;
+      const html = playwrightMock.__mockPage.setContent.mock.calls[0][0];
       expect(html).toContain('Desde 2020');
       expect(html).toContain('Hasta 2022');
       expect(html).not.toContain('Desde 2021');
@@ -548,7 +647,7 @@ describe('CompareService', () => {
         );
         expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
 
-        return playwrightMock.__mockPage.setContent.mock.calls[0][0] as string;
+        return playwrightMock.__mockPage.setContent.mock.calls[0][0];
       };
 
       it('omits overview and recommendations when overview generation throws', async () => {
@@ -619,8 +718,7 @@ describe('CompareService', () => {
         tarResults,
       );
 
-      const htmlArg = playwrightMock.__mockPage.setContent.mock
-        .calls[0][0] as string;
+      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
 
       expect(htmlArg).toContain('Spain');
       expect(htmlArg).toContain('Portugal');
@@ -646,8 +744,7 @@ describe('CompareService', () => {
         tarResults,
       );
 
-      const htmlArg = playwrightMock.__mockPage.setContent.mock
-        .calls[0][0] as string;
+      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
 
       expect(htmlArg).toContain('41.00000, -8.00000');
       expect(htmlArg).not.toContain('NaN');
@@ -699,8 +796,7 @@ describe('CompareService', () => {
         { data: 'overview-en' },
       );
 
-      const htmlArg = playwrightMock.__mockPage.setContent.mock
-        .calls[0][0] as string;
+      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
 
       expect(htmlArg).toContain('<html lang="en">');
       expect(htmlArg).toContain('LCA comparison report');
@@ -746,8 +842,7 @@ describe('CompareService', () => {
         { data: 'text' },
       );
 
-      const htmlArg = playwrightMock.__mockPage.setContent.mock
-        .calls[0][0] as string;
+      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
 
       expect(htmlArg).toContain('<html lang="es">');
       expect(htmlArg).toContain('Informe de comparativa de ACV');

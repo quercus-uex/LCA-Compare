@@ -78,7 +78,10 @@ export function rankProvincias(
   for (const [idProvincia, zona] of visibles) {
     const superficie = sum(zona.rows, (r) => r.superficie);
     const produccion = sum(zona.rows, (r) => r.produccion);
-    const consumoAgua = sum(zona.rows, (r) => r.consumoAgua);
+    // Los indicadores de agua solo usan regadío: el secano (consumo 0) bajaría
+    // la dotación y sumaría producción sin agua a la productividad
+    const regadio = zona.rows.filter((r) => r.consumoAgua > 0);
+    const consumoAgua = sum(regadio, (r) => r.consumoAgua);
 
     ranking.push({
       idProvincia,
@@ -89,8 +92,16 @@ export function rankProvincias(
       impactosPorCategoria: zona.impactosPorCategoria,
       // Cocientes de totales: ponderan cada cultivo por su tamaño
       rendimiento: ratio(produccion, superficie, 1),
-      dotacionAgua: ratio(consumoAgua, superficie, 1),
-      productividadAgua: ratio(produccion, consumoAgua, 2),
+      dotacionAgua: ratio(
+        consumoAgua,
+        sum(regadio, (r) => r.superficie),
+        1,
+      ),
+      productividadAgua: ratio(
+        sum(regadio, (r) => r.produccion),
+        consumoAgua,
+        2,
+      ),
     });
   }
 

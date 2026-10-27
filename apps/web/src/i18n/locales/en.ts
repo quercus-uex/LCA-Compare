@@ -91,7 +91,6 @@ export const en = {
     land_use: 'Land use',
     particulate_matter: 'Particulate matter',
     ecotoxicity: 'Ecotoxicity',
-    human_toxicity: 'Human toxicity',
     human_toxicity_cancer: 'Human toxicity, cancer',
     human_toxicity_non_cancer: 'Human toxicity, non-cancer',
   },
@@ -155,8 +154,10 @@ export const en = {
       generatingReport: 'Generating report…',
       reportGenerated: 'Report generated',
       reportFilename: 'Report.pdf',
+      meanNote:
+        'Mean values per kg of product: simple mean of the campaigns in the set, not weighted by production or area. Each category is averaged only over the campaigns that include it.',
       differenceNote:
-        'Difference = (target − reference) / reference × 100. Red means the target has a higher impact than the reference; green, a lower one.',
+        'Difference = (target − reference) / |reference| × 100. Red means the target has a higher impact than the reference; green, a lower one.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticides',
@@ -434,7 +435,7 @@ export const en = {
       cropDistribution: 'Distribution by crop',
       cropDistributionHint: 'Click a crop to filter the page',
       waterProductivity: 'Yield and water use',
-      waterProductivityHint: 'By province; the size of each dot is the cultivated area',
+      waterProductivityHint: 'By province, irrigated crops only; the size of each dot is the cultivated area',
     },
     kpis: {
       plots: 'Plots',
@@ -449,7 +450,9 @@ export const en = {
       inProvinces_other: 'In {{count}} provinces',
       meanPerCrop: 'Mean per crop',
       vsYear: 'vs {{year}}',
-      noPreviousYear: 'No {{year}} data to compare with',
+      noPreviousYear: 'Not enough plots with data also in {{year}} to compare',
+      comparablePlots_one: '{{count}} comparable plot',
+      comparablePlots_other: '{{count}} comparable plots',
       yoyHint: 'Choose a season to see the year-on-year change',
       allCategories: 'All categories',
     },

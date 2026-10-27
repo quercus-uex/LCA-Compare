@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { translateEfCategory } from '../../common/utils.ts';
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
+import { formatImpactValue } from '../../stats/stats-formatters.ts';
 
 const byCategory = (items: ResultadoImpactoItemDto[]) =>
   new Map(items.map((i) => [i.category, i]));
@@ -21,8 +22,10 @@ export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) =
     };
   }, [resultado]);
 
-  const fmt = (m: Map<string, ResultadoImpactoItemDto>, category: string) =>
-    m.get(category)?.amount.toFixed(5) ?? '—';
+  const fmt = (m: Map<string, ResultadoImpactoItemDto>, category: string) => {
+    const amount = m.get(category)?.amount;
+    return amount == null ? '—' : formatImpactValue(amount, '0');
+  };
 
   return (
     <div className="overflow-x-auto">

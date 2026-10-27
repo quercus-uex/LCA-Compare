@@ -51,7 +51,7 @@ Nele, pode comparar dois conjuntos de culturas, filtrando por:
 - Província
 - Localidade
 - Parcelas (as suas próprias parcelas; requer sessão iniciada)
-- Localização (ponto selecionado num mapa e raio em metros)
+- Localização (ponto selecionado num mapa e raio em metros; inclui todas as campanhas das parcelas dentro do raio)
 - Tipo de cultura
 - Ano de campanha (início ou fim; a partir de 2020)
 - **Apenas parcelas de referência**: limita o conjunto às parcelas marcadas como referência
@@ -60,10 +60,12 @@ Este filtro pode ser aplicado a qualquer um dos dois conjuntos e combina-se com 
 
 O conjunto de **Referência** é obrigatório. Se apenas for especificada a referência, serão apresentados os valores médios de impacto do conjunto. Se também for especificado um conjunto **Alvo**, será calculada para cada categoria a diferença percentual do alvo em relação à referência.
 
+Os valores são por kg de produto. O valor de cada conjunto é a **média simples** das suas campanhas: cada campanha conta o mesmo, sem ponderar por produção nem área. Cada categoria é calculada só com as campanhas que a incluem, pelo que uma categoria ausente numa campanha não conta como 0.
+
 A **Referência** atua sempre como linha de base e o **Alvo** é o conjunto que se avalia em relação a ela:
 
 ```
-Diferença (%) = (alvo − referência) / referência × 100
+Diferença (%) = (alvo − referência) / |referência| × 100
 ```
 
 - Um valor **positivo** (a vermelho) indica que o alvo tem **mais** impacto do que a referência. Por exemplo, +20 % significa que o impacto do alvo supera em 20 % o da referência.
@@ -121,7 +123,9 @@ Um administrador não pode eliminar a sua própria conta nem retirar a si própr
 
 A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no LCA Compare. Permite filtrar por ano, categoria de impacto, tipo de cultura e província, e visualiza:
 
-- KPIs globais: número de parcelas, culturas e superfície total, impacto médio por categoria e variação interanual do impacto de alterações climáticas.
+- KPIs globais: número de parcelas, culturas e superfície total, impacto médio por categoria e variação interanual de cada categoria. A variação interanual compara só as parcelas com resultado no ano escolhido e no anterior (pelo menos 3), para que as entradas e saídas de explorações não a afetem.
+- A toxicidade humana é apresentada em duas categorias, cancerígena e não cancerígena, como no EF 3.1.
+- A dotação de água (m³/ha) e a produtividade da água (kg/m³) são calculadas só com culturas de regadio (consumo de água superior a 0); o rendimento (kg/ha) inclui todas.
 - Ranking de províncias e localidades. Ao clicar numa entrada, abre-se o comparador com essa província ou localidade pré-carregada como conjunto de Referência. O ranking de localidades inclui uma caixa de pesquisa que mostra a posição da localidade no ranking.
 - Evolução temporal dos impactos, com um gráfico de tendência (sparkline) por categoria.
 - Perfil de impacto: gráfico de radar que permite comparar duas províncias ou duas localidades.

@@ -1,14 +1,13 @@
 import type { Prisma } from '../../generated/prisma/client';
 import type {
-  CategoryValues,
   DistribucionCultivoItemDto,
   GlobalStatsQuery,
 } from 'common/stats';
 import { parseImpactoDatos } from './impacto-datos.helpers';
 import {
-  buildEfCategoryLookup,
   getCategoryAmounts,
   round,
+  type PartialCategoryAmounts,
 } from './stats-aggregation.helpers';
 
 export const STATS_CULTIVO_SELECT = {
@@ -50,14 +49,12 @@ export type StatsRow = {
   /** m³ */
   consumoAgua: number;
   /** `null` si el cultivo no tiene resultado de impacto */
-  categorias: CategoryValues | null;
+  categorias: PartialCategoryAmounts | null;
   poblacion: Zona | null;
   provincia: Zona | null;
 };
 
 export function toStatsRows(cultivos: StatsCultivo[]): StatsRow[] {
-  const lookup = buildEfCategoryLookup();
-
   return cultivos.map((c) => {
     const poblacion = c.parcela.poblacion;
     return {
@@ -69,10 +66,7 @@ export function toStatsRows(cultivos: StatsCultivo[]): StatsRow[] {
       produccion: c.produccion,
       consumoAgua: c.consumoAgua,
       categorias: c.resultadoImpacto
-        ? getCategoryAmounts(
-            parseImpactoDatos(c.resultadoImpacto.datos),
-            lookup,
-          )
+        ? getCategoryAmounts(parseImpactoDatos(c.resultadoImpacto.datos))
         : null,
       poblacion: poblacion
         ? { id: poblacion.id, nombre: poblacion.nombre }
@@ -95,7 +89,7 @@ export function filterRows(
   );
 }
 
-export function collectCategorias(rows: StatsRow[]): CategoryValues[] {
+export function collectCategorias(rows: StatsRow[]): PartialCategoryAmounts[] {
   return rows.flatMap((r) => (r.categorias ? [r.categorias] : []));
 }
 

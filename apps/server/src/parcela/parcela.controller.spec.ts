@@ -37,9 +37,9 @@ describe('ParcelaController', () => {
   describe('getById', () => {
     it('returns parcel with geometry when owner matches', async () => {
       const user = { sub: 'u1', email: 'test@example.com' };
-      const parcela = { id: 'pa1', idPropietario: 'u1' } as never;
+      const parcela = { id: 'pa1', idPropietario: 'u1' };
       const geom = { type: 'Point', coordinates: [0, 0] };
-      parcelaService.findOne.mockResolvedValue(parcela);
+      parcelaService.findOne.mockResolvedValue(parcela as never);
       parcelaService.getGeom.mockResolvedValue(geom as never);
 
       const result = await controller.getById(user, 'pa1');

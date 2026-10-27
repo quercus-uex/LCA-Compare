@@ -99,9 +99,12 @@ export const StatsOverview = ({
               ) : selectedYoy === null ? (
                 t('stats.kpis.noPreviousYear', { year: anio - 1 })
               ) : (
-                <span className="flex items-center gap-2">
+                <span className="flex flex-wrap items-center gap-2">
                   <YoyBadge value={selectedYoy} />
                   {t('stats.kpis.vsYear', { year: anio - 1 })}
+                  <span>
+                    · {t('stats.kpis.comparablePlots', { count: kpis.parcelasComparables ?? 0 })}
+                  </span>
                 </span>
               )}
             </div>
@@ -131,7 +134,7 @@ export const StatsOverview = ({
 
       <div>
         <h2 className="sr-only">{t('stats.kpis.allCategories')}</h2>
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-6">
           {EF_CATEGORIES.map((cat) => {
             const isSelected = cat.id === selectedCategory;
             const yoy = kpis.variacionInteranual?.[cat.id] ?? null;

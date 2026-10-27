@@ -9,22 +9,6 @@ import { CompareQueryItemDto } from './dto/compare-query.dto';
  */
 export class CompareQueryBuilder {
   /**
-   * Filtros a nivel de campaña (tipo de cultivo y años). Se usan también para
-   * elegir la campaña más reciente de cada parcela en el filtro por radio.
-   */
-  static buildCultivoFilter(
-    filters: CompareQueryItemDto,
-  ): Prisma.CultivoWhereInput {
-    return {
-      ...(filters.tipoCultivo ? { tipo: filters.tipoCultivo } : {}),
-      ...buildCampaignYearRangeFilter(
-        filters.anioCampaniaInicio,
-        filters.anioCampaniaFin,
-      ),
-    };
-  }
-
-  /**
    * `locationIds` es `undefined` si no hay filtro por radio. Si lo hay pero no
    * encontró parcelas (array vacío), la condición se mantiene y no coincide con
    * ningún resultado, en lugar de descartarse en silencio.

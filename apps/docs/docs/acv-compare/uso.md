@@ -60,7 +60,8 @@ En él, podrás comparar dos conjuntos de cultivos, filtrando por:
 - Provincia
 - Población
 - Parcelas (tus propias parcelas; requiere sesión iniciada)
-- Ubicación (punto seleccionado en un mapa y radio en metros)
+- Ubicación (punto seleccionado en un mapa y radio en metros; incluye todas las campañas de las parcelas dentro del
+  radio)
 - Tipo de cultivo
 - Año de campaña (inicio o fin; a partir de 2020)
 - **Solo parcelas de referencia**: limita el conjunto a las parcelas marcadas como de referencia
@@ -73,10 +74,14 @@ El conjunto de **Referencia** es obligatorio. Si solo se especifica la referenci
 impacto del conjunto. Si también se especifica un conjunto **Objetivo**, se calculará para cada categoría la diferencia
 porcentual del objetivo respecto a la referencia.
 
+Los valores son por kg de producto. El valor de cada conjunto es la **media simple** de sus campañas: cada campaña
+cuenta igual, sin ponderar por producción ni superficie. Cada categoría se promedia solo con las campañas que la
+incluyen, de modo que una categoría ausente en una campaña no cuenta como 0.
+
 La **Referencia** actúa siempre como línea base y el **Objetivo** es el conjunto que se evalúa frente a ella:
 
 ```
-Diferencia (%) = (objetivo − referencia) / referencia × 100
+Diferencia (%) = (objetivo − referencia) / |referencia| × 100
 ```
 
 - Un valor **positivo** (en rojo) indica que el objetivo tiene **más** impacto que la referencia. Por ejemplo, +20 %
@@ -148,7 +153,11 @@ La ruta **Estadísticas** muestra una visión agregada de los resultados registr
 año, categoría de impacto, tipo de cultivo y provincia, y visualiza:
 
 - KPIs globales: número de parcelas, cultivos y superficie total, impacto medio por categoría y variación interanual
-  del impacto de cambio climático.
+  de cada categoría. La variación interanual compara solo las parcelas con resultado en el año elegido y en el
+  anterior (al menos 3), para que no influyan las altas y bajas de explotaciones.
+- La toxicidad humana se muestra en dos categorías, cancerígena y no cancerígena, como en EF 3.1.
+- La dotación de agua (m³/ha) y la productividad del agua (kg/m³) se calculan solo con cultivos de regadío (consumo de
+  agua mayor que 0); el rendimiento (kg/ha) incluye todos.
 - Ranking de provincias y poblaciones. Al pulsar en una entrada se abre el comparador con esa provincia o población
   precargada como conjunto de Referencia. El ranking de poblaciones incluye un buscador que muestra la posición de la
   población en el ranking.

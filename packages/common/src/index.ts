@@ -1,11 +1,9 @@
 export {
   EF_CATEGORIES,
-  EF_INDICATORS,
   IMPACT_KEYS,
-  getEfLabelId,
+  getEfCategoryId,
+  normalizeEfName,
   type EfCategoryId,
-  type EfIndicatorId,
-  type EfLabelId,
   type ImpactKey,
 } from './impact.js';
 

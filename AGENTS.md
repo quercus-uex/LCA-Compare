@@ -71,7 +71,7 @@ pnpm docs:typecheck
 
 ## Deploy And Infra
 
-- `.github/workflows/build.yml` (push to `main` or manual dispatch) builds and pushes `lca-compare-backend`, `lca-compare-frontend` and `lca-compare-backup` to `ghcr.io/quercus-uex/`, tagged `main` and `sha-<hash>`. LCA-Bridge has an equivalent workflow for `lca-bridge` and `openlca-ipc`. There is no deploy workflow: GitHub Actions never connects to the server.
+- `.github/workflows/build.yml` (push to `main`, push of a `v*` tag, or manual dispatch) builds and pushes `lca-compare-backend`, `lca-compare-frontend` and `lca-compare-backup` to `ghcr.io/quercus-uex/`, tagged `main` and `sha-<hash>` on `main`; a `vX.Y.Z` git tag publishes `X.Y.Z`, `X.Y` and `sha-<hash>`. LCA-Bridge has an equivalent workflow for `lca-bridge` and `openlca-ipc`. There is no deploy workflow: GitHub Actions never connects to the server.
 - Production runs `deploy/compose.yaml` (project `lca-platform`) from `~/lca-platform` on the server, next to a `.env` based on `deploy/.env.example`. Services: `db`, `migrate`, `lca-compare-backend`, `lca-compare-frontend`, `lca-bridge`, `openlca-ipc`, `db-backup`. Required vars use `${VAR:?}`, so compose fails fast when one is missing; `TAG` selects the image tag.
 - `migrate` reuses the backend image to run `prisma migrate deploy` and exits; `lca-compare-backend` waits for it with `service_completed_successfully`, so the backend does not start if a migration fails (check `docker compose logs migrate`).
 - Only the frontend publishes a port (`80:80`); every other service is reachable only on the project network `lca-platform_default`. `openlca-ipc` mounts `OLCA_DATA_DIR` (ecoinvent data, not in the image) at `/app/data`.

@@ -6,7 +6,9 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -51,6 +53,7 @@ class MetadatosParcelaDto {
   nombre: string;
 }
 
+// Rendimiento y dotación dividen por la superficie y la producción
 class MetadatosCultivoDto {
   @IsInt()
   id: number;
@@ -62,15 +65,15 @@ class MetadatosCultivoDto {
   fecha_fin_campania: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsPositive()
   superficie_cultivada: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsPositive()
   produccion: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @Min(0)
   consumo_agua: number;
 
   @IsInt()

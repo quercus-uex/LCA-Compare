@@ -12,13 +12,14 @@ import { CompareController } from './compare.controller';
 import type { CompareService } from './compare.service';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { IMPACT_KEYS } from './compare.types';
+import type { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
 
 function makeImpactDto(
   overrides?: Record<
     string,
     { category: string; amount: number; unit: string }[]
   >,
-) {
+): ResultadoImpactoDto {
   const base: Record<
     string,
     { category: string; amount: number; unit: string }[]
@@ -28,7 +29,7 @@ function makeImpactDto(
       { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
     ];
   }
-  return base as any;
+  return base as unknown as ResultadoImpactoDto;
 }
 
 describe('CompareController', () => {
@@ -201,5 +202,26 @@ describe('CompareController', () => {
         'en',
       );
     });
+
+    it.each([
+      ['reference', [], [{ id: 'r2' }]],
+      ['target', [{ id: 'r1' }], []],
+    ])(
+      'rejects with UnprocessableEntityException when the %s set is empty',
+      async (_set, refResults, tarResults) => {
+        compareService.findResults
+          .mockResolvedValueOnce(refResults as never)
+          .mockResolvedValueOnce(tarResults as never);
+
+        await expect(
+          controller.compareToReport({
+            reference: refFilters,
+            target: tarFilters,
+          }),
+        ).rejects.toThrow(UnprocessableEntityException);
+
+        expect(compareService.generateReport).not.toHaveBeenCalled();
+      },
+    );
   });
 });

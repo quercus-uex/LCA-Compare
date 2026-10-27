@@ -66,6 +66,10 @@ export class CompareController {
       'Debes especificar los filtros de los conjuntos de referencia y objetivo',
     type: ApiErrorDto,
   })
+  @ApiUnprocessableEntityResponse({
+    description: 'No existen datos suficientes para la comparativa',
+    type: ApiErrorDto,
+  })
   @ApiOkResponse({
     description: 'Informe generado con éxito',
   })
@@ -78,8 +82,13 @@ export class CompareController {
         'Debes especificar los filtros del conjunto objetivo y referencia.',
       );
 
-    const refResults = await this.compareService.findResults(body.reference);
-    const tarResults = await this.compareService.findResults(body.target);
+    const [refResults, tarResults] = await Promise.all([
+      this.compareService.findResults(body.reference),
+      this.compareService.findResults(body.target),
+    ]);
+
+    if (!refResults.length || !tarResults.length)
+      throw new UnprocessableEntityException('No hay datos suficientes.');
 
     const report = await this.compareService.generateReport(
       body.reference,

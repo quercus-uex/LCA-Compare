@@ -91,7 +91,6 @@ export const pt = {
     land_use: 'Uso do solo',
     particulate_matter: 'Partículas em suspensão',
     ecotoxicity: 'Ecotoxicidade',
-    human_toxicity: 'Toxicidade humana',
     human_toxicity_cancer: 'Toxicidade humana (cancerígena)',
     human_toxicity_non_cancer: 'Toxicidade humana (não cancerígena)',
   },
@@ -155,8 +154,10 @@ export const pt = {
       generatingReport: 'A gerar relatório…',
       reportGenerated: 'Relatório gerado',
       reportFilename: 'Relatorio.pdf',
+      meanNote:
+        'Valores médios por kg de produto: média simples das campanhas do conjunto, sem ponderar por produção nem área. Cada categoria é calculada só com as campanhas que a incluem.',
       differenceNote:
-        'Diferença = (alvo − referência) / referência × 100. A vermelho, o alvo tem mais impacto do que a referência; a verde, menos.',
+        'Diferença = (alvo − referência) / |referência| × 100. A vermelho, o alvo tem mais impacto do que a referência; a verde, menos.',
       tabs: {
         total: 'Total',
         pesticides: 'Pesticidas',
@@ -434,7 +435,7 @@ export const pt = {
       cropDistribution: 'Distribuição por cultura',
       cropDistributionHint: 'Clique numa cultura para filtrar a página',
       waterProductivity: 'Rendimento e uso da água',
-      waterProductivityHint: 'Por província; o tamanho de cada ponto é a área cultivada',
+      waterProductivityHint: 'Por província e só com culturas de regadio; o tamanho de cada ponto é a área cultivada',
     },
     kpis: {
       plots: 'Parcelas',
@@ -449,7 +450,9 @@ export const pt = {
       inProvinces_other: 'Em {{count}} províncias',
       meanPerCrop: 'Média por cultura',
       vsYear: 'vs {{year}}',
-      noPreviousYear: 'Sem dados de {{year}} para comparar',
+      noPreviousYear: 'Sem parcelas suficientes com dados também em {{year}} para comparar',
+      comparablePlots_one: '{{count}} parcela comparável',
+      comparablePlots_other: '{{count}} parcelas comparáveis',
       yoyHint: 'Escolha uma campanha para ver a variação homóloga',
       allCategories: 'Todas as categorias',
     },

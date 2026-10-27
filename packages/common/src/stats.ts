@@ -24,11 +24,18 @@ export type KpiDto = {
   /** Media por cultivo de cada categoría */
   impactosPorCategoria: CategoryValues;
   /**
-   * Variación (%) de la media de cada categoría frente al año anterior. Es
-   * `null` sin año seleccionado o sin datos del año anterior, y cada categoría
-   * es `null` si su media del año anterior es 0.
+   * Variación (%) de la media de cada categoría frente al año anterior,
+   * calculada solo con las parcelas que tienen resultado en ambos años para
+   * que no influyan las altas y bajas de explotaciones. Es `null` sin año
+   * seleccionado o con menos de `STATS_MIN_PARCELAS` parcelas comparables, y
+   * cada categoría es `null` si su media del año anterior es 0.
    */
   variacionInteranual: Record<EfCategoryId, number | null> | null;
+  /**
+   * Parcelas con resultado en el año seleccionado y en el anterior; `null`
+   * sin año seleccionado
+   */
+  parcelasComparables: number | null;
 };
 
 type ZonaStats = {
@@ -45,9 +52,9 @@ export type ProvinciaRankingItemDto = ZonaStats & {
   nombreProvincia: string;
   /** kg/ha; `null` sin superficie */
   rendimiento: number | null;
-  /** m³/ha; `null` sin superficie */
+  /** m³/ha, solo cultivos de regadío (consumo de agua > 0); `null` sin ellos */
   dotacionAgua: number | null;
-  /** kg/m³; `null` sin consumo de agua */
+  /** kg/m³, solo cultivos de regadío (consumo de agua > 0); `null` sin ellos */
   productividadAgua: number | null;
 };
 

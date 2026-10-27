@@ -1,11 +1,15 @@
 import {
   DEFAULT_EF_CATEGORY,
   EF_CATEGORIES,
+  getEfCategoryId,
   type EfCategoryId,
 } from 'common/impact';
 import type { CategoryValues } from 'common/stats';
 
 export type CategoryAmountRecord = CategoryValues;
+
+/** Importes de un resultado; solo tiene las categorías que trae el resultado */
+export type PartialCategoryAmounts = Partial<CategoryValues>;
 
 export type ImpactoDatos =
   | Record<string, Array<{ category: string; amount: number; unit?: string }>>
@@ -21,60 +25,42 @@ export const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
   return acc;
 }, {} as CategoryAmountRecord);
 
-export function normalizeCategoryName(name: string): string {
-  return name.trim().toLowerCase();
-}
-
-export function buildEfCategoryLookup(): Map<string, EfCategoryId> {
-  const lookup = new Map<string, EfCategoryId>();
-  for (const cat of EF_CATEGORIES) {
-    for (const name of cat.englishNames) {
-      lookup.set(normalizeCategoryName(name), cat.id);
-    }
-  }
-  return lookup;
-}
-
+/**
+ * Importes de `impacto_total` por categoría EF. Una categoría que no aparece
+ * en el resultado se omite en lugar de valer 0, para que no rebaje las medias.
+ */
 export function getCategoryAmounts(
   datos: ImpactoDatos,
-  lookup = buildEfCategoryLookup(),
-): CategoryAmountRecord {
-  const result = { ...EMPTY_CATEGORY_RECORD };
-  const items = datos?.impacto_total ?? [];
-
-  for (const item of items) {
-    const categoryId = lookup.get(normalizeCategoryName(item.category ?? ''));
-    if (categoryId) {
-      result[categoryId] += item.amount ?? 0;
+): PartialCategoryAmounts {
+  const result: PartialCategoryAmounts = {};
+  for (const item of datos?.impacto_total ?? []) {
+    const categoryId = getEfCategoryId(item.category ?? '');
+    if (categoryId && Number.isFinite(item.amount)) {
+      result[categoryId] = (result[categoryId] ?? 0) + item.amount;
     }
   }
-
   return result;
 }
 
-export function sumCategories(
-  records: CategoryAmountRecord[],
-): CategoryAmountRecord {
-  const sums = { ...EMPTY_CATEGORY_RECORD };
-  for (const record of records) {
-    for (const cat of EF_CATEGORIES) {
-      sums[cat.id] += record[cat.id] ?? 0;
-    }
-  }
-  return sums;
-}
-
+/**
+ * Media de cada categoría entre los registros que la tienen. Una categoría sin
+ * ningún valor vale 0.
+ */
 export function meanCategories(
-  records: CategoryAmountRecord[],
+  records: PartialCategoryAmounts[],
 ): CategoryAmountRecord {
-  if (records.length === 0) {
-    return { ...EMPTY_CATEGORY_RECORD };
-  }
-
-  const sums = sumCategories(records);
   const means = { ...EMPTY_CATEGORY_RECORD };
   for (const cat of EF_CATEGORIES) {
-    means[cat.id] = sums[cat.id] / records.length;
+    let sum = 0;
+    let count = 0;
+    for (const record of records) {
+      const value = record[cat.id];
+      if (value !== undefined) {
+        sum += value;
+        count += 1;
+      }
+    }
+    means[cat.id] = count > 0 ? sum / count : 0;
   }
   return means;
 }

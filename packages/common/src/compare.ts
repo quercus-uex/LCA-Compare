@@ -31,9 +31,10 @@ export type CompareResultItemDto = {
   unit: string;
   /**
    * Percentage change of the target with respect to the reference (baseline):
-   * `(tarAmount - refAmount) / refAmount * 100`. Positive means the target has
-   * a higher impact. `null` when the reference is zero or the category is
-   * missing from the target; absent when there is no target set.
+   * `(tarAmount - refAmount) / |refAmount| * 100`. Positive means the target
+   * has a higher impact. `null` when the reference is zero or the category is
+   * missing from the target (then `tarAmount` is absent too); absent when
+   * there is no target set.
    */
   diff?: number | null;
 };

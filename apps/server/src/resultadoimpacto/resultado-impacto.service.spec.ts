@@ -10,9 +10,6 @@ describe('ResultadoImpactoService', () => {
   let parcelaService: {
     findManyByPointRange: jest.Mock;
   };
-  let cultivoService: {
-    findMostRecentByParcelaIdBulk: jest.Mock;
-  };
   let service: ResultadoImpactoService;
 
   const locationInclude = {
@@ -35,13 +32,9 @@ describe('ResultadoImpactoService', () => {
     parcelaService = {
       findManyByPointRange: jest.fn(),
     };
-    cultivoService = {
-      findMostRecentByParcelaIdBulk: jest.fn(),
-    };
     service = new ResultadoImpactoService(
       prisma as never,
       parcelaService as never,
-      cultivoService as never,
     );
   });
 
@@ -88,13 +81,12 @@ describe('ResultadoImpactoService', () => {
   });
 
   describe('findManyAroundPoint', () => {
-    it('queries nearby parcels by point, recent crops, and fetches impact results', async () => {
-      const parcelas = [{ id: 'par1' }] as never;
-      const cultivos = [{ id: 'c1' }] as never;
-      const ris = [{ id: 'ri1' }] as never;
-
-      parcelaService.findManyByPointRange.mockResolvedValue(parcelas);
-      cultivoService.findMostRecentByParcelaIdBulk.mockResolvedValue(cultivos);
+    it('returns the results of every campaign of the parcels within range', async () => {
+      const ris = [{ id: 'ri1' }, { id: 'ri2' }] as never;
+      parcelaService.findManyByPointRange.mockResolvedValue([
+        { id: 'par1' },
+        { id: 'par2' },
+      ] as never);
       prisma.resultadoImpacto.findMany.mockResolvedValue(ris);
 
       const result = await service.findManyAroundPoint(40.0, -3.0, 5000);
@@ -104,30 +96,11 @@ describe('ResultadoImpactoService', () => {
         -3.0,
         5000,
       );
-      expect(cultivoService.findMostRecentByParcelaIdBulk).toHaveBeenCalledWith(
-        ['par1'],
-        {},
-      );
       expect(prisma.resultadoImpacto.findMany).toHaveBeenCalledWith({
-        where: { cultivo: { id: { in: ['c1'] } } },
-        include: locationInclude,
+        where: { cultivo: { idParcela: { in: ['par1', 'par2'] } } },
+        select: { id: true },
       });
       expect(result).toBe(ris);
-    });
-
-    it('passes the campaign filter so the most recent campaign is chosen among matching ones', async () => {
-      parcelaService.findManyByPointRange.mockResolvedValue([
-        { id: 'par1' },
-      ] as never);
-      cultivoService.findMostRecentByParcelaIdBulk.mockResolvedValue([]);
-      prisma.resultadoImpacto.findMany.mockResolvedValue([]);
-
-      await service.findManyAroundPoint(40.0, -3.0, 5000, { tipo: 'Tomate' });
-
-      expect(cultivoService.findMostRecentByParcelaIdBulk).toHaveBeenCalledWith(
-        ['par1'],
-        { tipo: 'Tomate' },
-      );
     });
   });
 });

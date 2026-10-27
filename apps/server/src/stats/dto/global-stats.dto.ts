@@ -17,6 +17,7 @@ export class KpiDto implements KpiShape {
   superficieTotal: number;
   impactosPorCategoria: CategoryValues;
   variacionInteranual: Record<EfCategoryId, number | null> | null;
+  parcelasComparables: number | null;
 }
 
 export class ProvinciaRankingItemDto implements ProvinciaRankingItemShape {

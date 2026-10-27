@@ -1,13 +1,6 @@
 import { EF_CATEGORIES } from 'common/impact';
-import type { CategoryValues } from 'common/stats';
 import { computeKpis } from './kpi.helpers';
 import type { StatsRow } from './stats-rows.helpers';
-
-function categorias(values: Partial<CategoryValues>): CategoryValues {
-  const record = {} as CategoryValues;
-  for (const cat of EF_CATEGORIES) record[cat.id] = values[cat.id] ?? 0;
-  return record;
-}
 
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
@@ -44,8 +37,8 @@ describe('kpi.helpers', () => {
     it('averages impacts only over crops with impact results', () => {
       const kpis = computeKpis(
         [
-          makeRow({ categorias: categorias({ climate_change: 10 }) }),
-          makeRow({ categorias: categorias({ climate_change: 30 }) }),
+          makeRow({ categorias: { climate_change: 10 } }),
+          makeRow({ categorias: { climate_change: 30 } }),
           makeRow(),
         ],
         null,
@@ -69,54 +62,93 @@ describe('kpi.helpers', () => {
     });
 
     describe('variacionInteranual', () => {
-      const current = [
-        makeRow({
-          categorias: categorias({ climate_change: 90, acidification: 3 }),
-        }),
-      ];
+      // Tres parcelas, el mínimo para calcular la variación
+      const PARCELAS = ['a', 'b', 'c'];
+      const rowsOf = (
+        anio: number,
+        categorias: StatsRow['categorias'],
+        parcelas = PARCELAS,
+      ) =>
+        parcelas.map((idParcela) => makeRow({ idParcela, anio, categorias }));
+
+      const current = rowsOf(2024, { climate_change: 90, acidification: 3 });
 
       it('is null without a selected year', () => {
-        expect(computeKpis(current, null).variacionInteranual).toBeNull();
+        const kpis = computeKpis(current, null);
+        expect(kpis.variacionInteranual).toBeNull();
+        expect(kpis.parcelasComparables).toBeNull();
       });
 
       it('is null when the previous year has no impact results', () => {
-        expect(
-          computeKpis(current, [makeRow({ anio: 2023 })]).variacionInteranual,
-        ).toBeNull();
+        const kpis = computeKpis(current, rowsOf(2023, null));
+        expect(kpis.variacionInteranual).toBeNull();
+        expect(kpis.parcelasComparables).toBe(0);
       });
 
       it('is null when the selected year has no impact results', () => {
-        const previous = [
-          makeRow({
-            anio: 2023,
-            categorias: categorias({ climate_change: 1 }),
-          }),
-        ];
         expect(
-          computeKpis([makeRow()], previous).variacionInteranual,
+          computeKpis(rowsOf(2024, null), rowsOf(2023, { climate_change: 1 }))
+            .variacionInteranual,
         ).toBeNull();
       });
 
       it('computes the change of every category, null where the previous mean is 0', () => {
-        const previous = [
-          makeRow({
-            anio: 2023,
-            categorias: categorias({ climate_change: 100, acidification: 0 }),
-          }),
-        ];
+        const previous = rowsOf(2023, {
+          climate_change: 100,
+          acidification: 0,
+        });
 
-        const variacion = computeKpis(current, previous).variacionInteranual;
+        const kpis = computeKpis(current, previous);
+        const variacion = kpis.variacionInteranual;
 
+        expect(kpis.parcelasComparables).toBe(3);
         expect(variacion?.climate_change).toBe(-10);
         expect(variacion?.acidification).toBeNull();
         expect(Object.keys(variacion ?? {})).toHaveLength(EF_CATEGORIES.length);
       });
 
-      it('uses the absolute previous mean so negative impacts keep the sign of the change', () => {
+      it('compares only the plots with results in both years', () => {
         const previous = [
-          makeRow({ anio: 2023, categorias: categorias({ land_use: -4 }) }),
+          ...rowsOf(2023, { climate_change: 100 }),
+          // Solo estuvo el año anterior: no debe influir
+          makeRow({
+            idParcela: 'z',
+            anio: 2023,
+            categorias: { climate_change: 1000 },
+          }),
         ];
-        const rows = [makeRow({ categorias: categorias({ land_use: -2 }) })];
+        const rows = [
+          ...current,
+          // Solo está este año: tampoco
+          makeRow({ idParcela: 'y', categorias: { climate_change: 1 } }),
+        ];
+
+        const kpis = computeKpis(rows, previous);
+
+        expect(kpis.parcelasComparables).toBe(3);
+        expect(kpis.variacionInteranual?.climate_change).toBe(-10);
+      });
+
+      it('is null below the minimum number of comparable plots', () => {
+        const previous = rowsOf(2023, { climate_change: 100 }, ['a', 'b']);
+
+        const kpis = computeKpis(current, previous);
+
+        expect(kpis.parcelasComparables).toBe(2);
+        expect(kpis.variacionInteranual).toBeNull();
+      });
+
+      it('is null for a category missing this year instead of a 100 % drop', () => {
+        const previous = rowsOf(2023, { climate_change: 100, water_use: 5 });
+
+        expect(
+          computeKpis(current, previous).variacionInteranual?.water_use,
+        ).toBeNull();
+      });
+
+      it('uses the absolute previous mean so negative impacts keep the sign of the change', () => {
+        const previous = rowsOf(2023, { land_use: -4 });
+        const rows = rowsOf(2024, { land_use: -2 });
 
         expect(computeKpis(rows, previous).variacionInteranual?.land_use).toBe(
           50,
@@ -124,15 +156,8 @@ describe('kpi.helpers', () => {
       });
 
       it('rounds to one decimal', () => {
-        const previous = [
-          makeRow({
-            anio: 2023,
-            categorias: categorias({ climate_change: 3 }),
-          }),
-        ];
-        const rows = [
-          makeRow({ categorias: categorias({ climate_change: 4 }) }),
-        ];
+        const previous = rowsOf(2023, { climate_change: 3 });
+        const rows = rowsOf(2024, { climate_change: 4 });
 
         expect(
           computeKpis(rows, previous).variacionInteranual?.climate_change,

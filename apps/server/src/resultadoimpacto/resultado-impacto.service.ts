@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
 import { ParcelaService } from '../parcela/parcela.service';
-import { CultivoService } from '../cultivo/cultivo.service';
 
 @Injectable()
 export class ResultadoImpactoService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly parcelaService: ParcelaService,
-    private readonly cultivoService: CultivoService,
   ) {}
 
   async findOne(
@@ -68,35 +66,23 @@ export class ResultadoImpactoService {
   }
 
   /**
-   * Resultados de la campaña más reciente de cada parcela dentro del radio,
-   * elegida entre las campañas que cumplen `cultivoWhere` (tipo, años).
+   * Resultados de todas las campañas de las parcelas dentro del radio. El tipo
+   * de cultivo y los años se filtran después, igual que con el resto de
+   * filtros de ubicación.
    */
   async findManyAroundPoint(
     lat: number,
     long: number,
     range: number,
-    cultivoWhere: Prisma.CultivoWhereInput = {},
-  ): Promise<ResultadoImpacto[]> {
+  ): Promise<Pick<ResultadoImpacto, 'id'>[]> {
     const parcelas = await this.parcelaService.findManyByPointRange(
       lat,
       long,
       range,
     );
-    const cultivos = await this.cultivoService.findMostRecentByParcelaIdBulk(
-      parcelas.map((p) => p.id),
-      cultivoWhere,
-    );
     return this.prisma.resultadoImpacto.findMany({
-      where: { cultivo: { id: { in: cultivos.map((c) => c.id) } } },
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } },
-            },
-          },
-        },
-      },
+      where: { cultivo: { idParcela: { in: parcelas.map((p) => p.id) } } },
+      select: { id: true },
     });
   }
 

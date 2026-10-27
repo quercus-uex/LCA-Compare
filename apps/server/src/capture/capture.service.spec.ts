@@ -29,7 +29,14 @@ jest.mock('generate-password', () => ({
 const argon2HashMock = jest.mocked(argon2.hash);
 const generatorGenerateMock = jest.mocked(generator.generate);
 
-function createMockStrategy(): jest.Mocked<CaptureStrategy> {
+// Propiedades en lugar de métodos, para que los `expect(strategy.x)` no lean
+// métodos sin enlazar
+type MockStrategy = {
+  matches: jest.MockedFunction<CaptureStrategy['matches']>;
+  resolveParcela: jest.MockedFunction<CaptureStrategy['resolveParcela']>;
+};
+
+function createMockStrategy(): MockStrategy {
   return {
     matches: jest.fn(),
     resolveParcela: jest.fn(),
@@ -52,9 +59,9 @@ describe('CaptureService', () => {
   let resultadoImpactoService: jest.Mocked<
     Pick<ResultadoImpactoService, 'create' | 'delete'>
   >;
-  let sigpacStrategy: jest.Mocked<CaptureStrategy>;
-  let catastroStrategy: jest.Mocked<CaptureStrategy>;
-  let predialStrategy: jest.Mocked<CaptureStrategy>;
+  let sigpacStrategy: MockStrategy;
+  let catastroStrategy: MockStrategy;
+  let predialStrategy: MockStrategy;
 
   beforeEach(() => {
     parcelaService = {
@@ -443,7 +450,7 @@ describe('CaptureService', () => {
       });
     });
 
-    it('updates an existing crop to connect the new impact result and deletes the previous impact result', async () => {
+    it('updates an existing crop with the resent crop data and new impact result, and deletes the previous impact result', async () => {
       const mCultivo = {
         fecha_inicio_campania: 20250901,
         produccion: 1200,
@@ -454,8 +461,9 @@ describe('CaptureService', () => {
       } as any;
 
       const existing = { id: 'c1', idResultadoImpacto: 'old-ri' } as any;
+      const updated = { id: 'c1', idResultadoImpacto: 'ri1' } as never;
       cultivoService.findOne.mockResolvedValue(existing);
-      cultivoService.update.mockResolvedValue(existing);
+      cultivoService.update.mockResolvedValue(updated);
 
       const result = await service.checkCultivo(
         idParcela,
@@ -463,15 +471,42 @@ describe('CaptureService', () => {
         mCultivo,
       );
 
-      expect(result).toBe(existing);
+      expect(result).toBe(updated);
       expect(cultivoService.update).toHaveBeenCalledWith({
         where: { id: 'c1' },
-        data: { resultadoImpacto: { connect: { id: 'ri1' } } },
+        data: {
+          produccion: 1200,
+          tipo: 'trigo',
+          ciclo: 1,
+          superficieCultivada: 5.2,
+          consumoAgua: 300,
+          resultadoImpacto: { connect: { id: 'ri1' } },
+        },
       });
       expect(resultadoImpactoService.delete).toHaveBeenCalledWith({
         id: 'old-ri',
       });
       expect(cultivoService.create).not.toHaveBeenCalled();
+    });
+
+    it('does not try to delete a previous impact result when the existing crop had none', async () => {
+      const mCultivo = {
+        fecha_inicio_campania: 20250901,
+        produccion: 1200,
+        tipo: 'trigo',
+        ciclo: 1,
+        superficie_cultivada: 5.2,
+        consumo_agua: 300,
+      } as never;
+      cultivoService.findOne.mockResolvedValue({
+        id: 'c1',
+        idResultadoImpacto: null,
+      } as never);
+      cultivoService.update.mockResolvedValue({ id: 'c1' } as never);
+
+      await service.checkCultivo(idParcela, idResultadoImpacto, mCultivo);
+
+      expect(resultadoImpactoService.delete).not.toHaveBeenCalled();
     });
   });
 });

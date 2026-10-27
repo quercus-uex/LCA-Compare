@@ -14,9 +14,8 @@ export {
   DEFAULT_EF_CATEGORY,
   EF_CATEGORIES,
   type EfCategoryId,
-  type EfLabelId,
   IMPACT_KEYS,
   type ImpactKey,
   getEfCategory,
-  getEfLabelId,
+  getEfCategoryId,
 } from 'common/impact';

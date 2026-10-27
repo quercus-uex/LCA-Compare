@@ -1,6 +1,6 @@
 import type { CompareReportLanguage } from 'common/compare';
-import type { EfLabelId } from 'common/impact';
-import { getEfLabelId } from 'common/impact';
+import type { EfCategoryId } from 'common/impact';
+import { getEfCategoryId } from 'common/impact';
 
 export const COMPARE_REPORT_DEFAULT_LANGUAGE: CompareReportLanguage = 'es';
 
@@ -232,7 +232,7 @@ export const translateCropType = (
 
 const EF_LABELS_BY_LANGUAGE: Record<
   CompareReportLanguage,
-  Record<EfLabelId, string>
+  Record<EfCategoryId, string>
 > = {
   es: {
     climate_change: 'Cambio climático',
@@ -244,7 +244,6 @@ const EF_LABELS_BY_LANGUAGE: Record<
     land_use: 'Uso del suelo',
     particulate_matter: 'Partículas en suspensión',
     ecotoxicity: 'Ecotoxicidad',
-    human_toxicity: 'Toxicidad humana',
     human_toxicity_cancer: 'Toxicidad humana (cancerígena)',
     human_toxicity_non_cancer: 'Toxicidad humana (no cancerígena)',
   },
@@ -258,7 +257,6 @@ const EF_LABELS_BY_LANGUAGE: Record<
     land_use: 'Land use',
     particulate_matter: 'Particulate matter',
     ecotoxicity: 'Ecotoxicity',
-    human_toxicity: 'Human toxicity',
     human_toxicity_cancer: 'Human toxicity, cancer',
     human_toxicity_non_cancer: 'Human toxicity, non-cancer',
   },
@@ -272,7 +270,6 @@ const EF_LABELS_BY_LANGUAGE: Record<
     land_use: 'Uso do solo',
     particulate_matter: 'Partículas em suspensão',
     ecotoxicity: 'Ecotoxicidade',
-    human_toxicity: 'Toxicidade humana',
     human_toxicity_cancer: 'Toxicidade humana (cancerígena)',
     human_toxicity_non_cancer: 'Toxicidade humana (não cancerígena)',
   },
@@ -283,6 +280,6 @@ export const translateCategory = (
   language: CompareReportLanguage,
 ): string => {
   if (!category) return '';
-  const id = getEfLabelId(category);
+  const id = getEfCategoryId(category);
   return id ? EF_LABELS_BY_LANGUAGE[language][id] : category;
 };

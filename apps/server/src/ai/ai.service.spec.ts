@@ -23,7 +23,9 @@ describe('AiService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env = { ...originalEnv, OPENROUTER_API_KEY: 'sk-or-test' };
-    sendMock = jest.requireMock('@openrouter/sdk').__sendMock as jest.Mock;
+    sendMock = jest.requireMock<{ __sendMock: jest.Mock }>(
+      '@openrouter/sdk',
+    ).__sendMock;
     sendMock.mockResolvedValue({
       choices: [{ message: { content: 'generated text' } }],
     });

@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-1.3.0}
     working_dir: /workspace/apps/server
     command: ["./node_modules/.bin/prisma", "migrate", "deploy", "--config", "prisma.config.ts"]
     environment:
@@ -33,7 +33,7 @@ services:
     restart: "no"
 
   lca-compare-backend:
-    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-main}
+    image: ghcr.io/quercus-uex/lca-compare-backend:${TAG:-1.3.0}
     environment:
       DATABASE_URL: *database-url
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is missing, run ./demo.sh up}
@@ -45,7 +45,7 @@ services:
     restart: unless-stopped
 
   lca-compare-frontend:
-    image: ghcr.io/quercus-uex/lca-compare-frontend:${TAG:-main}
+    image: ghcr.io/quercus-uex/lca-compare-frontend:${TAG:-1.3.0}
     ports:
       - "${DEMO_PORT:-8080}:80"
     environment:

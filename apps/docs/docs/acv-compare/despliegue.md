@@ -41,6 +41,7 @@ DB_USER=                                 # Usuario de la base de datos
 DB_PASSWORD=                             # Contraseña de la base de datos
 JWT_SECRET=                              # Clave secreta para JWT (autenticación)
 OPENROUTER_API_KEY=                      # Opcional. Clave de API para OpenRouter (IA en informes)
+OPENROUTER_MODEL=                        # Opcional. Modelo de OpenRouter (por defecto openai/gpt-oss-120b:nitro)
 MAILER_EMAIL=                            # Opcional. Email para envío de notificaciones
 MAILER_PASSWORD=                         # Opcional. Contraseña del email para notificaciones
 MAILER_HOST=                             # Opcional. Servidor SMTP; vacío para usar Gmail

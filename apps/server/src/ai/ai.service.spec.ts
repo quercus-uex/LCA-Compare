@@ -22,7 +22,11 @@ describe('AiService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...originalEnv, OPENROUTER_API_KEY: 'sk-or-test' };
+    process.env = {
+      ...originalEnv,
+      OPENROUTER_API_KEY: 'sk-or-test',
+      OPENROUTER_MODEL: '',
+    };
     sendMock = jest.requireMock<{ __sendMock: jest.Mock }>(
       '@openrouter/sdk',
     ).__sendMock;
@@ -61,6 +65,22 @@ describe('AiService', () => {
       { data: '{"impacto_total":[]}' },
       'anthropic/claude-sonnet-4',
     );
+
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chatGenerationParams: expect.objectContaining({
+          model: 'anthropic/claude-sonnet-4',
+        }),
+      }),
+    );
+  });
+
+  it('uses OPENROUTER_MODEL when no model is provided', async () => {
+    process.env.OPENROUTER_MODEL = ' anthropic/claude-sonnet-4 ';
+
+    await service.generateFromTemplate('compare-overview', {
+      data: '{"impacto_total":[]}',
+    });
 
     expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({

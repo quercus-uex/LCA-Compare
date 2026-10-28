@@ -8,6 +8,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import Handlebars from 'handlebars';
 
+const DEFAULT_MODEL = 'openai/gpt-oss-120b:nitro';
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -56,7 +58,7 @@ export class AiService {
     const response = await this.openRouter.chat.send({
       chatGenerationParams: {
         messages: [{ role: 'user', content }],
-        model: model ?? 'openai/gpt-oss-120b:nitro',
+        model: model ?? (process.env.OPENROUTER_MODEL?.trim() || DEFAULT_MODEL),
       },
     });
     return response.choices[0].message.content as string;

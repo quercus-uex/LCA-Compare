@@ -7,7 +7,8 @@
 # Only asks for what is strictly needed (from the environment or interactively):
 #   DEMO_ADMIN_EMAIL  Administrator email
 #   DEMO_PASSWORD     Password for the administrator and the sample users
-# Optional: DEMO_PORT (8080), TAG (1.3.0), OPENROUTER_API_KEY (AI text in reports).
+# Optional: DEMO_PORT (8080), TAG (1.3.0), OPENROUTER_API_KEY (AI text in reports),
+# OPENROUTER_MODEL (OpenRouter model for that text).
 # Internal secrets (database, JWT, CALC_API_KEY) are generated into .env.
 set -euo pipefail
 

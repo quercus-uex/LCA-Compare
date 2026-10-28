@@ -38,6 +38,7 @@ services:
       DATABASE_URL: *database-url
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is missing, run ./demo.sh up}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
       DEFAULT_IMPACT_METHOD_UUID: 2f995579-06bd-4681-b07c-cee3b1805b0d
     depends_on:
       migrate:

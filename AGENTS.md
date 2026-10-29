@@ -66,7 +66,7 @@ pnpm docs:typecheck
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
 - DaisyUI 5 is configured in CSS via `@plugin "daisyui"` and the custom `acv` theme in `apps/web/src/index.css`.
 - `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noUncheckedSideEffectImports`, `noImplicitOverride`, and `noUncheckedIndexedAccess` (the last makes `arr[i]`/`obj[k]` return `T | undefined`, so index reads need null guards).
-- Production Nginx (`apps/web/nginx.conf`, rendered as an envsubst template) proxies `/api/` to `lca-compare-backend:3000/` and `/calc` to `lca-bridge:3000/capture-acv`; `/calc` rejects requests without header `x-api-key: $CALC_API_KEY` (401). A second `server` block serves `quercusstatus.duckdns.org` from `uptime-kuma:3001`.
+- Production Nginx (`apps/web/nginx.conf`, rendered as an envsubst template) proxies `/api/` to `lca-compare-backend:3000/` (except `/api/capture`, blocked with 403 because only LCA-Bridge ingests data, via the internal network) and `/calc` to `lca-bridge:3000/capture-acv`; `/calc` rejects requests without header `x-api-key: $CALC_API_KEY` (401). A second `server` block serves `quercusstatus.duckdns.org` from `uptime-kuma:3001`.
 - Upstreams use `server <name> resolve` with Docker's DNS (`resolver 127.0.0.11`), so nginx starts even if a target container is missing (502) and follows IP changes when a service is recreated; this needs nginx >= 1.27.3 (`nginx:alpine`).
 
 ## Deploy And Infra

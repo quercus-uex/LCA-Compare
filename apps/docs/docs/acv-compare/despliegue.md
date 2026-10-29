@@ -141,6 +141,7 @@ El frontend se sirve con Nginx, que actúa como proxy inverso con el siguiente e
 | Host / ruta | Destino |
 |---|---|
 | `/api/` | `lca-compare-backend:3000` (API REST, se elimina el prefijo `/api`) |
+| `/api/capture` | Bloqueada (403). La ingesta de datos solo la hace LCA Bridge, directamente contra `lca-compare-backend:3000` por la red interna |
 | `/calc` | `lca-bridge:3000/capture-acv` (cálculo de ACV; exige la cabecera `x-api-key` con el valor de `CALC_API_KEY`, si no devuelve 401) |
 | `/` | SPA servida estáticamente (`index.html`) |
 | `quercusstatus.duckdns.org` | `uptime-kuma:3001` (Uptime Kuma) |

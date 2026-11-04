@@ -15,6 +15,86 @@ The ultimate goal of this app is to provide a simple, intuitive interface for co
 
 ## Architecture
 
+LCA Compare follows a three-tier architecture (presentation, application and data) whose tiers communicate only
+through a documented REST API; everything outside the blue boundary is an external service.
+
+```mermaid
+flowchart LR
+    browser(["🌐 Web browser"])
+
+    subgraph lca["LCA-Compare"]
+        direction TB
+        subgraph pres["Presentation tier"]
+            direction LR
+            spa["<b>React 19 SPA</b><br/>Leaflet · Recharts · i18n"]
+            nginx["<b>Nginx</b><br/>static + /api proxy"]
+        end
+        subgraph app["Application tier · NestJS"]
+            direction LR
+            ingest["② Ingestion<br/>API"] ~~~ auth["Auth<br/>(JWT)"] ~~~ parcels["Parcels /<br/>crops"] ~~~ results["Impact<br/>results"]
+            methods["Method<br/>registry"] ~~~ compare["⑤ Comparison<br/>engine"] ~~~ stats["Statistics"] ~~~ report["⑥ PDF reports<br/>(Playwright)"]
+            ai["⑥ LLM<br/>connector"] ~~~ geo["③ Geospatial<br/>connectors"] ~~~ mailer["Mailer"]
+        end
+        subgraph data["Data tier"]
+            db[("<b>PostgreSQL 17 + PostGIS</b><br/>Prisma ORM 7 · parcels as SRID 4326 polygons")]
+        end
+        pres -- "⑤ REST / JSON" --> app
+        app -- "④ SQL / PostGIS" --> data
+    end
+
+    subgraph ext["External services"]
+        direction TB
+        subgraph lcatools["LCA tooling"]
+            direction TB
+            capture["<b>LCA Capture</b><br/>farm inputs"]
+            engines["<b>LCA engines</b><br/>openLCA · SimaPro · Brightway…"]
+            capture -- "① JSON" --> engines
+        end
+        subgraph apis["Third-party APIs"]
+            direction LR
+            cadastre["SIGPAC / Cadastre (ES)<br/>SNIC cadastre (PT)"]
+            openrouter["OpenRouter<br/>(LLM API)"]
+            smtp["SMTP<br/>(mailer)"]
+        end
+    end
+
+    browser --> pres
+    lcatools -- "② JSON results<br/>POST /capture" --> app
+    app -. "③ ⑥ HTTPS / SMTP" .-> apis
+
+    classDef module fill:#ffffff,stroke:#94a3b8,color:#0f172a
+    classDef step fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:2px
+    classDef lcatool fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef extsvc fill:#f8fafc,stroke:#64748b,color:#334155,stroke-dasharray:4 3
+    classDef store fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef actor fill:#f1f5f9,stroke:#475569,color:#0f172a
+
+    class spa,nginx,auth,parcels,results,methods,stats,mailer module
+    class ingest,compare,report,ai,geo step
+    class capture,engines lcatool
+    class cadastre,openrouter,smtp extsvc
+    class db store
+    class browser actor
+
+    style lca fill:transparent,stroke:#2563eb,stroke-width:2px,color:#2563eb
+    style pres fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
+    style app fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
+    style data fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
+    style ext fill:transparent,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b
+    style lcatools fill:transparent,stroke:#cbd5e1,color:#64748b
+    style apis fill:transparent,stroke:#cbd5e1,color:#64748b
+```
+
+The numbered markers trace the life of a result:
+
+1. Farm inputs are recorded in **LCA Capture**, and an LCA engine computes the crop LCA (in the reference deployment,
+   [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge) with openLCA).
+2. The engine-independent JSON result is posted to the ingestion endpoint (`POST /capture`).
+3. The parcel polygon is resolved from the official cadastral registries (SIGPAC/Catastro in Spain, SNIC in Portugal).
+4. The result is stored in PostgreSQL/PostGIS, linked to its parcel, campaign and impact method.
+5. Users compose reference and target crop sets in the web app, and the comparison is computed on demand.
+6. A comparison can be turned into a PDF report with AI-generated narrative through OpenRouter.
+
 ### Backend (`apps/server/src`)
 NestJS REST API. The current public controllers cover:
 - **Authentication** (`/auth`) - JWT login (there is no self-registration; administrators create users)

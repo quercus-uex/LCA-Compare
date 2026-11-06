@@ -1,7 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Parcela } from '../generated/prisma/client';
+import { Prisma, Parcela, Cultivo } from '../generated/prisma/client';
 import { Polygon } from 'geojson';
+import { parseImpactoDatos } from '../stats/helpers/impacto-datos.helpers';
+import {
+  getCategoryAmounts,
+  type PartialCategoryAmounts,
+} from '../stats/helpers/stats-aggregation.helpers';
+
+const POBLACION_SELECT = {
+  select: {
+    id: true,
+    nombre: true,
+    provincia: { select: { id: true, nombre: true } },
+  },
+} satisfies Prisma.Parcela$poblacionArgs;
+
+type ParcelaPoblacionRow = {
+  id: string;
+  nombre: string;
+  provincia: { id: string; nombre: string };
+};
+
+export type ParcelaResumenRow = Parcela & {
+  poblacion: ParcelaPoblacionRow | null;
+  ultimoCultivo: Pick<
+    Cultivo,
+    'id' | 'tipo' | 'fechaInicioCampania' | 'superficieCultivada'
+  > | null;
+  numCultivos: number;
+};
+
+export type ParcelaDetalleRow = Parcela & {
+  poblacion: ParcelaPoblacionRow | null;
+  cultivos: Array<Cultivo & { impactoTotal: PartialCategoryAmounts | null }>;
+};
 
 @Injectable()
 export class ParcelaService {
@@ -18,6 +51,76 @@ export class ParcelaService {
         },
       },
     });
+  }
+
+  /** Parcelas de un propietario con su ubicación, su último cultivo y su número de campañas */
+  async findResumenByPropietario(
+    idPropietario: string,
+  ): Promise<ParcelaResumenRow[]> {
+    const parcelas = await this.prisma.parcela.findMany({
+      where: { idPropietario },
+      orderBy: { nombre: 'asc' },
+      include: {
+        poblacion: POBLACION_SELECT,
+        cultivos: {
+          orderBy: { fechaInicioCampania: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            tipo: true,
+            fechaInicioCampania: true,
+            superficieCultivada: true,
+          },
+        },
+        _count: { select: { cultivos: true } },
+      },
+    });
+
+    return parcelas.map(({ cultivos, _count, ...parcela }) => ({
+      ...parcela,
+      ultimoCultivo: cultivos[0] ?? null,
+      numCultivos: _count.cultivos,
+    }));
+  }
+
+  /** Geometrías de las parcelas de un propietario que tienen polígono */
+  async getGeomsByPropietario(
+    idPropietario: string,
+  ): Promise<Map<string, Polygon>> {
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: string; geojson: unknown }>
+    >`
+      SELECT "id", ST_AsGeoJSON("geom")::json AS geojson
+      FROM "Parcela"
+      WHERE "idPropietario" = ${idPropietario} AND "geom" IS NOT NULL
+    `;
+
+    return new Map(rows.map((r) => [r.id, r.geojson as Polygon]));
+  }
+
+  /** Parcela con su ubicación y sus cultivos (del más reciente al más antiguo) con el impacto total por categoría */
+  async findDetalle(id: string): Promise<ParcelaDetalleRow | null> {
+    const parcela = await this.prisma.parcela.findUnique({
+      where: { id },
+      include: {
+        poblacion: POBLACION_SELECT,
+        cultivos: {
+          orderBy: { fechaInicioCampania: 'desc' },
+          include: { resultadoImpacto: { select: { datos: true } } },
+        },
+      },
+    });
+    if (!parcela) return null;
+
+    return {
+      ...parcela,
+      cultivos: parcela.cultivos.map(({ resultadoImpacto, ...cultivo }) => ({
+        ...cultivo,
+        impactoTotal: resultadoImpacto
+          ? getCategoryAmounts(parseImpactoDatos(resultadoImpacto.datos))
+          : null,
+      })),
+    };
   }
 
   async findMany(params: {

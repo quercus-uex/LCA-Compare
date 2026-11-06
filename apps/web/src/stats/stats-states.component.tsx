@@ -3,11 +3,7 @@ import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
 
 // Reproduce la disposición del dashboard para que no salte al cargar
 export const StatsLoadingSkeleton = () => (
-  <div className="w-full max-w-[96rem] space-y-6" aria-busy="true">
-    <div className="space-y-2">
-      <div className="skeleton h-8 w-64" />
-      <div className="skeleton h-4 w-96 max-w-full" />
-    </div>
+  <div className="w-full space-y-6" aria-busy="true">
     <div className="skeleton h-16 rounded-box" />
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
       <div className="skeleton h-36 rounded-box" />
@@ -33,7 +29,7 @@ export const StatsLoadingSkeleton = () => (
 export const StatsErrorState = ({ onRetry }: { onRetry: () => void }) => {
   const { t } = useTranslation();
   return (
-    <div className="w-full max-w-[96rem]">
+    <div className="w-full">
       <div role="alert" className="alert alert-error">
         <FiAlertTriangle />
         <span>{t('stats.errors.load')}</span>

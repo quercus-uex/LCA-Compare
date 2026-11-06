@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FaCheck, FaRegClipboard } from 'react-icons/fa6';
 import { toast } from 'sonner';
 
-export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
+export const CopyToClipboardBtn = ({ text, label }: { text: string | null; label?: string }) => {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation();
 
@@ -11,7 +11,10 @@ export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
 
   return (
     <button
+      type="button"
       className="btn btn-outline w-7 h-7 btn-square"
+      aria-label={t('clipboard.copy', { label: label ?? text })}
+      title={t('clipboard.copy', { label: label ?? text })}
       onClick={() => {
         navigator.clipboard
           .writeText(text)
@@ -24,7 +27,7 @@ export const CopyToClipboardBtn = ({ text }: { text: string | null }) => {
           });
       }}
     >
-      {copied ? <FaCheck /> : <FaRegClipboard />}
+      {copied ? <FaCheck aria-hidden /> : <FaRegClipboard aria-hidden />}
     </button>
   );
 }

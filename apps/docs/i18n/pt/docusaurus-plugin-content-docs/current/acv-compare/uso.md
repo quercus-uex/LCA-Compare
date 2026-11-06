@@ -15,7 +15,7 @@ A interface está disponível em espanhol, inglês e português. Pode mudar o id
 
 ## Visualizar Resultados de ACV de uma Parcela
 
-Para visualizar as parcelas do seu utilizador, com sessão iniciada selecione a imagem de perfil e *As minhas parcelas*.
+Para visualizar as parcelas do seu utilizador, com sessão iniciada selecione *As minhas parcelas* na barra de navegação (em ecrãs estreitos, dentro do menu ☰).
 
 <p align="center">
     <img src="/img/acv-compare/mis_parcelas.png" alt="As minhas parcelas" width="600"/>
@@ -25,13 +25,15 @@ Para visualizar as parcelas do seu utilizador, com sessão iniciada selecione a 
     <img src="/img/acv-compare/mis_parcelas_ruta.png" alt="Vista das minhas parcelas" width="600"/>
 </p>
 
-A partir da lista de parcelas, pode aceder ao detalhe de cada uma, onde são apresentados o identificador SIGPAC, a referência cadastral, um mapa com o polígono da parcela e as culturas associadas ordenadas por campanha. As parcelas marcadas por um administrador como **parcelas de referência** são identificadas com o distintivo «Referência» junto ao nome. Se não foi possível determinar a localização da parcela ao ingeri-la, é apresentado «Localização não disponível» em vez do mapa; essas parcelas não aparecem nos filtros por localização geográfica do comparador.
+A lista mostra cada parcela com a sua localidade, a cultura atual, a área e o número de campanhas. Pode pesquisar por nome, identificador (SIGPAC, referência cadastral ou ID predial) ou localidade, filtrar por cultura atual, por localidade ou só as parcelas de referência, e ordenar por nome, última campanha ou área. As parcelas podem ser vistas como cartões, como tabela ou sobre um mapa, onde cada uma é colorida segundo a sua cultura atual. A pesquisa, os filtros e a vista ficam guardados no endereço da página, pelo que se mantêm ao voltar do detalhe de uma parcela.
+
+Ao abrir uma parcela é apresentado um mapa com o seu polígono (com camada de ruas ou de satélite), a sua localidade, os seus identificadores, os dados da cultura atual e o histórico de todas as campanhas. Se a parcela tiver mais de uma campanha, um gráfico mostra a evolução da produção, do rendimento, do consumo de água ou do impacto total de qualquer categoria EF 3.1. **Comparar esta parcela** abre o comparador com a parcela pré-carregada como conjunto objetivo ou de referência. As parcelas marcadas por um administrador como **parcelas de referência** são identificadas com o distintivo «Referência» junto ao nome. Se não foi possível determinar a localização da parcela ao ingeri-la, é apresentado «Localização não disponível» em vez do mapa; essas parcelas não aparecem na vista de mapa da lista nem nos filtros por localização geográfica do comparador.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Exemplo de parcela" width="600"/>
 </p>
 
-Ao selecionar uma cultura, são apresentados os resultados de ACV discriminados por categoria de impacto: fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total. A partir desta vista também pode usar **Adicionar à comparação** para abrir o comparador com essa parcela pré-carregada como conjunto de Referência ou Alvo.
+Ao clicar em **Ver impactos** na cultura atual ou em qualquer campanha do histórico, são apresentados os resultados de ACV dessa campanha: o impacto total de cada categoria e uma barra com a sua repartição entre fertilizantes, maneio da cultura, pesticidas e sistema de rega. Em ecrãs largos a tabela mostra também o valor de cada etapa; o detalhe completo está sempre incluído na exportação. A partir desta vista pode exportar o resultado em JSON ou CSV e usar **Comparar esta parcela** para abrir o comparador com a parcela pré-carregada como conjunto objetivo ou de referência.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="ACV de uma parcela" width="600"/>

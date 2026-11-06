@@ -4,6 +4,7 @@ import { FiAlertTriangle, FiFilter, FiPlus, FiRefreshCw, FiSearch, FiX } from 'r
 import { useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { PAGE_CLASS, PageHeader, PageHeaderSkeleton } from '../../components/page-header.component.tsx';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { fetchPage, fetchSummary, type FormMode, type Summary } from './admin-api.ts';
@@ -153,8 +154,8 @@ export const AdminRoute = () => {
 
   if (auth.loading || !isAdmin) {
     return (
-      <div className="w-full flex flex-col gap-4">
-        <div className="skeleton w-64 h-9" />
+      <div className={PAGE_CLASS}>
+        <PageHeaderSkeleton />
         <div className="skeleton w-full h-96" />
       </div>
     );
@@ -165,11 +166,8 @@ export const AdminRoute = () => {
   const sinPoblacionCount = summary.parcelasSinPoblacion ?? 0;
 
   return (
-    <div className="w-full flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold">{t('admin.title')}</h1>
-        <p className="text-base-content/70">{t('admin.subtitle')}</p>
-      </div>
+    <div className={PAGE_CLASS}>
+      <PageHeader title={t('admin.title')} subtitle={t('admin.subtitle')} />
 
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* Navegación: menú lateral en escritorio, selector en móvil */}

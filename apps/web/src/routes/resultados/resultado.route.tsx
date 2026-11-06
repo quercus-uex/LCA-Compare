@@ -1,17 +1,29 @@
-import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
+import { FiDownload, FiMapPin } from 'react-icons/fi';
+import { Link, useNavigate, useParams } from 'react-router';
+import { ApiError } from '../../common/api.ts';
+import { formatCampaignDate } from '../../common/format.ts';
 import { exportJSON } from '../../common/utils.ts';
+import { CropTypeBadge } from '../../components/crop-type-badge.component.tsx';
 import { MapPreview } from '../../components/map-preview.component.tsx';
-import  { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
+import { PAGE_CLASS } from '../../components/page-header.component.tsx';
+import { type ParcelaDetalle, useParcela } from '../../hooks/parcela.hook.tsx';
 import {
   type ResultadoImpacto,
   useResultadoImpacto,
 } from '../../hooks/resultado-impacto.hook.tsx';
-import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
+import { CompararParcelaDropdown } from '../parcelas/comparar-parcela.component.tsx';
+import { CultivoMetricas } from '../parcelas/cultivo-metricas.component.tsx';
+import { LoadErrorAlert, ParcelaDetailSkeleton } from '../parcelas/parcelas-states.component.tsx';
+import { formatPoblacion } from '../parcelas/parcelas.utils.ts';
 import { buildResultadoCSV } from './resultado-export.utils.ts';
 import { ResultadoTable } from './resultado-table.component.tsx';
+
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'ready'; resultado: ResultadoImpacto; parcela: ParcelaDetalle };
 
 export const ResultadoRoute = () => {
   const { id } = useParams();
@@ -19,120 +31,107 @@ export const ResultadoRoute = () => {
   const resultadoImpacto = useResultadoImpacto();
   const p = useParcela();
   const { t } = useTranslation();
-  const getCropTypeLabel = useCropTypeLabel();
+  const [state, setState] = useState<LoadState>({ status: 'loading' });
 
-  const [resultado, setResultado] = useState<ResultadoImpacto | undefined>();
-  const [parcela, setParcela] = useState<Parcela | undefined>();
-
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return;
+    setState({ status: 'loading' });
     resultadoImpacto.getById(id)
-      .then(r => {
-        setResultado(r);
-        p.getById(r.cultivo.parcela!.id)
-          .then((p) => setParcela(p))
-          .catch(() => navigate('/404'));
+      .then(async (resultado) => {
+        const parcela = await p.getById(resultado.cultivo.parcela!.id);
+        setState({ status: 'ready', resultado, parcela });
       })
-      .catch(() => navigate('/404'));
-  }, [navigate, id, resultadoImpacto, p])
+      .catch((e: unknown) => {
+        // Un resultado de una parcela ajena se trata igual que uno inexistente
+        if (e instanceof ApiError && (e.status === 404 || e.status === 401)) {
+          void navigate('/404', { replace: true });
+        } else {
+          setState({ status: 'error' });
+        }
+      });
+  }, [id, navigate, p, resultadoImpacto]);
 
-  if (!resultado || !parcela) return <div className="skeleton w-full h-full" />
+  useEffect(load, [load]);
+
+  if (state.status === 'loading') return <ParcelaDetailSkeleton />;
+
+  if (state.status === 'error') {
+    return (
+      <div className={PAGE_CLASS}>
+        <nav className="breadcrumbs text-sm [&>ul]:flex-wrap [&>ul]:whitespace-normal" aria-label={t('parcelas.detail.breadcrumb')}>
+          <ul><li><Link to="/parcelas">{t('parcelas.title')}</Link></li></ul>
+        </nav>
+        <LoadErrorAlert message={t('resultados.loadError')} onRetry={load} />
+      </div>
+    );
+  }
+
+  const { resultado, parcela } = state;
+  const { cultivo } = resultado;
+  const fecha = formatCampaignDate(cultivo.fechaInicioCampania);
 
   return (
-    <div className="flex flex-col items-center gap-2 flex-wrap">
-      <h1 className="text-3xl font-bold">{t('resultados.title')}</h1>
+    <div className={PAGE_CLASS}>
+      <nav className="breadcrumbs text-sm [&>ul]:flex-wrap [&>ul]:whitespace-normal" aria-label={t('parcelas.detail.breadcrumb')}>
+        <ul>
+          <li><Link to="/parcelas">{t('parcelas.title')}</Link></li>
+          <li><Link to={`/parcelas/${parcela.id}`}>{parcela.nombre}</Link></li>
+          <li aria-current="page">{t('resultados.campaign', { date: fecha })}</li>
+        </ul>
+      </nav>
 
-      <div className="flex gap-2 h-96 flex-wrap w-full">
-        <div className="flex flex-col gap-2 grow">
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <h2 className="card-title">{t('resultados.method')}</h2>
-              <p className="text-xl">{resultado.impacto.nombre}</p>
-            </div>
-          </div>
-          <div className="card bg-base-100 shadow-sm grow">
-            <div className="card-body">
-              <h2 className="card-title">{getCropTypeLabel(resultado.cultivo.tipo)}</h2>
-              <div className="flex flex-col gap-1">
-                <p>
-                  {t('common.fields.campaignStartDate')}:{' '}
-                  {DateTime.fromISO(resultado.cultivo.fechaInicioCampania, {
-                    zone: 'utc',
-                  }).toFormat('dd/LL/yyyy')}
-                </p>
-                <p>
-                  {t('common.fields.cultivatedArea')}: {resultado.cultivo.superficieCultivada}{' '}
-                  {t('common.units.hectares')}
-                </p>
-                <p>{t('common.fields.production')}: {resultado.cultivo.produccion} {t('common.units.tonsPerHectare')}</p>
-                <p>{t('common.fields.waterConsumption')}: {resultado.cultivo.consumoAgua} {t('common.units.litersPerHectare')}</p>
-                <p>{t('common.fields.cropCycle')}: {resultado.cultivo.ciclo} {t('common.units.days')}</p>
+      <div className="card bg-base-100 shadow-sm lg:card-side">
+        <figure className="lg:w-96 lg:shrink-0 lg:self-stretch">
+          <MapPreview
+            polygon={parcela.geom ?? undefined}
+            satellite
+            className="h-64 w-full sm:h-80 lg:h-full lg:min-h-96"
+          />
+        </figure>
+        <div className="card-body gap-5 min-w-0">
+          <header className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="text-sm font-semibold uppercase tracking-wide text-base-content/70">
+                {t('resultados.title')}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-semibold break-words">{parcela.nombre}</h1>
+                {parcela.esParcelaReferencia && (
+                  <span className="badge badge-success">{t('parcelas.referenceBadge')}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-base-content/70">
+                <FiMapPin aria-hidden />
+                {formatPoblacion(parcela.poblacion, t)}
               </div>
             </div>
-          </div>
-          <div className="flex gap-2 w-full">
-            <button
-              className="btn btn-secondary flex-1"
-              onClick={() => exportJSON(resultado.datos)}
-            >
-              {t('common.actions.export')} JSON
-            </button>
-            <button
-              className="btn btn-secondary flex-1"
-              onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}
-            >
-              {t('common.actions.export')} CSV
-            </button>
-          </div>
-        </div>
 
-        <div className="flex flex-col gap-2 grow">
-          <div className="card bg-base-100 shadow-sm grow">
-            <div className="card-body">
-              <h2 className="card-title">{parcela.nombre}</h2>
-              <p>SIGPAC: {parcela.sigpac ?? '-'}</p>
-              <p>{t('common.fields.cadastralReference')}: {parcela.refCat ?? '-'}</p>
-              <p>{t('common.fields.portugalId')}: {parcela.ptIdParcela ?? '-'}</p>
+            <div className="flex flex-wrap gap-2">
+              <CompararParcelaDropdown parcela={parcela} />
+              <div className="dropdown dropdown-end">
+                <button type="button" tabIndex={0} className="btn btn-outline btn-sm">
+                  <FiDownload aria-hidden />
+                  {t('common.actions.export')}
+                </button>
+                <ul tabIndex={-1} className="dropdown-content menu bg-base-100 rounded-box z-[1000] mt-2 w-40 p-2 shadow-sm">
+                  <li><button type="button" onClick={() => exportJSON(resultado.datos)}>JSON</button></li>
+                  <li><button type="button" onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}>CSV</button></li>
+                </ul>
+              </div>
             </div>
+          </header>
+
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <CropTypeBadge tipo={cultivo.tipo} />
+            <span className="text-base-content/70">{t('parcelas.campaignStarted', { date: fecha })}</span>
+            <span className="badge badge-ghost">{t('resultados.method')}: {resultado.impacto.nombre}</span>
           </div>
 
-          <div className="dropdown dropdown-end w-full">
-            <button
-              type="button"
-              className="btn btn-primary w-full"
-              tabIndex={0}
-            >
-              {t('resultados.addToComparison')}
-            </button>
-            <ul
-              tabIndex={-1}
-              className="dropdown-content menu bg-base-100 rounded-box z-50 w-full p-2 shadow-sm"
-            >
-              <li>
-                <button
-                  type="button"
-                  onClick={() => void navigate('/compare', { state: { parcelaObjetivo: parcela } })}
-                >
-                  {t('compare.filters.target')}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => void navigate('/compare', { state: { parcelaReferencia: parcela } })}
-                >
-                  {t('compare.filters.reference')}
-                </button>
-              </li>
-            </ul>
-          </div>
+          <CultivoMetricas cultivo={cultivo} />
         </div>
-        <MapPreview
-          className="h-full rounded-box aspect-square"
-          polygon={parcela.geom ?? undefined}
-        />
       </div>
+
       <ResultadoTable resultado={resultado} />
     </div>
   );
-}
+};

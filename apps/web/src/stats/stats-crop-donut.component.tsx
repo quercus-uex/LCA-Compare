@@ -1,24 +1,22 @@
 import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
-import { colorAt } from './stats-chart-theme.ts';
+import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import { formatInteger, formatNumber, formatPercent } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
   data: DistribucionCultivoItemDto[];
-  /** Todos los tipos de cultivo: fijan el color de cada uno aunque cambie el año */
-  tiposCultivo: string[];
   selected?: string;
   onSelect: (tipo: string | undefined) => void;
 };
 
-export const StatsCropDonut = ({ data, tiposCultivo, selected, onSelect }: Props) => {
+export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
   const { t } = useTranslation();
   const getCropTypeLabel = useCropTypeLabel();
   const total = data.reduce((sum, d) => sum + d.count, 0);
-  const colorOf = (tipo: string) => colorAt(Math.max(tiposCultivo.indexOf(tipo), 0));
+  // Mismo color por cultivo que en las vistas de parcelas
+  const colorOf = (tipo: string) => getCropTypeStyle(tipo).color;
   const toggle = (tipo: string) => onSelect(selected === tipo ? undefined : tipo);
 
   if (data.length === 0) {

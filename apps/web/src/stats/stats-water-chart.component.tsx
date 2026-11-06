@@ -11,14 +11,13 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts';
-import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
+import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import {
   CHART_AXIS_LABEL_STYLE,
   CHART_GRID_STROKE,
   CHART_POINT_LABEL_STYLE,
   CHART_REFERENCE_STROKE,
   CHART_TICK,
-  colorAt,
 } from './stats-chart-theme.ts';
 import { formatInteger, formatNumber } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
@@ -112,7 +111,7 @@ export const StatsWaterChart = ({
     return <StatsPlaceholder>{t('stats.chart.noWaterData')}</StatsPlaceholder>;
   }
 
-  const color = colorAt(Math.max(tiposCultivo.indexOf(tipoCultivo), 0));
+  const color = getCropTypeStyle(tipoCultivo).color;
 
   return (
     <div className="space-y-2">

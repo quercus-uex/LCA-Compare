@@ -34,6 +34,8 @@ export const LanguageSelector = () => {
               className={code === currentLanguage ? 'active' : ''}
               onClick={() => {
                 void i18n.changeLanguage(code);
+                // El desplegable se abre con el foco: sin esto sigue abierto tras elegir
+                (document.activeElement as HTMLElement | null)?.blur();
               }}
             >
               {code.toUpperCase()}

@@ -287,8 +287,8 @@ export const AdminTable = ({
                                   {(
                                     [
                                       ['superficieCultivada', 'common.units.hectares'],
-                                      ['produccion', 'common.units.tonsPerHectare'],
-                                      ['consumoAgua', 'common.units.litersPerHectare'],
+                                      ['produccion', 'common.units.kilograms'],
+                                      ['consumoAgua', 'common.units.cubicMeters'],
                                       ['ciclo', 'common.units.days'],
                                     ] as const
                                   ).map(([key, unit]) => {

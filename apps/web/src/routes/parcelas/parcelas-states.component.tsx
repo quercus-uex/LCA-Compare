@@ -1,0 +1,63 @@
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
+import { GiFarmTractor } from 'react-icons/gi';
+
+export const LoadErrorAlert = ({ message, onRetry }: { message: string; onRetry: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <div role="alert" className="alert alert-error w-full">
+      <FiAlertTriangle aria-hidden />
+      <span>{message}</span>
+      <button type="button" className="btn btn-sm" onClick={onRetry}>
+        <FiRefreshCw aria-hidden />
+        {t('common.actions.retry')}
+      </button>
+    </div>
+  );
+};
+
+export const EmptyState = ({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+}) => (
+  <div className="card bg-base-100 shadow-sm w-full">
+    <div className="card-body items-center py-16 text-center gap-3">
+      <GiFarmTractor aria-hidden className="size-12 text-base-content/40" />
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <p className="text-base-content/70 max-w-md">{description}</p>
+      {action}
+    </div>
+  </div>
+);
+
+export const ParcelasListSkeleton = () => (
+  <div className="w-full space-y-4" aria-busy="true">
+    <div className="skeleton h-12 rounded-box" />
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="skeleton h-48 rounded-box" />
+      ))}
+    </div>
+  </div>
+);
+
+export const ParcelaDetailSkeleton = () => (
+  <div className="w-full max-w-[96rem] space-y-5" aria-busy="true">
+    <div className="skeleton h-5 w-48" />
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[24rem_minmax(0,1fr)]">
+      <div className="skeleton aspect-square rounded-box" />
+      <div className="space-y-4">
+        <div className="skeleton h-9 w-72 max-w-full" />
+        <div className="skeleton h-24 rounded-box" />
+        <div className="skeleton h-40 rounded-box" />
+      </div>
+    </div>
+    <div className="skeleton h-80 rounded-box" />
+  </div>
+);

@@ -15,7 +15,7 @@ The interface is available in Spanish, English, and Portuguese. You can change t
 
 ## View LCA Results for a Plot
 
-To view the plots for your user, sign in, select the profile image, and choose *My plots*.
+To view the plots for your user, sign in and select *My plots* in the navigation bar (on narrow screens, inside the ☰ menu).
 
 <p align="center">
     <img src="/img/acv-compare/mis_parcelas.png" alt="My plots" width="600"/>
@@ -25,13 +25,15 @@ To view the plots for your user, sign in, select the profile image, and choose *
     <img src="/img/acv-compare/mis_parcelas_ruta.png" alt="My plots view" width="600"/>
 </p>
 
-From the plot list, you can open the details for each plot, where its SIGPAC identifier, cadastral reference, a map with the plot polygon, and associated crops ordered by season are shown. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the comparator's geographic location filters.
+The list shows each plot with its town, current crop, area and number of campaigns. You can search by name, identifier (SIGPAC, cadastral reference or Portuguese land ID) or town, filter by current crop, by town or by reference plots only, and sort by name, latest campaign or area. Plots can be shown as cards, as a table or on a map, where each one is coloured by its current crop. The search, filters and view are kept in the page address, so they are preserved when you come back from a plot's details.
+
+Opening a plot shows a map with its polygon (with a streets or satellite layer), its town, its identifiers, the data of its current crop and the history of all its campaigns. If the plot has more than one campaign, a chart shows how production, yield, water consumption or the total impact of any EF 3.1 category evolves. **Compare this plot** opens the comparator with the plot preloaded as the target or reference set. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the list's map view or in the comparator's geographic location filters.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Plot example" width="600"/>
 </p>
 
-When selecting a crop, LCA results are shown by impact category: fertilizers, crop management, pesticides, irrigation system, and total impact. From this view you can also use **Add to comparison** to open the comparator with that plot preloaded as the Reference or Target set.
+Clicking **View impacts** on the current crop or on any campaign in the history shows the LCA results of that campaign: the total impact of each category and a bar with its share across fertilizers, crop management, pesticides and irrigation system. On wide screens the table also shows the value of each stage; the full breakdown is always included in the export. From this view you can export the result as JSON or CSV and use **Compare this plot** to open the comparator with the plot preloaded as the target or reference set.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="LCA for a plot" width="600"/>

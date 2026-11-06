@@ -28,7 +28,7 @@ export const StatsFiltersBar = ({
   const getCropTypeLabel = useCropTypeLabel();
 
   return (
-    <div className="z-20 rounded-box bg-base-200 px-4 py-3 md:sticky md:top-2 md:shadow-sm">
+    <div className="z-20 rounded-box bg-base-100 p-4 shadow-sm md:sticky md:top-2">
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex min-w-56 flex-1 flex-col gap-1 sm:flex-none">
           <span className="text-xs font-medium text-base-content/70">

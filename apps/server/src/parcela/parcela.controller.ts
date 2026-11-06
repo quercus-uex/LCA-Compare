@@ -20,7 +20,7 @@ import {
 import { ApiErrorDto } from '../common/dto/api-error.dto';
 import { ApiResponseDto } from '../common/dto/api-response.dto';
 import { ApiResponseArrayDto } from '../common/dto/api-response-array.dto';
-import { ParcelaDto, ParcelaWithGeomDto } from './dto/parcela.dto';
+import { ParcelaDetalleDto, ParcelaResumenDto } from './dto/parcela.dto';
 
 @ApiTags('Parcela')
 @ApiBearerAuth()
@@ -30,20 +30,27 @@ export class ParcelaController {
 
   @UseGuards(AuthGuard)
   @Get('')
-  @ApiOperation({ summary: 'Obtener las parcelas del usuario autenticado' })
+  @ApiOperation({
+    summary: 'Obtener las parcelas del usuario autenticado',
+    description:
+      'Cada parcela incluye su ubicación, su último cultivo, su número de campañas y su polígono.',
+  })
   @ApiUnauthorizedResponse({
     description: 'Credenciales inválidas',
     type: ApiErrorDto,
   })
   @ApiOkResponse({
     description: 'Parcelas del usuario',
-    type: ApiResponseArrayDto(ParcelaDto),
+    type: ApiResponseArrayDto(ParcelaResumenDto),
   })
   async getByAuthUser(@AuthUser() user: UserJwt) {
+    const [parcelas, geoms] = await Promise.all([
+      this.parcelaService.findResumenByPropietario(user.sub),
+      this.parcelaService.getGeomsByPropietario(user.sub),
+    ]);
+
     return {
-      data: await this.parcelaService.findMany({
-        where: { idPropietario: user.sub },
-      }),
+      data: parcelas.map((p) => ({ ...p, geom: geoms.get(p.id) ?? null })),
     };
   }
 
@@ -61,10 +68,10 @@ export class ParcelaController {
   })
   @ApiOkResponse({
     description: 'Parcela',
-    type: ApiResponseDto(ParcelaWithGeomDto),
+    type: ApiResponseDto(ParcelaDetalleDto),
   })
   async getById(@AuthUser() user: UserJwt, @Param('id') id: string) {
-    const parcela = await this.parcelaService.findOne({ id });
+    const parcela = await this.parcelaService.findDetalle(id);
     if (!parcela) throw new NotFoundException();
     if (parcela.idPropietario !== user.sub)
       throw new UnauthorizedException('No eres el propietario de esta parcela');

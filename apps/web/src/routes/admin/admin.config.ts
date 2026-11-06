@@ -201,7 +201,7 @@ export const CONFIG: Record<Entity, EntityConfig> = {
       { kind: 'link', key: 'idParcela', labelKey: 'admin.fields.parcela', entity: 'parcelas', relation: 'parcela' },
       { kind: 'date', key: 'fechaInicioCampania', labelKey: 'admin.fields.fechaInicioCampania' },
       { kind: 'number', key: 'superficieCultivada', labelKey: 'admin.fields.superficieCultivada', unitKey: 'common.units.hectares' },
-      { kind: 'number', key: 'produccion', labelKey: 'admin.fields.produccion', unitKey: 'common.units.tonsPerHectare' },
+      { kind: 'number', key: 'produccion', labelKey: 'admin.fields.produccion', unitKey: 'common.units.kilograms' },
       { kind: 'number', key: 'ciclo', labelKey: 'admin.fields.ciclo', unitKey: 'common.units.days' },
     ],
     formFields: [

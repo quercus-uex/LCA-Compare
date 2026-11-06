@@ -59,7 +59,6 @@ export const StatsDashboard = ({ data, filters, onFiltersChange }: Props) => {
         >
           <StatsCropDonut
             data={data.distribucionCultivos}
-            tiposCultivo={data.tiposCultivoDisponibles}
             selected={filters.tipoCultivo}
             onSelect={(tipoCultivo) => onFiltersChange({ tipoCultivo })}
           />

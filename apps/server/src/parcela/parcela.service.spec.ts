@@ -4,6 +4,7 @@ describe('ParcelaService', () => {
   let prisma: {
     parcela: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
     };
     $transaction: jest.Mock;
     $queryRaw: jest.Mock;
@@ -15,6 +16,7 @@ describe('ParcelaService', () => {
     prisma = {
       parcela: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
       },
       $transaction: jest.fn(),
       $queryRaw: jest.fn(),
@@ -39,6 +41,82 @@ describe('ParcelaService', () => {
         },
       });
       expect(result).toBe(parcela);
+    });
+  });
+
+  describe('findResumenByPropietario', () => {
+    it('flattens the latest crop and the crop count of each parcel', async () => {
+      const ultimo = { id: 'c2', tipo: 'Olivo' };
+      prisma.parcela.findMany.mockResolvedValue([
+        { id: 'par1', cultivos: [ultimo], _count: { cultivos: 3 } },
+        { id: 'par2', cultivos: [], _count: { cultivos: 0 } },
+      ]);
+
+      const result = await service.findResumenByPropietario('u1');
+
+      expect(prisma.parcela.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { idPropietario: 'u1' },
+          orderBy: { nombre: 'asc' },
+        }),
+      );
+      expect(result).toEqual([
+        { id: 'par1', ultimoCultivo: ultimo, numCultivos: 3 },
+        { id: 'par2', ultimoCultivo: null, numCultivos: 0 },
+      ]);
+    });
+  });
+
+  describe('getGeomsByPropietario', () => {
+    it('maps each parcel id to its geometry', async () => {
+      const geojson = { type: 'Polygon', coordinates: [] };
+      prisma.$queryRaw.mockResolvedValue([{ id: 'par1', geojson }]);
+
+      const result = await service.getGeomsByPropietario('u1');
+
+      expect(prisma.$queryRaw).toHaveBeenCalledWith(expect.anything(), 'u1');
+      expect(result).toEqual(new Map([['par1', geojson]]));
+    });
+  });
+
+  describe('findDetalle', () => {
+    it('returns null when the parcel does not exist', async () => {
+      prisma.parcela.findUnique.mockResolvedValue(null);
+
+      await expect(service.findDetalle('par1')).resolves.toBeNull();
+    });
+
+    it('replaces each crop result with its total impact per EF category', async () => {
+      prisma.parcela.findUnique.mockResolvedValue({
+        id: 'par1',
+        cultivos: [
+          {
+            id: 'c1',
+            resultadoImpacto: {
+              datos: {
+                impacto_total: [
+                  { category: 'Climate change', amount: 2, unit: 'kg CO2 eq' },
+                  { category: 'Unknown', amount: 5, unit: 'x' },
+                ],
+              },
+            },
+          },
+          { id: 'c2', resultadoImpacto: null },
+        ],
+      });
+
+      const result = await service.findDetalle('par1');
+
+      expect(prisma.parcela.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'par1' } }),
+      );
+      expect(result).toEqual({
+        id: 'par1',
+        cultivos: [
+          { id: 'c1', impactoTotal: { climate_change: 2 } },
+          { id: 'c2', impactoTotal: null },
+        ],
+      });
     });
   });
 

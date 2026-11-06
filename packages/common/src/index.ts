@@ -31,7 +31,15 @@ export type {
 
 export type { Pais, Provincia, Poblacion } from './location.js';
 
-export type { Cultivo, Parcela } from './parcela.js';
+export type {
+  Cultivo,
+  CultivoConImpacto,
+  CultivoResumen,
+  Parcela,
+  ParcelaDetalle,
+  ParcelaPoblacion,
+  ParcelaResumen,
+} from './parcela.js';
 
 export type { Usuario } from './usuario.js';
 

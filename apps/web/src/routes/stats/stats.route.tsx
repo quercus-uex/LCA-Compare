@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
 import { StatsDashboard } from '../../stats/stats-dashboard.component.tsx';
 import { StatsFiltersBar } from '../../stats/stats-filters.component.tsx';
 import {
@@ -18,20 +19,20 @@ export const StatsRoute = () => {
     tipoCultivo: filters.tipoCultivo,
   });
 
+  const header = <PageHeader title={t('stats.title')} />;
+
   if (!data) {
-    return failed && !isFetching ? (
-      <StatsErrorState onRetry={refetch} />
-    ) : (
-      <StatsLoadingSkeleton />
+    return (
+      <div className={PAGE_CLASS}>
+        {header}
+        {failed && !isFetching ? <StatsErrorState onRetry={refetch} /> : <StatsLoadingSkeleton />}
+      </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[96rem] space-y-4">
-      <header>
-        <h1 className="text-2xl font-bold">{t('stats.title')}</h1>
-        <p className="text-sm text-base-content/60">{t('stats.subtitle')}</p>
-      </header>
+    <div className={PAGE_CLASS}>
+      {header}
 
       <StatsFiltersBar
         data={data}

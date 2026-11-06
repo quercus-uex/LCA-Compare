@@ -49,9 +49,7 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
     if (!value || labels[value]) return;
     const controller = new AbortController();
     void fetchOne(entity, value, controller.signal)
-      .then((item) => {
-        if (item) setLabels((prev) => ({ ...prev, [value]: ENTITY_DISPLAY[entity].label(item) }));
-      })
+      .then((item) => setLabels((prev) => ({ ...prev, [value]: ENTITY_DISPLAY[entity].label(item) })))
       .catch(() => undefined);
     return () => controller.abort();
   }, [entity, value, labels]);

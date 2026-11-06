@@ -21,32 +21,23 @@ describe('StatsController', () => {
     controller = new StatsController(statsService as unknown as StatsService);
   });
 
-  it('forwards the year and crop type to StatsService', async () => {
-    const { dto } = await parseQuery({ anio: '2024', tipoCultivo: 'trigo' });
+  it.each([
+    [
+      { anio: '2024', tipoCultivo: 'trigo' },
+      { anio: 2024, tipoCultivo: 'trigo' },
+    ],
+    [{}, { anio: undefined, tipoCultivo: undefined }],
+  ])('forwards the query %p to StatsService', async (query, expected) => {
+    const { dto, errors } = await parseQuery(query);
+    expect(errors).toEqual([]);
 
     await controller.getGlobalStats(dto);
 
-    expect(statsService.getGlobalStats).toHaveBeenCalledWith({
-      anio: 2024,
-      tipoCultivo: 'trigo',
-    });
-  });
-
-  it('forwards undefined filters when the query is empty', async () => {
-    await controller.getGlobalStats(new GlobalStatsQueryDto());
-
-    expect(statsService.getGlobalStats).toHaveBeenCalledWith({
-      anio: undefined,
-      tipoCultivo: undefined,
-    });
+    expect(statsService.getGlobalStats).toHaveBeenCalledWith(expected);
   });
 });
 
 describe('GlobalStatsQueryDto', () => {
-  it('accepts an empty query', async () => {
-    expect((await parseQuery({})).errors).toEqual([]);
-  });
-
   it('converts the year to a number', async () => {
     const { dto, errors } = await parseQuery({ anio: '2024' });
 

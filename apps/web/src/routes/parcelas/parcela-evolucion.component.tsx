@@ -2,11 +2,10 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { DEFAULT_EF_CATEGORY, EF_CATEGORIES, type EfCategoryId } from '../../common/constants.ts';
-import { formatCampaignDate, formatCampaignMonth, formatQuantity } from '../../common/format.ts';
+import { formatAxisValue, formatCampaignDate, formatCampaignMonth, formatImpactValue, formatQuantity } from '../../common/format.ts';
 import type { CultivoConImpacto } from '../../hooks/parcela.hook.tsx';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { CHART_GRID_STROKE, CHART_TICK } from '../../stats/stats-chart-theme.ts';
-import { formatAxisValue, formatImpactValue } from '../../stats/stats-formatters.ts';
 import { useTranslatedEfCategories } from '../../stats/use-translated-ef-categories.ts';
 
 type CropMetric = 'produccion' | 'rendimiento' | 'consumoAgua';

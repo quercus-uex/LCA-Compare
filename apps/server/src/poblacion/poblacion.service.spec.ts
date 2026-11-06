@@ -1,55 +1,31 @@
 import { PoblacionService } from './poblacion.service';
 
 describe('PoblacionService', () => {
-  let prisma: {
-    poblacion: {
-      findMany: jest.Mock;
-    };
-  };
-  let service: PoblacionService;
+  describe('findByCatastroIds', () => {
+    it('looks the town up by its catastro ids and country, returning the first match or undefined', async () => {
+      const findMany = jest
+        .fn()
+        .mockResolvedValueOnce([{ id: 'pob1' }, { id: 'pob2' }])
+        .mockResolvedValueOnce([]);
+      const service = new PoblacionService({
+        poblacion: { findMany },
+      } as never);
 
-  beforeEach(() => {
-    prisma = {
-      poblacion: {
-        findMany: jest.fn(),
-      },
-    };
-    service = new PoblacionService(prisma as never);
-  });
-
-  describe('findAll', () => {
-    it('calls prisma.poblacion.findMany with provincia.pais include', async () => {
-      const poblaciones = [{ id: 'pop1' }] as never;
-      prisma.poblacion.findMany.mockResolvedValue(poblaciones);
-
-      const result = await service.findAll();
-
-      expect(prisma.poblacion.findMany).toHaveBeenCalledWith({
-        include: { provincia: { include: { pais: true } } },
+      await expect(service.findByCatastroIds(6, 44, 'ES')).resolves.toEqual({
+        id: 'pob1',
       });
-      expect(result).toBe(poblaciones);
-    });
-  });
+      await expect(service.findByCatastroIds(6, 44, 'ES')).resolves.toBe(
+        undefined,
+      );
 
-  describe('findMany', () => {
-    it('forwards parameters with provincia.pais include', async () => {
-      const poblaciones = [{ id: 'pop1' }] as never;
-      prisma.poblacion.findMany.mockResolvedValue(poblaciones);
-
-      const params = {
-        skip: 5,
-        take: 10,
-        cursor: { id: 'pop1' },
-        where: { nombre: 'Lagos' },
-        orderBy: { nombre: 'asc' as const },
-      };
-      const result = await service.findMany(params);
-
-      expect(prisma.poblacion.findMany).toHaveBeenCalledWith({
-        ...params,
-        include: { provincia: { include: { pais: true } } },
-      });
-      expect(result).toBe(poblaciones);
+      expect(findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            provincia: { idCatastro: 6, pais: { codigo: 'ES' } },
+            idCatastro: 44,
+          },
+        }),
+      );
     });
   });
 });

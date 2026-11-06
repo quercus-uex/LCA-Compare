@@ -6,27 +6,6 @@ function dateAtStartOfYear(year: number): Date {
 
 /**
  * Builds a Prisma where-condition filter for `Cultivo.fechaInicioCampania`
- * that matches a single campaign year exactly.
- *
- * Returns an empty object when no year is provided.
- */
-export function buildCampaignYearFilter(
-  anio?: number,
-): Prisma.CultivoWhereInput {
-  if (!anio) {
-    return {};
-  }
-
-  return {
-    fechaInicioCampania: {
-      gte: dateAtStartOfYear(anio),
-      lt: dateAtStartOfYear(anio + 1),
-    },
-  };
-}
-
-/**
- * Builds a Prisma where-condition filter for `Cultivo.fechaInicioCampania`
  * based on an optional start and/or end campaign year.
  *
  * - If only `anioInicio` is provided, the filter matches dates from

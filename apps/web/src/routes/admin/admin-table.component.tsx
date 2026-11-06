@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiAlertTriangle, FiChevronDown, FiChevronRight, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { formatNumericDate, formatQuantity } from '../../common/format.ts';
 import { safeString } from '../../common/utils.ts';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { CONFIG, ENTITY_DISPLAY, type ColumnConfig, type Entity, type Item } from './admin.config.ts';
@@ -20,13 +21,9 @@ type Props = {
   onNavigate: (entity: Entity, id: string, label: string) => void;
 };
 
-const formatUtcDate = (value: unknown, locale: string) => {
+const formatAdminDate = (value: unknown) => {
   const str = safeString(value);
-  if (!str) return null;
-  const date = new Date(str);
-  if (Number.isNaN(date.getTime())) return null;
-  // Las fechas de campaña se guardan a medianoche UTC
-  return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+  return str ? formatNumericDate(str) : null;
 };
 
 const Empty = () => <span className="text-base-content/40">—</span>;
@@ -45,11 +42,10 @@ export const AdminTable = ({
   onCreate,
   onNavigate,
 }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const getCropTypeLabel = useCropTypeLabel();
   const config = CONFIG[entity];
   const expandable = entity === 'parcelas';
-  const numberFormat = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 });
 
   const renderCell = (column: ColumnConfig, item: Item) => {
     const raw = item[column.key];
@@ -83,12 +79,12 @@ export const AdminTable = ({
           <span className="text-base-content/50 text-sm">{t('common.no')}</span>
         );
       case 'date':
-        return formatUtcDate(raw, i18n.language) ?? <Empty />;
+        return formatAdminDate(raw) ?? <Empty />;
       case 'number': {
         if (typeof raw !== 'number') return <Empty />;
         return (
           <span className="tabular-nums">
-            {numberFormat.format(raw)}
+            {formatQuantity(raw)}
             {column.unitKey && <span className="text-base-content/60 text-xs"> {t(column.unitKey)}</span>}
           </span>
         );
@@ -283,7 +279,7 @@ export const AdminTable = ({
                               {cultivos.map((c) => (
                                 <tr key={c.id as string}>
                                   <td>{typeof c.tipo === 'string' ? getCropTypeLabel(c.tipo) : <Empty />}</td>
-                                  <td>{formatUtcDate(c.fechaInicioCampania, i18n.language) ?? <Empty />}</td>
+                                  <td>{formatAdminDate(c.fechaInicioCampania) ?? <Empty />}</td>
                                   {(
                                     [
                                       ['superficieCultivada', 'common.units.hectares'],
@@ -297,7 +293,7 @@ export const AdminTable = ({
                                     <td key={key} className="tabular-nums">
                                       {typeof value === 'number' ? (
                                         <>
-                                          {numberFormat.format(value)}
+                                          {formatQuantity(value)}
                                           <span className="text-base-content/60 text-xs"> {t(unit)}</span>
                                         </>
                                       ) : (

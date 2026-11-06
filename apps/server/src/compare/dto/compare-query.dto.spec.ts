@@ -6,7 +6,7 @@ import { CompareQueryDto } from './compare-query.dto';
 const uuid = '550e8400-e29b-41d4-a716-446655440000';
 
 describe('CompareQueryDto', () => {
-  it('accepts a reference-only query and converts coordinate strings to numbers', () => {
+  it('accepts a reference-only query, a report language and the reference-parcel flag, converting coordinate strings to numbers', () => {
     const dto = plainToInstance(CompareQueryDto, {
       reference: {
         idPais: uuid,
@@ -17,17 +17,21 @@ describe('CompareQueryDto', () => {
         tipoCultivo: 'trigo',
         anioCampaniaInicio: 2024,
         anioCampaniaFin: 2025,
+        soloParcelasReferencia: true,
       },
+      language: 'en',
     });
 
     expect(validateSync(dto)).toEqual([]);
     expect(dto.reference.lat).toBe(40.4168);
     expect(dto.reference.long).toBe(-3.7038);
     expect(dto.reference.range).toBe(25);
+    expect(dto.reference.soloParcelasReferencia).toBe(true);
+    expect(dto.language).toBe('en');
     expect(dto.target).toBeUndefined();
   });
 
-  it('rejects missing reference, malformed UUIDs, invalid coordinates, and non-positive ranges', () => {
+  it('rejects missing reference, malformed UUIDs, invalid coordinates, non-positive ranges, and a non-boolean flag', () => {
     const missingReference = plainToInstance(CompareQueryDto, {});
     expect(validateSync(missingReference)).toEqual([
       expect.objectContaining({ property: 'reference' }),
@@ -41,6 +45,7 @@ describe('CompareQueryDto', () => {
         long: '200',
         range: '0',
         anioCampaniaInicio: 2019,
+        soloParcelasReferencia: 'yes',
       },
     });
 
@@ -56,18 +61,9 @@ describe('CompareQueryDto', () => {
         'long',
         'range',
         'anioCampaniaInicio',
+        'soloParcelasReferencia',
       ]),
     );
-  });
-
-  it('accepts a supported report language', () => {
-    const dto = plainToInstance(CompareQueryDto, {
-      reference: { idPais: uuid },
-      language: 'en',
-    });
-
-    expect(validateSync(dto)).toEqual([]);
-    expect(dto.language).toBe('en');
   });
 
   it('rejects an unsupported report language', () => {
@@ -78,25 +74,5 @@ describe('CompareQueryDto', () => {
 
     const errors = validateSync(dto);
     expect(errors[0]?.property).toBe('language');
-  });
-
-  it('accepts a soloParcelasReferencia boolean flag', () => {
-    const dto = plainToInstance(CompareQueryDto, {
-      reference: { idPais: uuid, soloParcelasReferencia: true },
-    });
-
-    expect(validateSync(dto)).toEqual([]);
-    expect(dto.reference.soloParcelasReferencia).toBe(true);
-  });
-
-  it('rejects a non-boolean soloParcelasReferencia flag', () => {
-    const dto = plainToInstance(CompareQueryDto, {
-      reference: { soloParcelasReferencia: 'yes' },
-    });
-
-    const referenceErrors = validateSync(dto)[0]?.children?.filter(
-      (c) => c.property === 'soloParcelasReferencia',
-    );
-    expect(referenceErrors).toHaveLength(1);
   });
 });

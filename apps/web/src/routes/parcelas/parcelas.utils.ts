@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import { normalizeSearch } from '../../common/utils.ts';
 import type { Parcela, ParcelaPoblacion, ParcelaResumen } from '../../hooks/parcela.hook.tsx';
 
 export const PARCELAS_SORTS = ['nombre', 'campania', 'superficie'] as const;
@@ -44,12 +45,8 @@ export const toSearchParams = (query: ParcelasQuery): URLSearchParams => {
 export const hasActiveFilters = (query: ParcelasQuery) =>
   !!query.q || !!query.tipo || !!query.poblacion || query.soloReferencia;
 
-// Sin tildes ni mayúsculas, para que «caceres» encuentre «Cáceres»
-const normalize = (value: string) =>
-  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-
 const searchableText = (p: ParcelaResumen) =>
-  normalize([
+  normalizeSearch([
     p.nombre,
     p.sigpac,
     p.refCat,
@@ -68,7 +65,7 @@ const compareBy: Record<ParcelasSort, (a: ParcelaResumen, b: ParcelaResumen) => 
 };
 
 export const filterAndSortParcelas = (parcelas: ParcelaResumen[], query: ParcelasQuery, locale: string) => {
-  const terms = normalize(query.q).split(/\s+/).filter(Boolean);
+  const terms = normalizeSearch(query.q).split(/\s+/).filter(Boolean);
   const byName = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' });
 
   return parcelas

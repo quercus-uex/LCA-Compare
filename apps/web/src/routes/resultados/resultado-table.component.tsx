@@ -1,20 +1,22 @@
 import type { ResultadoImpactoItemDto } from 'common/api';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getEfCategory, getEfCategoryId } from '../../common/constants.ts';
+import { getEfCategory, getEfCategoryId, IMPACT_LABEL_KEYS, IMPACT_STAGE_KEYS } from '../../common/constants.ts';
+import { formatImpactValue, formatPercent } from '../../common/format.ts';
 import { translateEfCategory } from '../../common/utils.ts';
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
-import { formatImpactValue, formatPercent } from '../../stats/stats-formatters.ts';
 
 const byCategory = (items: ResultadoImpactoItemDto[]) =>
   new Map(items.map((i) => [i.category, i]));
 
-const ETAPAS = [
-  { key: 'pesticidas', datos: 'impacto_pesticidas', labelKey: 'common.fields.pesticides', color: '#8b5cf6' },
-  { key: 'fertilizantes', datos: 'impacto_fertilizantes', labelKey: 'common.fields.fertilizers', color: '#10b981' },
-  { key: 'sistemaRiego', datos: 'impacto_sistema_riego', labelKey: 'common.fields.irrigationSystem', color: '#06b6d4' },
-  { key: 'manejoCultivo', datos: 'impacto_manejo_cultivo', labelKey: 'common.fields.cropManagement', color: '#f59e0b' },
-] as const;
+const STAGE_COLORS: Record<(typeof IMPACT_STAGE_KEYS)[number], string> = {
+  impacto_pesticidas: '#8b5cf6',
+  impacto_fertilizantes: '#10b981',
+  impacto_sistema_riego: '#06b6d4',
+  impacto_manejo_cultivo: '#f59e0b',
+};
+
+const ETAPAS = IMPACT_STAGE_KEYS.map((key) => ({ key, labelKey: IMPACT_LABEL_KEYS[key], color: STAGE_COLORS[key] }));
 
 // Las etapas solo caben en pantallas anchas; la barra de reparto las resume en el resto.
 // En móvil la unidad va bajo el total y la barra bajo la categoría
@@ -47,7 +49,7 @@ export const ResultadoTable = ({ resultado }: { resultado: ResultadoImpacto }) =
 
   const lookup = useMemo(
     () => ({
-      etapas: ETAPAS.map((e) => byCategory(resultado.datos[e.datos])),
+      etapas: ETAPAS.map((e) => byCategory(resultado.datos[e.key])),
       total: byCategory(resultado.datos.impacto_total),
     }),
     [resultado],

@@ -1,5 +1,6 @@
 export const en = {
   common: {
+    loading: 'Loading…',
     actions: {
       applyFilters: 'Apply filters',
       cancel: 'Cancel',
@@ -14,10 +15,8 @@ export const en = {
       search: 'Search…',
     },
     empty: {
-      noData: 'No data',
       noOptions: 'No options available',
       noResults: 'No results',
-      unavailable: '-',
     },
     fields: {
       actions: 'Actions',
@@ -25,7 +24,6 @@ export const en = {
       impactArea: 'Impact area',
       crop: 'Crop',
       cropCycle: 'Crop cycle',
-      cropType: 'Type',
       difference: 'Difference',
       end: 'To:',
       irrigationSystem: 'Irrigation system',
@@ -37,7 +35,6 @@ export const en = {
       referenceAmount: 'Reference amount',
       cadastralReference: 'Cadastral reference',
       start: 'From:',
-      campaignStartDate: 'Season start date',
       cultivatedArea: 'Cultivated area',
       total: 'Total',
       targetAmount: 'Target amount',
@@ -168,13 +165,6 @@ export const en = {
         'Mean values per kg of product: simple mean of the campaigns in the set, not weighted by production or area. Each category is averaged only over the campaigns that include it.',
       differenceNote:
         'Difference = (target − reference) / |reference| × 100. Red means the target has a higher impact than the reference; green, a lower one.',
-      tabs: {
-        total: 'Total',
-        pesticides: 'Pesticides',
-        fertilizers: 'Fertilizers',
-        irrigationSystem: 'Irrigation system',
-        cropManagement: 'Crop management',
-      },
     },
   },
   parcelas: {
@@ -241,7 +231,6 @@ export const en = {
     detail: {
       breadcrumb: 'Breadcrumb',
       loadError: 'The plot could not be loaded.',
-      identifiers: 'Identifiers',
       compare: 'Compare this plot',
       compareAsTarget: 'As target set',
       compareAsReference: 'As reference set',

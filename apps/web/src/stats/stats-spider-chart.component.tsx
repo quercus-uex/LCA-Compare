@@ -10,13 +10,13 @@ import {
   Tooltip,
 } from 'recharts';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { formatImpactValue, formatNumber } from '../common/format.ts';
 import { SearchableLocationSelect } from './searchable-location-select.component.tsx';
 import {
   CHART_GRID_STROKE,
   CHART_SMALL_TICK,
   PROFILE_COLORS,
 } from './stats-chart-theme.ts';
-import { formatImpactValue, formatNumber } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 

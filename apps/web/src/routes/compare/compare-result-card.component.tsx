@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ImpactKey } from '../../common/constants.ts';
+import { IMPACT_LABEL_KEYS, IMPACT_STAGE_KEYS, type ImpactKey } from '../../common/constants.ts';
 import { ResultComparisonTable } from '../../components/result-comparison-table.component.tsx';
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
 
@@ -23,42 +23,17 @@ export const CompareResultCard = ({ result }: { result?: CompareResult }) => {
           <h2 className="card-title text-xl">{t('compare.result.title')}</h2>
         </div>
         <div className="tabs tabs-box w-fit">
-          <input
-            type="radio"
-            name="impact"
-            className="tab"
-            aria-label={t('compare.result.tabs.total')}
-            defaultChecked
-            onClick={() => setImpact('impacto_total')}
-          />
-          <input
-            type="radio"
-            name="impact"
-            className="tab"
-            aria-label={t('compare.result.tabs.pesticides')}
-            onClick={() => setImpact('impacto_pesticidas')}
-          />
-          <input
-            type="radio"
-            name="impact"
-            className="tab"
-            aria-label={t('compare.result.tabs.fertilizers')}
-            onClick={() => setImpact('impacto_fertilizantes')}
-          />
-          <input
-            type="radio"
-            name="impact"
-            className="tab"
-            aria-label={t('compare.result.tabs.irrigationSystem')}
-            onClick={() => setImpact('impacto_sistema_riego')}
-          />
-          <input
-            type="radio"
-            name="impact"
-            className="tab"
-            aria-label={t('compare.result.tabs.cropManagement')}
-            onClick={() => setImpact('impacto_manejo_cultivo')}
-          />
+          {(['impacto_total', ...IMPACT_STAGE_KEYS] as const).map((key) => (
+            <input
+              key={key}
+              type="radio"
+              name="impact"
+              className="tab"
+              aria-label={t(IMPACT_LABEL_KEYS[key])}
+              checked={impact === key}
+              onChange={() => setImpact(key)}
+            />
+          ))}
         </div>
         <ResultComparisonTable
           result={result}

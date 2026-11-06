@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { toggleInArray } from '../../common/utils.ts';
+import { matchesSearch, toggleInArray } from '../../common/utils.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
@@ -54,7 +54,7 @@ export const ProvinciaFilterCollapse = (
         <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
           {provincias
             .filter((p) =>
-              p.nombre.toUpperCase().includes(query.toUpperCase()),
+              matchesSearch(p.nombre, query),
             )
             .map((p) => (
               <li

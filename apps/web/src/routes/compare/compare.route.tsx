@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 import { toast } from 'sonner';
 import { exportJSON, exportCSV, hasTargetSet, omitNullish } from '../../common/utils.ts';
+import { Dropdown } from '../../components/dropdown.component.tsx';
 import {
   type CompareFilterType,
   type CompareResult,
@@ -10,7 +11,7 @@ import {
 } from '../../hooks/compare.hook.tsx';
 import type { Poblacion, Provincia } from '../../hooks/location.hook.tsx';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
-import { buildCompareCSV, buildCompareExportPayload } from './compare-export.utils.ts';
+import { buildCompareCSV, buildCompareExportPayload, type CompareExportMode } from './compare-export.utils.ts';
 import { CompareFilterCard } from './compare-filter-card.component.tsx';
 import { CompareResultCard } from './compare-result-card.component.tsx';
 
@@ -40,6 +41,18 @@ export const CompareRoute = () => {
   const [filtersRef, setFiltersRef] = useState<CompareFilterType>(initialReferenciaFilters);
   const [filtersObj, setFiltersObj] = useState<CompareFilterType | undefined>(initialObjetivoFilters);
   const [result, setResult] = useState<CompareResult | undefined>();
+
+  const exportOptions: Array<{
+    mode: CompareExportMode;
+    titleKey: string;
+    filePrefix: string;
+    metadata: unknown;
+    needsTarget: boolean;
+  }> = [
+    { mode: 'full', titleKey: 'compare.actions.exportComparison', filePrefix: 'comparativa', metadata: { reference: filtersRef, target: filtersObj }, needsTarget: true },
+    { mode: 'target', titleKey: 'compare.actions.exportTarget', filePrefix: 'objetivo', metadata: filtersObj, needsTarget: true },
+    { mode: 'reference', titleKey: 'compare.actions.exportReference', filePrefix: 'referencia', metadata: filtersRef, needsTarget: false },
+  ];
   const compare = useCompare();
   const { t } = useTranslation();
 
@@ -53,10 +66,7 @@ export const CompareRoute = () => {
           const d = omitNullish(data!) as CompareFilterType;
           setFiltersRef(d);
           try {
-            const result = filtersObj
-              ? await compare.compare(d, filtersObj)
-              : await compare.compareSingle(d);
-            setResult(result);
+            setResult(await compare.compare(d, filtersObj));
           } catch {
             toast.error(t('compare.result.insufficientData'));
           }
@@ -82,112 +92,33 @@ export const CompareRoute = () => {
               </button>
             )}
 
-            <div className="dropdown dropdown-end">
-              <button
-                type="button"
-                className="btn btn-accent"
-                tabIndex={0}
-              >
-                {t('common.actions.export')}
-              </button>
-              <ul
-                tabIndex={-1}
-                className="dropdown-content menu bg-base-100 rounded-box z-50 mt-2 w-56 p-2 shadow-sm"
-              >
-                {hasTargetSet(result) && (
-                  <>
-                    <li className="menu-title">{t('compare.actions.exportComparison')}</li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          exportJSON({
-                            metadata: {
-                              reference: filtersRef,
-                              target: filtersObj,
-                            },
-                            result: buildCompareExportPayload(result, 'full'),
-                          })
-                        }
-                      >
-                        JSON
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          exportCSV(
-                            `comparativa-${Date.now()}.csv`,
-                            buildCompareCSV(result, 'full', t),
-                          )
-                        }
-                      >
-                        CSV
-                      </button>
-                    </li>
-                  </>
-                )}
-                {hasTargetSet(result) && (
-                  <>
-                    <li className="menu-title">{t('compare.actions.exportTarget')}</li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          exportJSON({
-                            metadata: filtersObj,
-                            result: buildCompareExportPayload(result, 'target'),
-                          })
-                        }
-                      >
-                        JSON
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          exportCSV(
-                            `objetivo-${Date.now()}.csv`,
-                            buildCompareCSV(result, 'target', t),
-                          )
-                        }
-                      >
-                        CSV
-                      </button>
-                    </li>
-                  </>
-                )}
-                <li className="menu-title">{t('compare.actions.exportReference')}</li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      exportJSON({
-                        metadata: filtersRef,
-                        result: buildCompareExportPayload(result, 'reference'),
-                      })
-                    }
-                  >
-                    JSON
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      exportCSV(
-                        `referencia-${Date.now()}.csv`,
-                        buildCompareCSV(result, 'reference', t),
-                      )
-                    }
-                  >
-                    CSV
-                  </button>
-                </li>
+            <Dropdown triggerClassName="btn btn-accent" contentClassName="w-56" trigger={t('common.actions.export')}>
+              <ul className="menu w-full p-0">
+                {exportOptions
+                  .filter((option) => !option.needsTarget || hasTargetSet(result))
+                  .map(({ mode, titleKey, filePrefix, metadata }) => (
+                    <Fragment key={mode}>
+                      <li className="menu-title">{t(titleKey)}</li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => exportJSON({ metadata, result: buildCompareExportPayload(result, mode) })}
+                        >
+                          JSON
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => exportCSV(`${filePrefix}-${Date.now()}.csv`, buildCompareCSV(result, mode, t))}
+                        >
+                          CSV
+                        </button>
+                      </li>
+                    </Fragment>
+                  ))}
               </ul>
-            </div>
+            </Dropdown>
           </div>
         )}
         <CompareResultCard result={result} />

@@ -20,6 +20,16 @@ type RankedByImpact = {
   impactosPorCategoria: CategoryAmountRecord;
 };
 
+// Los nombres de categoría distintos son pocos y se repiten en cada resultado,
+// así que su normalización se calcula una vez por nombre
+const efCategoryIds = new Map<string, EfCategoryId | undefined>();
+function getCachedEfCategoryId(name: string): EfCategoryId | undefined {
+  if (efCategoryIds.has(name)) return efCategoryIds.get(name);
+  const id = getEfCategoryId(name);
+  efCategoryIds.set(name, id);
+  return id;
+}
+
 export const EMPTY_CATEGORY_RECORD = EF_CATEGORIES.reduce((acc, cat) => {
   acc[cat.id] = 0;
   return acc;
@@ -34,7 +44,7 @@ export function getCategoryAmounts(
 ): PartialCategoryAmounts {
   const result: PartialCategoryAmounts = {};
   for (const item of datos?.impacto_total ?? []) {
-    const categoryId = getEfCategoryId(item.category ?? '');
+    const categoryId = getCachedEfCategoryId(item.category ?? '');
     if (categoryId && Number.isFinite(item.amount)) {
       result[categoryId] = (result[categoryId] ?? 0) + item.amount;
     }
@@ -71,17 +81,14 @@ export function round(value: number, decimals = 2): number {
 }
 
 /**
- * Ordena de menor a mayor impacto en una única categoría (por defecto, cambio
+ * Ordena de menor a mayor impacto en la categoría por defecto (cambio
  * climático). No existe ordenación por impacto total: sumar categorías con
  * unidades distintas no tiene sentido.
  */
-export function sortByImpact<T extends RankedByImpact>(
-  items: T[],
-  categoria: EfCategoryId = DEFAULT_EF_CATEGORY,
-): T[] {
+export function sortByImpact<T extends RankedByImpact>(items: T[]): T[] {
   return [...items].sort(
     (a, b) =>
-      (a.impactosPorCategoria[categoria] ?? 0) -
-      (b.impactosPorCategoria[categoria] ?? 0),
+      (a.impactosPorCategoria[DEFAULT_EF_CATEGORY] ?? 0) -
+      (b.impactosPorCategoria[DEFAULT_EF_CATEGORY] ?? 0),
   );
 }

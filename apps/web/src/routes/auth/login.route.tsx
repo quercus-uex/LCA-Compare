@@ -1,25 +1,21 @@
+import type { LoginDto } from 'common/auth';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 
-type LoginType = {
-  email: string;
-  password: string;
-}
-
 export const LoginRoute = () => {
   const {
     register,
     handleSubmit,
-  } = useForm<LoginType>();
+  } = useForm<LoginDto>();
 
   const auth = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const onSubmit: SubmitHandler<LoginType> = async (data) => {
+  const onSubmit: SubmitHandler<LoginDto> = async (data) => {
     try {
       const usuario = await auth.login(data.email, data.password);
       if (usuario) {

@@ -1,5 +1,4 @@
-import { AiService } from './ai.service';
-import { OpenRouter } from '@openrouter/sdk';
+import { AiService, DEFAULT_MODEL } from './ai.service';
 
 jest.mock('@openrouter/sdk', () => {
   const send = jest.fn();
@@ -36,60 +35,39 @@ describe('AiService', () => {
     service = new AiService();
   });
 
-  it('loads prompt templates, renders context, and sends the prompt to OpenRouter using the default model', async () => {
-    const result = await service.generateFromTemplate(
-      'compare-recommendations',
-      { data: 'El conjunto objetivo reduce el impacto climático.' },
-    );
-
-    expect(OpenRouter).toHaveBeenCalledTimes(1);
-    expect(sendMock).toHaveBeenCalledWith({
-      chatGenerationParams: {
-        messages: [
-          {
-            role: 'user',
-            content: expect.stringContaining(
-              'Resumen: El conjunto objetivo reduce el impacto climático.',
-            ),
-          },
-        ],
-        model: 'openai/gpt-oss-120b:nitro',
-      },
-    });
-    expect(result).toBe('generated text');
-  });
-
-  it('uses an explicitly provided model when generating from a template', async () => {
-    await service.generateFromTemplate(
-      'compare-overview',
-      { data: '{"impacto_total":[]}' },
+  it.each([
+    ['the default model when OPENROUTER_MODEL is empty', '', DEFAULT_MODEL],
+    [
+      'the trimmed OPENROUTER_MODEL when set',
+      ' anthropic/claude-sonnet-4 ',
       'anthropic/claude-sonnet-4',
-    );
+    ],
+  ])(
+    'renders the prompt template and sends it to OpenRouter using %s',
+    async (_case, envModel, expectedModel) => {
+      process.env.OPENROUTER_MODEL = envModel;
 
-    expect(sendMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chatGenerationParams: expect.objectContaining({
-          model: 'anthropic/claude-sonnet-4',
-        }),
-      }),
-    );
-  });
+      const result = await service.generateFromTemplate(
+        'compare-recommendations',
+        { data: 'El conjunto objetivo reduce el impacto climático.' },
+      );
 
-  it('uses OPENROUTER_MODEL when no model is provided', async () => {
-    process.env.OPENROUTER_MODEL = ' anthropic/claude-sonnet-4 ';
-
-    await service.generateFromTemplate('compare-overview', {
-      data: '{"impacto_total":[]}',
-    });
-
-    expect(sendMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chatGenerationParams: expect.objectContaining({
-          model: 'anthropic/claude-sonnet-4',
-        }),
-      }),
-    );
-  });
+      expect(sendMock).toHaveBeenCalledWith({
+        chatGenerationParams: {
+          messages: [
+            {
+              role: 'user',
+              content: expect.stringContaining(
+                'Resumen: El conjunto objetivo reduce el impacto climático.',
+              ),
+            },
+          ],
+          model: expectedModel,
+        },
+      });
+      expect(result).toBe('generated text');
+    },
+  );
 
   it('throws before calling OpenRouter when the requested template does not exist', async () => {
     await expect(

@@ -2,18 +2,6 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { PredialService } from './predial.service';
 
-jest.mock('proj4', () => {
-  const mock = jest.fn(
-    (_from: string, _to: string, coord: [number, number]) => [
-      coord[0] / 111319.49079327357,
-      coord[1] / 110540.15577050635,
-    ],
-  );
-  return { __esModule: true, default: mock };
-});
-
-import proj4 from 'proj4';
-
 const PREDIAL_URL =
   'https://snic.dgterritorio.gov.pt/geoportal/dgt_snic2/api/app/search/predio/nic';
 
@@ -24,7 +12,6 @@ describe('PredialService', () => {
   beforeEach(() => {
     httpService = { get: jest.fn() };
     service = new PredialService(httpService as unknown as HttpService);
-    (proj4 as unknown as jest.Mock).mockClear();
   });
 
   it('requests the predial search endpoint with spaces removed and Referer header', async () => {
@@ -48,12 +35,12 @@ describe('PredialService', () => {
     );
   });
 
-  it('parses WKT polygon rings, transforms EPSG:3857 to WGS84, and returns a GeoJSON feature', async () => {
+  it('parses the WKT polygon and transforms it from EPSG:3857 to WGS84', async () => {
     httpService.get.mockReturnValue(
       of({
         data: {
           wkt_3857:
-            'POLYGON((-370000 4400000,-369000 4400000,-369000 4401000,-370000 4400000))',
+            'POLYGON((-333958.47 4865942.28,-222638.98 4865942.28,-222638.98 5012341.66,-333958.47 4865942.28))',
           dico: '050601',
         },
       } as any),
@@ -61,13 +48,19 @@ describe('PredialService', () => {
 
     const result = await service.getPolygon('050601');
 
-    expect(proj4).toHaveBeenCalledWith('EPSG:3857', 'WGS84', expect.any(Array));
     expect(result.type).toBe('Feature');
     expect(result.geometry.type).toBe('Polygon');
-    expect(result.geometry.coordinates).toHaveLength(1);
-    expect(result.geometry.coordinates[0]).toHaveLength(4);
-    expect(result.properties!.provincia).toBe(5);
-    expect(result.properties!.poblacion).toBe(6);
+    const lonLat = result.geometry.coordinates.map((ring) =>
+      ring.map((position) => position.map((v) => Number(v.toFixed(6)))),
+    );
+    expect(lonLat).toEqual([
+      [
+        [-3, 40],
+        [-2, 40],
+        [-2, 41],
+        [-3, 40],
+      ],
+    ]);
   });
 
   it('extracts provincia and poblacion from dico digits', async () => {

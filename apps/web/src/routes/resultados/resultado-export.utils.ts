@@ -1,3 +1,4 @@
+import { IMPACT_LABEL_KEYS, IMPACT_STAGE_KEYS } from '../../common/constants.ts';
 import { exportCSV, translateEfCategory } from '../../common/utils.ts';
 import type { ResultadoImpacto } from '../../hooks/resultado-impacto.hook.tsx';
 
@@ -8,28 +9,19 @@ export const buildResultadoCSV = (
   parcelaNombre: string,
   t: Translator,
 ): void => {
+  const { datos } = resultado;
   // Sin redondear, para no exportar como 0 los indicadores pequeños
-  const find = (
-    arr: typeof resultado.datos.impacto_pesticidas,
-    category: string,
-  ) => arr.find((i) => i.category === category)?.amount ?? '';
-  const rows = resultado.datos.impacto_total.map(({ category, amount, unit }) => [
+  const rows = datos.impacto_total.map(({ category, amount, unit }) => [
     translateEfCategory(category),
-    find(resultado.datos.impacto_pesticidas, category),
-    find(resultado.datos.impacto_fertilizantes, category),
-    find(resultado.datos.impacto_sistema_riego, category),
-    find(resultado.datos.impacto_manejo_cultivo, category),
+    ...IMPACT_STAGE_KEYS.map((key) => datos[key].find((i) => i.category === category)?.amount ?? ''),
     amount,
     unit,
   ]);
   exportCSV(`impacto-${parcelaNombre}.csv`, [
     [
       t('common.fields.category'),
-      t('common.fields.pesticides'),
-      t('common.fields.fertilizers'),
-      t('common.fields.irrigationSystem'),
-      t('common.fields.cropManagement'),
-      t('common.fields.total'),
+      ...IMPACT_STAGE_KEYS.map((key) => t(IMPACT_LABEL_KEYS[key])),
+      t(IMPACT_LABEL_KEYS.impacto_total),
       t('common.fields.unit'),
     ],
     ...rows,

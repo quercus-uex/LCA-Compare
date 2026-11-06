@@ -9,13 +9,14 @@ import { CompareQueryItemDto } from './dto/compare-query.dto';
  */
 export class CompareQueryBuilder {
   /**
-   * `locationIds` es `undefined` si no hay filtro por radio. Si lo hay pero no
-   * encontró parcelas (array vacío), la condición se mantiene y no coincide con
-   * ningún resultado, en lugar de descartarse en silencio.
+   * `nearbyParcelaIds` son las parcelas dentro del radio, o `undefined` si no
+   * hay filtro por radio. Si lo hay pero no encontró parcelas (array vacío), la
+   * condición se mantiene y no coincide con ningún resultado, en lugar de
+   * descartarse en silencio.
    */
   static build(
     filters: CompareQueryItemDto,
-    locationIds?: string[],
+    nearbyParcelaIds?: string[],
   ): Prisma.ResultadoImpactoWhereInput | null {
     const orConditions: Prisma.ResultadoImpactoWhereInput[] = [];
 
@@ -45,8 +46,8 @@ export class CompareQueryBuilder {
       });
     }
 
-    if (locationIds !== undefined) {
-      orConditions.push({ id: { in: locationIds } });
+    if (nearbyParcelaIds !== undefined) {
+      orConditions.push({ cultivo: { idParcela: { in: nearbyParcelaIds } } });
     }
 
     if (filters.idPais) {

@@ -11,6 +11,7 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts';
+import { formatNumber } from '../common/format.ts';
 import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import {
   CHART_AXIS_LABEL_STYLE,
@@ -19,7 +20,6 @@ import {
   CHART_REFERENCE_STROKE,
   CHART_TICK,
 } from './stats-chart-theme.ts';
-import { formatInteger, formatNumber } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 
@@ -57,8 +57,8 @@ const WaterTooltip = ({
   return (
     <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
       <p className="font-bold">{d.nombreProvincia}</p>
-      <p>{t('stats.chart.yield')}: {formatInteger(d.rendimiento)} kg/ha</p>
-      <p>{t('stats.chart.waterUse')}: {formatInteger(d.dotacionAgua)} m³/ha</p>
+      <p>{t('stats.chart.yield')}: {formatNumber(d.rendimiento)} kg/ha</p>
+      <p>{t('stats.chart.waterUse')}: {formatNumber(d.dotacionAgua)} m³/ha</p>
       {d.productividadAgua !== null && (
         <p className="font-semibold">
           {t('stats.chart.waterProductivity')}: {formatNumber(d.productividadAgua, 2)} kg/m³
@@ -123,7 +123,7 @@ export const StatsWaterChart = ({
             dataKey="dotacionAgua"
             name={t('stats.chart.waterUse')}
             tick={CHART_TICK}
-            tickFormatter={(v: number) => formatInteger(v)}
+            tickFormatter={(v: number) => formatNumber(v)}
             domain={['auto', 'auto']}
             padding={{ left: 24, right: 24 }}
             label={{
@@ -138,7 +138,7 @@ export const StatsWaterChart = ({
             dataKey="rendimiento"
             name={t('stats.chart.yield')}
             tick={CHART_TICK}
-            tickFormatter={(v: number) => formatInteger(v)}
+            tickFormatter={(v: number) => formatNumber(v)}
             domain={['auto', 'auto']}
             padding={{ top: 24, bottom: 24 }}
             width={80}

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { formatImpactValue } from '../common/format.ts';
 import { PROFILE_COLORS } from './stats-chart-theme.ts';
-import { formatImpactValue } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';

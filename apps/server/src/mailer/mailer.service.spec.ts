@@ -27,7 +27,7 @@ describe('MailerService', () => {
   });
 
   it('creates a Gmail transport using MAILER_EMAIL and MAILER_PASSWORD from the environment', () => {
-    const service = new MailerService();
+    new MailerService();
 
     expect(mockCreateTransport).toHaveBeenCalledWith({
       service: 'gmail',
@@ -36,25 +36,30 @@ describe('MailerService', () => {
         pass: 'app-password',
       },
     });
-    expect(service.isConfigured()).toBe(true);
   });
 
-  it('creates a generic SMTP transport when MAILER_HOST is set', () => {
-    process.env.MAILER_HOST = 'smtp.example.com';
-    process.env.MAILER_PORT = '465';
+  it.each([
+    { MAILER_PORT: '465', port: 465, secure: true },
+    { MAILER_PORT: undefined, port: 587, secure: false },
+  ])(
+    'creates a generic SMTP transport when MAILER_HOST is set (MAILER_PORT=$MAILER_PORT)',
+    ({ MAILER_PORT, port, secure }) => {
+      process.env.MAILER_HOST = 'smtp.example.com';
+      if (MAILER_PORT) process.env.MAILER_PORT = MAILER_PORT;
 
-    new MailerService();
+      new MailerService();
 
-    expect(mockCreateTransport).toHaveBeenCalledWith({
-      host: 'smtp.example.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'test@gmail.com',
-        pass: 'app-password',
-      },
-    });
-  });
+      expect(mockCreateTransport).toHaveBeenCalledWith({
+        host: 'smtp.example.com',
+        port,
+        secure,
+        auth: {
+          user: 'test@gmail.com',
+          pass: 'app-password',
+        },
+      });
+    },
+  );
 
   it('sends new user mail with sender, recipient, subject, and password in text', async () => {
     const service = new MailerService();
@@ -76,7 +81,6 @@ describe('MailerService', () => {
     const service = new MailerService();
 
     expect(mockCreateTransport).not.toHaveBeenCalled();
-    expect(service.isConfigured()).toBe(false);
     await expect(
       service.sendNewUserMail('user@example.com', 'secret123'),
     ).resolves.toBeUndefined();

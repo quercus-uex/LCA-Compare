@@ -10,6 +10,7 @@ import {
   findPoblacionSafely,
   resolvePolygonSafely,
 } from './geolocation.helpers';
+import { toSigpacKey } from '../../sigpac/sigpac.helpers';
 
 @Injectable()
 export class SigpacCaptureStrategy implements CaptureStrategy {
@@ -26,22 +27,22 @@ export class SigpacCaptureStrategy implements CaptureStrategy {
 
   async resolveParcela(mParcela: ParcelaMetadata): Promise<ParcelaResolution> {
     const sigpac = mParcela.es_sigpac!;
-    const { provincia, municipio, poligono, parcela } = sigpac;
-    const sigpacKey = `${provincia}:${municipio}:0:0:${poligono}:${parcela}:1`;
+    const sigpacKey = toSigpacKey(sigpac);
 
-    const polygon = await resolvePolygonSafely(
-      this.logger,
-      `SIGPAC ${sigpacKey}`,
-      () => this.sigpacService.getPolygon(sigpac),
-    );
-    const poblacion = await findPoblacionSafely(
-      this.logger,
-      `SIGPAC ${sigpacKey}`,
-      this.poblacionService,
-      provincia,
-      municipio,
-      'ES',
-    );
+    // Ninguna de las dos búsquedas lanza: un fallo se registra y devuelve null
+    const [polygon, poblacion] = await Promise.all([
+      resolvePolygonSafely(this.logger, `SIGPAC ${sigpacKey}`, () =>
+        this.sigpacService.getPolygon(sigpac),
+      ),
+      findPoblacionSafely(
+        this.logger,
+        `SIGPAC ${sigpacKey}`,
+        this.poblacionService,
+        sigpac.provincia,
+        sigpac.municipio,
+        'ES',
+      ),
+    ]);
 
     return { polygon, poblacion, sigpacKey };
   }

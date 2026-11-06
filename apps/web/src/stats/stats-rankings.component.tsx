@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FiInfo } from 'react-icons/fi';
 import { useNavigate } from 'react-router';
 import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
-import { formatNumber } from './stats-formatters.ts';
+import { formatNumber } from '../common/format.ts';
 import { StatsRankingList } from './stats-ranking-list.component.tsx';
 import {
   poblacionToCompareState,

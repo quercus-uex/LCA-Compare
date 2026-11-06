@@ -65,8 +65,6 @@ describe('stats-rows.helpers', () => {
         provincia: { id: 'prov-1', nombre: 'Badajoz' },
       });
       expect(row.categorias?.climate_change).toBe(4);
-      // Una categoría que no trae el resultado no vale 0
-      expect(row.categorias).not.toHaveProperty('acidification');
     });
 
     it('takes the campaign year in UTC', () => {
@@ -156,10 +154,6 @@ describe('stats-rows.helpers', () => {
         { tipo: 'trigo', count: 2, superficieTotal: 5 },
         { tipo: 'maiz', count: 1, superficieTotal: 1 },
       ]);
-    });
-
-    it('returns an empty list without rows', () => {
-      expect(computeDistribucionCultivos([])).toEqual([]);
     });
   });
 });

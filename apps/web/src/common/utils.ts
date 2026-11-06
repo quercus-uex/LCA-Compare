@@ -31,20 +31,18 @@ export function safeString(value: unknown): string | null {
   return null;
 }
 
+/** Texto sin tildes ni mayúsculas, para que «caceres» encuentre «Cáceres» */
+export const normalizeSearch = (value: string) =>
+  value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+
+/** `true` si `text` contiene `query` sin distinguir tildes ni mayúsculas */
+export const matchesSearch = (text: string, query: string) =>
+  normalizeSearch(text).includes(normalizeSearch(query));
+
 export function toggleInArray<T extends { id: string }>(arr: T[], item: T): T[] {
   return arr.some((i) => i.id === item.id)
     ? arr.filter((i) => i.id !== item.id)
     : [...arr, item];
-}
-
-export function formatDate(value: Date | string): string | null {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString(i18n.language ?? 'es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 }
 
 export function exportJSON(input: object) {

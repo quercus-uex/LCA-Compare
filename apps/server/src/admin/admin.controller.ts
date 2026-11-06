@@ -76,7 +76,7 @@ import {
   Provincia,
 } from '../generated/prisma/client';
 import type { UsuarioPublico } from '../usuario/usuario.service';
-import * as argon2 from 'argon2';
+import { hashPassword } from '../auth/auth.helpers';
 
 type Paginated<T> = { data: T[]; total: number };
 
@@ -190,9 +190,7 @@ export class AdminController {
   async createUsuario(@Body() body: CreateUsuarioAdminDto) {
     const data = {
       ...body,
-      passwordHash: await argon2.hash(body.passwordHash, {
-        type: argon2.argon2id,
-      }),
+      passwordHash: await hashPassword(body.passwordHash),
     };
     return { data: await this.usuarioService.create(data) };
   }
@@ -213,9 +211,7 @@ export class AdminController {
     }
     const data = { ...body };
     if (typeof body.passwordHash === 'string') {
-      data.passwordHash = await argon2.hash(body.passwordHash, {
-        type: argon2.argon2id,
-      });
+      data.passwordHash = await hashPassword(body.passwordHash);
     }
     return {
       data: await this.usuarioService.update({

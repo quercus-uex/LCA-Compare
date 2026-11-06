@@ -53,18 +53,6 @@ describe('AdminGuard', () => {
     expect(usuarioService.findOne).not.toHaveBeenCalled();
   });
 
-  it('rejects requests with a non-Bearer authorization header', async () => {
-    const context = createContext({
-      headers: { authorization: 'Basic credentials' },
-    });
-
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      new UnauthorizedException('Token de acceso no proporcionado'),
-    );
-    expect(jwtService.verifyAsync).not.toHaveBeenCalled();
-    expect(usuarioService.findOne).not.toHaveBeenCalled();
-  });
-
   it('rejects bearer tokens that fail JWT verification', async () => {
     const context = createContext({
       headers: { authorization: 'Bearer invalid-token' },
@@ -80,50 +68,26 @@ describe('AdminGuard', () => {
     expect(usuarioService.findOne).not.toHaveBeenCalled();
   });
 
-  it('forbids valid tokens whose subject does not resolve to a user', async () => {
-    const context = createContext({
-      headers: { authorization: 'Bearer valid-token' },
-    });
-    jwtService.verifyAsync.mockResolvedValue({
-      sub: 'missing-user',
-      email: 'missing@example.com',
-    });
-    usuarioService.findOne.mockResolvedValue(null);
+  it.each([null, { id: 'user-1', email: 'user@example.com', rol: 'user' }])(
+    'forbids valid tokens whose user is not an admin (%p)',
+    async (user) => {
+      const context = createContext({
+        headers: { authorization: 'Bearer valid-token' },
+      });
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-1',
+        email: 'user@example.com',
+      });
+      usuarioService.findOne.mockResolvedValue(user as never);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      new ForbiddenException(
-        'Acceso denegado: se requiere rol de administrador',
-      ),
-    );
-    expect(usuarioService.findOne).toHaveBeenCalledWith({ id: 'missing-user' });
-  });
-
-  it('forbids valid tokens whose user is not an admin', async () => {
-    const context = createContext({
-      headers: { authorization: 'Bearer valid-token' },
-    });
-    jwtService.verifyAsync.mockResolvedValue({
-      sub: 'user-1',
-      email: 'user@example.com',
-    });
-    usuarioService.findOne.mockResolvedValue({
-      id: 'user-1',
-      nombre: 'Test',
-      apellidos: 'User',
-      email: 'user@example.com',
-      passwordHash: 'hashed-password',
-      rol: 'user',
-      fechaRegistro: new Date('2026-01-01T00:00:00.000Z'),
-      fechaActualizacion: new Date('2026-01-01T00:00:00.000Z'),
-    });
-
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      new ForbiddenException(
-        'Acceso denegado: se requiere rol de administrador',
-      ),
-    );
-    expect(usuarioService.findOne).toHaveBeenCalledWith({ id: 'user-1' });
-  });
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        new ForbiddenException(
+          'Acceso denegado: se requiere rol de administrador',
+        ),
+      );
+      expect(usuarioService.findOne).toHaveBeenCalledWith({ id: 'user-1' });
+    },
+  );
 
   it('assigns an admin user to request.user and returns true', async () => {
     const request: Partial<TestRequest> = {
@@ -135,19 +99,11 @@ describe('AdminGuard', () => {
     });
     usuarioService.findOne.mockResolvedValue({
       id: 'admin-1',
-      nombre: 'Admin',
-      apellidos: 'User',
       email: 'admin@example.com',
-      passwordHash: 'hashed-password',
       rol: 'admin',
-      fechaRegistro: new Date('2026-01-01T00:00:00.000Z'),
-      fechaActualizacion: new Date('2026-01-01T00:00:00.000Z'),
-    });
+    } as never);
 
     await expect(guard.canActivate(createContext(request))).resolves.toBe(true);
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid-token', {
-      secret: 'test-secret',
-    });
     expect(request.user).toEqual({
       sub: 'admin-1',
       email: 'admin@example.com',

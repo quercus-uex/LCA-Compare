@@ -4,6 +4,7 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['<rootDir>/src/**/*.spec.ts'],
   transform: {
+    '/packages/common/src/.+\\.ts$': '<rootDir>/test/transform-common.cjs',
     '^.+\\.ts$': [
       'ts-jest',
       {
@@ -14,8 +15,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
     '^@openrouter/sdk$': '<rootDir>/test/mocks/openrouter-sdk.cjs',
-    '^common/impact$': '<rootDir>/test/mocks/common-impact.cjs',
-    '^common/stats$': '<rootDir>/test/mocks/common-stats.cjs',
     '^common/(.*)$': '<rootDir>/../../packages/common/src/$1.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

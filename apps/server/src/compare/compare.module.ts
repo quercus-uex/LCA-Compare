@@ -6,10 +6,12 @@ import { ProvinciaModule } from '../provincia/provincia.module';
 import { PoblacionModule } from '../poblacion/poblacion.module';
 import { PaisModule } from '../pais/pais.module';
 import { AiModule } from '../ai/ai.module';
+import { ParcelaModule } from '../parcela/parcela.module';
 
 @Module({
   imports: [
     ResultadoImpactoModule,
+    ParcelaModule,
     ProvinciaModule,
     PoblacionModule,
     PaisModule,

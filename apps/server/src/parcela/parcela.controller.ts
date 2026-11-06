@@ -71,16 +71,16 @@ export class ParcelaController {
     type: ApiResponseDto(ParcelaDetalleDto),
   })
   async getById(@AuthUser() user: UserJwt, @Param('id') id: string) {
-    const parcela = await this.parcelaService.findDetalle(id);
+    // La geometría se lee a la vez que el detalle, pero solo se devuelve al
+    // propietario
+    const [parcela, geom] = await Promise.all([
+      this.parcelaService.findDetalle(id),
+      this.parcelaService.getGeom(id),
+    ]);
     if (!parcela) throw new NotFoundException();
     if (parcela.idPropietario !== user.sub)
       throw new UnauthorizedException('No eres el propietario de esta parcela');
 
-    return {
-      data: {
-        ...parcela,
-        geom: await this.parcelaService.getGeom(id),
-      },
-    };
+    return { data: { ...parcela, geom } };
   }
 }

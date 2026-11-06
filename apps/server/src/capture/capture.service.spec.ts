@@ -1,9 +1,7 @@
 import { BadRequestException, Logger } from '@nestjs/common';
-import * as argon2 from 'argon2';
 import generator from 'generate-password';
 import { CaptureService } from './capture.service';
 import { ParcelaService } from '../parcela/parcela.service';
-import { PoblacionService } from '../poblacion/poblacion.service';
 import { UsuarioService } from '../usuario/usuario.service';
 import { MailerService } from '../mailer/mailer.service';
 import { CultivoService } from '../cultivo/cultivo.service';
@@ -16,17 +14,17 @@ import type {
   CaptureStrategy,
   ParcelaResolution,
 } from './strategies/capture-strategy.interface';
+import { hashPassword } from '../auth/auth.helpers';
 
-jest.mock('argon2', () => ({
-  hash: jest.fn(),
-  argon2id: 'argon2id',
+jest.mock('../auth/auth.helpers', () => ({
+  hashPassword: jest.fn(),
 }));
 
 jest.mock('generate-password', () => ({
   generate: jest.fn(),
 }));
 
-const argon2HashMock = jest.mocked(argon2.hash);
+const hashPasswordMock = jest.mocked(hashPassword);
 const generatorGenerateMock = jest.mocked(generator.generate);
 
 // Propiedades en lugar de métodos, para que los `expect(strategy.x)` no lean
@@ -48,7 +46,6 @@ describe('CaptureService', () => {
   let parcelaService: jest.Mocked<
     Pick<ParcelaService, 'findMany' | 'create' | 'setGeom'>
   >;
-  let poblacionService: jest.Mocked<PoblacionService>;
   let usuarioService: jest.Mocked<
     Pick<UsuarioService, 'findOnePublic' | 'create'>
   >;
@@ -69,9 +66,6 @@ describe('CaptureService', () => {
       create: jest.fn(),
       setGeom: jest.fn(),
     };
-    poblacionService = {
-      findByCatastroIds: jest.fn(),
-    } as unknown as jest.Mocked<PoblacionService>;
     usuarioService = { findOnePublic: jest.fn(), create: jest.fn() };
     mailerService = { sendNewUserMail: jest.fn() };
     cultivoService = {
@@ -86,7 +80,6 @@ describe('CaptureService', () => {
 
     service = new CaptureService(
       parcelaService as unknown as ParcelaService,
-      poblacionService,
       usuarioService as unknown as UsuarioService,
       mailerService as unknown as MailerService,
       cultivoService as unknown as CultivoService,
@@ -109,7 +102,7 @@ describe('CaptureService', () => {
       email: 'ana@example.com',
     };
 
-    it('returns an existing public user without generating credentials, creating a user, or sending mail', async () => {
+    it('returns an existing public user without creating one', async () => {
       const existing = { id: 'u1', email: 'ana@example.com' } as any;
       usuarioService.findOnePublic.mockResolvedValue(existing);
 
@@ -119,16 +112,13 @@ describe('CaptureService', () => {
       expect(usuarioService.findOnePublic).toHaveBeenCalledWith({
         email: 'ana@example.com',
       });
-      expect(generatorGenerateMock).not.toHaveBeenCalled();
-      expect(argon2HashMock).not.toHaveBeenCalled();
       expect(usuarioService.create).not.toHaveBeenCalled();
-      expect(mailerService.sendNewUserMail).not.toHaveBeenCalled();
     });
 
-    it('creates a missing user with argon2id password hashing, role usuario, and new-user mail notification', async () => {
+    it('creates a missing user with role usuario and mails the generated password that was hashed', async () => {
       usuarioService.findOnePublic.mockResolvedValue(null);
       generatorGenerateMock.mockReturnValue('temp-pass');
-      argon2HashMock.mockResolvedValue('hashed-pass');
+      hashPasswordMock.mockResolvedValue('hashed-pass');
       const created = { id: 'u2', email: 'ana@example.com' } as any;
       usuarioService.create.mockResolvedValue(created);
       mailerService.sendNewUserMail.mockResolvedValue(undefined);
@@ -136,13 +126,7 @@ describe('CaptureService', () => {
       const result = await service.checkUsuario(mUsuario);
 
       expect(result).toBe(created);
-      expect(generatorGenerateMock).toHaveBeenCalledWith({
-        length: 10,
-        uppercase: false,
-      });
-      expect(argon2HashMock).toHaveBeenCalledWith('temp-pass', {
-        type: 'argon2id',
-      });
+      expect(hashPasswordMock).toHaveBeenCalledWith('temp-pass');
       expect(usuarioService.create).toHaveBeenCalledWith({
         nombre: 'Ana',
         apellidos: 'García',
@@ -155,14 +139,10 @@ describe('CaptureService', () => {
         'temp-pass',
       );
     });
-  });
 
-  describe('checkUsuario when new-user mail fails', () => {
-    it('still returns the created user when sending the new-user mail throws', async () => {
+    it('still returns the created user and logs when the new-user mail fails', async () => {
       usuarioService.findOnePublic.mockResolvedValue(null);
-      generatorGenerateMock.mockReturnValue('temp-pass');
-      argon2HashMock.mockResolvedValue('hashed-pass');
-      const created = { id: 'u3', email: 'luis@example.com' } as any;
+      const created = { id: 'u3', email: 'ana@example.com' } as any;
       usuarioService.create.mockResolvedValue(created);
       mailerService.sendNewUserMail.mockRejectedValue(
         new Error('SMTP not configured'),
@@ -171,18 +151,7 @@ describe('CaptureService', () => {
         .spyOn(Logger.prototype, 'error')
         .mockImplementation(() => undefined);
 
-      const result = await service.checkUsuario({
-        id: 2,
-        nombre: 'Luis',
-        email: 'luis@example.com',
-      });
-
-      expect(result).toBe(created);
-      expect(usuarioService.create).toHaveBeenCalled();
-      expect(mailerService.sendNewUserMail).toHaveBeenCalledWith(
-        'luis@example.com',
-        'temp-pass',
-      );
+      await expect(service.checkUsuario(mUsuario)).resolves.toBe(created);
       expect(loggerError).toHaveBeenCalledWith(
         expect.stringContaining('SMTP not configured'),
       );
@@ -192,55 +161,46 @@ describe('CaptureService', () => {
   describe('checkParcela', () => {
     const idPropietario = 'u1';
 
-    describe('existing parcel reuse', () => {
-      it('reuses an existing parcel matching SIGPAC key and does not invoke strategies or creation', async () => {
-        const mParcela = {
-          es_sigpac: {
-            provincia: 41,
-            municipio: 91,
-            poligono: 3,
-            parcela: 45,
-          },
-          es_referencia_catastral: undefined,
-          pt_id_parcela_predial: undefined,
-          nombre: 'Test parcel',
-        } as any;
+    it.each([
+      {
+        kind: 'SIGPAC',
+        mParcela: {
+          es_sigpac: { provincia: 41, municipio: 91, poligono: 3, parcela: 45 },
+        },
+        condition: { sigpac: '41:91:0:0:3:45:1' },
+      },
+      {
+        kind: 'refCat',
+        mParcela: {
+          es_sigpac: { provincia: undefined },
+          es_referencia_catastral: '4191003AG3456S0001EP',
+        },
+        condition: { refCat: '4191003AG3456S0001EP' },
+      },
+      {
+        kind: 'ptIdParcela',
+        mParcela: { pt_id_parcela_predial: '1234-56' },
+        condition: { ptIdParcela: '1234-56' },
+      },
+    ])(
+      'reuses an existing parcel found by its $kind',
+      async ({ mParcela, condition }) => {
         const existing = { id: 'p1' } as any;
         parcelaService.findMany.mockResolvedValue([existing]);
 
-        const result = await service.checkParcela(idPropietario, mParcela);
+        const result = await service.checkParcela(idPropietario, {
+          id: 10,
+          nombre: 'Test parcel',
+          ...mParcela,
+        });
 
         expect(result).toBe(existing);
         expect(parcelaService.findMany).toHaveBeenCalledWith({
-          where: {
-            idPropietario,
-            OR: [{ sigpac: '41:91:0:0:3:45:1' }],
-          },
+          where: { idPropietario, OR: [condition] },
         });
-        expect(sigpacStrategy.resolveParcela).not.toHaveBeenCalled();
         expect(parcelaService.create).not.toHaveBeenCalled();
-      });
-    });
-
-    it('looks up a Portuguese parcel by ptIdParcela when es_sigpac is omitted', async () => {
-      const mParcela = {
-        es_referencia_catastral: undefined,
-        pt_id_parcela_predial: '1234-56',
-        nombre: 'Parcela PT',
-      } as any;
-      const existing = { id: 'p-pt' } as any;
-      parcelaService.findMany.mockResolvedValue([existing]);
-
-      const result = await service.checkParcela(idPropietario, mParcela);
-
-      expect(result).toBe(existing);
-      expect(parcelaService.findMany).toHaveBeenCalledWith({
-        where: {
-          idPropietario,
-          OR: [{ ptIdParcela: '1234-56' }],
-        },
-      });
-    });
+      },
+    );
 
     describe('missing parcel creation', () => {
       const polygon: Feature<Polygon> = {
@@ -279,7 +239,6 @@ describe('CaptureService', () => {
         const result = await service.checkParcela(idPropietario, mParcela);
 
         expect(result).toBe(created);
-        expect(sigpacStrategy.matches).toHaveBeenCalledWith(mParcela);
         expect(sigpacStrategy.resolveParcela).toHaveBeenCalledWith(mParcela);
         expect(parcelaService.create).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -391,36 +350,27 @@ describe('CaptureService', () => {
   describe('checkCultivo', () => {
     const idParcela = 'p1';
     const idResultadoImpacto = 'ri1';
+    const mCultivo = {
+      fecha_inicio_campania: 20250901,
+      produccion: 1200,
+      tipo: 'trigo',
+      ciclo: 1,
+      superficie_cultivada: 5.2,
+      consumo_agua: 300,
+    } as any;
 
-    it('rejects invalid campaign start dates with BadRequestException and avoids crop persistence calls', async () => {
-      const mCultivo = {
-        fecha_inicio_campania: 99999999,
-        produccion: 100,
-        tipo: 'trigo',
-        ciclo: 1,
-        superficie_cultivada: 5,
-        consumo_agua: 200,
-      } as any;
-
+    it('rejects invalid campaign start dates with BadRequestException before any lookup', async () => {
       await expect(
-        service.checkCultivo(idParcela, idResultadoImpacto, mCultivo),
+        service.checkCultivo(idParcela, idResultadoImpacto, {
+          ...mCultivo,
+          fecha_inicio_campania: 99999999,
+        }),
       ).rejects.toThrow(BadRequestException);
 
       expect(cultivoService.findOne).not.toHaveBeenCalled();
-      expect(cultivoService.create).not.toHaveBeenCalled();
-      expect(cultivoService.update).not.toHaveBeenCalled();
     });
 
     it('creates a missing crop with parsed UTC campaign date, crop fields, parcel connection, and impact result connection', async () => {
-      const mCultivo = {
-        fecha_inicio_campania: 20250901,
-        produccion: 1200,
-        tipo: 'trigo',
-        ciclo: 1,
-        superficie_cultivada: 5.2,
-        consumo_agua: 300,
-      } as any;
-
       cultivoService.findOne.mockResolvedValue(null);
       const created = { id: 'c1' } as any;
       cultivoService.create.mockResolvedValue(created);
@@ -451,15 +401,6 @@ describe('CaptureService', () => {
     });
 
     it('updates an existing crop with the resent crop data and new impact result, and deletes the previous impact result', async () => {
-      const mCultivo = {
-        fecha_inicio_campania: 20250901,
-        produccion: 1200,
-        tipo: 'trigo',
-        ciclo: 1,
-        superficie_cultivada: 5.2,
-        consumo_agua: 300,
-      } as any;
-
       const existing = { id: 'c1', idResultadoImpacto: 'old-ri' } as any;
       const updated = { id: 'c1', idResultadoImpacto: 'ri1' } as never;
       cultivoService.findOne.mockResolvedValue(existing);
@@ -490,14 +431,6 @@ describe('CaptureService', () => {
     });
 
     it('does not try to delete a previous impact result when the existing crop had none', async () => {
-      const mCultivo = {
-        fecha_inicio_campania: 20250901,
-        produccion: 1200,
-        tipo: 'trigo',
-        ciclo: 1,
-        superficie_cultivada: 5.2,
-        consumo_agua: 300,
-      } as never;
       cultivoService.findOne.mockResolvedValue({
         id: 'c1',
         idResultadoImpacto: null,

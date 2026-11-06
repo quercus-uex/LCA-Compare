@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
 import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
 import { StatsDashboard } from '../../stats/stats-dashboard.component.tsx';
 import { StatsFiltersBar } from '../../stats/stats-filters.component.tsx';
 import {
   StatsEmptyState,
-  StatsErrorState,
   StatsLoadingSkeleton,
-  StatsStaleAlert,
 } from '../../stats/stats-states.component.tsx';
 import { useStats } from '../../stats/stats.hook.tsx';
 import { useStatsFilters } from '../../stats/use-stats-filters.ts';
@@ -25,7 +24,7 @@ export const StatsRoute = () => {
     return (
       <div className={PAGE_CLASS}>
         {header}
-        {failed && !isFetching ? <StatsErrorState onRetry={refetch} /> : <StatsLoadingSkeleton />}
+        {failed && !isFetching ? <LoadErrorAlert message={t('stats.errors.load')} onRetry={refetch} /> : <StatsLoadingSkeleton />}
       </div>
     );
   }
@@ -43,7 +42,7 @@ export const StatsRoute = () => {
         onReset={resetFilters}
       />
 
-      {failed && !isFetching && <StatsStaleAlert onRetry={refetch} />}
+      {failed && !isFetching && <LoadErrorAlert variant="warning" message={t('stats.errors.stale')} onRetry={refetch} />}
 
       <div
         aria-busy={isFetching}

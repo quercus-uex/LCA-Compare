@@ -1,5 +1,6 @@
 export const es = {
   common: {
+    loading: 'Cargando…',
     actions: {
       applyFilters: 'Aplicar filtros',
       cancel: 'Cancelar',
@@ -14,10 +15,8 @@ export const es = {
       search: 'Buscar…',
     },
     empty: {
-      noData: 'Sin datos',
       noOptions: 'Sin opciones disponibles',
       noResults: 'Sin resultados',
-      unavailable: '-',
     },
     fields: {
       actions: 'Acciones',
@@ -25,7 +24,6 @@ export const es = {
       impactArea: 'Área de impacto',
       crop: 'Cultivo',
       cropCycle: 'Ciclo de cultivo',
-      cropType: 'Tipo',
       difference: 'Diferencia',
       end: 'Hasta:',
       irrigationSystem: 'Sistema de riego',
@@ -37,7 +35,6 @@ export const es = {
       referenceAmount: 'Cantidad de referencia',
       cadastralReference: 'Referencia catastral',
       start: 'Desde:',
-      campaignStartDate: 'Fecha de inicio de campaña',
       cultivatedArea: 'Superficie cultivada',
       total: 'Total',
       targetAmount: 'Cantidad objetivo',
@@ -168,13 +165,6 @@ export const es = {
         'Valores medios por kg de producto: media simple de las campañas del conjunto, sin ponderar por producción ni superficie. Cada categoría se promedia solo con las campañas que la incluyen.',
       differenceNote:
         'Diferencia = (objetivo − referencia) / |referencia| × 100. En rojo, el objetivo tiene más impacto que la referencia; en verde, menos.',
-      tabs: {
-        total: 'Total',
-        pesticides: 'Pesticidas',
-        fertilizers: 'Fertilizantes',
-        irrigationSystem: 'Sistema de riego',
-        cropManagement: 'Manejo de cultivo',
-      },
     },
   },
   parcelas: {
@@ -241,7 +231,6 @@ export const es = {
     detail: {
       breadcrumb: 'Ruta de navegación',
       loadError: 'No se ha podido cargar la parcela.',
-      identifiers: 'Identificadores',
       compare: 'Comparar esta parcela',
       compareAsTarget: 'Como conjunto objetivo',
       compareAsReference: 'Como conjunto de referencia',

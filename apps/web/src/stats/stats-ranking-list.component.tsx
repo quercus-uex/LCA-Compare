@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiArrowRight } from 'react-icons/fi';
-import { formatImpactValue } from './stats-formatters.ts';
+import { formatImpactValue } from '../common/format.ts';
+import { matchesSearch } from '../common/utils.ts';
 import { RANKING_PAGE_SIZE, type RankedEntry } from './stats-ranking.helpers.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 
@@ -22,9 +23,6 @@ type Props<T> = {
 
 type View = 'best' | 'worst';
 
-const normalize = (value: string) =>
-  value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-
 export function StatsRankingList<T>({
   entries,
   getId,
@@ -44,12 +42,12 @@ export function StatsRankingList<T>({
   const [query, setQuery] = useState('');
 
   const isPaged = entries.length > RANKING_PAGE_SIZE;
-  const searchTerm = normalize(query.trim());
+  const searchTerm = query.trim();
 
   let visible: RankedEntry<T>[];
   if (searchTerm) {
     visible = entries.filter(({ item }) =>
-      normalize(getName(item)).includes(searchTerm),
+      matchesSearch(getName(item), searchTerm),
     );
   } else if (!isPaged || expanded) {
     visible = view === 'worst' ? [...entries].reverse() : entries;

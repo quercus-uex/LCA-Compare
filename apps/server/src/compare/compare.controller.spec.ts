@@ -10,7 +10,7 @@ jest.mock('./compare.service', () => ({
 
 import { CompareController } from './compare.controller';
 import type { CompareService } from './compare.service';
-import { CompareQueryItemDto } from './dto/compare-query.dto';
+import { CompareQueryDto, CompareQueryItemDto } from './dto/compare-query.dto';
 import { IMPACT_KEYS } from './compare.types';
 import type { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
 
@@ -65,8 +65,10 @@ describe('CompareController', () => {
 
       const result = await controller.compare({ reference: refFilters });
 
-      expect(compareService.getMeanByFilters).toHaveBeenCalledTimes(1);
-      expect(compareService.getMeanByFilters).toHaveBeenCalledWith(refFilters);
+      // Only the reference mean is requested when there is no target
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [refFilters],
+      ]);
       expect(compareService.compareResults).toHaveBeenCalledWith(
         refMean,
         undefined,
@@ -88,15 +90,10 @@ describe('CompareController', () => {
         target: tarFilters,
       });
 
-      expect(compareService.getMeanByFilters).toHaveBeenCalledTimes(2);
-      expect(compareService.getMeanByFilters).toHaveBeenNthCalledWith(
-        1,
-        refFilters,
-      );
-      expect(compareService.getMeanByFilters).toHaveBeenNthCalledWith(
-        2,
-        tarFilters,
-      );
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [refFilters],
+        [tarFilters],
+      ]);
       expect(compareService.compareResults).toHaveBeenCalledWith(
         refMean,
         tarMean,
@@ -132,28 +129,22 @@ describe('CompareController', () => {
     const refFilters: CompareQueryItemDto = { idPais: 'p1' };
     const tarFilters: CompareQueryItemDto = { idPais: 'p2' };
 
-    it('rejects missing reference filters with BadRequestException', async () => {
-      await expect(
-        controller.compareToReport({
-          reference: undefined as any,
-          target: tarFilters,
-        }),
-      ).rejects.toThrow(BadRequestException);
+    it.each<[string, Partial<CompareQueryDto>]>([
+      ['reference', { target: tarFilters }],
+      ['target', { reference: refFilters }],
+    ])(
+      'rejects missing %s filters with BadRequestException',
+      async (_set, body) => {
+        await expect(
+          controller.compareToReport(body as CompareQueryDto),
+        ).rejects.toThrow(BadRequestException);
 
-      expect(compareService.findResults).not.toHaveBeenCalled();
-      expect(compareService.generateReport).not.toHaveBeenCalled();
-    });
+        expect(compareService.findResults).not.toHaveBeenCalled();
+        expect(compareService.generateReport).not.toHaveBeenCalled();
+      },
+    );
 
-    it('rejects missing target filters with BadRequestException', async () => {
-      await expect(
-        controller.compareToReport({ reference: refFilters }),
-      ).rejects.toThrow(BadRequestException);
-
-      expect(compareService.findResults).not.toHaveBeenCalled();
-      expect(compareService.generateReport).not.toHaveBeenCalled();
-    });
-
-    it('delegates result lookup and report generation, returns StreamableFile', async () => {
+    it('delegates result lookup and report generation with the requested language, returns StreamableFile', async () => {
       const refResults = [{ id: 'r1' }] as any;
       const tarResults = [{ id: 'r2' }] as any;
       const pdfBuffer = Buffer.from('pdf-content');
@@ -165,35 +156,13 @@ describe('CompareController', () => {
       const result = await controller.compareToReport({
         reference: refFilters,
         target: tarFilters,
-      });
-
-      expect(compareService.findResults).toHaveBeenCalledTimes(2);
-      expect(compareService.findResults).toHaveBeenNthCalledWith(1, refFilters);
-      expect(compareService.findResults).toHaveBeenNthCalledWith(2, tarFilters);
-      expect(compareService.generateReport).toHaveBeenCalledWith(
-        refFilters,
-        refResults,
-        tarFilters,
-        tarResults,
-        undefined,
-      );
-      expect(result).toBeInstanceOf(StreamableFile);
-    });
-
-    it('forwards the requested language to the report generator', async () => {
-      const refResults = [{ id: 'r1' }] as any;
-      const tarResults = [{ id: 'r2' }] as any;
-      compareService.findResults
-        .mockResolvedValueOnce(refResults)
-        .mockResolvedValueOnce(tarResults);
-      compareService.generateReport.mockResolvedValue(Buffer.from('pdf'));
-
-      await controller.compareToReport({
-        reference: refFilters,
-        target: tarFilters,
         language: 'en',
       });
 
+      expect(compareService.findResults.mock.calls).toEqual([
+        [refFilters],
+        [tarFilters],
+      ]);
       expect(compareService.generateReport).toHaveBeenCalledWith(
         refFilters,
         refResults,
@@ -201,6 +170,7 @@ describe('CompareController', () => {
         tarResults,
         'en',
       );
+      expect(result).toBeInstanceOf(StreamableFile);
     });
 
     it.each([

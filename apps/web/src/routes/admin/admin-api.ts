@@ -1,4 +1,4 @@
-import { apiRequest } from '../../common/api.ts';
+import { apiFetch, apiFetchRaw, apiRequest } from '../../common/api.ts';
 import { safeString } from '../../common/utils.ts';
 import { CONFIG, ENTITY_DISPLAY, type Entity, type FieldConfig, type Item } from './admin.config.ts';
 
@@ -133,13 +133,9 @@ export async function deleteItem(entity: Entity, id: string): Promise<AdminError
   return res.ok ? null : readAdminError(res);
 }
 
-export async function fetchSummary(signal?: AbortSignal): Promise<Summary> {
-  const res = await apiRequest('/admin/resumen', { signal });
-  if (!res.ok) throw new Error(String(res.status));
-  return ((await res.json()) as { data: Summary }).data;
-}
+export const fetchSummary = (signal?: AbortSignal) => apiFetch<Summary>('/admin/resumen', { signal });
 
-export async function fetchPage(
+export function fetchPage(
   entity: Entity,
   params: { search?: string; skip: number; take: number; sinPoblacion?: boolean },
   signal?: AbortSignal,
@@ -147,14 +143,8 @@ export async function fetchPage(
   const query = new URLSearchParams({ skip: String(params.skip), take: String(params.take) });
   if (params.search) query.set('search', params.search);
   if (params.sinPoblacion) query.set('sinPoblacion', 'true');
-  const res = await apiRequest(`/admin/${entity}?${query}`, { signal });
-  if (!res.ok) throw new Error(String(res.status));
-  const json = (await res.json()) as { data?: Item[]; total?: number };
-  return { data: json.data ?? [], total: json.total ?? 0 };
+  return apiFetchRaw(`/admin/${entity}?${query}`, { signal });
 }
 
-export async function fetchOne(entity: Entity, id: string, signal?: AbortSignal): Promise<Item | null> {
-  const res = await apiRequest(`/admin/${entity}/${id}`, { signal });
-  if (!res.ok) return null;
-  return ((await res.json()) as { data?: Item }).data ?? null;
-}
+export const fetchOne = (entity: Entity, id: string, signal?: AbortSignal) =>
+  apiFetch<Item>(`/admin/${entity}/${id}`, { signal });

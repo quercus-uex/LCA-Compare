@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { ImpactKey } from '../common/constants.ts';
+import { formatImpactValue, formatPercent } from '../common/format.ts';
 import { hasTargetSet, translateEfCategory } from '../common/utils.ts';
 import type { CompareResult } from '../hooks/compare.hook.tsx';
-import { formatImpactValue } from '../stats/stats-formatters.ts';
 
 export const ResultComparisonTable = ({
   result,
@@ -45,7 +45,7 @@ export const ResultComparisonTable = ({
                       : ''
                   }
                 >
-                  {i.diff != null ? `${i.diff.toFixed(2)} %` : 'n/a'}
+                  {i.diff != null ? formatPercent(i.diff, 2) : 'n/a'}
                 </th>
               )}
             </tr>

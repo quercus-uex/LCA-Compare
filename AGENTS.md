@@ -59,7 +59,7 @@ pnpm docs:typecheck
 - Swagger is served by `src/main.ts` at `/docs`; `apps/server/nest-cli.json` enables the `@nestjs/swagger` plugin.
 - Nest build copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src`; keep report/prompt assets under those paths.
 - Server TypeScript uses `module`/`moduleResolution: "nodenext"`; common package also uses NodeNext and explicit `.js` extensions in source re-exports.
-- Backend Jest only matches `apps/server/src/**/*.spec.ts`; it maps `common/*` to `packages/common/src/*.ts`, but `common/impact` and `@openrouter/sdk` use CJS mocks in `apps/server/test/mocks`.
+- Backend Jest only matches `apps/server/src/**/*.spec.ts`; it maps `common/*` to `packages/common/src/*.ts`, which `apps/server/test/transform-common.cjs` transpiles to CommonJS (ts-jest would emit ESM there). Only `@openrouter/sdk` uses a CJS mock, in `apps/server/test/mocks`.
 
 ## Frontend Notes
 

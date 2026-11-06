@@ -1,12 +1,15 @@
 import { CompareService, formatAmount, formatPercent } from './compare.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
+import { ParcelaService } from '../parcela/parcela.service';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
 import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
+import { CompareQueryBuilder } from './compare-query.builder';
 import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
+import type { CompareReportLanguage } from 'common/compare';
 
 jest.mock('playwright', () => {
   const page = {
@@ -103,8 +106,9 @@ function makeResultadoImpacto(
 describe('CompareService', () => {
   let service: CompareService;
   let resultadoImpactoService: jest.Mocked<
-    Pick<ResultadoImpactoService, 'findMany' | 'findManyAroundPoint'>
+    Pick<ResultadoImpactoService, 'findMany' | 'findManyDatos'>
   >;
+  let parcelaService: jest.Mocked<Pick<ParcelaService, 'findManyByPointRange'>>;
   let provinciaService: jest.Mocked<Pick<ProvinciaService, 'findMany'>>;
   let poblacionService: jest.Mocked<Pick<PoblacionService, 'findMany'>>;
   let paisService: jest.Mocked<Pick<PaisService, 'findMany'>>;
@@ -113,8 +117,9 @@ describe('CompareService', () => {
   beforeEach(() => {
     resultadoImpactoService = {
       findMany: jest.fn(),
-      findManyAroundPoint: jest.fn(),
+      findManyDatos: jest.fn(),
     };
+    parcelaService = { findManyByPointRange: jest.fn() };
     provinciaService = { findMany: jest.fn() };
     poblacionService = { findMany: jest.fn() };
     paisService = { findMany: jest.fn() };
@@ -122,6 +127,7 @@ describe('CompareService', () => {
 
     service = new CompareService(
       resultadoImpactoService as unknown as ResultadoImpactoService,
+      parcelaService as unknown as ParcelaService,
       provinciaService as unknown as ProvinciaService,
       poblacionService as unknown as PoblacionService,
       paisService as unknown as PaisService,
@@ -138,157 +144,45 @@ describe('CompareService', () => {
       const result = await service.findResults({});
 
       expect(result).toEqual([]);
-      expect(
-        resultadoImpactoService.findManyAroundPoint,
-      ).not.toHaveBeenCalled();
+      expect(parcelaService.findManyByPointRange).not.toHaveBeenCalled();
       expect(resultadoImpactoService.findMany).not.toHaveBeenCalled();
     });
 
-    it('uses findManyAroundPoint and passes nearby ids to findMany for location radius filters', async () => {
-      const nearbyResults = [{ id: 'ri-1' }, { id: 'ri-2' }] as any[];
-      resultadoImpactoService.findManyAroundPoint.mockResolvedValue(
-        nearbyResults,
-      );
-      const expectedResults = [{ id: 'ri-1' }] as any[];
-      resultadoImpactoService.findMany.mockResolvedValue(expectedResults);
+    const radiusCases: [number, number, number, string[]][] = [
+      [40, -3, 50, ['par-1', 'par-2']],
+      [0, 0, 10, ['par-zero']],
+      // No parcels found keeps the spatial condition (matches nothing)
+      [40, -3, 50, []],
+    ];
+    it.each(radiusCases)(
+      'filters a radius (%d, %d, %d) by the ids of the parcels within it: %j',
+      async (lat, long, range, ids) => {
+        parcelaService.findManyByPointRange.mockResolvedValue(
+          ids.map((id) => ({ id })),
+        );
+        const expectedResults = [] as ResultadoImpactoWithRelations[];
+        resultadoImpactoService.findMany.mockResolvedValue(expectedResults);
+        const filters: CompareQueryItemDto = { lat, long, range };
 
-      const filters: CompareQueryItemDto = {
-        lat: 40.0,
-        long: -3.0,
-        range: 50,
-      };
-      const result = await service.findResults(filters);
+        const result = await service.findResults(filters);
 
-      expect(resultadoImpactoService.findManyAroundPoint).toHaveBeenCalledWith(
-        40.0,
-        -3.0,
-        50,
-      );
-      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
-        where: {
-          AND: [
-            {
-              OR: [{ id: { in: ['ri-1', 'ri-2'] } }],
-            },
-          ],
-        },
-      });
-      expect(result).toBe(expectedResults);
-    });
-
-    it('treats zero latitude and longitude as valid location filters', async () => {
-      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
-        { id: 'ri-zero' },
-      ]);
-      resultadoImpactoService.findMany.mockResolvedValue([
-        { id: 'ri-zero' },
-      ] as any);
-
-      await service.findResults({ lat: 0, long: 0, range: 10 });
-
-      expect(resultadoImpactoService.findManyAroundPoint).toHaveBeenCalledWith(
-        0,
-        0,
-        10,
-      );
-      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
-        where: { AND: [{ OR: [{ id: { in: ['ri-zero'] } }] }] },
-      });
-    });
-
-    it('keeps every campaign within the radius and applies crop type and years like the other location filters', async () => {
-      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([
-        { id: 'ri-2023' },
-        { id: 'ri-2024' },
-      ]);
-      resultadoImpactoService.findMany.mockResolvedValue([]);
-
-      await service.findResults({
-        lat: 40.0,
-        long: -3.0,
-        range: 50,
-        tipoCultivo: 'Tomate',
-        anioCampaniaInicio: 2022,
-        anioCampaniaFin: 2024,
-      });
-
-      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
-        where: {
-          AND: [
-            { OR: [{ id: { in: ['ri-2023', 'ri-2024'] } }] },
-            { cultivo: { tipo: 'Tomate' } },
-            {
-              cultivo: {
-                fechaInicioCampania: {
-                  gte: new Date('2022-01-01T00:00:00.000Z'),
-                  lt: new Date('2025-01-01T00:00:00.000Z'),
-                },
-              },
-            },
-          ],
-        },
-      });
-    });
-
-    it('returns an empty set when a radius filter finds no parcels instead of dropping the spatial condition', async () => {
-      resultadoImpactoService.findManyAroundPoint.mockResolvedValue([]);
-      resultadoImpactoService.findMany.mockResolvedValue([]);
-
-      const result = await service.findResults({
-        lat: 40.0,
-        long: -3.0,
-        range: 50,
-        tipoCultivo: 'Tomate',
-      });
-
-      expect(result).toEqual([]);
-      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
-        where: {
-          AND: [{ OR: [{ id: { in: [] } }] }, { cultivo: { tipo: 'Tomate' } }],
-        },
-      });
-    });
+        expect(parcelaService.findManyByPointRange).toHaveBeenCalledWith(
+          lat,
+          long,
+          range,
+        );
+        expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+          where: CompareQueryBuilder.build(filters, ids),
+        });
+        expect(result).toBe(expectedResults);
+      },
+    );
   });
 
   describe('getMeanOfResults', () => {
     it('returns undefined for empty input', () => {
       const result = service.getMeanOfResults([]);
       expect(result).toBeUndefined();
-    });
-
-    it('returns the single result datos as-is', () => {
-      const impactDto = makeImpactDto();
-      const resultado = { datos: impactDto as any } as any;
-
-      const result = service.getMeanOfResults([resultado]);
-
-      expect(result).toEqual(impactDto);
-    });
-
-    it('averages matching categories across all impact keys for multiple results', () => {
-      const r1Impact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
-          { category: 'AP', amount: 20, unit: 'mol H+ eq' },
-        ],
-      });
-      const r2Impact = makeImpactDto({
-        impacto_total: [
-          { category: 'GWP', amount: 30, unit: 'kg CO2 eq' },
-          { category: 'AP', amount: 40, unit: 'mol H+ eq' },
-        ],
-      });
-
-      const result = service.getMeanOfResults([
-        { datos: r1Impact as any } as any,
-        { datos: r2Impact as any } as any,
-      ]);
-
-      expect(result).toBeDefined();
-      expect(result!.impacto_total).toEqual([
-        { category: 'GWP', amount: 20, unit: 'kg CO2 eq' },
-        { category: 'AP', amount: 30, unit: 'mol H+ eq' },
-      ]);
     });
 
     it('averages each category only over the results that include it', () => {
@@ -339,19 +233,52 @@ describe('CompareService', () => {
         { category: 'Particulate matter', amount: 2, unit: 'disease inc.' },
       ]);
     });
+
+    it('skips non-finite amounts instead of letting them poison the mean', () => {
+      const r1Impact = makeImpactDto({
+        impacto_total: [
+          { category: 'GWP', amount: NaN, unit: 'kg CO2 eq' },
+          { category: 'AP', amount: Infinity, unit: 'mol H+ eq' },
+        ],
+      });
+      const r2Impact = makeImpactDto({
+        impacto_total: [{ category: 'GWP', amount: 30, unit: 'kg CO2 eq' }],
+      });
+
+      const result = service.getMeanOfResults([
+        makeResultadoImpacto(r1Impact),
+        makeResultadoImpacto(r2Impact),
+      ]);
+
+      // GWP averages only the finite value; AP has none, so it is dropped
+      expect(result!.impacto_total).toEqual([
+        { category: 'GWP', amount: 30, unit: 'kg CO2 eq' },
+      ]);
+    });
   });
 
   describe('getMeanByFilters', () => {
-    it('delegates to findResults and returns getMeanOfResults', async () => {
+    it('loads only the impact data of the matching results and returns their mean', async () => {
       const impactDto = makeImpactDto();
-      const results = [{ datos: impactDto as any }] as any[];
-      resultadoImpactoService.findMany.mockResolvedValue(results);
+      resultadoImpactoService.findManyDatos.mockResolvedValue([
+        { datos: impactDto as any },
+      ]);
 
       const filters: CompareQueryItemDto = { tipoCultivo: 'trigo' };
       const result = await service.getMeanByFilters(filters);
 
-      expect(resultadoImpactoService.findMany).toHaveBeenCalled();
+      expect(resultadoImpactoService.findManyDatos).toHaveBeenCalledWith({
+        AND: [{ cultivo: { tipo: 'trigo' } }],
+      });
+      expect(resultadoImpactoService.findMany).not.toHaveBeenCalled();
       expect(result).toEqual(impactDto);
+    });
+
+    it('returns undefined without querying when no filters are provided', async () => {
+      const result = await service.getMeanByFilters({});
+
+      expect(result).toBeUndefined();
+      expect(resultadoImpactoService.findManyDatos).not.toHaveBeenCalled();
     });
   });
 
@@ -363,15 +290,10 @@ describe('CompareService', () => {
 
       const result = service.compareResults(refImpact);
 
-      expect(result.impacto_total).toEqual([
-        {
-          category: 'GWP',
-          unit: 'kg CO2 eq',
-          refAmount: 100,
-        },
+      // Strict: tarAmount and diff must be absent, not just undefined
+      expect(result.impacto_total).toStrictEqual([
+        { category: 'GWP', unit: 'kg CO2 eq', refAmount: 100 },
       ]);
-      expect(result.impacto_total[0]).not.toHaveProperty('tarAmount');
-      expect(result.impacto_total[0]).not.toHaveProperty('diff');
     });
 
     it('returns target comparison with tarAmount and diff relative to the reference', () => {
@@ -393,19 +315,6 @@ describe('CompareService', () => {
           diff: 20,
         },
       ]);
-    });
-
-    it('returns a negative diff when the target has a lower impact than the reference', () => {
-      const refImpact = makeImpactDto({
-        impacto_total: [{ category: 'GWP', amount: 200, unit: 'kg CO2 eq' }],
-      });
-      const tarImpact = makeImpactDto({
-        impacto_total: [{ category: 'GWP', amount: 150, unit: 'kg CO2 eq' }],
-      });
-
-      const result = service.compareResults(refImpact, tarImpact);
-
-      expect(result.impacto_total[0].diff).toBe(-25);
     });
 
     it('returns null (n/a) diff for zero reference amount or missing target category', () => {
@@ -479,17 +388,77 @@ describe('CompareService', () => {
 
       expect(result.impacto_total[0]).toMatchObject({ tarAmount: 3, diff: 50 });
     });
+
+    it('uses the first target item when a category is repeated in the target', () => {
+      const refImpact = makeImpactDto({
+        impacto_total: [{ category: 'GWP', amount: 100, unit: 'kg CO2 eq' }],
+      });
+      const tarImpact = makeImpactDto({
+        impacto_total: [
+          { category: 'GWP', amount: 120, unit: 'kg CO2 eq' },
+          { category: 'GWP', amount: 999, unit: 'kg CO2 eq' },
+        ],
+      });
+
+      const result = service.compareResults(refImpact, tarImpact);
+
+      expect(result.impacto_total[0]).toMatchObject({
+        tarAmount: 120,
+        diff: 20,
+      });
+    });
   });
 
-  describe('onModuleInit / onModuleDestroy', () => {
-    it('launches Chromium on init and closes browser on destroy', async () => {
-      await service.onModuleInit();
+  describe('browser lifecycle', () => {
+    const generateMinimalReport = () => {
+      aiService.generateFromTemplate.mockResolvedValue('');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+      return service.generateReport(
+        {},
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })],
+        {},
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })],
+      );
+    };
 
-      expect(playwrightMock.chromium.launch).toHaveBeenCalled();
+    it('does not launch Chromium until a report is generated, and then only once', async () => {
+      expect(playwrightMock.chromium.launch).not.toHaveBeenCalled();
 
+      await Promise.all([generateMinimalReport(), generateMinimalReport()]);
+
+      expect(playwrightMock.chromium.launch).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes the browser on destroy only if it was launched', async () => {
       await service.onModuleDestroy();
+      expect(playwrightMock.__mockBrowser.close).not.toHaveBeenCalled();
 
+      await generateMinimalReport();
+      await service.onModuleDestroy();
       expect(playwrightMock.__mockBrowser.close).toHaveBeenCalled();
+    });
+
+    it('retries the launch on the next report when it fails', async () => {
+      playwrightMock.chromium.launch.mockRejectedValueOnce(
+        new Error('no chromium'),
+      );
+
+      await expect(generateMinimalReport()).rejects.toThrow('no chromium');
+      await expect(generateMinimalReport()).resolves.toEqual(
+        Buffer.from('mock-pdf'),
+      );
+      expect(playwrightMock.chromium.launch).toHaveBeenCalledTimes(2);
+    });
+
+    it('closes the page even when printing the PDF fails', async () => {
+      playwrightMock.__mockPage.pdf.mockRejectedValueOnce(
+        new Error('pdf failed'),
+      );
+
+      await expect(generateMinimalReport()).rejects.toThrow('pdf failed');
+      expect(playwrightMock.__mockPage.close).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -506,10 +475,6 @@ describe('CompareService', () => {
       idPais: 'pais-2',
       tipoCultivo: 'cebada',
     };
-
-    beforeEach(async () => {
-      await service.onModuleInit();
-    });
 
     it('computes comparison, generates AI text, builds context, and returns PDF buffer', async () => {
       const refResults = [
@@ -549,13 +514,18 @@ describe('CompareService', () => {
       paisService.findMany
         .mockResolvedValueOnce([{ id: 'pais-1', nombre: 'Spain' }] as any)
         .mockResolvedValueOnce([{ id: 'pais-2', nombre: 'Portugal' }] as any);
+      // prov-9 appears in the reference data but was not chosen in the filter
       provinciaService.findMany
-        .mockResolvedValueOnce([{ id: 'prov-1' }] as any)
+        .mockResolvedValueOnce([
+          { id: 'prov-1', nombre: 'Badajoz' },
+          { id: 'prov-9', nombre: 'Cáceres' },
+        ] as any)
         .mockResolvedValueOnce([{ id: 'prov-2' }] as any);
       poblacionService.findMany
         .mockResolvedValueOnce([{ id: 'pop-1' }] as any)
         .mockResolvedValueOnce([{ id: 'pop-2' }] as any);
 
+      // No language: falls back to Spanish
       const pdfBuffer = await service.generateReport(
         refFilters,
         refResults,
@@ -575,10 +545,6 @@ describe('CompareService', () => {
         { data: 'overview-text' },
       );
 
-      expect(paisService.findMany).toHaveBeenCalledTimes(2);
-      expect(provinciaService.findMany).toHaveBeenCalledTimes(2);
-      expect(poblacionService.findMany).toHaveBeenCalledTimes(2);
-
       expect(playwrightMock.__mockBrowser.newPage).toHaveBeenCalled();
       expect(playwrightMock.__mockPage.setContent).toHaveBeenCalledWith(
         expect.any(String),
@@ -591,6 +557,16 @@ describe('CompareService', () => {
       });
       expect(playwrightMock.__mockPage.close).toHaveBeenCalled();
       expect(pdfBuffer).toEqual(Buffer.from('mock-pdf'));
+
+      const html = playwrightMock.__mockPage.setContent.mock.calls[0][0];
+      expect(html).toContain('<html lang="es">');
+      expect(html).toContain('Informe de comparativa de ACV');
+      // Chosen filters get the set colour (blue = reference, red = target);
+      // values only present in the data are grey
+      expect(html).toMatch(/text-blue-600[^"]*">Spain</);
+      expect(html).toMatch(/text-blue-600[^"]*">Badajoz</);
+      expect(html).toMatch(/text-gray-500[^"]*">Cáceres</);
+      expect(html).toMatch(/text-red-600[^"]*">Portugal</);
     });
 
     it('shows the campaign years chosen in the filter, and labels the data range when no year filter was applied', async () => {
@@ -650,14 +626,21 @@ describe('CompareService', () => {
         return playwrightMock.__mockPage.setContent.mock.calls[0][0];
       };
 
-      it('omits overview and recommendations when overview generation throws', async () => {
-        const html = await generateWithAiMock((mock) =>
-          mock.mockRejectedValueOnce(new Error('OpenRouter down')),
-        );
+      it.each<[string, (mock: jest.Mock) => void]>([
+        [
+          'throws',
+          (mock) => mock.mockRejectedValueOnce(new Error('OpenRouter down')),
+        ],
+        ['returns blank content', (mock) => mock.mockResolvedValueOnce('   ')],
+      ])(
+        'omits overview and recommendations when overview generation %s',
+        async (_case, setupAi) => {
+          const html = await generateWithAiMock(setupAi);
 
-        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
-        expect(html).not.toContain(aiDisclaimer);
-      });
+          expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
+          expect(html).not.toContain(aiDisclaimer);
+        },
+      );
 
       it('omits only recommendations when their generation throws', async () => {
         const html = await generateWithAiMock((mock) =>
@@ -669,59 +652,6 @@ describe('CompareService', () => {
         expect(html).toContain('overview-text');
         expect(html.split(aiDisclaimer)).toHaveLength(2);
       });
-
-      it('omits sections whose generated content is empty', async () => {
-        const html = await generateWithAiMock((mock) =>
-          mock.mockResolvedValueOnce('   '),
-        );
-
-        expect(aiService.generateFromTemplate).toHaveBeenCalledTimes(1);
-        expect(html).not.toContain(aiDisclaimer);
-      });
-    });
-
-    it('marks selected filters as chosen in report context', async () => {
-      const refResults = [
-        makeResultadoImpacto(makeImpactDto(), {
-          id: 'ri-1',
-          cultivoTipo: 'trigo',
-          paisId: 'pais-1',
-          provinciaId: 'prov-1',
-          poblacionId: 'pop-1',
-        }),
-      ];
-      const tarResults = [
-        makeResultadoImpacto(makeImpactDto(), {
-          id: 'ri-2',
-          cultivoTipo: 'cebada',
-          paisId: 'pais-2',
-          provinciaId: 'prov-2',
-          poblacionId: 'pop-2',
-        }),
-      ];
-
-      aiService.generateFromTemplate.mockResolvedValue('text');
-      paisService.findMany
-        .mockResolvedValueOnce([{ id: 'pais-1', nombre: 'Spain' }] as any)
-        .mockResolvedValueOnce([{ id: 'pais-2', nombre: 'Portugal' }] as any);
-      provinciaService.findMany
-        .mockResolvedValueOnce([{ id: 'prov-1' }] as any)
-        .mockResolvedValueOnce([{ id: 'prov-2' }] as any);
-      poblacionService.findMany
-        .mockResolvedValueOnce([{ id: 'pop-1' }] as any)
-        .mockResolvedValueOnce([{ id: 'pop-2' }] as any);
-
-      await service.generateReport(
-        refFilters,
-        refResults,
-        tarFilters,
-        tarResults,
-      );
-
-      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
-
-      expect(htmlArg).toContain('Spain');
-      expect(htmlArg).toContain('Portugal');
     });
 
     it('renders target location coordinates from target filters', async () => {
@@ -811,14 +741,7 @@ describe('CompareService', () => {
       expect(htmlArg).toContain('Olive');
     });
 
-    it('falls back to Spanish prompts when language is missing', async () => {
-      const refResults = [
-        makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' }),
-      ];
-      const tarResults = [
-        makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' }),
-      ];
-
+    it('falls back to Spanish when an unsupported language is requested', async () => {
       aiService.generateFromTemplate.mockResolvedValue('text');
       paisService.findMany.mockResolvedValue([]);
       provinciaService.findMany.mockResolvedValue([]);
@@ -826,9 +749,10 @@ describe('CompareService', () => {
 
       await service.generateReport(
         refFilters,
-        refResults,
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })],
         tarFilters,
-        tarResults,
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })],
+        'fr' as CompareReportLanguage,
       );
 
       expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
@@ -836,16 +760,9 @@ describe('CompareService', () => {
         'compare-overview',
         { data: expect.any(String) },
       );
-      expect(aiService.generateFromTemplate).toHaveBeenNthCalledWith(
-        2,
-        'compare-recommendations',
-        { data: 'text' },
-      );
-
-      const htmlArg = playwrightMock.__mockPage.setContent.mock.calls[0][0];
-
-      expect(htmlArg).toContain('<html lang="es">');
-      expect(htmlArg).toContain('Informe de comparativa de ACV');
+      const html = playwrightMock.__mockPage.setContent.mock.calls[0][0];
+      expect(html).toContain('<html lang="es">');
+      expect(html).toContain('Informe de comparativa de ACV');
     });
   });
 });

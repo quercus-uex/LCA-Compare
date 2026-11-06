@@ -1,21 +1,11 @@
 import { CultivoService } from './cultivo.service';
 
 describe('CultivoService', () => {
-  let prisma: {
-    cultivo: {
-      findMany: jest.Mock;
-    };
-    $transaction: jest.Mock;
-  };
+  let prisma: { $transaction: jest.Mock };
   let service: CultivoService;
 
   beforeEach(() => {
-    prisma = {
-      cultivo: {
-        findMany: jest.fn(),
-      },
-      $transaction: jest.fn(),
-    };
+    prisma = { $transaction: jest.fn() };
     service = new CultivoService(prisma as never);
   });
 

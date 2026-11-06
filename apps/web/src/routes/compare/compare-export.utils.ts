@@ -1,18 +1,10 @@
-import { IMPACT_KEYS, type ImpactKey } from '../../common/constants.ts';
+import { IMPACT_KEYS, IMPACT_LABEL_KEYS, type ImpactKey } from '../../common/constants.ts';
 import { translateEfCategory } from '../../common/utils.ts';
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
 
 export type CompareExportMode = 'full' | 'reference' | 'target';
 
 type Translator = (key: string) => string;
-
-const IMPACT_LABEL_KEYS: Readonly<Record<ImpactKey, string>> = {
-  impacto_total: 'common.fields.total',
-  impacto_pesticidas: 'common.fields.pesticides',
-  impacto_sistema_riego: 'common.fields.irrigationSystem',
-  impacto_fertilizantes: 'common.fields.fertilizers',
-  impacto_manejo_cultivo: 'common.fields.cropManagement',
-};
 
 // Sin redondear: con decimales fijos los indicadores pequeños (CTUh, ~1e-10)
 // se exportarían como 0

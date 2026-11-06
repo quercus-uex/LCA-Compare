@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { ApiError } from '../../common/api.ts';
+import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
 import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
 import { type ParcelaResumen, useParcela } from '../../hooks/parcela.hook.tsx';
 import { ParcelasItem } from './parcelas-item.component.tsx';
 import { ParcelasMap } from './parcelas-map.component.tsx';
-import { EmptyState, LoadErrorAlert, ParcelasListSkeleton } from './parcelas-states.component.tsx';
+import { EmptyState, ParcelasListSkeleton } from './parcelas-states.component.tsx';
 import { ParcelasTable } from './parcelas-table.component.tsx';
 import { ParcelasToolbar } from './parcelas-toolbar.component.tsx';
 import {

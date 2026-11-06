@@ -1,6 +1,6 @@
 import type { GlobalStatsDto, GlobalStatsQuery } from 'common/stats';
 import { useCallback, useEffect, useState } from 'react';
-import { apiRequest } from '../common/api.ts';
+import { apiFetchRaw } from '../common/api.ts';
 
 export type {
   GlobalStatsDto,
@@ -45,12 +45,8 @@ export function useStats(query: GlobalStatsQuery) {
   useEffect(() => {
     const controller = new AbortController();
 
-    apiRequest(`/stats/global${queryString}`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = (await response.json()) as GlobalStatsDto;
-        setState({ requestKey, data, failed: false });
-      })
+    apiFetchRaw<GlobalStatsDto>(`/stats/global${queryString}`, { signal: controller.signal })
+      .then((data) => setState({ requestKey, data, failed: false }))
       .catch(() => {
         if (controller.signal.aborted) return;
         setState((prev) => ({ requestKey, data: prev.data, failed: true }));

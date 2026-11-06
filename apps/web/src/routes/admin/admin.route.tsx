@@ -4,6 +4,7 @@ import { FiAlertTriangle, FiFilter, FiPlus, FiRefreshCw, FiSearch, FiX } from 'r
 import { useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { formatQuantity } from '../../common/format.ts';
 import { PAGE_CLASS, PageHeader, PageHeaderSkeleton } from '../../components/page-header.component.tsx';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
@@ -20,7 +21,7 @@ type DeleteTarget = { entity: Entity; item: Item };
 export const AdminRoute = () => {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
 
   // La vista vive en la URL: recargar o compartir el enlace conserva la pestaña y los filtros
@@ -46,7 +47,6 @@ export const AdminRoute = () => {
 
   const isAdmin = auth.usuario?.rol === 'admin';
   const config = CONFIG[entity];
-  const numberFormat = new Intl.NumberFormat(i18n.language);
 
   useEffect(() => {
     if (!auth.loading && !isAdmin) void navigate('/parcelas');
@@ -178,7 +178,7 @@ export const AdminRoute = () => {
               {ENTITIES.map((e) => (
                 <option key={e} value={e}>
                   {t(CONFIG[e].labelKey)}
-                  {summary[e] !== undefined ? ` (${numberFormat.format(summary[e])})` : ''}
+                  {summary[e] !== undefined ? ` (${formatQuantity(summary[e])})` : ''}
                 </option>
               ))}
             </select>
@@ -204,7 +204,7 @@ export const AdminRoute = () => {
                           <span className="flex-1">{t(CONFIG[e].labelKey)}</span>
                           {summary[e] !== undefined && (
                             <span className={`text-xs tabular-nums ${active ? '' : 'text-base-content/50'}`}>
-                              {numberFormat.format(summary[e])}
+                              {formatQuantity(summary[e])}
                             </span>
                           )}
                         </button>
@@ -239,7 +239,7 @@ export const AdminRoute = () => {
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     {t(config.labelKey)}
                     {loadedKey !== null && (
-                      <span className="badge badge-sm badge-ghost tabular-nums">{numberFormat.format(total)}</span>
+                      <span className="badge badge-sm badge-ghost tabular-nums">{formatQuantity(total)}</span>
                     )}
                   </h2>
                   <p className="text-sm text-base-content/60">{t(config.descriptionKey)}</p>

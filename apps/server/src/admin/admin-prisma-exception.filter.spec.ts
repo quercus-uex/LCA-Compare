@@ -49,14 +49,17 @@ describe('AdminPrismaExceptionFilter', () => {
     );
   });
 
-  it('maps foreign key violations to 409 in-use', () => {
-    filter.catch(prismaError('P2003'), host);
+  it.each(['P2003', 'P2014'])(
+    'maps relation violation %s to 409 in-use',
+    (code) => {
+      filter.catch(prismaError(code), host);
 
-    expect(status).toHaveBeenCalledWith(409);
-    expect(json).toHaveBeenCalledWith(
-      expect.objectContaining({ error: 'in-use' }),
-    );
-  });
+      expect(status).toHaveBeenCalledWith(409);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'in-use' }),
+      );
+    },
+  );
 
   it('maps missing records to 404', () => {
     filter.catch(prismaError('P2025'), host);

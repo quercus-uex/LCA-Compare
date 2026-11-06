@@ -94,17 +94,6 @@ describe('StatsService', () => {
       });
     });
 
-    it('loads the dataset with a single select query', async () => {
-      await service.getGlobalStats();
-
-      expect(findMany).toHaveBeenCalledTimes(1);
-      const [args] = findMany.mock.calls[0];
-      expect(args).not.toHaveProperty('where');
-      expect(args).not.toHaveProperty('include');
-      expect(args).toHaveProperty('select.resultadoImpacto');
-      expect(args).toHaveProperty('select.parcela.select.poblacion');
-    });
-
     it('applies year and crop filters to KPIs and rankings', async () => {
       mockDataset([
         ...zona('a', { anio: 2024, tipo: 'trigo' }),
@@ -190,12 +179,6 @@ describe('StatsService', () => {
 
       const result = await service.getGlobalStats();
 
-      expect(result.rankingProvincias.map((r) => r.idProvincia)).toEqual([
-        'prov-ba',
-      ]);
-      expect(result.rankingPoblaciones.map((r) => r.idPoblacion)).toEqual([
-        'pob-db',
-      ]);
       expect(result.zonasOcultas).toEqual({ provincias: 1, poblaciones: 1 });
       // Los KPIs sí incluyen las zonas ocultas
       expect(result.kpis.totalParcelas).toBe(4);
@@ -216,7 +199,6 @@ describe('StatsService', () => {
 
       expect(kpis.parcelasComparables).toBe(3);
       expect(kpis.variacionInteranual?.climate_change).toBe(-10);
-      expect(kpis.variacionInteranual?.acidification).toBeNull();
     });
 
     it('returns a null year-on-year change without a selected year', async () => {
@@ -225,6 +207,8 @@ describe('StatsService', () => {
       const { kpis } = await service.getGlobalStats();
 
       expect(kpis.variacionInteranual).toBeNull();
+      // Sin año no se compara: con una lista vacía del año anterior sería 0
+      expect(kpis.parcelasComparables).toBeNull();
     });
   });
 

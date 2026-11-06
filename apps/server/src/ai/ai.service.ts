@@ -8,7 +8,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import Handlebars from 'handlebars';
 
-const DEFAULT_MODEL = 'openai/gpt-oss-120b:nitro';
+export const DEFAULT_MODEL = 'openai/gpt-oss-120b:nitro';
 
 @Injectable()
 export class AiService {
@@ -38,7 +38,6 @@ export class AiService {
   async generateFromTemplate(
     templateName: string,
     context: Record<string, string>,
-    model?: string,
   ): Promise<string> {
     const template = this.templates.get(templateName);
     if (!template)
@@ -58,7 +57,7 @@ export class AiService {
     const response = await this.openRouter.chat.send({
       chatGenerationParams: {
         messages: [{ role: 'user', content }],
-        model: model ?? (process.env.OPENROUTER_MODEL?.trim() || DEFAULT_MODEL),
+        model: process.env.OPENROUTER_MODEL?.trim() || DEFAULT_MODEL,
       },
     });
     return response.choices[0].message.content as string;

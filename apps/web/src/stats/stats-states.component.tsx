@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
 
 // Reproduce la disposición del dashboard para que no salte al cargar
 export const StatsLoadingSkeleton = () => (
@@ -25,36 +24,6 @@ export const StatsLoadingSkeleton = () => (
     <div className="skeleton h-96 rounded-box" />
   </div>
 );
-
-export const StatsErrorState = ({ onRetry }: { onRetry: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <div className="w-full">
-      <div role="alert" className="alert alert-error">
-        <FiAlertTriangle />
-        <span>{t('stats.errors.load')}</span>
-        <button type="button" className="btn btn-sm" onClick={onRetry}>
-          <FiRefreshCw />
-          {t('common.actions.retry')}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export const StatsStaleAlert = ({ onRetry }: { onRetry: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <div role="alert" className="alert alert-warning">
-      <FiAlertTriangle />
-      <span>{t('stats.errors.stale')}</span>
-      <button type="button" className="btn btn-sm" onClick={onRetry}>
-        <FiRefreshCw />
-        {t('common.actions.retry')}
-      </button>
-    </div>
-  );
-};
 
 export const StatsEmptyState = ({
   filtered,

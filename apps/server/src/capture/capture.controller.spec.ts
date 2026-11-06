@@ -66,25 +66,25 @@ describe('CaptureController', () => {
     );
   });
 
-  it('delegates to checkUsuario, checkParcela, resultadoImpacto.create, and checkCultivo in order', async () => {
-    const usuario = { id: 'u1', email: 'ana@example.com' } as any;
+  it('chains the user, parcela, impact result and cultivo ids and returns the records', async () => {
+    const usuario = { id: 'u1' } as any;
     const parcela = { id: 'p1' } as any;
-    const resultadoImpacto = { id: 'ri1' } as any;
     const cultivo = { id: 'c1' } as any;
-
     captureService.checkUsuario.mockResolvedValue(usuario);
     captureService.checkParcela.mockResolvedValue(parcela);
-    resultadoImpactoService.create.mockResolvedValue(resultadoImpacto);
+    resultadoImpactoService.create.mockResolvedValue({ id: 'ri1' } as any);
     captureService.checkCultivo.mockResolvedValue(cultivo);
 
     const originalEnv = process.env.DEFAULT_IMPACT_METHOD_UUID;
     process.env.DEFAULT_IMPACT_METHOD_UUID = 'method-uuid-1';
+    let result: unknown;
     try {
-      await controller.postCaptureData(fixture);
+      result = await controller.postCaptureData(fixture);
     } finally {
       process.env.DEFAULT_IMPACT_METHOD_UUID = originalEnv;
     }
 
+    expect(result).toEqual({ usuario, parcela, cultivo });
     expect(captureService.checkUsuario).toHaveBeenCalledWith(
       fixture.metadatos.usuario,
     );
@@ -101,21 +101,5 @@ describe('CaptureController', () => {
       'ri1',
       fixture.metadatos.cultivo,
     );
-  });
-
-  it('returns { usuario, parcela, cultivo } from the resolved service records', async () => {
-    const usuario = { id: 'u1' } as any;
-    const parcela = { id: 'p1' } as any;
-    const resultadoImpacto = { id: 'ri1' } as any;
-    const cultivo = { id: 'c1' } as any;
-
-    captureService.checkUsuario.mockResolvedValue(usuario);
-    captureService.checkParcela.mockResolvedValue(parcela);
-    resultadoImpactoService.create.mockResolvedValue(resultadoImpacto);
-    captureService.checkCultivo.mockResolvedValue(cultivo);
-
-    const result = await controller.postCaptureData(fixture);
-
-    expect(result).toEqual({ usuario, parcela, cultivo });
   });
 });

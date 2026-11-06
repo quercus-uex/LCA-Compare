@@ -25,35 +25,18 @@ describe('compare report i18n', () => {
       },
     );
 
-    it('translates the eutrophication indicators in every report language', () => {
-      expect(translateCategory('Eutrophication: marine', 'es')).toBe(
-        'Eutrofización (marina)',
-      );
-      expect(translateCategory('Eutrophication: marine', 'en')).toBe(
-        'Eutrophication, marine',
-      );
-      expect(translateCategory('Eutrophication: marine', 'pt')).toBe(
-        'Eutrofização (marinha)',
-      );
-    });
-
-    it('translates the human toxicity indicators with their own labels', () => {
-      expect(translateCategory('Human toxicity: carcinogenic', 'es')).toBe(
-        'Toxicidad humana (cancerígena)',
-      );
-      expect(translateCategory('Human toxicity: non-carcinogenic', 'en')).toBe(
-        'Human toxicity, non-cancer',
-      );
-    });
-
-    it('translates legacy Spanish category names', () => {
-      expect(translateCategory('Uso de Agua', 'pt')).toBe('Uso da água');
-    });
-
-    it('returns unknown categories unchanged', () => {
-      expect(translateCategory('Ozone depletion', 'es')).toBe(
-        'Ozone depletion',
-      );
+    it.each([
+      ['Eutrophication: marine', 'es', 'Eutrofización (marina)'],
+      ['Eutrophication: marine', 'en', 'Eutrophication, marine'],
+      ['Eutrophication: marine', 'pt', 'Eutrofização (marinha)'],
+      ['Human toxicity: carcinogenic', 'es', 'Toxicidad humana (cancerígena)'],
+      ['Human toxicity: non-carcinogenic', 'en', 'Human toxicity, non-cancer'],
+      // Legacy Spanish category name
+      ['Uso de Agua', 'pt', 'Uso da água'],
+      // Unknown categories are returned unchanged
+      ['Ozone depletion', 'es', 'Ozone depletion'],
+    ] as const)('translates %s in %s as %s', (name, language, expected) => {
+      expect(translateCategory(name, language)).toBe(expected);
     });
   });
 });

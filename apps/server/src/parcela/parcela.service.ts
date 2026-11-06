@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Parcela, Cultivo } from '../generated/prisma/client';
 import { Polygon } from 'geojson';
+import type { ParcelaPoblacion } from 'common/parcela';
 import { parseImpactoDatos } from '../stats/helpers/impacto-datos.helpers';
 import {
   getCategoryAmounts,
@@ -16,14 +17,8 @@ const POBLACION_SELECT = {
   },
 } satisfies Prisma.Parcela$poblacionArgs;
 
-type ParcelaPoblacionRow = {
-  id: string;
-  nombre: string;
-  provincia: { id: string; nombre: string };
-};
-
 export type ParcelaResumenRow = Parcela & {
-  poblacion: ParcelaPoblacionRow | null;
+  poblacion: ParcelaPoblacion | null;
   ultimoCultivo: Pick<
     Cultivo,
     'id' | 'tipo' | 'fechaInicioCampania' | 'superficieCultivada'
@@ -32,7 +27,7 @@ export type ParcelaResumenRow = Parcela & {
 };
 
 export type ParcelaDetalleRow = Parcela & {
-  poblacion: ParcelaPoblacionRow | null;
+  poblacion: ParcelaPoblacion | null;
   cultivos: Array<Cultivo & { impactoTotal: PartialCategoryAmounts | null }>;
 };
 
@@ -172,14 +167,15 @@ export class ParcelaService {
     return (rows?.[0]?.geojson as Polygon) ?? null;
   }
 
+  /** Ids de las parcelas cuyo polígono está a `range` metros o menos del punto */
   async findManyByPointRange(
     lat: number,
     long: number,
     range: number,
-  ): Promise<Parcela[]> {
-    return this.prisma.$queryRaw<Array<Parcela>>`
+  ): Promise<Pick<Parcela, 'id'>[]> {
+    return this.prisma.$queryRaw<Array<Pick<Parcela, 'id'>>>`
       WITH target AS (SELECT ST_SetSRID(ST_MakePoint(${long}, ${lat}), 4326)::geography AS geo)
-      SELECT p.*
+      SELECT p.id
       FROM "Parcela" p
       JOIN target t ON TRUE
       WHERE ST_DWithin(p.geom::geography, t.geo, ${range})
@@ -198,10 +194,6 @@ export class ParcelaService {
       data,
       where,
     });
-  }
-
-  async delete(where: Prisma.ParcelaWhereUniqueInput): Promise<Parcela> {
-    return this.prisma.parcela.delete({ where });
   }
 
   /** Elimina la parcela junto con sus cultivos y los resultados de estos */

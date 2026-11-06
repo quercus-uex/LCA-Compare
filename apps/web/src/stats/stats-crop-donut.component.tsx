@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { formatNumber, formatPercent } from '../common/format.ts';
 import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
-import { formatInteger, formatNumber, formatPercent } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
@@ -69,7 +69,7 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold tabular-nums">{formatInteger(total)}</span>
+          <span className="text-2xl font-bold tabular-nums">{formatNumber(total)}</span>
           <span className="text-xs text-base-content/60">{t('stats.kpis.crops')}</span>
         </div>
       </div>

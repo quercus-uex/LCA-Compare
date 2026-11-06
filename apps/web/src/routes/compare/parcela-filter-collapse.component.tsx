@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toggleInArray } from '../../common/utils.ts';
+import { matchesSearch, toggleInArray } from '../../common/utils.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
@@ -52,7 +52,7 @@ export const ParcelaFilterCollapse = (
         <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
           {parcelas
             .filter((p) =>
-              p.nombre.toUpperCase().includes(query.toUpperCase()),
+              matchesSearch(p.nombre, query),
             )
             .map((p) => (
               <li

@@ -75,21 +75,16 @@ describe('ParcelaController', () => {
       await expect(controller.getById(user, 'pa1')).rejects.toThrow(
         NotFoundException,
       );
-      expect(parcelaService.getGeom).not.toHaveBeenCalled();
     });
 
-    it('throws UnauthorizedException when owner does not match without geometry lookup', async () => {
+    it('throws UnauthorizedException when owner does not match', async () => {
       const user = { sub: 'u1', email: 'test@example.com' };
       const parcela = { id: 'pa1', idPropietario: 'u2' } as never;
       parcelaService.findDetalle.mockResolvedValue(parcela);
 
-      await expect(controller.getById(user, 'pa1')).rejects.toThrow(
-        UnauthorizedException,
+      await expect(controller.getById(user, 'pa1')).rejects.toStrictEqual(
+        new UnauthorizedException('No eres el propietario de esta parcela'),
       );
-      await expect(controller.getById(user, 'pa1')).rejects.toThrow(
-        'No eres el propietario de esta parcela',
-      );
-      expect(parcelaService.getGeom).not.toHaveBeenCalled();
     });
   });
 });

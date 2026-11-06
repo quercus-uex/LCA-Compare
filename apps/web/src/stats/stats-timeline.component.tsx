@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
+import { formatAxisValue, formatImpactValue } from '../common/format.ts';
 import {
   CHART_GRID_STROKE,
   CHART_MUTED_FILL,
@@ -19,7 +20,6 @@ import {
   CHART_SELECTED_FILL,
   CHART_TICK,
 } from './stats-chart-theme.ts';
-import { formatAxisValue, formatImpactValue } from './stats-formatters.ts';
 import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';

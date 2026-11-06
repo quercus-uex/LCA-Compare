@@ -2,10 +2,7 @@ import type { Logger } from '@nestjs/common';
 import type { Feature, Polygon } from 'geojson';
 import type { Poblacion } from '../../generated/prisma/client';
 import type { PoblacionService } from '../../poblacion/poblacion.service';
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
+import { errorMessage } from '../../common/helpers/error.helper';
 
 function isValidPolygon(
   feature: Feature<Polygon> | null | undefined,

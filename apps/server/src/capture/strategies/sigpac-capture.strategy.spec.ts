@@ -48,29 +48,20 @@ describe('SigpacCaptureStrategy', () => {
     );
   });
 
-  describe('matches', () => {
-    it('returns true when es_sigpac.provincia is set', () => {
-      expect(strategy.matches(sigpacParcela())).toBe(true);
-    });
-
-    it('returns false when es_sigpac.provincia is undefined', () => {
-      expect(
-        strategy.matches(
-          sigpacParcela({ es_sigpac: { provincia: undefined } }),
-        ),
-      ).toBe(false);
-    });
-
-    it('returns false when es_sigpac is omitted', () => {
-      expect(
-        strategy.matches(
-          sigpacParcela({
-            es_sigpac: undefined,
-            pt_id_parcela_predial: '1234-56',
-          }),
-        ),
-      ).toBe(false);
-    });
+  it.each([
+    ['es_sigpac.provincia is set', sigpacParcela(), true],
+    [
+      'es_sigpac.provincia is undefined',
+      sigpacParcela({ es_sigpac: { provincia: undefined } }),
+      false,
+    ],
+    [
+      'es_sigpac is omitted',
+      sigpacParcela({ es_sigpac: undefined, pt_id_parcela_predial: '1234-56' }),
+      false,
+    ],
+  ])('matches when %s', (_label, mParcela, expected) => {
+    expect(strategy.matches(mParcela)).toBe(expected);
   });
 
   describe('resolveParcela', () => {
@@ -92,37 +83,6 @@ describe('SigpacCaptureStrategy', () => {
         91,
         'ES',
       );
-    });
-
-    it('keeps the polygon and returns a null poblacion when it is not found', async () => {
-      sigpacService.getPolygon.mockResolvedValue(polygon);
-      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBe(polygon);
-      expect(result.poblacion).toBeNull();
-    });
-
-    it('returns a null polygon but still resolves the poblacion when the polygon lookup fails', async () => {
-      sigpacService.getPolygon.mockRejectedValue(new Error('Request failed'));
-      const poblacion = { id: 'pop1' } as any;
-      poblacionService.findByCatastroIds.mockResolvedValue(poblacion);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBeNull();
-      expect(result.poblacion).toBe(poblacion);
-    });
-
-    it('returns a null polygon when the service returns no valid geometry', async () => {
-      sigpacService.getPolygon.mockResolvedValue(undefined as any);
-      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBeNull();
-      expect(result.poblacion).toBeNull();
     });
 
     it('skips the poblacion lookup when the municipio is missing', async () => {

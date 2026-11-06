@@ -1,16 +1,15 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiExternalLink, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
 import { useAuth } from '../hooks/auth.hook.tsx';
-import { isSupportedLanguage, supportedLanguages } from '../i18n/index.ts';
+import { useClickOutside } from '../hooks/use-click-outside.ts';
+import { supportedLanguages, toSupportedLanguage } from '../i18n/index.ts';
+import { Dropdown } from './dropdown.component.tsx';
 import { LanguageSelector } from './language-selector.component.tsx';
 
 type NavItem = { to: string; labelKey: string };
-
-// Los desplegables de DaisyUI se abren con el foco y siguen abiertos tras navegar
-const blurActive = () => (document.activeElement as HTMLElement | null)?.blur();
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `btn btn-ghost ${isActive ? 'bg-base-200 text-secondary' : ''}`;
@@ -28,7 +27,7 @@ const UserHeader = ({ nombre, apellidos, email }: { nombre: string; apellidos: s
 /** Idioma como selector segmentado, para el menú móvil */
 const LanguageSegmented = () => {
   const { i18n, t } = useTranslation();
-  const current = isSupportedLanguage(i18n.language) ? i18n.language : 'es';
+  const current = toSupportedLanguage(i18n.language);
 
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2">
@@ -68,23 +67,17 @@ export const NavBar = () => {
   ];
 
   // El menú móvil se cierra al navegar, al pulsar fuera y con Escape
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  useEffect(closeMenu, [location.pathname, closeMenu]);
+  useClickOutside(barRef, closeMenu);
   useEffect(() => {
     if (!menuOpen) return;
-    const onPointer = (e: PointerEvent) => {
-      if (!barRef.current?.contains(e.target as Node)) setMenuOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
-    document.addEventListener('pointerdown', onPointer);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeMenu();
     document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [menuOpen]);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [menuOpen, closeMenu]);
 
   const logout = () => {
-    blurActive();
     auth.logout();
     void navigate('/auth/login', { replace: true });
   };
@@ -119,33 +112,30 @@ export const NavBar = () => {
           )}
 
           {usuario && (
-            <div className="dropdown dropdown-end">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn btn-circle btn-ghost avatar"
-                aria-label={t('nav.account')}
-                title={`${usuario.nombre} ${usuario.apellidos}`}
-              >
+            <Dropdown
+              triggerClassName="btn btn-circle btn-ghost avatar"
+              contentClassName="w-64"
+              label={t('nav.account')}
+              title={`${usuario.nombre} ${usuario.apellidos}`}
+              trigger={
                 <div className="w-10 rounded-full">
                   <img src={AVATAR_URL} alt={t('nav.profileImageAlt')} />
                 </div>
-              </div>
-              <div tabIndex={-1} className="dropdown-content mt-3 w-64 rounded-box bg-base-100 p-2 shadow-sm">
-                <UserHeader {...usuario} />
-                <ul className="menu w-full p-0 pt-1">
-                  {usuario.rol === 'admin' && (
-                    <li><Link to="/admin" onClick={blurActive}>{t('nav.admin')}</Link></li>
-                  )}
-                  <li>
-                    <button type="button" className="text-red-700" onClick={logout}>
-                      <FiLogOut aria-hidden />
-                      {t('nav.logout')}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
+              }
+            >
+              <UserHeader {...usuario} />
+              <ul className="menu w-full p-0 pt-1">
+                {usuario.rol === 'admin' && (
+                  <li><Link to="/admin">{t('nav.admin')}</Link></li>
+                )}
+                <li>
+                  <button type="button" className="text-red-700" onClick={logout}>
+                    <FiLogOut aria-hidden />
+                    {t('nav.logout')}
+                  </button>
+                </li>
+              </ul>
+            </Dropdown>
           )}
         </div>
 

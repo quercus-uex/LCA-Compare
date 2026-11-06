@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { Dropdown } from '../../components/dropdown.component.tsx';
 import type { Parcela } from '../../hooks/parcela.hook.tsx';
 
 /** Abre el comparador con la parcela precargada como conjunto objetivo o de referencia */
@@ -8,11 +9,8 @@ export const CompararParcelaDropdown = ({ parcela }: { parcela: Parcela }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="dropdown dropdown-end">
-      <button type="button" tabIndex={0} className="btn btn-secondary btn-sm">
-        {t('parcelas.detail.compare')}
-      </button>
-      <ul tabIndex={-1} className="dropdown-content menu bg-base-100 rounded-box z-[1000] mt-2 w-64 p-2 shadow-sm">
+    <Dropdown triggerClassName="btn btn-secondary btn-sm" contentClassName="w-64" trigger={t('parcelas.detail.compare')}>
+      <ul className="menu w-full p-0">
         <li>
           <button type="button" onClick={() => void navigate('/compare', { state: { parcelaObjetivo: parcela } })}>
             {t('parcelas.detail.compareAsTarget')}
@@ -24,6 +22,6 @@ export const CompararParcelaDropdown = ({ parcela }: { parcela: Parcela }) => {
           </button>
         </li>
       </ul>
-    </div>
+    </Dropdown>
   );
 };

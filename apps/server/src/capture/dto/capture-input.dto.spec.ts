@@ -1,10 +1,7 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-import { CaptureInputDto, SigpacDto } from './capture-input.dto';
-import { SigpacCaptureStrategy } from '../strategies/sigpac-capture.strategy';
-import { CatastroCaptureStrategy } from '../strategies/catastro-capture.strategy';
-import { PredialCaptureStrategy } from '../strategies/predial-capture.strategy';
+import { CaptureInputDto } from './capture-input.dto';
 
 function validPayload() {
   const impact = {
@@ -51,16 +48,13 @@ function validPayload() {
 }
 
 describe('CaptureInputDto', () => {
-  it('accepts a valid nested capture payload and materializes nested DTO instances', () => {
+  it('accepts a valid nested capture payload', () => {
     const dto = plainToInstance(CaptureInputDto, validPayload());
 
     expect(validateSync(dto)).toEqual([]);
-    expect(dto.metadatos.parcela.es_sigpac).toBeInstanceOf(SigpacDto);
-    expect(dto.metadatos.cultivo.constructor.name).toBe('MetadatosCultivoDto');
-    expect(dto.resultado.impacto_total[0].constructor.name).toBe('ImpactoDto');
   });
 
-  it('accepts a Portuguese parcel identified only by pt_id_parcela_predial, without es_sigpac, and only the predial strategy matches it', () => {
+  it('accepts a Portuguese parcel identified only by pt_id_parcela_predial, without es_sigpac', () => {
     const payload = validPayload();
     const parcela: Record<string, unknown> = {
       ...payload.metadatos.parcela,
@@ -74,18 +68,6 @@ describe('CaptureInputDto', () => {
 
     expect(validateSync(dto)).toEqual([]);
     expect(dto.metadatos.parcela.es_sigpac).toBeUndefined();
-
-    const mParcela = dto.metadatos.parcela;
-    const sinDependencias = [undefined, undefined] as [never, never];
-    expect(
-      new SigpacCaptureStrategy(...sinDependencias).matches(mParcela),
-    ).toBe(false);
-    expect(
-      new CatastroCaptureStrategy(...sinDependencias).matches(mParcela),
-    ).toBe(false);
-    expect(
-      new PredialCaptureStrategy(...sinDependencias).matches(mParcela),
-    ).toBe(true);
   });
 
   it('rejects invalid nested metadata and empty impact arrays', () => {

@@ -29,10 +29,11 @@ type WidenLocaleStrings<T> = {
 export const isSupportedLanguage = (language: string | null): language is SupportedLanguage =>
   supportedLanguages.some(({ code }) => code === language);
 
-const getInitialLanguage = (): SupportedLanguage => {
-  const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return isSupportedLanguage(savedLanguage) ? savedLanguage : fallbackLanguage;
-};
+export const toSupportedLanguage = (language: string | null): SupportedLanguage =>
+  isSupportedLanguage(language) ? language : fallbackLanguage;
+
+const getInitialLanguage = (): SupportedLanguage =>
+  toSupportedLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY));
 
 void i18n.use(initReactI18next).init({
   resources,

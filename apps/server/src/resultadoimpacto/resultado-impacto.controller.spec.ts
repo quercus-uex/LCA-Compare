@@ -51,11 +51,8 @@ describe('ResultadoImpactoController', () => {
       } as never;
       resultadoImpactoService.findOne.mockResolvedValue(resultado);
 
-      await expect(controller.getById(user, 'r1')).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(controller.getById(user, 'r1')).rejects.toThrow(
-        'No eres el propietario de esta parcela',
+      await expect(controller.getById(user, 'r1')).rejects.toStrictEqual(
+        new UnauthorizedException('No eres el propietario de esta parcela'),
       );
     });
   });

@@ -5,11 +5,7 @@ import {
   getEfCategory,
   type EfCategoryId,
 } from '../common/constants.ts';
-import {
-  formatImpactValue,
-  formatInteger,
-  formatPercent,
-} from './stats-formatters.ts';
+import { formatImpactValue, formatNumber, formatPercent } from '../common/format.ts';
 import type { KpiDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -51,19 +47,19 @@ export const StatsOverview = ({
     {
       icon: <FiGrid />,
       label: t('stats.kpis.plots'),
-      value: formatInteger(kpis.totalParcelas),
+      value: formatNumber(kpis.totalParcelas),
       desc: t('stats.kpis.inProvinces', { count: numProvincias }),
     },
     {
       icon: <FiBox />,
       label: t('stats.kpis.crops'),
-      value: formatInteger(kpis.totalCultivos),
+      value: formatNumber(kpis.totalCultivos),
       desc: t('stats.kpis.cropsWithImpact', { count: kpis.cultivosConImpacto }),
     },
     {
       icon: <FiActivity />,
       label: t('stats.kpis.area'),
-      value: formatInteger(kpis.superficieTotal),
+      value: formatNumber(kpis.superficieTotal),
       unit: t('stats.kpis.areaUnit'),
       // Sin año, la misma parcela suma su superficie en cada campaña
       desc:

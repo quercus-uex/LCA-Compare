@@ -10,7 +10,7 @@ import nodemailer from 'nodemailer';
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);
   private readonly from?: string;
-  transporter?: nodemailer.Transporter;
+  private readonly transporter?: nodemailer.Transporter;
 
   constructor() {
     const user = process.env.MAILER_EMAIL?.trim();
@@ -30,10 +30,6 @@ export class MailerService {
         ? { host, port, secure: port === 465, auth: { user, pass } }
         : { service: 'gmail', auth: { user, pass } },
     );
-  }
-
-  isConfigured(): boolean {
-    return this.transporter !== undefined;
   }
 
   async sendNewUserMail(to: string, password: string) {

@@ -1,4 +1,5 @@
 import { CompareQueryBuilder } from './compare-query.builder';
+import type { Prisma } from '../generated/prisma/client';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 
 describe('CompareQueryBuilder', () => {
@@ -14,111 +15,67 @@ describe('CompareQueryBuilder', () => {
       [],
     );
 
-    expect(result).toEqual({ AND: [{ OR: [{ id: { in: [] } }] }] });
-  });
-
-  it('builds a location filter from nearby result ids', () => {
-    const result = CompareQueryBuilder.build(
-      { lat: 40.0, long: -3.0, range: 50 },
-      ['ri-1', 'ri-2'],
-    );
-
     expect(result).toEqual({
-      AND: [{ OR: [{ id: { in: ['ri-1', 'ri-2'] } }] }],
+      AND: [{ OR: [{ cultivo: { idParcela: { in: [] } } }] }],
     });
   });
 
-  it('builds a poblacion filter', () => {
-    const result = CompareQueryBuilder.build({ idsPoblacion: ['pop-1'] });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          OR: [
-            {
-              cultivo: {
-                parcela: { poblacion: { id: { in: ['pop-1'] } } },
-              },
+  it.each<[string, CompareQueryItemDto, Prisma.ResultadoImpactoWhereInput]>([
+    [
+      'poblacion',
+      { idsPoblacion: ['pop-1'] },
+      {
+        OR: [
+          { cultivo: { parcela: { poblacion: { id: { in: ['pop-1'] } } } } },
+        ],
+      },
+    ],
+    [
+      'provincia',
+      { idsProvincia: ['prov-1'] },
+      {
+        OR: [
+          {
+            cultivo: {
+              parcela: { poblacion: { provincia: { id: { in: ['prov-1'] } } } },
             },
-          ],
-        },
-      ],
-    });
-  });
-
-  it('builds a provincia filter', () => {
-    const result = CompareQueryBuilder.build({ idsProvincia: ['prov-1'] });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          OR: [
-            {
-              cultivo: {
-                parcela: {
-                  poblacion: {
-                    provincia: { id: { in: ['prov-1'] } },
-                  },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    });
-  });
-
-  it('builds a parcela filter', () => {
-    const result = CompareQueryBuilder.build({ idsParcela: ['par-1'] });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          OR: [{ cultivo: { parcela: { id: { in: ['par-1'] } } } }],
-        },
-      ],
-    });
-  });
-
-  it('builds a pais filter', () => {
-    const result = CompareQueryBuilder.build({ idPais: 'pais-1' });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          OR: [
-            {
-              cultivo: {
-                parcela: {
-                  poblacion: { provincia: { idPais: 'pais-1' } },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    });
-  });
-
-  it('builds a crop type filter', () => {
-    const result = CompareQueryBuilder.build({ tipoCultivo: 'trigo' });
-
-    expect(result).toEqual({
-      AND: [{ cultivo: { tipo: 'trigo' } }],
-    });
-  });
-
-  it('builds a soloParcelasReferencia filter', () => {
-    const result = CompareQueryBuilder.build({ soloParcelasReferencia: true });
-
-    expect(result).toEqual({
-      AND: [
-        {
-          cultivo: {
-            parcela: { esParcelaReferencia: true },
           },
-        },
-      ],
+        ],
+      },
+    ],
+    [
+      'parcela',
+      { idsParcela: ['par-1'] },
+      { OR: [{ cultivo: { parcela: { id: { in: ['par-1'] } } } }] },
+    ],
+    [
+      'pais',
+      { idPais: 'pais-1' },
+      {
+        OR: [
+          {
+            cultivo: {
+              parcela: { poblacion: { provincia: { idPais: 'pais-1' } } },
+            },
+          },
+        ],
+      },
+    ],
+    ['crop type', { tipoCultivo: 'trigo' }, { cultivo: { tipo: 'trigo' } }],
+    [
+      'soloParcelasReferencia',
+      { soloParcelasReferencia: true },
+      { cultivo: { parcela: { esParcelaReferencia: true } } },
+    ],
+    // The exact date range is covered by campaign-year.helper.spec
+    [
+      'campaign year range',
+      { anioCampaniaInicio: 2023, anioCampaniaFin: 2025 },
+      { cultivo: { fechaInicioCampania: expect.any(Object) } },
+    ],
+  ])('builds a %s filter', (_name, filters, expectedCondition) => {
+    expect(CompareQueryBuilder.build(filters)).toEqual({
+      AND: [expectedCondition],
     });
   });
 
@@ -128,24 +85,14 @@ describe('CompareQueryBuilder', () => {
     expect(result).toBeNull();
   });
 
-  it('builds a combined campaign year range filter', () => {
+  it('ignores empty id lists', () => {
     const result = CompareQueryBuilder.build({
-      anioCampaniaInicio: 2023,
-      anioCampaniaFin: 2025,
+      idsPoblacion: [],
+      idsProvincia: [],
+      idsParcela: [],
     });
 
-    expect(result).toEqual({
-      AND: [
-        {
-          cultivo: {
-            fechaInicioCampania: {
-              gte: new Date('2023-01-01T00:00:00.000Z'),
-              lt: new Date('2026-01-01T00:00:00.000Z'),
-            },
-          },
-        },
-      ],
-    });
+    expect(result).toBeNull();
   });
 
   it('combines location, entity, crop and campaign filters', () => {
@@ -160,7 +107,7 @@ describe('CompareQueryBuilder', () => {
       soloParcelasReferencia: true,
     };
 
-    const result = CompareQueryBuilder.build(filters, ['ri-loc']);
+    const result = CompareQueryBuilder.build(filters, ['par-loc']);
 
     expect(result).toEqual({
       AND: [
@@ -181,7 +128,7 @@ describe('CompareQueryBuilder', () => {
               },
             },
             { cultivo: { parcela: { id: { in: ['par-1'] } } } },
-            { id: { in: ['ri-loc'] } },
+            { cultivo: { idParcela: { in: ['par-loc'] } } },
             {
               cultivo: {
                 parcela: {

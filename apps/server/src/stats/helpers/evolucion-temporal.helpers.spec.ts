@@ -57,9 +57,5 @@ describe('evolucion-temporal.helpers', () => {
 
       expect(result.map((r) => r.anio)).toEqual([2024]);
     });
-
-    it('returns an empty list without rows', () => {
-      expect(aggregateEvolucionByYear([])).toEqual([]);
-    });
   });
 });

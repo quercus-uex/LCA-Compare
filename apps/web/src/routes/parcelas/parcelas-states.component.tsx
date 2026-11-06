@@ -1,21 +1,5 @@
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi';
 import { GiFarmTractor } from 'react-icons/gi';
-
-export const LoadErrorAlert = ({ message, onRetry }: { message: string; onRetry: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <div role="alert" className="alert alert-error w-full">
-      <FiAlertTriangle aria-hidden />
-      <span>{message}</span>
-      <button type="button" className="btn btn-sm" onClick={onRetry}>
-        <FiRefreshCw aria-hidden />
-        {t('common.actions.retry')}
-      </button>
-    </div>
-  );
-};
 
 export const EmptyState = ({
   title,

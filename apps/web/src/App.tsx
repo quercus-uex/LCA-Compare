@@ -1,15 +1,18 @@
+import { lazy } from 'react';
 import { Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
 import { NavbarContainer } from './components/navbar-container.component.tsx';
-import { AdminRoute } from './routes/admin/admin.route.tsx';
 import { LoginRoute } from './routes/auth/login.route.tsx';
-import { CompareRoute } from './routes/compare/compare.route.tsx';
 import { LandingRoute } from './routes/landing/landing.route.tsx';
 import { NotFoundRoute } from './routes/not-found.route.tsx';
-import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
-import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
-import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
-import { StatsRoute } from './routes/stats/stats.route.tsx';
+
+// Las rutas con mapas, gráficas o el panel de administración se cargan al visitarlas
+const AdminRoute = lazy(() => import('./routes/admin/admin.route.tsx').then((m) => ({ default: m.AdminRoute })));
+const CompareRoute = lazy(() => import('./routes/compare/compare.route.tsx').then((m) => ({ default: m.CompareRoute })));
+const ParcelaRoute = lazy(() => import('./routes/parcelas/parcela.route.tsx').then((m) => ({ default: m.ParcelaRoute })));
+const ParcelasRoute = lazy(() => import('./routes/parcelas/parcelas.route.tsx').then((m) => ({ default: m.ParcelasRoute })));
+const ResultadoRoute = lazy(() => import('./routes/resultados/resultado.route.tsx').then((m) => ({ default: m.ResultadoRoute })));
+const StatsRoute = lazy(() => import('./routes/stats/stats.route.tsx').then((m) => ({ default: m.StatsRoute })));
 
 function App() {
   return (

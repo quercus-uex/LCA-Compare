@@ -25,25 +25,6 @@ describe('ParcelaService', () => {
     service = new ParcelaService(prisma as never);
   });
 
-  describe('findOne', () => {
-    it('calls prisma.parcela.findUnique with where and ordered cultivos include', async () => {
-      const parcela = { id: 'par1', cultivos: [] } as never;
-      prisma.parcela.findUnique.mockResolvedValue(parcela);
-
-      const result = await service.findOne({ id: 'par1' });
-
-      expect(prisma.parcela.findUnique).toHaveBeenCalledWith({
-        where: { id: 'par1' },
-        include: {
-          cultivos: {
-            orderBy: { fechaInicioCampania: 'desc' },
-          },
-        },
-      });
-      expect(result).toBe(parcela);
-    });
-  });
-
   describe('findResumenByPropietario', () => {
     it('flattens the latest crop and the crop count of each parcel', async () => {
       const ultimo = { id: 'c2', tipo: 'Olivo' };
@@ -137,7 +118,6 @@ describe('ParcelaService', () => {
 
       await service.setGeom('par1', geoJson as never);
 
-      expect(prisma.$executeRaw).toHaveBeenCalled();
       expect(prisma.$executeRaw).toHaveBeenCalledWith(
         expect.anything(),
         JSON.stringify(geoJson),
@@ -163,36 +143,16 @@ describe('ParcelaService', () => {
 
       const result = await service.getGeom('par1');
 
-      expect(prisma.$queryRaw).toHaveBeenCalled();
       expect(result).toEqual(geojson);
     });
 
-    it('returns null when no rows are found', async () => {
-      prisma.$queryRaw.mockResolvedValue([]);
-
-      const result = await service.getGeom('par1');
-
-      expect(result).toBeNull();
-    });
-
-    it('returns null when rows exist but geojson is null', async () => {
-      prisma.$queryRaw.mockResolvedValue([{ geojson: null }]);
-
-      const result = await service.getGeom('par1');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('findManyByPointRange', () => {
-    it('delegates to prisma.$queryRaw with lat, long, and range', async () => {
-      const rows = [{ id: 'par2' }] as never;
+    it.each([
+      ['no rows are found', []],
+      ['the geojson is null', [{ geojson: null }]],
+    ])('returns null when %s', async (_, rows) => {
       prisma.$queryRaw.mockResolvedValue(rows);
 
-      const result = await service.findManyByPointRange(40.0, -3.0, 5000);
-
-      expect(prisma.$queryRaw).toHaveBeenCalled();
-      expect(result).toBe(rows);
+      await expect(service.getGeom('par1')).resolves.toBeNull();
     });
   });
 

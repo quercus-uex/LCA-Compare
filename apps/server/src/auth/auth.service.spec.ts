@@ -43,7 +43,9 @@ describe('AuthService', () => {
 
     await expect(
       service.login('missing@example.com', 'password'),
-    ).rejects.toThrow(new UnauthorizedException('Credenciales inválidas'));
+    ).rejects.toStrictEqual(
+      new UnauthorizedException('Credenciales inválidas'),
+    );
     expect(usuarioService.findOne).toHaveBeenCalledWith({
       email: 'missing@example.com',
     });
@@ -56,7 +58,9 @@ describe('AuthService', () => {
 
     await expect(
       service.login('user@example.com', 'wrong-password'),
-    ).rejects.toThrow(new UnauthorizedException('Credenciales inválidas'));
+    ).rejects.toStrictEqual(
+      new UnauthorizedException('Credenciales inválidas'),
+    );
     expect(verifyMock).toHaveBeenCalledWith(
       'hashed-password',
       'wrong-password',

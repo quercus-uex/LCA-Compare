@@ -57,6 +57,8 @@ import {
   poblacionAdminSearch,
   provinciaAdminSearch,
   usuarioAdminSearch,
+  organizacionAdminSearch,
+  consentimientoAdminSearch,
   andWhere,
 } from './helpers/admin-search.helpers';
 import { parseAdminPagination } from './helpers/admin-pagination.helpers';
@@ -67,6 +69,8 @@ import { MetodoImpactoService } from '../metodoimpacto/metodoimpacto.service';
 import { PaisService } from '../pais/pais.service';
 import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
+import { OrganizacionService } from '../organizacion/organizacion.service';
+import { OrganizacionResumenDto } from '../organizacion/dto/organizacion.dto';
 import {
   Cultivo,
   MetodoImpacto,
@@ -104,6 +108,7 @@ export class AdminController {
     private readonly paisService: PaisService,
     private readonly provinciaService: ProvinciaService,
     private readonly poblacionService: PoblacionService,
+    private readonly organizacionService: OrganizacionService,
   ) {}
 
   // ─── Resumen ───
@@ -120,6 +125,8 @@ export class AdminController {
       paises,
       provincias,
       poblaciones,
+      organizaciones,
+      consentimientos,
     ] = await Promise.all([
       this.usuarioService.count(),
       this.parcelaService.count(),
@@ -129,6 +136,8 @@ export class AdminController {
       this.paisService.count(),
       this.provinciaService.count(),
       this.poblacionService.count(),
+      this.organizacionService.count(),
+      this.organizacionService.countConsentimientos(),
     ]);
     return {
       data: {
@@ -140,6 +149,8 @@ export class AdminController {
         paises,
         provincias,
         poblaciones,
+        organizaciones,
+        consentimientos,
       },
     };
   }
@@ -631,5 +642,96 @@ export class AdminController {
   @ApiOkResponse({ type: ApiResponseDto(PoblacionDto) })
   async deletePoblacion(@Param('id') id: string) {
     return { data: await this.poblacionService.delete({ id }) };
+  }
+
+  // ─── Organizaciones ───
+
+  @Get('/organizaciones')
+  @ApiOperation({
+    summary: 'Listar organizaciones con búsqueda y paginación',
+    description:
+      'Busca por el nombre de la organización o por el nombre o email de su administrador.',
+  })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  async getOrganizaciones(
+    @Query('search') search?: string,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    const where = organizacionAdminSearch(search);
+    const [data, total] = await Promise.all([
+      this.organizacionService.findMany({
+        where,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+      }),
+      this.organizacionService.count(where),
+    ]);
+    return { data, total };
+  }
+
+  @Get('/organizaciones/:id')
+  @ApiOperation({
+    summary: 'Obtener una organización con su administrador y consentimientos',
+  })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  async getOrganizacion(@Param('id') id: string) {
+    const organizacion = await this.organizacionService.findOneAdmin(id);
+    if (!organizacion)
+      throw new NotFoundException('Organización no encontrada');
+    return { data: organizacion };
+  }
+
+  @Delete('/organizaciones/:id')
+  @ApiOperation({
+    summary: 'Eliminar una organización',
+    description:
+      'Avisa a los usuarios con campañas aceptadas o pendientes, como cuando la elimina su administrador.',
+  })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ApiOkResponse({ type: ApiResponseDto(OrganizacionResumenDto) })
+  async deleteOrganizacion(@Param('id') id: string) {
+    return { data: await this.organizacionService.eliminar(id) };
+  }
+
+  // ─── Consentimientos ───
+
+  @Get('/consentimientos')
+  @ApiOperation({
+    summary: 'Listar consentimientos con búsqueda y paginación',
+    description:
+      'Busca por el nombre de la organización, por el nombre o email del usuario o por el estado.',
+  })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  async getConsentimientos(
+    @Query('search') search?: string,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    const where = consentimientoAdminSearch(search);
+    const [data, total] = await Promise.all([
+      this.organizacionService.findManyConsentimientos({
+        where,
+        ...parseAdminPagination(skip, take),
+        orderBy: [{ fechaSolicitud: 'desc' }, { id: 'asc' }],
+      }),
+      this.organizacionService.countConsentimientos(where),
+    ]);
+    return { data, total };
+  }
+
+  @Get('/consentimientos/:id')
+  @ApiOperation({ summary: 'Obtener un consentimiento por ID' })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  async getConsentimiento(@Param('id') id: string) {
+    const consentimiento =
+      await this.organizacionService.findConsentimiento(id);
+    if (!consentimiento)
+      throw new NotFoundException('Consentimiento no encontrado');
+    return { data: consentimiento };
   }
 }

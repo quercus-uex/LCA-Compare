@@ -4,10 +4,13 @@ import { FiExternalLink, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
 import { useAuth } from '../hooks/auth.hook.tsx';
+import { useNotificaciones } from '../hooks/notificaciones.hook.tsx';
 import { useClickOutside } from '../hooks/use-click-outside.ts';
 import { supportedLanguages, toSupportedLanguage } from '../i18n/index.ts';
+import type { ParcelaLinkState } from '../routes/parcelas/parcelas.utils.ts';
 import { Dropdown } from './dropdown.component.tsx';
 import { LanguageSelector } from './language-selector.component.tsx';
+import { BellIcon, NotificationsBell, NotificationsPanel, useBellLabel } from './notifications-bell.component.tsx';
 
 type NavItem = { to: string; labelKey: string };
 
@@ -55,27 +58,49 @@ export const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const [menuOpen, setMenuOpen] = useState(false);
+  // En móvil solo hay un panel abierto a la vez: el menú o las notificaciones
+  const [openPanel, setOpenPanel] = useState<'menu' | 'notificaciones' | null>(null);
+  const menuOpen = openPanel === 'menu';
+  const notificacionesOpen = openPanel === 'notificaciones';
   const menuId = useId();
+  const notificacionesId = useId();
   const barRef = useRef<HTMLDivElement>(null);
   const usuario = auth.usuario;
+  const { total } = useNotificaciones();
+  const bellLabel = useBellLabel();
+  const togglePanel = (panel: 'menu' | 'notificaciones') =>
+    setOpenPanel((open) => (open === panel ? null : panel));
 
   const items: NavItem[] = [
     { to: '/compare', labelKey: 'nav.compare' },
     { to: '/estadisticas', labelKey: 'nav.statistics' },
-    ...(usuario ? [{ to: '/parcelas', labelKey: 'nav.myPlots' }] : []),
+    ...(usuario
+      ? [
+          { to: '/parcelas', labelKey: 'nav.myPlots' },
+          { to: '/organizaciones', labelKey: 'nav.organizations' },
+        ]
+      : []),
   ];
 
-  // El menú móvil se cierra al navegar, al pulsar fuera y con Escape
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  // Una parcela o un resultado abiertos desde las parcelas de un miembro
+  // pertenecen a «Organizaciones», aunque su ruta cuelgue de /parcelas
+  const viaOrganizacion = !!(location.state as ParcelaLinkState | null)?.organizacion;
+  const isItemActive = (to: string, isActive: boolean) => {
+    if (!viaOrganizacion) return isActive;
+    if (to === '/organizaciones') return true;
+    return to === '/parcelas' ? false : isActive;
+  };
+
+  // Los paneles móviles se cierran al navegar, al pulsar fuera y con Escape
+  const closeMenu = useCallback(() => setOpenPanel(null), []);
   useEffect(closeMenu, [location.pathname, closeMenu]);
   useClickOutside(barRef, closeMenu);
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!openPanel) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeMenu();
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [menuOpen, closeMenu]);
+  }, [openPanel, closeMenu]);
 
   const logout = () => {
     auth.logout();
@@ -93,7 +118,7 @@ export const NavBar = () => {
         <ul className="hidden flex-1 items-center gap-1 lg:flex">
           {items.map((item) => (
             <li key={item.to}>
-              <NavLink to={item.to} className={navLinkClass}>{t(item.labelKey)}</NavLink>
+              <NavLink to={item.to} className={({ isActive }) => navLinkClass({ isActive: isItemActive(item.to, isActive) })}>{t(item.labelKey)}</NavLink>
             </li>
           ))}
         </ul>
@@ -110,6 +135,8 @@ export const NavBar = () => {
           {!auth.loading && !usuario && (
             <Link to="/auth/login" className="btn btn-primary">{t('nav.login')}</Link>
           )}
+
+          {usuario && <NotificationsBell />}
 
           {usuario && (
             <Dropdown
@@ -140,17 +167,47 @@ export const NavBar = () => {
         </div>
 
         {/* Móvil y tablet */}
-        <button
-          type="button"
-          className="btn btn-square btn-ghost ml-auto lg:hidden"
-          aria-expanded={menuOpen}
-          aria-controls={menuId}
-          aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? <FiX aria-hidden className="size-5" /> : <FiMenu aria-hidden className="size-5" />}
-        </button>
+        <div className="ml-auto flex items-center gap-1 lg:hidden">
+          {usuario && (
+            <button
+              type="button"
+              className="btn btn-square btn-ghost"
+              aria-expanded={notificacionesOpen}
+              aria-controls={notificacionesId}
+              aria-label={notificacionesOpen ? t('notificaciones.close') : bellLabel}
+              onClick={() => togglePanel('notificaciones')}
+            >
+              {notificacionesOpen ? <FiX aria-hidden className="size-5" /> : <BellIcon total={total} />}
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-square btn-ghost"
+            aria-expanded={menuOpen}
+            aria-controls={menuId}
+            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+            onClick={() => togglePanel('menu')}
+          >
+            {menuOpen ? <FiX aria-hidden className="size-5" /> : <FiMenu aria-hidden className="size-5" />}
+          </button>
+        </div>
       </nav>
+
+      {/* Anuncia los cambios del número de novedades, que el sondeo puede traer en cualquier momento */}
+      {usuario && (
+        <span className="sr-only" aria-live="polite">
+          {total > 0 ? t('notificaciones.liveCount', { count: total }) : ''}
+        </span>
+      )}
+
+      {notificacionesOpen && usuario && (
+        <div
+          id={notificacionesId}
+          className="absolute inset-x-0 top-full mt-2 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-xl bg-white p-2 shadow-lg lg:hidden"
+        >
+          <NotificationsPanel />
+        </div>
+      )}
 
       {menuOpen && (
         <div
@@ -161,7 +218,7 @@ export const NavBar = () => {
           <ul className="menu w-full gap-0.5 p-0 text-base">
             {items.map((item) => (
               <li key={item.to}>
-                <NavLink to={item.to} className={mobileLinkClass}>{t(item.labelKey)}</NavLink>
+                <NavLink to={item.to} className={({ isActive }) => mobileLinkClass({ isActive: isItemActive(item.to, isActive) })}>{t(item.labelKey)}</NavLink>
               </li>
             ))}
             {usuario?.rol === 'admin' && (

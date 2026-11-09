@@ -158,6 +158,7 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   │   ├── poblacion/         # Consulta de localidades
 │   │   │   ├── metodoimpacto/     # Métodos de impacto
 │   │   │   ├── stats/             # Estatísticas globais e agregações para o dashboard
+│   │   │   ├── organizacion/      # Organizações, consentimentos por campanha e notificações
 │   │   │   ├── admin/             # CRUD administrativo protegido por papel admin
 │   │   │   ├── ai/                # Integração com OpenRouter para IA
 │   │   │   ├── mailer/            # Envio de correios eletrónicos
@@ -170,8 +171,9 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   ├── prisma/
 │   │   │   ├── schema/            # Esquema Prisma dividido em vários ficheiros
 │   │   │   │   ├── schema.prisma
-│   │   │   │   └── poblacion.prisma
-│   │   │   └── migrations/        # Migrações versionadas (0_init e 1_seed_datos_iniciales com os dados iniciais)
+│   │   │   │   ├── poblacion.prisma
+│   │   │   │   └── organizacion.prisma
+│   │   │   └── migrations/        # Migrações versionadas (0_init, 1_seed_datos_iniciales com os dados iniciais e 2_organizaciones)
 │   │   └── Dockerfile             # Imagem do backend
 │   ├── web/                       # Frontend React
 │   │   ├── src/
@@ -198,7 +200,7 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 └── turbo.json                     # Pipeline de Turborepo
 ```
 
-O backend e o frontend consomem contratos partilhados a partir do pacote workspace `common`, por exemplo através de subrotas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/auth` ou `common/api`.
+O backend e o frontend consomem contratos partilhados a partir do pacote workspace `common`, por exemplo através de subrotas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/organizacion`, `common/auth` ou `common/api`.
 
 ## Esquema da Base de Dados
 
@@ -216,9 +218,14 @@ O esquema Prisma define os seguintes modelos principais:
 | `Pais` | Países de referência para localizar parcelas |
 | `Provincia` | Províncias associadas a um país e ao seu código cadastral |
 | `Poblacion` | Localidades associadas a uma província e ao seu código cadastral |
+| `Organizacion` | Organizações criadas por um utilizador, que é o seu único administrador |
+| `Consentimiento` | Acesso de uma organização aos dados de um utilizador numa campanha (ano), com o seu estado: pendente, aceite, rejeitado ou revogado |
+| `Notificacion` | Avisos informativos para um utilizador (revogações, remoções, transferências…); os pedidos pendentes leem-se de `Consentimiento` |
 
 As relações principais são: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 A localização geográfica é modelada com a hierarquia `Pais` → `Provincia` → `Poblacion`, onde cada parcela é atribuída a uma localidade e armazena o seu polígono numa coluna PostGIS `geometry(Polygon, 4326)`. Ambos os campos são opcionais: se durante a ingestão não for possível obter o polígono (identificador SIGPAC, Catastro ou predial incorreto, serviço indisponível ou geometria inválida) ou a localidade não for encontrada, a parcela é guardada na mesma sem eles e a falha fica registada como aviso nos logs do backend.
 
 A marca `esParcelaReferencia` (por omissão `false`) só pode ser atribuída por um administrador e permite que o comparador restrinja um conjunto a estas parcelas através do filtro `soloParcelasReferencia`.
+
+O administrador de uma organização acede aos dados de um membro apenas nas campanhas que este aceitou: a regra vive em `OrganizacionAccesoService` e é usada pelo detalhe de parcelas e resultados, pelo comparador e pelas estatísticas. A campanha é o ano UTC de `Cultivo.fechaInicioCampania`, e as parcelas do próprio administrador não contam. `/compare` e `/stats` continuam públicos: o `OptionalAuthGuard` identifica o utilizador se enviar um token válido, e filtrar por uma organização que não administra responde 403.

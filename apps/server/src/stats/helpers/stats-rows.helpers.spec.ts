@@ -24,6 +24,7 @@ function makeCultivo(overrides: Partial<StatsCultivo> = {}): StatsCultivo {
       },
     },
     parcela: {
+      idPropietario: 'u-1',
       poblacion: {
         id: 'pob-1',
         nombre: 'Don Benito',
@@ -37,6 +38,7 @@ function makeCultivo(overrides: Partial<StatsCultivo> = {}): StatsCultivo {
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio: 2024,
     superficie: 10,
@@ -56,6 +58,7 @@ describe('stats-rows.helpers', () => {
 
       expect(row).toMatchObject({
         idParcela: 'par-1',
+        idPropietario: 'u-1',
         tipo: 'trigo',
         anio: 2024,
         superficie: 10,
@@ -93,7 +96,7 @@ describe('stats-rows.helpers', () => {
 
     it('leaves zones null when the plot has no town', () => {
       const [row] = toStatsRows([
-        makeCultivo({ parcela: { poblacion: null } }),
+        makeCultivo({ parcela: { idPropietario: 'u-1', poblacion: null } }),
       ]);
 
       expect(row.poblacion).toBeNull();

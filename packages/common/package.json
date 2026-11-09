@@ -48,6 +48,11 @@
       "types": "./dist/api.d.ts",
       "import": "./dist/api.js",
       "default": "./dist/api.js"
+    },
+    "./organizacion": {
+      "types": "./dist/organizacion.d.ts",
+      "import": "./dist/organizacion.js",
+      "default": "./dist/organizacion.js"
     }
   },
   "scripts": {

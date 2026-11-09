@@ -61,6 +61,46 @@ describe('AdminPrismaExceptionFilter', () => {
     },
   );
 
+  it.each([
+    {
+      driverAdapterError: {
+        cause: { constraint: { index: 'Organizacion_idAdministrador_fkey' } },
+      },
+    },
+    { field_name: 'Organizacion_idAdministrador_fkey (index)' },
+  ])(
+    'explains that a user who administers organizations cannot be deleted (%p)',
+    (meta) => {
+      filter.catch(prismaError('P2003', meta), host);
+
+      expect(status).toHaveBeenCalledWith(409);
+      expect(json).toHaveBeenCalledWith({
+        statusCode: 409,
+        error: 'in-use',
+        message:
+          'No se puede eliminar el usuario porque administra organizaciones: transfiere o elimina antes esas organizaciones',
+      });
+    },
+  );
+
+  it('keeps the generic in-use message for other foreign keys', () => {
+    filter.catch(
+      prismaError('P2003', {
+        driverAdapterError: {
+          cause: { constraint: { index: 'Parcela_idPropietario_fkey' } },
+        },
+      }),
+      host,
+    );
+
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          'No se puede completar la operación porque hay registros relacionados',
+      }),
+    );
+  });
+
   it('maps missing records to 404', () => {
     filter.catch(prismaError('P2025'), host);
 

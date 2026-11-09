@@ -7,22 +7,28 @@ type Props = {
   contentClassName?: string;
   label?: string;
   title?: string;
+  /** Elementos del panel que lo cierran al pulsarlos */
+  closeOn?: string;
   children: ReactNode;
 };
 
 // Los desplegables de DaisyUI se abren con el foco, así que se cierran quitándolo
 const close = () => (document.activeElement as HTMLElement | null)?.blur();
 
-const closeOnItem = (e: MouseEvent) => {
-  if ((e.target as HTMLElement).closest('a, button')) close();
-};
-
 const closeOnEscape = (e: KeyboardEvent) => {
   if (e.key === 'Escape') close();
 };
 
 /** Desplegable alineado a la derecha que se cierra al elegir una opción o con Escape */
-export const Dropdown = ({ trigger, triggerClassName, contentClassName = '', label, title, children }: Props) => (
+export const Dropdown = ({
+  trigger,
+  triggerClassName,
+  contentClassName = '',
+  label,
+  title,
+  closeOn = 'a, button',
+  children,
+}: Props) => (
   // Los manejadores solo delegan los eventos de los botones y enlaces que contiene
   <div className="dropdown dropdown-end" role="presentation" onKeyDown={closeOnEscape}>
     <button type="button" tabIndex={0} className={triggerClassName} aria-label={label} title={title}>
@@ -32,7 +38,9 @@ export const Dropdown = ({ trigger, triggerClassName, contentClassName = '', lab
       role="presentation"
       tabIndex={-1}
       className={`dropdown-content z-[1000] mt-2 rounded-box bg-base-100 p-2 shadow-sm ${contentClassName}`}
-      onClick={closeOnItem}
+      onClick={(e: MouseEvent) => {
+        if ((e.target as HTMLElement).closest(closeOn)) close();
+      }}
     >
       {children}
     </div>

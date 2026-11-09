@@ -20,6 +20,7 @@ export const STATS_CULTIVO_SELECT = {
   resultadoImpacto: { select: { datos: true } },
   parcela: {
     select: {
+      idPropietario: true,
       poblacion: {
         select: {
           id: true,
@@ -40,6 +41,7 @@ type Zona = { id: string; nombre: string };
 /** Un cultivo ya reducido a lo que necesitan las agregaciones */
 export type StatsRow = {
   idParcela: string;
+  idPropietario: string;
   tipo: string;
   anio: number;
   /** ha */
@@ -59,6 +61,7 @@ export function toStatsRows(cultivos: StatsCultivo[]): StatsRow[] {
     const poblacion = c.parcela.poblacion;
     return {
       idParcela: c.idParcela,
+      idPropietario: c.parcela.idPropietario,
       tipo: c.tipo,
       // Los filtros de año trabajan en UTC
       anio: c.fechaInicioCampania.getUTCFullYear(),

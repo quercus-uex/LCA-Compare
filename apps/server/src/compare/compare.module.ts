@@ -7,6 +7,7 @@ import { PoblacionModule } from '../poblacion/poblacion.module';
 import { PaisModule } from '../pais/pais.module';
 import { AiModule } from '../ai/ai.module';
 import { ParcelaModule } from '../parcela/parcela.module';
+import { OrganizacionAccesoModule } from '../organizacion/organizacion-acceso.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ParcelaModule } from '../parcela/parcela.module';
     PoblacionModule,
     PaisModule,
     AiModule,
+    OrganizacionAccesoModule,
   ],
   controllers: [CompareController],
   providers: [CompareService],

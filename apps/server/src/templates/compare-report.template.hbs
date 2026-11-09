@@ -72,6 +72,11 @@
         {{#> filterRow label=@root.labels.cropType}}
           {{#each set.tiposCultivo}}{{> chip text=nombre chosen=chosen color=../color}}{{/each}}
         {{/filterRow}}
+        {{#if set.organizacion}}
+          {{#> filterRow label=@root.labels.organization}}
+            {{> chip text=set.organizacion.nombre chosen=true color=color}}
+          {{/filterRow}}
+        {{/if}}
         {{#if set.filters.soloParcelasReferencia}}
           {{#> filterRow label=@root.labels.referenceOnly}}
             {{> chip text=@root.labels.yes chosen=true color=color}}

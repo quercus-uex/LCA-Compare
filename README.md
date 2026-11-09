@@ -103,7 +103,8 @@ NestJS REST API. The current public controllers cover:
 - **Impact results** (`/resultado`) - Querying LCA results
 - **Comparator** (`/compare`) - Crop comparison and PDF report generation
 - **Statistics** (`/stats`) - KPIs and aggregations for the statistics dashboard
-- **Administration** (`/admin`) - CRUD for users, plots, crops, impact methods and locations
+- **Organizations** (`/organizaciones`, `/consentimientos`, `/notificaciones`) - Organizations, per-campaign consent requests and in-app notifications
+- **Administration** (`/admin`) - CRUD for users, plots, crops, impact methods and locations, plus viewing organizations and consents
 - **Locations** (`/pais`, `/provincia`, `/poblacion`) - Territorial data lookup
 - **LCA Bridge** (`/capture`) - Receives LCA results from LCA Bridge and creates the related user, plot and crop
 
@@ -315,6 +316,8 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 - `POST /compare` - Compare crops
 - `POST /compare/report` - Generate the comparison report
 - `GET /stats/global` - Global statistics
+- `GET /organizaciones` - Organizations the user manages or belongs to
+- `GET /notificaciones` - Pending consent requests and notices
 - `POST /capture` - Ingest results from LCA Bridge
 - `GET /api/docs` - Swagger documentation through the frontend proxy
 
@@ -332,7 +335,6 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 ├── deploy/                 # Production compose.yaml and .env.example
 │   └── demo/               # Temporary demo instance (compose.yaml and demo.sh)
 ├── docker/backup/          # Backup image
-├── openspec/               # OpenSpec changes and specs
 ├── pnpm-workspace.yaml     # pnpm workspace
 ├── turbo.json              # Turborepo pipeline
 └── docker-compose.yaml     # Development database

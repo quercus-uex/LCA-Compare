@@ -19,6 +19,7 @@ import {
 import { ApiErrorDto } from '../common/dto/api-error.dto';
 import { ApiResponseDto } from '../common/dto/api-response.dto';
 import { ResultadoImpactoDto } from './dto/resultado-impacto.dto';
+import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 @ApiTags('Resultado de ACV')
 @ApiBearerAuth()
@@ -26,14 +27,19 @@ import { ResultadoImpactoDto } from './dto/resultado-impacto.dto';
 export class ResultadoImpactoController {
   constructor(
     private readonly resultadoImpactoService: ResultadoImpactoService,
+    private readonly accesoService: OrganizacionAccesoService,
   ) {}
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener un resultado de ACV por ID' })
+  @ApiOperation({
+    summary: 'Obtener un resultado de ACV por ID',
+    description:
+      'Lo ve el propietario de la parcela o el administrador de una organización a la que el propietario ha consentido la campaña del cultivo.',
+  })
   @ApiUnauthorizedResponse({
     description:
-      'Usuario no autenticado o usuario no es propietario de la parcela',
+      'Usuario no autenticado, o no es el propietario de la parcela ni tiene acceso a esa campaña',
     type: ApiErrorDto,
   })
   @ApiOkResponse({
@@ -43,8 +49,19 @@ export class ResultadoImpactoController {
   async getById(@AuthUser() user: UserJwt, @Param('id') id: string) {
     const resultado = await this.resultadoImpactoService.findOne({ id });
     if (!resultado) throw new NotFoundException();
-    if (resultado.cultivo!.parcela.idPropietario !== user.sub)
-      throw new UnauthorizedException('No eres el propietario de esta parcela');
+
+    const cultivo = resultado.cultivo!;
+    if (cultivo.parcela.idPropietario !== user.sub) {
+      const acceso = await this.accesoService.getAccesoOrganizacion(
+        user.sub,
+        cultivo.parcela.idPropietario,
+      );
+      const anio = cultivo.fechaInicioCampania.getUTCFullYear();
+      if (!acceso?.anios.includes(anio))
+        throw new UnauthorizedException(
+          'No eres el propietario de esta parcela',
+        );
+    }
 
     return { data: resultado };
   }

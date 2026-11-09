@@ -75,4 +75,15 @@ describe('CompareQueryDto', () => {
     const errors = validateSync(dto);
     expect(errors[0]?.property).toBe('language');
   });
+
+  it.each([
+    [uuid, []],
+    ['not-a-uuid', ['reference']],
+  ])('validates the organization id %s', (idOrganizacion, errors) => {
+    const dto = plainToInstance(CompareQueryDto, {
+      reference: { idOrganizacion },
+    });
+
+    expect(validateSync(dto).map((e) => e.property)).toEqual(errors);
+  });
 });

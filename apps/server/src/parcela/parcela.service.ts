@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Parcela, Cultivo } from '../generated/prisma/client';
 import { Polygon } from 'geojson';
 import type { ParcelaPoblacion } from 'common/parcela';
+import { buildCampaignYearRangeFilter } from '../common/helpers/campaign-year.helper';
 import { parseImpactoDatos } from '../stats/helpers/impacto-datos.helpers';
 import {
   getCategoryAmounts,
@@ -48,16 +49,30 @@ export class ParcelaService {
     });
   }
 
-  /** Parcelas de un propietario con su ubicación, su último cultivo y su número de campañas */
+  /**
+   * Parcelas de un propietario con su ubicación, su último cultivo y su número
+   * de campañas. Con `anios` solo cuentan los cultivos de esos años de campaña
+   * (UTC) y se omiten las parcelas que no tienen ninguno; un array vacío no
+   * devuelve nada.
+   */
   async findResumenByPropietario(
     idPropietario: string,
+    anios?: number[],
   ): Promise<ParcelaResumenRow[]> {
+    const cultivoWhere: Prisma.CultivoWhereInput | undefined = anios && {
+      OR: anios.map((anio) => buildCampaignYearRangeFilter(anio, anio)),
+    };
+
     const parcelas = await this.prisma.parcela.findMany({
-      where: { idPropietario },
+      where: {
+        idPropietario,
+        ...(cultivoWhere && { cultivos: { some: cultivoWhere } }),
+      },
       orderBy: { nombre: 'asc' },
       include: {
         poblacion: POBLACION_SELECT,
         cultivos: {
+          where: cultivoWhere,
           orderBy: { fechaInicioCampania: 'desc' },
           take: 1,
           select: {
@@ -67,7 +82,11 @@ export class ParcelaService {
             superficieCultivada: true,
           },
         },
-        _count: { select: { cultivos: true } },
+        _count: {
+          select: {
+            cultivos: cultivoWhere ? { where: cultivoWhere } : true,
+          },
+        },
       },
     });
 

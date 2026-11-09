@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   StreamableFile,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import type { CompareService } from './compare.service';
 import { CompareQueryDto, CompareQueryItemDto } from './dto/compare-query.dto';
 import { IMPACT_KEYS } from './compare.types';
 import type { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
+import type { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 function makeImpactDto(
   overrides?: Record<
@@ -39,9 +41,13 @@ describe('CompareController', () => {
       'getMeanByFilters' | 'compareResults' | 'findResults' | 'generateReport'
     >
   >;
+  let accesoService: jest.Mocked<
+    Pick<OrganizacionAccesoService, 'getOrganizacionAdministrada'>
+  >;
   let controller: CompareController;
 
   beforeEach(() => {
+    accesoService = { getOrganizacionAdministrada: jest.fn() };
     compareService = {
       getMeanByFilters: jest.fn(),
       compareResults: jest.fn(),
@@ -50,7 +56,76 @@ describe('CompareController', () => {
     };
     controller = new CompareController(
       compareService as unknown as CompareService,
+      accesoService as unknown as OrganizacionAccesoService,
     );
+  });
+
+  describe('organization filter', () => {
+    const forbidden = new ForbiddenException(
+      'No eres el administrador de esta organización',
+    );
+    const user = { sub: 'u1', email: 'u1@example.com' };
+
+    it('does not check organizations when no side uses one', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+
+      await controller.compare({ reference: { idPais: 'p1' } }, user);
+
+      expect(accesoService.getOrganizacionAdministrada).not.toHaveBeenCalled();
+    });
+
+    it('checks each distinct organization once against the requester', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+
+      await controller.compare(
+        {
+          reference: { idOrganizacion: 'org-1' },
+          target: { idOrganizacion: 'org-1', tipoCultivo: 'Olivo' },
+        },
+        user,
+      );
+
+      expect(accesoService.getOrganizacionAdministrada.mock.calls).toEqual([
+        ['org-1', 'u1'],
+      ]);
+    });
+
+    it.each([
+      ['an anonymous requester', undefined],
+      ['a user who does not administer it', user],
+    ])('rejects the comparison for %s with 403', async (_name, requester) => {
+      accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
+
+      await expect(
+        controller.compare(
+          {
+            reference: { idPais: 'p1' },
+            target: { idOrganizacion: 'org-1' },
+          },
+          requester,
+        ),
+      ).rejects.toStrictEqual(forbidden);
+      expect(accesoService.getOrganizacionAdministrada).toHaveBeenCalledWith(
+        'org-1',
+        requester?.sub,
+      );
+      expect(compareService.getMeanByFilters).not.toHaveBeenCalled();
+    });
+
+    it('rejects the report for a user who does not administer the organization', async () => {
+      accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
+
+      await expect(
+        controller.compareToReport(
+          {
+            reference: { idOrganizacion: 'org-1' },
+            target: { idPais: 'p2' },
+          },
+          user,
+        ),
+      ).rejects.toStrictEqual(forbidden);
+      expect(compareService.findResults).not.toHaveBeenCalled();
+    });
   });
 
   describe('compare', () => {

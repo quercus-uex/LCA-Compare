@@ -46,6 +46,38 @@ describe('ParcelaService', () => {
         { id: 'par2', ultimoCultivo: null, numCultivos: 0 },
       ]);
     });
+
+    it('limits parcels, latest crop and crop count to the given campaign years', async () => {
+      prisma.parcela.findMany.mockResolvedValue([]);
+
+      await service.findResumenByPropietario('u1', [2023, 2025]);
+
+      const cultivoWhere = {
+        OR: [
+          {
+            fechaInicioCampania: {
+              gte: new Date('2023-01-01T00:00:00.000Z'),
+              lt: new Date('2024-01-01T00:00:00.000Z'),
+            },
+          },
+          {
+            fechaInicioCampania: {
+              gte: new Date('2025-01-01T00:00:00.000Z'),
+              lt: new Date('2026-01-01T00:00:00.000Z'),
+            },
+          },
+        ],
+      };
+      expect(prisma.parcela.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { idPropietario: 'u1', cultivos: { some: cultivoWhere } },
+          include: expect.objectContaining({
+            cultivos: expect.objectContaining({ where: cultivoWhere }),
+            _count: { select: { cultivos: { where: cultivoWhere } } },
+          }),
+        }),
+      );
+    });
   });
 
   describe('getGeomsByPropietario', () => {

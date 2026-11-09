@@ -29,6 +29,30 @@ function uniqueFields(error: Prisma.PrismaClientKnownRequestError): string[] {
   );
 }
 
+/** Clave ajena que impide borrar a un usuario mientras administra organizaciones */
+export const ORGANIZACION_ADMINISTRADOR_FK =
+  'Organizacion_idAdministrador_fkey';
+
+function foreignKey(error: Prisma.PrismaClientKnownRequestError): string[] {
+  // Con el adaptador de pg la restricción llega como índice o como campos
+  const meta = error.meta as
+    | {
+        field_name?: string;
+        constraint?: string;
+        driverAdapterError?: {
+          cause?: { constraint?: { index?: string; fields?: string[] } };
+        };
+      }
+    | undefined;
+  const constraint = meta?.driverAdapterError?.cause?.constraint;
+  return [
+    constraint?.index,
+    ...(constraint?.fields ?? []),
+    meta?.field_name,
+    meta?.constraint,
+  ].filter((value): value is string => typeof value === 'string');
+}
+
 /**
  * Traduce los errores de Prisma del panel de administración a respuestas
  * HTTP con un código estable que el frontend puede mostrar.
@@ -54,6 +78,18 @@ export class AdminPrismaExceptionFilter implements ExceptionFilter {
       }
       case 'P2003':
       case 'P2014':
+        if (
+          foreignKey(error).some((key) =>
+            key.includes(ORGANIZACION_ADMINISTRADOR_FK),
+          )
+        ) {
+          return {
+            statusCode: HttpStatus.CONFLICT,
+            error: 'in-use',
+            message:
+              'No se puede eliminar el usuario porque administra organizaciones: transfiere o elimina antes esas organizaciones',
+          };
+        }
         return {
           statusCode: HttpStatus.CONFLICT,
           error: 'in-use',

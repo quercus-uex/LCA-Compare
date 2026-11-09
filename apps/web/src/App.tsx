@@ -9,6 +9,9 @@ import { NotFoundRoute } from './routes/not-found.route.tsx';
 // Las rutas con mapas, gráficas o el panel de administración se cargan al visitarlas
 const AdminRoute = lazy(() => import('./routes/admin/admin.route.tsx').then((m) => ({ default: m.AdminRoute })));
 const CompareRoute = lazy(() => import('./routes/compare/compare.route.tsx').then((m) => ({ default: m.CompareRoute })));
+const MiembroParcelasRoute = lazy(() => import('./routes/organizaciones/miembro-parcelas.route.tsx').then((m) => ({ default: m.MiembroParcelasRoute })));
+const OrganizacionRoute = lazy(() => import('./routes/organizaciones/organizacion.route.tsx').then((m) => ({ default: m.OrganizacionRoute })));
+const OrganizacionesRoute = lazy(() => import('./routes/organizaciones/organizaciones.route.tsx').then((m) => ({ default: m.OrganizacionesRoute })));
 const ParcelaRoute = lazy(() => import('./routes/parcelas/parcela.route.tsx').then((m) => ({ default: m.ParcelaRoute })));
 const ParcelasRoute = lazy(() => import('./routes/parcelas/parcelas.route.tsx').then((m) => ({ default: m.ParcelasRoute })));
 const ResultadoRoute = lazy(() => import('./routes/resultados/resultado.route.tsx').then((m) => ({ default: m.ResultadoRoute })));
@@ -25,6 +28,11 @@ function App() {
           <Route path="/auth/login" element={<LoginRoute />} />
           <Route path="/admin" element={<AdminRoute />} />
           <Route path="/estadisticas" element={<StatsRoute />} />
+          <Route path="/organizaciones">
+            <Route index element={<OrganizacionesRoute />} />
+            <Route path=":id" element={<OrganizacionRoute />} />
+            <Route path=":id/miembros/:idUsuario" element={<MiembroParcelasRoute />} />
+          </Route>
           <Route path="/parcelas">
             <Route index element={<ParcelasRoute />} />
             <Route path=":id" element={<ParcelaRoute />} />

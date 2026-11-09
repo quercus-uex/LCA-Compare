@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import type { OrganizacionResumen } from '../../hooks/organizacion.hook.tsx';
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
+import { OrganizacionFilterCollapse } from './organizacion-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
 import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
@@ -27,9 +29,16 @@ const SelectedChips = ({ items, onRemove }: { items: ChipItem[]; onRemove: (id: 
   </>
 );
 
-export const CompareFilterCard = (
-  { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void | Promise<void> }
-) => {
+type Props = {
+  name: string;
+  required?: boolean;
+  initialFilters?: CompareFilterType;
+  /** Organizaciones que administra el usuario; sin ninguna no se ofrece el filtro */
+  organizaciones?: OrganizacionResumen[];
+  onSubmit: (data?: CompareFilterType) => void | Promise<void>;
+};
+
+export const CompareFilterCard = ({ name, required = false, initialFilters, organizaciones = [], onSubmit }: Props) => {
   const [enabled, setEnabled] = useState<boolean>(required || !!initialFilters);
   const [filters, setFilters] = useState<CompareFilterType>(initialFilters ?? {
     parcelas: [],
@@ -114,6 +123,9 @@ export const CompareFilterCard = (
             setFilters={setFilters}
           />
           <ReferenciaFilterCollapse filters={filters} setFilters={setFilters} />
+          {organizaciones.length > 0 && (
+            <OrganizacionFilterCollapse filters={filters} setFilters={setFilters} organizaciones={organizaciones} />
+          )}
 
           <button
             className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}

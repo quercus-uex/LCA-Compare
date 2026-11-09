@@ -54,7 +54,8 @@ export const ParcelasItem = ({ parcela, linkState }: { parcela: ParcelaResumen; 
         {identificadores.length > 0 && (
           <dl className="flex flex-col gap-0.5 text-xs text-base-content/70">
             {identificadores.map((id) => (
-              <div key={id.key} className="flex gap-1">
+              // La etiqueta y el valor usan fuentes distintas: se alinean por la línea base
+              <div key={id.key} className="flex items-baseline gap-1">
                 <dt>{id.label}:</dt>
                 <dd className="font-mono break-all">{id.value}</dd>
               </div>

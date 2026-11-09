@@ -1,10 +1,12 @@
+import { CONSENTIMIENTO_ESTADOS, type ConsentimientoEstado } from 'common/organizacion';
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiAlertTriangle, FiChevronDown, FiChevronRight, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { formatNumericDate, formatQuantity } from '../../common/format.ts';
 import { safeString } from '../../common/utils.ts';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
-import { CONFIG, ENTITY_DISPLAY, type ColumnConfig, type Entity, type Item } from './admin.config.ts';
+import { EstadoBadge } from '../organizaciones/campania-chip.component.tsx';
+import { canDo, CONFIG, ENTITY_DISPLAY, type ColumnConfig, type Entity, type Item } from './admin.config.ts';
 
 type Props = {
   entity: Entity;
@@ -27,6 +29,9 @@ const formatAdminDate = (value: unknown) => {
 };
 
 const Empty = () => <span className="text-base-content/40">—</span>;
+
+const isEstado = (value: unknown): value is ConsentimientoEstado =>
+  CONSENTIMIENTO_ESTADOS.includes(value as ConsentimientoEstado);
 
 export const AdminTable = ({
   entity,
@@ -53,7 +58,7 @@ export const AdminTable = ({
       case 'text': {
         const value = column.value(item);
         if (!value) return <Empty />;
-        if (column.primary) {
+        if (column.primary && canDo(entity, 'edit')) {
           return (
             <button
               type="button"
@@ -64,6 +69,7 @@ export const AdminTable = ({
             </button>
           );
         }
+        if (column.primary) return <span className="font-medium">{value}</span>;
         return <span className={column.mono ? 'font-mono text-xs' : ''}>{value}</span>;
       }
       case 'role':
@@ -101,6 +107,8 @@ export const AdminTable = ({
         ) : (
           <Empty />
         );
+      case 'consentState':
+        return isEstado(raw) ? <EstadoBadge estado={raw} /> : <Empty />;
       case 'parcelId': {
         const ids = [
           ['SIGPAC', item.sigpac],
@@ -151,29 +159,36 @@ export const AdminTable = ({
     }
   };
 
+  const hasActions = canDo(entity, 'edit') || canDo(entity, 'delete');
+
   const actions = (item: Item, target?: Entity) => {
-    const isSelf = (target ?? entity) === 'usuarios' && item.id === currentUserId;
+    const actionEntity = target ?? entity;
+    const isSelf = actionEntity === 'usuarios' && item.id === currentUserId;
     return (
       <div className="flex justify-end gap-1">
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square tooltip tooltip-left"
-          data-tip={t('common.actions.edit')}
-          aria-label={t('common.actions.edit')}
-          onClick={() => onEdit(item, target)}
-        >
-          <FiEdit2 aria-hidden />
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm btn-square tooltip tooltip-left hover:bg-error hover:text-error-content disabled:bg-transparent"
-          data-tip={isSelf ? t('admin.delete.ownAccount') : t('common.actions.delete')}
-          aria-label={t('common.actions.delete')}
-          disabled={isSelf}
-          onClick={() => onDelete(item, target)}
-        >
-          <FiTrash2 aria-hidden />
-        </button>
+        {canDo(actionEntity, 'edit') && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square tooltip tooltip-left"
+            data-tip={t('common.actions.edit')}
+            aria-label={t('common.actions.edit')}
+            onClick={() => onEdit(item, target)}
+          >
+            <FiEdit2 aria-hidden />
+          </button>
+        )}
+        {canDo(actionEntity, 'delete') && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-square tooltip tooltip-left hover:bg-error hover:text-error-content disabled:bg-transparent"
+            data-tip={isSelf ? t('admin.delete.ownAccount') : t('common.actions.delete')}
+            aria-label={t('common.actions.delete')}
+            disabled={isSelf}
+            onClick={() => onDelete(item, target)}
+          >
+            <FiTrash2 aria-hidden />
+          </button>
+        )}
       </div>
     );
   };
@@ -198,10 +213,12 @@ export const AdminTable = ({
         <div>
           <p className="font-medium">{filtered ? t('common.empty.noResults') : t('admin.empty.title')}</p>
           <p className="text-sm text-base-content/60">
-            {filtered ? t('admin.empty.filtered') : t('admin.empty.create')}
+            {filtered
+              ? t('admin.empty.filtered')
+              : t(canDo(entity, 'create') ? 'admin.empty.create' : 'admin.empty.readOnly')}
           </p>
         </div>
-        {!filtered && (
+        {!filtered && canDo(entity, 'create') && (
           <button type="button" className="btn btn-primary btn-sm" onClick={onCreate}>
             <FiPlus aria-hidden /> {t(`admin.createTitles.${config.titleKey}`)}
           </button>
@@ -210,7 +227,7 @@ export const AdminTable = ({
     );
   }
 
-  const colSpan = config.columns.length + (expandable ? 2 : 1);
+  const colSpan = config.columns.length + (expandable ? 1 : 0) + (hasActions ? 1 : 0);
 
   return (
     <div className={`overflow-x-auto transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
@@ -223,7 +240,7 @@ export const AdminTable = ({
                 {t(column.labelKey)}
               </th>
             ))}
-            <th className="w-24 text-right font-medium">{t('common.fields.actions')}</th>
+            {hasActions && <th className="w-24 text-right font-medium">{t('common.fields.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -253,7 +270,7 @@ export const AdminTable = ({
                   {config.columns.map((column) => (
                     <td key={column.key}>{renderCell(column, item)}</td>
                   ))}
-                  <td>{actions(item)}</td>
+                  {hasActions && <td>{actions(item)}</td>}
                 </tr>
                 {isExpanded && (
                   <tr>

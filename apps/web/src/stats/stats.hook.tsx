@@ -18,10 +18,11 @@ type StatsState = {
   failed: boolean;
 };
 
-const buildQueryString = ({ anio, tipoCultivo }: GlobalStatsQuery) => {
+const buildQueryString = ({ anio, tipoCultivo, idOrganizacion }: GlobalStatsQuery) => {
   const params = new URLSearchParams();
   if (anio) params.set('anio', String(anio));
   if (tipoCultivo) params.set('tipoCultivo', tipoCultivo);
+  if (idOrganizacion) params.set('idOrganizacion', idOrganizacion);
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 };

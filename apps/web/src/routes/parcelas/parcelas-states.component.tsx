@@ -1,19 +1,25 @@
 import type { ReactNode } from 'react';
+import type { IconType } from 'react-icons';
 import { GiFarmTractor } from 'react-icons/gi';
 
 export const EmptyState = ({
   title,
   description,
   action,
+  icon: Icon = GiFarmTractor,
+  headingLevel: Heading = 'h2',
 }: {
   title: string;
   description: string;
   action?: ReactNode;
+  icon?: IconType;
+  /** Nivel del título, para que encaje en la jerarquía de la página */
+  headingLevel?: 'h2' | 'h3';
 }) => (
   <div className="card bg-base-100 shadow-sm w-full">
     <div className="card-body items-center py-16 text-center gap-3">
-      <GiFarmTractor aria-hidden className="size-12 text-base-content/40" />
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <Icon aria-hidden className="size-12 text-base-content/40" />
+      <Heading className="text-lg font-semibold">{title}</Heading>
       <p className="text-base-content/70 max-w-md">{description}</p>
       {action}
     </div>

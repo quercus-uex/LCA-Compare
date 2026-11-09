@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Polygon } from 'geojson';
 import { CultivoDto } from '../../cultivo/dto/cultivo.dto';
+import { AccesoOrganizacionDto } from '../../organizacion/dto/organizacion-acceso.dto';
 import type { CategoryValues } from 'common/stats';
 import type {
   CultivoConImpacto,
@@ -95,6 +96,14 @@ export class ParcelaDetalleDto extends ParcelaDto implements ParcelaDetalle {
     description: 'Cultivos del más reciente al más antiguo',
   })
   cultivos: CultivoConImpactoDto[];
+
+  @ApiProperty({
+    required: false,
+    type: AccesoOrganizacionDto,
+    description:
+      'Solo si quien consulta no es el propietario: los cultivos se limitan a las campañas consentidas a sus organizaciones',
+  })
+  acceso?: AccesoOrganizacionDto;
 
   @ApiProperty({ nullable: true, description: 'Polígono GeoJSON (EPSG:4326)' })
   geom: Polygon | null;

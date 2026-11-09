@@ -7,6 +7,8 @@ import {
   poblacionAdminSearch,
   provinciaAdminSearch,
   usuarioAdminSearch,
+  organizacionAdminSearch,
+  consentimientoAdminSearch,
 } from './admin-search.helpers';
 
 const contains = (search: string) => ({
@@ -62,6 +64,27 @@ describe('admin search helpers', () => {
       search: poblacionAdminSearch,
       fields: ['nombre', 'idProvincia'],
       related: [{ provincia: { nombre: contains('term') } }],
+    },
+    {
+      name: 'organizacionAdminSearch',
+      search: organizacionAdminSearch,
+      fields: ['nombre', 'idAdministrador'],
+      related: [
+        { administrador: { nombre: contains('term') } },
+        { administrador: { apellidos: contains('term') } },
+        { administrador: { email: contains('term') } },
+      ],
+    },
+    {
+      name: 'consentimientoAdminSearch',
+      search: consentimientoAdminSearch,
+      fields: ['estado', 'idOrganizacion', 'idUsuario'],
+      related: [
+        { organizacion: { nombre: contains('term') } },
+        { usuario: { nombre: contains('term') } },
+        { usuario: { apellidos: contains('term') } },
+        { usuario: { email: contains('term') } },
+      ],
     },
   ])(
     '$name searches its fields and relations',

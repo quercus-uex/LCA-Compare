@@ -14,6 +14,8 @@ export type CompareFilterDto = {
   anioCampaniaInicio?: number;
   anioCampaniaFin?: number;
   soloParcelasReferencia?: boolean;
+  /** Solo cultivos de las campañas consentidas a esta organización (requiere ser su administrador) */
+  idOrganizacion?: string;
 };
 
 export type CompareQueryItemDto = CompareFilterDto;

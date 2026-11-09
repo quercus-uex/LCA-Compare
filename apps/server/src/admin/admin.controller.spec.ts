@@ -9,6 +9,8 @@ import {
   poblacionAdminSearch,
   provinciaAdminSearch,
   usuarioAdminSearch,
+  organizacionAdminSearch,
+  consentimientoAdminSearch,
 } from './helpers/admin-search.helpers';
 
 jest.mock('../auth/auth.helpers', () => ({
@@ -35,6 +37,9 @@ jest.mock('../provincia/provincia.service', () => ({
 jest.mock('../poblacion/poblacion.service', () => ({
   PoblacionService: class PoblacionService {},
 }));
+jest.mock('../organizacion/organizacion.service', () => ({
+  OrganizacionService: class OrganizacionService {},
+}));
 
 type MockService = Record<string, jest.Mock>;
 type ServiceName =
@@ -44,10 +49,11 @@ type ServiceName =
   | 'metodoImpactoService'
   | 'paisService'
   | 'provinciaService'
-  | 'poblacionService';
+  | 'poblacionService'
+  | 'organizacionService';
 type ResourceConfig = {
   name: string;
-  serviceName: Exclude<ServiceName, 'usuarioService'>;
+  serviceName: Exclude<ServiceName, 'usuarioService' | 'organizacionService'>;
   listMethod: keyof AdminController;
   getMethod: keyof AdminController;
   search: (search?: string) => unknown;
@@ -156,6 +162,15 @@ describe('AdminController', () => {
       paisService: createMockService(lookup),
       provinciaService: createMockService(lookup),
       poblacionService: createMockService(lookup),
+      organizacionService: createMockService([
+        'findMany',
+        'count',
+        'findOneAdmin',
+        'eliminar',
+        'findManyConsentimientos',
+        'countConsentimientos',
+        'findConsentimiento',
+      ]),
     };
     controller = new AdminController(
       services.usuarioService as never,
@@ -165,6 +180,7 @@ describe('AdminController', () => {
       services.paisService as never,
       services.provinciaService as never,
       services.poblacionService as never,
+      services.organizacionService as never,
     );
   });
 
@@ -337,6 +353,8 @@ describe('AdminController', () => {
       services.paisService.count.mockResolvedValue(2);
       services.provinciaService.count.mockResolvedValue(70);
       services.poblacionService.count.mockResolvedValue(8000);
+      services.organizacionService.count.mockResolvedValue(4);
+      services.organizacionService.countConsentimientos.mockResolvedValue(12);
 
       await expect(controller.getResumen()).resolves.toEqual({
         data: {
@@ -348,6 +366,8 @@ describe('AdminController', () => {
           paises: 2,
           provincias: 70,
           poblaciones: 8000,
+          organizaciones: 4,
+          consentimientos: 12,
         },
       });
     });
@@ -399,6 +419,86 @@ describe('AdminController', () => {
         expect(deleteMock).toHaveBeenCalledWith('record-1');
       },
     );
+  });
+
+  describe('organizaciones y consentimientos', () => {
+    it.each([
+      {
+        name: 'organizaciones',
+        list: 'getOrganizaciones',
+        findMany: 'findMany',
+        count: 'count',
+        search: organizacionAdminSearch,
+        orderBy: [{ nombre: 'asc' }, { id: 'asc' }],
+      },
+      {
+        name: 'consentimientos',
+        list: 'getConsentimientos',
+        findMany: 'findManyConsentimientos',
+        count: 'countConsentimientos',
+        search: consentimientoAdminSearch,
+        orderBy: [{ fechaSolicitud: 'desc' }, { id: 'asc' }],
+      },
+    ] as const)(
+      'lists $name with search and pagination',
+      async ({ list, findMany, count, search, orderBy }) => {
+        const service = services.organizacionService;
+        const data = [{ id: 'record-1' }];
+        service[findMany].mockResolvedValue(data);
+        service[count].mockResolvedValue(1);
+
+        await expect(
+          callController(list, 'coop', '10', '500'),
+        ).resolves.toEqual({ data, total: 1 });
+        expect(service[findMany]).toHaveBeenCalledWith({
+          where: search('coop'),
+          orderBy,
+          skip: 10,
+          take: 100,
+        });
+        expect(service[count]).toHaveBeenCalledWith(search('coop'));
+      },
+    );
+
+    it.each([
+      {
+        method: 'getOrganizacion',
+        serviceMethod: 'findOneAdmin',
+        notFound: 'Organización no encontrada',
+      },
+      {
+        method: 'getConsentimiento',
+        serviceMethod: 'findConsentimiento',
+        notFound: 'Consentimiento no encontrado',
+      },
+    ] as const)(
+      '$method returns the record or 404',
+      async ({ method, serviceMethod, notFound }) => {
+        const lookup = services.organizacionService[serviceMethod];
+        lookup.mockResolvedValueOnce({ id: 'record-1' });
+        lookup.mockResolvedValueOnce(null);
+
+        await expect(callController(method, 'record-1')).resolves.toEqual({
+          data: { id: 'record-1' },
+        });
+        await expect(callController(method, 'record-1')).rejects.toStrictEqual(
+          new NotFoundException(notFound),
+        );
+        expect(lookup).toHaveBeenCalledWith('record-1');
+      },
+    );
+
+    it('deletes an organization through the service, which notifies its members', async () => {
+      const deleted = { id: 'org-1', nombre: 'Coop' };
+      services.organizacionService.eliminar.mockResolvedValue(deleted);
+
+      await expect(controller.deleteOrganizacion('org-1')).resolves.toEqual({
+        data: deleted,
+      });
+      expect(services.organizacionService.eliminar).toHaveBeenCalledWith(
+        'org-1',
+      );
+    });
   });
 
   function callController(method: keyof AdminController, ...args: unknown[]) {

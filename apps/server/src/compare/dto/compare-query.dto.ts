@@ -72,6 +72,11 @@ export class CompareQueryItemDto implements CompareQueryItemShape {
   @IsOptional()
   @IsBoolean()
   soloParcelasReferencia?: boolean;
+
+  /** Solo cultivos de las campañas consentidas a esta organización (requiere ser su administrador) */
+  @IsOptional()
+  @IsUUID()
+  idOrganizacion?: string;
 }
 
 export const COMPARE_REPORT_LANGUAGES: readonly CompareReportLanguage[] = [

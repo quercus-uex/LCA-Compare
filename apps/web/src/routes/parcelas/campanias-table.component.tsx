@@ -10,7 +10,13 @@ const SM = 'hidden sm:table-cell';
 const LG = 'hidden lg:table-cell';
 
 /** Todas las campañas de la parcela, de la más reciente a la más antigua */
-export const CampaniasTable = ({ cultivos }: { cultivos: CultivoConImpacto[] }) => {
+type Props = {
+  cultivos: CultivoConImpacto[];
+  /** Estado de navegación que se pasa al resultado, para que sus migas vuelvan por el mismo camino */
+  linkState?: unknown;
+};
+
+export const CampaniasTable = ({ cultivos, linkState }: Props) => {
   const { t } = useTranslation();
 
   return (
@@ -47,6 +53,7 @@ export const CampaniasTable = ({ cultivos }: { cultivos: CultivoConImpacto[] }) 
                   {c.idResultadoImpacto ? (
                     <Link
                       to={`/resultados/${c.idResultadoImpacto}`}
+                      state={linkState}
                       className="btn btn-outline btn-primary btn-xs whitespace-nowrap"
                       aria-label={t('parcelas.viewImpacts')}
                       title={t('parcelas.viewImpacts')}

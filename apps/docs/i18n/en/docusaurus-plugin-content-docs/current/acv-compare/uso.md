@@ -57,8 +57,9 @@ There, you can compare two crop sets, filtering by:
 - Crop type
 - Season year (start or end; from 2020 onwards)
 - **Only reference plots**: limits the set to plots marked as reference
+- **Organization**: limits the set to the campaigns that the members of your organization have consented to (only shown if you manage one; see [Organizations](#organizations))
 
-This filter can be applied to either set and is combined with the other filters. A **reference plot** is a plot that an administrator has marked as validated data; it should not be confused with the **Reference** set, which is the mandatory set in the comparison.
+The reference plots filter can be applied to either set and is combined with the other filters. A **reference plot** is a plot that an administrator has marked as validated data; it should not be confused with the **Reference** set, which is the mandatory set in the comparison.
 
 The **Reference** set is required. If only the reference is specified, the average impact values for the set are shown. If a **Target** set is also specified, the percentage difference of the target relative to the reference is calculated for each category.
 
@@ -115,7 +116,9 @@ When deleting:
 - a crop, its impact result is also deleted;
 - a user with plots, a country with provinces, a province with towns, a town with plots or an impact method with results, the panel prevents it and explains why.
 
-An administrator cannot delete their own account or remove their own administrator role.
+An administrator cannot delete their own account or remove their own administrator role. A user who manages organizations cannot be deleted either: those organizations must be transferred or deleted first.
+
+The **Data** group also includes **organizations**, which can be viewed and deleted (they are created and edited from the application), and **consents**, read-only, with their organization, user, campaign and status.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Administration panel" width="600"/>
@@ -123,7 +126,7 @@ An administrator cannot delete their own account or remove their own administrat
 
 ## Global Statistics
 
-The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by year, impact category, crop type, and province, and displays:
+The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by year, impact category, crop type, and province (and by organization, if you manage one), and displays:
 
 - Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of each category. The year-over-year variation compares only the plots with a result in both the selected year and the previous one (at least 3), so farms joining or leaving do not affect it.
 - Human toxicity is shown as two categories, cancer and non-cancer, as in EF 3.1.
@@ -133,3 +136,20 @@ The **Statistics** route shows an aggregated view of the results registered in L
 - Impact profile: a radar chart that allows comparing two provinces or two towns.
 - Heat map by province and category; clicking a category name reorders the map by its values.
 - Crop distribution and relationship between production and impact.
+
+## Organizations
+
+An organization lets you analyse the campaigns of several users together. Any signed-in user can create organizations from **Organizations** in the navigation bar, and whoever creates one is its only administrator.
+
+The administrator asks other users for access from the **Request access** tab of the organization's panel, entering the email of an already registered user and the campaigns (years, from 2020 to the one after the current year) they want to access. Consent is given per user and per campaign.
+
+The user receives the request in the navigation bar notifications (bell icon) and, if e-mail sending is configured, also by e-mail. From there they accept or reject each campaign, or all of them at once. **An accepted campaign can only be revoked by the organization's administrator**: the user cannot withdraw it or leave the organization. If they reject a campaign, the administrator can request it again.
+
+With an accepted campaign, the administrator can:
+
+- View the member's plots (**View plots** in the **Members** tab), with their map, crops and LCA results, but only for the accepted campaigns.
+- Use the organization as a filter in the [comparator](#lca-comparator) and in the [statistics](#global-statistics). The filter only includes the crops of the campaigns accepted by members; the administrator's own plots do not count.
+
+In the **Members** tab the administrator sees the status of each campaign (pending, accepted, rejected or revoked), and can cancel a pending request, revoke an accepted campaign or remove a member, which revokes all their campaigns. In **Settings** they can change the name and description, transfer the administration to a member with at least one accepted campaign, or delete the organization. The affected user is notified of every revocation, removal, transfer or deletion.
+
+In **Organizations**, each user also sees the organizations they are a member of, who manages them and which campaigns they have granted, with their status.

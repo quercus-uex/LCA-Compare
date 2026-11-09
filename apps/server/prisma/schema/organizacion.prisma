@@ -1,0 +1,45 @@
+model Organizacion {
+  id              String           @id @default(uuid())
+  nombre          String
+  descripcion     String?
+  idAdministrador String
+  administrador   Usuario          @relation("OrganizacionAdministrador", fields: [idAdministrador], references: [id], onDelete: Restrict)
+  fechaCreacion   DateTime         @default(now())
+  consentimientos Consentimiento[]
+
+  @@index([idAdministrador])
+}
+
+/// Acceso de una organización a los datos de un usuario en una campaña (año
+/// UTC de `Cultivo.fechaInicioCampania`). Estados: pendiente, aceptado,
+/// rechazado o revocado. Solo el administrador puede revocar uno aceptado.
+model Consentimiento {
+  id              String       @id @default(uuid())
+  idOrganizacion  String
+  organizacion    Organizacion @relation(fields: [idOrganizacion], references: [id], onDelete: Cascade)
+  idUsuario       String
+  usuario         Usuario      @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  anioCampania    Int
+  estado          String
+  fechaSolicitud  DateTime     @default(now())
+  fechaRespuesta  DateTime?
+  fechaRevocacion DateTime?
+
+  @@unique([idOrganizacion, idUsuario, anioCampania])
+  @@index([idUsuario, estado])
+}
+
+/// Aviso informativo para un usuario. Las solicitudes pendientes no se guardan
+/// aquí: se leen de `Consentimiento`. `datos` copia el nombre de la
+/// organización para que el aviso sobreviva a su borrado.
+model Notificacion {
+  id            String   @id @default(uuid())
+  idUsuario     String
+  usuario       Usuario  @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  tipo          String
+  datos         Json
+  leida         Boolean  @default(false)
+  fechaCreacion DateTime @default(now())
+
+  @@index([idUsuario, leida])
+}

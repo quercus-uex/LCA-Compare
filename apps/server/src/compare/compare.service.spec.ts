@@ -10,6 +10,7 @@ import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { CompareQueryBuilder } from './compare-query.builder';
 import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
 import type { CompareReportLanguage } from 'common/compare';
+import type { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 jest.mock('playwright', () => {
   const page = {
@@ -113,8 +114,18 @@ describe('CompareService', () => {
   let poblacionService: jest.Mocked<Pick<PoblacionService, 'findMany'>>;
   let paisService: jest.Mocked<Pick<PaisService, 'findMany'>>;
   let aiService: jest.Mocked<Pick<AiService, 'generateFromTemplate'>>;
+  let accesoService: jest.Mocked<
+    Pick<
+      OrganizacionAccesoService,
+      'getConsentimientosAceptados' | 'getOrganizacionRef'
+    >
+  >;
 
   beforeEach(() => {
+    accesoService = {
+      getConsentimientosAceptados: jest.fn(),
+      getOrganizacionRef: jest.fn(),
+    };
     resultadoImpactoService = {
       findMany: jest.fn(),
       findManyDatos: jest.fn(),
@@ -132,6 +143,7 @@ describe('CompareService', () => {
       poblacionService as unknown as PoblacionService,
       paisService as unknown as PaisService,
       aiService as unknown as AiService,
+      accesoService as unknown as OrganizacionAccesoService,
     );
   });
 
@@ -177,6 +189,67 @@ describe('CompareService', () => {
         expect(result).toBe(expectedResults);
       },
     );
+  });
+
+  describe('organization filter', () => {
+    const ORG_ID = '11111111-1111-4111-8111-111111111111';
+
+    it('limits the results to the accepted consents of the organization', async () => {
+      const consentimientos = [
+        { idUsuario: 'u-1', anio: 2023 },
+        { idUsuario: 'u-2', anio: 2024 },
+      ];
+      accesoService.getConsentimientosAceptados.mockResolvedValue(
+        consentimientos,
+      );
+      resultadoImpactoService.findMany.mockResolvedValue([]);
+      const filters: CompareQueryItemDto = {
+        idOrganizacion: ORG_ID,
+        tipoCultivo: 'Olivo',
+      };
+
+      await service.findResults(filters);
+
+      expect(accesoService.getConsentimientosAceptados).toHaveBeenCalledWith(
+        ORG_ID,
+      );
+      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+        where: CompareQueryBuilder.build(filters, undefined, consentimientos),
+      });
+    });
+
+    it('does not read consents without an organization', async () => {
+      resultadoImpactoService.findManyDatos.mockResolvedValue([]);
+
+      await service.getMeanByFilters({ tipoCultivo: 'Olivo' });
+
+      expect(accesoService.getConsentimientosAceptados).not.toHaveBeenCalled();
+    });
+
+    it('shows the organization name, escaped, in the description of the set that uses it', async () => {
+      aiService.generateFromTemplate.mockResolvedValue('');
+      paisService.findMany.mockResolvedValue([]);
+      provinciaService.findMany.mockResolvedValue([]);
+      poblacionService.findMany.mockResolvedValue([]);
+      accesoService.getOrganizacionRef.mockResolvedValue({
+        id: ORG_ID,
+        nombre: 'Cooperativa <Sur>',
+      });
+
+      await service.generateReport(
+        { idOrganizacion: ORG_ID },
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-1' })],
+        { tipoCultivo: 'trigo' },
+        [makeResultadoImpacto(makeImpactDto(), { id: 'ri-2' })],
+        'en',
+      );
+
+      expect(accesoService.getOrganizacionRef.mock.calls).toEqual([[ORG_ID]]);
+      const html = playwrightMock.__mockPage.setContent.mock.calls[0][0];
+      expect(html).toContain('Organization:');
+      expect(html).toContain('Cooperativa &lt;Sur&gt;');
+      expect(html).not.toContain('Cooperativa <Sur>');
+    });
   });
 
   describe('getMeanOfResults', () => {

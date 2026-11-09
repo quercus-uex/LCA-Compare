@@ -16,7 +16,13 @@ import {
 } from '../../hooks/resultado-impacto.hook.tsx';
 import { CompararParcelaDropdown } from '../parcelas/comparar-parcela.component.tsx';
 import { CultivoMetricas } from '../parcelas/cultivo-metricas.component.tsx';
-import { ParcelaBreadcrumbs, ParcelaHeroCard } from '../parcelas/parcela-hero.component.tsx';
+import {
+  AccesoNote,
+  ParcelaBreadcrumbs,
+  ParcelaHeroCard,
+  useAccesoCrumbs,
+  useAccesoEyebrow,
+} from '../parcelas/parcela-hero.component.tsx';
 import { ParcelaDetailSkeleton } from '../parcelas/parcelas-states.component.tsx';
 import { buildResultadoCSV } from './resultado-export.utils.ts';
 import { ResultadoTable } from './resultado-table.component.tsx';
@@ -33,6 +39,9 @@ export const ResultadoRoute = () => {
   const p = useParcela();
   const { t } = useTranslation();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const acceso = state.status === 'ready' ? state.parcela.acceso : undefined;
+  const accesoCrumbs = useAccesoCrumbs(acceso);
+  const accesoEyebrow = useAccesoEyebrow(acceso);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -72,6 +81,7 @@ export const ResultadoRoute = () => {
   return (
     <div className={PAGE_CLASS}>
       <ParcelaBreadcrumbs
+        root={accesoCrumbs}
         items={[
           { label: parcela.nombre, to: `/parcelas/${parcela.id}` },
           { label: t('resultados.campaign', { date: fecha }) },
@@ -80,10 +90,11 @@ export const ResultadoRoute = () => {
 
       <ParcelaHeroCard
         parcela={parcela}
-        eyebrow={t('resultados.title')}
+        eyebrow={accesoEyebrow ? `${t('resultados.title')} · ${accesoEyebrow}` : t('resultados.title')}
         actions={
           <div className="flex flex-wrap gap-2">
-            <CompararParcelaDropdown parcela={parcela} />
+            {/* Comparar por parcela usaría todas sus campañas, también las no consentidas */}
+            {!acceso && <CompararParcelaDropdown parcela={parcela} />}
             <Dropdown
               triggerClassName="btn btn-outline btn-sm"
               contentClassName="w-40"
@@ -104,6 +115,8 @@ export const ResultadoRoute = () => {
         </div>
 
         <CultivoMetricas cultivo={cultivo} />
+
+        {acceso && <AccesoNote acceso={acceso} />}
       </ParcelaHeroCard>
 
       <ResultadoTable resultado={resultado} />

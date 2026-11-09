@@ -29,6 +29,7 @@ import {
 import type { CompareReportLanguage } from 'common/compare';
 import { getEfCategoryId, normalizeEfName } from 'common/impact';
 import { errorMessage } from '../common/helpers/error.helper';
+import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 // openLCA no siempre escribe igual el nombre de una categoría; se comparan por
 // su categoría EF o, si no es una conocida, por el nombre normalizado. Los
@@ -111,6 +112,7 @@ export class CompareService implements OnModuleDestroy {
     private readonly poblacionService: PoblacionService,
     private readonly paisService: PaisService,
     private readonly aiService: AiService,
+    private readonly accesoService: OrganizacionAccesoService,
   ) {
     const reportTemplateFile = fs.readFileSync(
       path.resolve(__dirname, '../templates/compare-report.template.hbs'),
@@ -136,21 +138,31 @@ export class CompareService implements OnModuleDestroy {
   /**
    * `where` de los resultados que cumplen los filtros, o null si no hay
    * filtros. El filtro por radio se resuelve antes a los ids de las parcelas
-   * que caen dentro.
+   * que caen dentro, y el de organización a sus campañas consentidas (quién
+   * puede usarlo lo comprueba el controlador).
    */
   private async buildWhere(
     filters: CompareQueryItemDto,
   ): Promise<Prisma.ResultadoImpactoWhereInput | null> {
-    const { lat, long, range } = filters;
+    const { lat, long, range, idOrganizacion } = filters;
     const hasLocationFilter = lat != null && long != null && range != null;
 
-    const nearbyParcelaIds = hasLocationFilter
-      ? (await this.parcelaService.findManyByPointRange(lat, long, range)).map(
-          (p) => p.id,
-        )
-      : undefined;
+    const [nearbyParcelaIds, consentimientos] = await Promise.all([
+      hasLocationFilter
+        ? this.parcelaService
+            .findManyByPointRange(lat, long, range)
+            .then((parcelas) => parcelas.map((p) => p.id))
+        : undefined,
+      idOrganizacion
+        ? this.accesoService.getConsentimientosAceptados(idOrganizacion)
+        : undefined,
+    ]);
 
-    return CompareQueryBuilder.build(filters, nearbyParcelaIds);
+    return CompareQueryBuilder.build(
+      filters,
+      nearbyParcelaIds,
+      consentimientos,
+    );
   }
 
   /** Resultados con su cultivo y ubicación, que necesita el informe */
@@ -269,10 +281,13 @@ export class CompareService implements OnModuleDestroy {
     const { idsPais, idsProvincia, idsPoblacion, minYear, maxYear } =
       extractLocationData(results);
 
-    const [paises, provincias, poblaciones] = await Promise.all([
+    const [paises, provincias, poblaciones, organizacion] = await Promise.all([
       this.paisService.findMany({ where: { id: { in: idsPais } } }),
       this.provinciaService.findMany({ where: { id: { in: idsProvincia } } }),
       this.poblacionService.findMany({ where: { id: { in: idsPoblacion } } }),
+      filters.idOrganizacion
+        ? this.accesoService.getOrganizacionRef(filters.idOrganizacion)
+        : null,
     ]);
 
     const provinciaSet = new Set(filters.idsProvincia ?? []);
@@ -306,6 +321,8 @@ export class CompareService implements OnModuleDestroy {
           chosen: t === filters.tipoCultivo,
         }),
       ),
+      // Organización cuyas campañas consentidas limitan el conjunto
+      organizacion,
       filters,
       results,
     };

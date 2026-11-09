@@ -12,6 +12,7 @@ function categorias(values: Partial<CategoryValues>): CategoryValues {
 function makeRow(anio: number, climateChange?: number): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio,
     superficie: 10,

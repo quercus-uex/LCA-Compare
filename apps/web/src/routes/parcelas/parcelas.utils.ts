@@ -106,4 +106,8 @@ export const getIdentificadores = (p: Parcela, t: TFunction) =>
   ].filter((i): i is { key: string; label: string; value: string } => !!i.value);
 
 /** Estado de navegación que lleva al detalle la URL del listado, para volver a ella */
-export type ParcelaLinkState = { listSearch?: string };
+export type ParcelaLinkState = {
+  listSearch?: string;
+  /** Al llegar desde las parcelas de un miembro: organización por la que se accede y búsqueda de esa lista */
+  organizacion?: { id: string; search: string };
+};

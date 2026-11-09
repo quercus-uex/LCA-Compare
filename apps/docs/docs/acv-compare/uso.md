@@ -78,8 +78,10 @@ En él, podrás comparar dos conjuntos de cultivos, filtrando por:
 - Tipo de cultivo
 - Año de campaña (inicio o fin; a partir de 2020)
 - **Solo parcelas de referencia**: limita el conjunto a las parcelas marcadas como de referencia
+- **Organización**: limita el conjunto a las campañas que los miembros de tu organización te han consentido (solo
+  aparece si administras alguna; ver [Organizaciones](#organizaciones))
 
-Este filtro puede aplicarse a cualquiera de los dos conjuntos y se combina con el resto de filtros. Una **parcela de
+El filtro de parcelas de referencia puede aplicarse a cualquiera de los dos conjuntos y se combina con el resto de filtros. Una **parcela de
 referencia** es una parcela que un administrador ha marcado como dato validado; no debe confundirse con el
 **conjunto de Referencia**, que es el conjunto obligatorio de la comparativa.
 
@@ -154,7 +156,11 @@ Al eliminar:
 - un usuario con parcelas, un país con provincias, una provincia con poblaciones, una población con parcelas o un método
   de impacto con resultados, el panel lo impide y explica el motivo.
 
-Un administrador no puede eliminar su propia cuenta ni quitarse el rol de administrador.
+Un administrador no puede eliminar su propia cuenta ni quitarse el rol de administrador. Tampoco se puede eliminar un
+usuario que administra organizaciones: antes debe transferirlas o eliminarlas.
+
+En el grupo **Datos** están también las **organizaciones**, que se pueden consultar y eliminar (se crean y editan desde
+la aplicación), y los **consentimientos**, de solo lectura, con su organización, usuario, campaña y estado.
 
 <p align="center">
     <img src="/img/acv-compare/panel_admin.png" alt="Panel de administración" width="600"/>
@@ -163,7 +169,7 @@ Un administrador no puede eliminar su propia cuenta ni quitarse el rol de admini
 ## Estadísticas globales
 
 La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en LCA Compare. Permite filtrar por
-año, categoría de impacto, tipo de cultivo y provincia, y visualiza:
+año, categoría de impacto, tipo de cultivo y provincia (y por organización, si administras alguna), y visualiza:
 
 - KPIs globales: número de parcelas, cultivos y superficie total, impacto medio por categoría y variación interanual
   de cada categoría. La variación interanual compara solo las parcelas con resultado en el año elegido y en el
@@ -178,3 +184,35 @@ año, categoría de impacto, tipo de cultivo y provincia, y visualiza:
 - Perfil de impacto: gráfico de radar que permite comparar dos provincias o dos poblaciones.
 - Mapa de calor por provincia y categoría; al pulsar en el nombre de una categoría se reordena el mapa según sus valores.
 - Distribución de cultivos y relación entre producción e impacto.
+
+## Organizaciones
+
+Una organización permite analizar en conjunto las campañas de varios usuarios. Cualquier usuario con la sesión iniciada
+puede crear organizaciones desde **Organizaciones** en la barra de navegación, y quien la crea es su único
+administrador.
+
+El administrador pide acceso a otros usuarios desde la pestaña **Solicitar acceso** del panel de la organización,
+indicando el correo de un usuario ya registrado y las campañas (años, desde 2020 hasta el siguiente al actual) a las que
+quiere acceder. El consentimiento se da por usuario y por campaña.
+
+El usuario recibe la solicitud en las notificaciones de la barra de navegación (icono de campana) y, si el envío de
+correo está configurado, también por correo. Desde ahí acepta o rechaza cada campaña, o todas a la vez. **Una campaña
+aceptada solo puede revocarla el administrador de la organización**: el usuario no puede retirarla ni salir de la
+organización. Si rechaza una campaña, el administrador puede volver a pedirla.
+
+Con una campaña aceptada, el administrador puede:
+
+- Consultar las parcelas del miembro (**Ver parcelas** en la pestaña **Miembros**), con su mapa, sus cultivos y sus
+  resultados de ACV, pero solo de las campañas aceptadas.
+- Usar la organización como filtro en el [comparador](#comparador-de-acv) y en las
+  [estadísticas](#estadísticas-globales). El filtro incluye solo los cultivos de las campañas aceptadas por los
+  miembros; las parcelas del propio administrador no cuentan.
+
+En la pestaña **Miembros** el administrador ve el estado de cada campaña (pendiente, aceptada, rechazada o revocada),
+puede cancelar una solicitud pendiente, revocar una campaña aceptada o expulsar a un miembro, lo que revoca todas sus
+campañas. En **Ajustes** puede cambiar el nombre y la descripción, transferir la administración a un miembro con alguna
+campaña aceptada o eliminar la organización. El usuario afectado recibe un aviso de cada revocación, expulsión,
+transferencia o eliminación.
+
+En **Organizaciones**, cada usuario ve también las organizaciones de las que es miembro, quién las administra y qué
+campañas ha dado, con su estado.

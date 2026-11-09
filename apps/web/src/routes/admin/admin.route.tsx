@@ -11,7 +11,7 @@ import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { fetchPage, fetchSummary, type FormMode, type Summary } from './admin-api.ts';
 import { AdminFormModal } from './admin-form-modal.component.tsx';
 import { AdminTable } from './admin-table.component.tsx';
-import { CONFIG, ENTITIES, ENTITY_GROUPS, isEntity, type Entity, type Item } from './admin.config.ts';
+import { canDo, CONFIG, ENTITIES, ENTITY_GROUPS, isEntity, type Entity, type Item } from './admin.config.ts';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.component.tsx';
 import { SmartPagination } from './smart-pagination.component.tsx';
 
@@ -245,13 +245,15 @@ export const AdminRoute = () => {
                   <p className="text-sm text-base-content/60">{t(config.descriptionKey)}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-primary shrink-0"
-                onClick={() => setFormTarget({ entity, mode: 'create', item: null })}
-              >
-                <FiPlus aria-hidden /> {t(`admin.createTitles.${config.titleKey}`)}
-              </button>
+              {canDo(entity, 'create') && (
+                <button
+                  type="button"
+                  className="btn btn-primary shrink-0"
+                  onClick={() => setFormTarget({ entity, mode: 'create', item: null })}
+                >
+                  <FiPlus aria-hidden /> {t(`admin.createTitles.${config.titleKey}`)}
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">

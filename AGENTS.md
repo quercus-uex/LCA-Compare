@@ -9,7 +9,7 @@
 - Docs is a Docusaurus 3 app in `apps/docs`; locales are `es` (default), `en`, and `pt`, and Lunr search covers all three. Translations mirror `apps/docs/docs/` under `apps/docs/i18n/<locale>/docusaurus-plugin-content-docs/current/`; keep the three locales in sync when editing docs.
 - `packages/common` is a real TypeScript package; backend/frontend import shared DTOs/constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
 - `docker/backup/` holds the DB backup sidecar image (Postgres 17 client + aws-cli + busybox cron); it lives outside `apps/*` and `packages/*` on purpose, so pnpm/Turborepo never touch it.
-- `.opencode/`, `opencode.json`, and `.agents/` are OpenCode config, not app code; load the `customize-opencode` skill before editing them. `openspec/` holds the OpenSpec change/spec workflow artifacts (skills under `.opencode/skills/openspec-*`).
+- `.opencode/`, `opencode.json`, and `.agents/` are OpenCode config, not app code; load the `customize-opencode` skill before editing them.
 
 ## Commands
 

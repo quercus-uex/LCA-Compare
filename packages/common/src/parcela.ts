@@ -1,3 +1,4 @@
+import type { AccesoOrganizacion } from './organizacion.js';
 import type { CategoryValues } from './stats.js';
 
 export type Cultivo = {
@@ -55,4 +56,9 @@ export type CultivoConImpacto = Cultivo & {
 export type ParcelaDetalle = Parcela & {
   poblacion: ParcelaPoblacion | null;
   cultivos: CultivoConImpacto[];
+  /**
+   * Solo si quien consulta no es el propietario: los cultivos se limitan a las
+   * campañas que el propietario ha consentido a sus organizaciones
+   */
+  acceso?: AccesoOrganizacion;
 };

@@ -52,3 +52,36 @@ export type {
   ResultadoImpactoItemDto,
   ResultadoImpactoDto,
 } from './api.js';
+
+export {
+  CAMPANIA_MIN_ANIO,
+  CONSENTIMIENTO_ESTADOS,
+  NOTIFICACION_TIPOS,
+  campaniaMaxAnio,
+} from './organizacion.js';
+
+export type {
+  AccesoOrganizacion,
+  AvisoDatos,
+  AvisoDto,
+  CampaniaConsentimiento,
+  ConsentimientoEstado,
+  ConsentimientoRespuesta,
+  CreateOrganizacionDto,
+  MarcarAvisosLeidosDto,
+  MembresiaOrganizacion,
+  MiembroOrganizacion,
+  MiembroParcelasDto,
+  MisOrganizacionesDto,
+  NotificacionesDto,
+  NotificacionTipo,
+  OrganizacionDetalle,
+  OrganizacionResumen,
+  ResponderConsentimientosDto,
+  SolicitarConsentimientoDto,
+  SolicitudConsentimientoResultadoDto,
+  SolicitudPendienteDto,
+  TransferirOrganizacionDto,
+  UpdateOrganizacionDto,
+  UsuarioBasico,
+} from './organizacion.js';

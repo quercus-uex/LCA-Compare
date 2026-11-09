@@ -167,6 +167,7 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   │   ├── poblacion/         # Consulta de poblaciones
 │   │   │   ├── metodoimpacto/     # Métodos de impacto
 │   │   │   ├── stats/             # Estadísticas globales y agregaciones para el dashboard
+│   │   │   ├── organizacion/      # Organizaciones, consentimientos por campaña y notificaciones
 │   │   │   ├── admin/             # CRUD administrativo protegido por rol admin
 │   │   │   ├── ai/                # Integración con OpenRouter para IA
 │   │   │   ├── mailer/            # Envío de correos electrónicos
@@ -179,8 +180,9 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 │   │   ├── prisma/
 │   │   │   ├── schema/            # Esquema Prisma dividido en varios ficheros
 │   │   │   │   ├── schema.prisma
-│   │   │   │   └── poblacion.prisma
-│   │   │   └── migrations/        # Migraciones versionadas (0_init y 1_seed_datos_iniciales con los datos iniciales)
+│   │   │   │   ├── poblacion.prisma
+│   │   │   │   └── organizacion.prisma
+│   │   │   └── migrations/        # Migraciones versionadas (0_init, 1_seed_datos_iniciales con los datos iniciales y 2_organizaciones)
 │   │   └── Dockerfile             # Imagen del backend
 │   ├── web/                       # Frontend React
 │   │   ├── src/
@@ -209,7 +211,7 @@ La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus star
 
 El backend y el frontend consumen contratos compartidos desde el paquete workspace `common`, por ejemplo mediante
 subrutas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`,
-`common/auth` o `common/api`.
+`common/organizacion`, `common/auth` o `common/api`.
 
 ## Esquema de base de datos
 
@@ -227,6 +229,9 @@ El esquema de Prisma define los siguientes modelos principales:
 | `Pais` | Países de referencia para ubicar parcelas |
 | `Provincia` | Provincias asociadas a un país y su código catastral |
 | `Poblacion` | Poblaciones asociadas a una provincia y su código catastral |
+| `Organizacion` | Organizaciones creadas por un usuario, que es su único administrador |
+| `Consentimiento` | Acceso de una organización a los datos de un usuario en una campaña (año), con su estado: pendiente, aceptado, rechazado o revocado |
+| `Notificacion` | Avisos informativos para un usuario (revocaciones, expulsiones, transferencias…); las solicitudes pendientes se leen de `Consentimiento` |
 
 Las relaciones principales son: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
@@ -238,3 +243,9 @@ registrado como aviso en los logs del backend.
 
 La marca `esParcelaReferencia` (por defecto `false`) solo puede asignarla un administrador y permite que el comparador
 restrinja un conjunto a estas parcelas mediante el filtro `soloParcelasReferencia`.
+
+El administrador de una organización accede a los datos de un miembro solo en las campañas que este ha aceptado: la
+regla vive en `OrganizacionAccesoService` y la usan el detalle de parcelas y resultados, el comparador y las
+estadísticas. La campaña es el año UTC de `Cultivo.fechaInicioCampania`, y las parcelas del propio administrador no
+cuentan. `/compare` y `/stats` siguen siendo públicos: `OptionalAuthGuard` identifica al usuario si envía un token
+válido, y filtrar por una organización que no administra responde 403.

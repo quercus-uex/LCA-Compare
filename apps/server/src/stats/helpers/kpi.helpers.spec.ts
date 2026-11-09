@@ -5,6 +5,7 @@ import type { StatsRow } from './stats-rows.helpers';
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio: 2024,
     superficie: 10,

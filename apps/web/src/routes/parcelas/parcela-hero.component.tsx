@@ -1,31 +1,85 @@
+import type { AccesoOrganizacion } from 'common/organizacion';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiMapPin } from 'react-icons/fi';
+import { FiInfo, FiMapPin } from 'react-icons/fi';
 import { Link, useLocation } from 'react-router';
+import { formatList } from '../../common/format.ts';
 import { MapPreview } from '../../components/map-preview.component.tsx';
 import type { ParcelaDetalle } from '../../hooks/parcela.hook.tsx';
+import { miembroUrl, nombreCompleto, organizacionUrl } from '../organizaciones/organizaciones.utils.ts';
 import { formatPoblacion, type ParcelaLinkState } from './parcelas.utils.ts';
 
-type Crumb = { label: string; to?: string };
+export type Crumb = { label: string; to?: string };
 
-/** Migas desde «Mis parcelas»; el último elemento es la página actual */
-export const ParcelaBreadcrumbs = ({ items = [] }: { items?: Crumb[] }) => {
+/**
+ * Migas desde «Mis parcelas», o desde `root` si se indica; el último elemento
+ * es la página actual. Los enlaces conservan el estado de navegación para que
+ * el detalle de un resultado pueda volver a la parcela por el mismo camino.
+ */
+export const ParcelaBreadcrumbs = ({ items = [], root }: { items?: Crumb[]; root?: Crumb[] }) => {
   const { t } = useTranslation();
   const location = useLocation();
   // Vuelve al listado con la búsqueda, los filtros y la vista con que se dejó
   const listUrl = `/parcelas${(location.state as ParcelaLinkState | null)?.listSearch ?? ''}`;
-  const crumbs: Crumb[] = [{ label: t('parcelas.title'), to: listUrl }, ...items];
+  const crumbs: Crumb[] = [...(root ?? [{ label: t('parcelas.title'), to: listUrl }]), ...items];
 
   return (
     <nav className="breadcrumbs text-sm [&>ul]:flex-wrap [&>ul]:whitespace-normal" aria-label={t('parcelas.detail.breadcrumb')}>
       <ul>
         {crumbs.map((c, i) => (
           <li key={i} aria-current={i === crumbs.length - 1 && i > 0 ? 'page' : undefined}>
-            {c.to ? <Link to={c.to}>{c.label}</Link> : c.label}
+            {c.to ? <Link to={c.to} state={location.state as unknown}>{c.label}</Link> : c.label}
           </li>
         ))}
       </ul>
     </nav>
+  );
+};
+
+/**
+ * Migas de una parcela ajena: «Organizaciones › organización › miembro». Usa
+ * la organización desde la que se llegó si sigue dando acceso; si no, la primera.
+ */
+export const useAccesoCrumbs = (acceso: AccesoOrganizacion | undefined): Crumb[] | undefined => {
+  const { t } = useTranslation();
+  const location = useLocation();
+  if (!acceso) return undefined;
+  const origen = (location.state as ParcelaLinkState | null)?.organizacion;
+  const organizacion = acceso.organizaciones.find((o) => o.id === origen?.id) ?? acceso.organizaciones[0];
+  const root: Crumb[] = [{ label: t('organizaciones.title'), to: '/organizaciones' }];
+  if (!organizacion) return root;
+  const search = origen?.id === organizacion.id ? origen.search : '';
+  return [
+    ...root,
+    { label: organizacion.nombre, to: organizacionUrl(organizacion.id) },
+    { label: nombreCompleto(acceso.propietario), to: `${miembroUrl(organizacion.id, acceso.propietario.id)}${search}` },
+  ];
+};
+
+/** Texto de la cabecera de una parcela ajena: de quién es y por qué organizaciones se ve */
+export const useAccesoEyebrow = (acceso: AccesoOrganizacion | undefined): string | undefined => {
+  const { t } = useTranslation();
+  if (!acceso) return undefined;
+  return t('organizaciones.acceso.eyebrow', {
+    nombre: nombreCompleto(acceso.propietario),
+    organizaciones: formatList(acceso.organizaciones.map((o) => o.nombre)),
+  });
+};
+
+/** Aviso de que de una parcela ajena solo se ven las campañas consentidas */
+export const AccesoNote = ({ acceso }: { acceso: AccesoOrganizacion }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-2 rounded-box bg-info/50 px-3 py-2 text-sm">
+      <FiInfo aria-hidden className="mt-0.5 shrink-0" />
+      <span>
+        {t('organizaciones.acceso.note', {
+          nombre: nombreCompleto(acceso.propietario),
+          count: acceso.anios.length,
+          anios: formatList([...acceso.anios].sort((a, b) => a - b)),
+        })}
+      </span>
+    </div>
   );
 };
 

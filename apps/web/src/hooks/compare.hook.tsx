@@ -22,6 +22,8 @@ export type CompareFilterType = {
   anioCampaniaInicio?: number;
   anioCampaniaFin?: number;
   soloParcelasReferencia?: boolean;
+  /** Solo las campañas consentidas a esta organización; requiere administrarla */
+  organizacion?: { id: string; nombre: string };
 };
 
 type CompareContextType = {
@@ -44,6 +46,7 @@ const transformFilters = (filters: CompareFilterType): CompareFilterDto => ({
   anioCampaniaFin: filters.anioCampaniaFin,
   idPais: filters.pais?.id,
   soloParcelasReferencia: filters.soloParcelasReferencia,
+  idOrganizacion: filters.organizacion?.id,
 });
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {

@@ -61,3 +61,19 @@ export const formatNumericDate = (iso: string) => {
     ? date.setLocale(locale()).toLocaleString({ day: '2-digit', month: '2-digit', year: 'numeric' })
     : null;
 };
+
+/** Lista con la conjunción del idioma activo: «2023, 2024 y 2025» */
+export const formatList = (items: readonly (string | number)[]) =>
+  new Intl.ListFormat(locale(), { style: 'long', type: 'conjunction' }).format(items.map(String));
+
+/** Momento relativo al actual: «hace 3 horas» */
+export const formatRelativeTime = (iso: string) => {
+  const date = DateTime.fromISO(iso);
+  return date.isValid ? date.setLocale(locale()).toRelative() ?? '' : iso;
+};
+
+/** Fecha y hora locales completas, para el atributo `title` de las fechas relativas */
+export const formatDateTime = (iso: string) => {
+  const date = DateTime.fromISO(iso);
+  return date.isValid ? date.setLocale(locale()).toLocaleString(DateTime.DATETIME_MED) : iso;
+};

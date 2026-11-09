@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
 import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
+import { useOrganizacionesAdministradas } from '../../hooks/organizacion.hook.tsx';
 import { StatsDashboard } from '../../stats/stats-dashboard.component.tsx';
 import { StatsFiltersBar } from '../../stats/stats-filters.component.tsx';
 import {
@@ -13,9 +14,11 @@ import { useStatsFilters } from '../../stats/use-stats-filters.ts';
 export const StatsRoute = () => {
   const { t } = useTranslation();
   const { filters, setFilters, resetFilters, hasActiveFilters } = useStatsFilters();
+  const organizaciones = useOrganizacionesAdministradas();
   const { data, failed, isFetching, refetch } = useStats({
     anio: filters.anio,
     tipoCultivo: filters.tipoCultivo,
+    idOrganizacion: filters.organizacion,
   });
 
   const header = <PageHeader title={t('stats.title')} />;
@@ -36,6 +39,7 @@ export const StatsRoute = () => {
       <StatsFiltersBar
         data={data}
         filters={filters}
+        organizaciones={organizaciones}
         isFetching={isFetching}
         hasActiveFilters={hasActiveFilters}
         onChange={setFilters}

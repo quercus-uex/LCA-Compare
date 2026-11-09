@@ -158,6 +158,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   │   ├── poblacion/         # Town queries
 │   │   │   ├── metodoimpacto/     # Impact methods
 │   │   │   ├── stats/             # Global statistics and dashboard aggregations
+│   │   │   ├── organizacion/      # Organizations, per-campaign consents and notifications
 │   │   │   ├── admin/             # Role-protected admin CRUD
 │   │   │   ├── ai/                # OpenRouter AI integration
 │   │   │   ├── mailer/            # Email delivery
@@ -170,8 +171,9 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   ├── prisma/
 │   │   │   ├── schema/            # Prisma schema split into multiple files
 │   │   │   │   ├── schema.prisma
-│   │   │   │   └── poblacion.prisma
-│   │   │   └── migrations/        # Versioned migrations (0_init, and 1_seed_datos_iniciales with the initial data)
+│   │   │   │   ├── poblacion.prisma
+│   │   │   │   └── organizacion.prisma
+│   │   │   └── migrations/        # Versioned migrations (0_init, 1_seed_datos_iniciales with the initial data, and 2_organizaciones)
 │   │   └── Dockerfile             # Backend image
 │   ├── web/                       # React frontend
 │   │   ├── src/
@@ -198,7 +200,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 └── turbo.json                     # Turborepo pipeline
 ```
 
-The backend and frontend consume shared contracts from the `common` workspace package, for example through subpaths such as `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/auth`, or `common/api`.
+The backend and frontend consume shared contracts from the `common` workspace package, for example through subpaths such as `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/organizacion`, `common/auth`, or `common/api`.
 
 ## Database Schema
 
@@ -216,9 +218,14 @@ The Prisma schema defines these main models:
 | `Pais` | Reference countries for locating plots |
 | `Provincia` | Provinces associated with a country and its cadastral code |
 | `Poblacion` | Towns associated with a province and its cadastral code |
+| `Organizacion` | Organizations created by a user, who is their only administrator |
+| `Consentimiento` | Access of an organization to a user's data for one campaign (year), with its status: pending, accepted, rejected or revoked |
+| `Notificacion` | Informational notices for a user (revocations, removals, transfers…); pending requests are read from `Consentimiento` |
 
 The main relationships are: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` hierarchy, where each plot is assigned to a town and stores its polygon in a PostGIS `geometry(Polygon, 4326)` column. Both fields are optional: if the polygon cannot be obtained during ingestion (wrong SIGPAC, Catastro or predial identifier, unavailable service or invalid geometry) or the town is not found, the plot is still saved without them and the failure is logged as a warning by the backend.
 
 The `esParcelaReferencia` flag (default `false`) can only be set by an administrator and lets the comparator restrict a set to these plots through the `soloParcelasReferencia` filter.
+
+An organization's administrator can access a member's data only for the campaigns that member has accepted: the rule lives in `OrganizacionAccesoService` and is used by the plot and result details, the comparator and the statistics. The campaign is the UTC year of `Cultivo.fechaInicioCampania`, and the administrator's own plots do not count. `/compare` and `/stats` remain public: `OptionalAuthGuard` identifies the user if they send a valid token, and filtering by an organization they do not manage returns 403.

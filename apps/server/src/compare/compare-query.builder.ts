@@ -1,6 +1,7 @@
 import { Prisma } from '../generated/prisma/client';
 import { buildCampaignYearRangeFilter } from '../common/helpers/campaign-year.helper';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
+import type { ConsentimientoAceptado } from '../organizacion/organizacion-acceso.service';
 
 /**
  * Builds the Prisma `where` clause for a comparison query.
@@ -13,10 +14,15 @@ export class CompareQueryBuilder {
    * hay filtro por radio. Si lo hay pero no encontró parcelas (array vacío), la
    * condición se mantiene y no coincide con ningún resultado, en lugar de
    * descartarse en silencio.
+   *
+   * `consentimientos` son los pares usuario-año aceptados en
+   * `filters.idOrganizacion`. Con la organización elegida y ningún par, la
+   * condición (`OR` vacío) tampoco coincide con nada.
    */
   static build(
     filters: CompareQueryItemDto,
     nearbyParcelaIds?: string[],
+    consentimientos: ConsentimientoAceptado[] = [],
   ): Prisma.ResultadoImpactoWhereInput | null {
     const orConditions: Prisma.ResultadoImpactoWhereInput[] = [];
 
@@ -83,6 +89,17 @@ export class CompareQueryBuilder {
 
     if (yearFilter.fechaInicioCampania) {
       andConditions.push({ cultivo: yearFilter });
+    }
+
+    if (filters.idOrganizacion) {
+      andConditions.push({
+        OR: consentimientos.map(({ idUsuario, anio }) => ({
+          cultivo: {
+            parcela: { idPropietario: idUsuario },
+            ...buildCampaignYearRangeFilter(anio, anio),
+          },
+        })),
+      });
     }
 
     if (andConditions.length === 0) {

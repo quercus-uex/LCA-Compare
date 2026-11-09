@@ -8,7 +8,7 @@ jest.mock('nodemailer', () => ({
   default: { createTransport: mockCreateTransport },
 }));
 
-import { MailerService } from './mailer.service';
+import { MailerService, formatAnios } from './mailer.service';
 
 describe('MailerService', () => {
   const originalEnv = process.env;
@@ -74,7 +74,81 @@ describe('MailerService', () => {
     });
   });
 
-  it('does not create a transport nor send mail when SMTP credentials are missing', async () => {
+  it('sends the consent request mail with the organization and the years', async () => {
+    const service = new MailerService();
+
+    await service.sendSolicitudConsentimientoMail(
+      'user@example.com',
+      'Cooperativa Sur',
+      [2025, 2023, 2024],
+    );
+
+    expect(mockSendMail).toHaveBeenCalledWith({
+      from: 'test@gmail.com',
+      to: 'user@example.com',
+      subject: 'Solicitud de acceso de Cooperativa Sur en LCA Compare',
+      text: expect.stringContaining(
+        'Cooperativa Sur te pide acceso a los datos de tus campañas 2023, 2024 y 2025',
+      ),
+    });
+  });
+
+  it.each([
+    [
+      'consentimiento_revocado',
+      [2024],
+      'Cooperativa Sur ya no tiene acceso a tus campañas',
+      'campañas 2024',
+    ],
+    [
+      'miembro_expulsado',
+      [2023, 2024],
+      'Ya no eres miembro de Cooperativa Sur',
+      'campañas 2023 y 2024',
+    ],
+    [
+      'organizacion_eliminada',
+      undefined,
+      'La organización Cooperativa Sur se ha eliminado',
+      'se ha eliminado',
+    ],
+    [
+      'administracion_transferida',
+      undefined,
+      'Ahora administras Cooperativa Sur',
+      'Se te ha transferido la administración',
+    ],
+  ] as const)(
+    'sends the %s notice mail',
+    async (tipo, anios, subject, textFragment) => {
+      const service = new MailerService();
+
+      await service.sendAvisoOrganizacionMail(
+        'user@example.com',
+        tipo,
+        'Cooperativa Sur',
+        anios ? [...anios] : undefined,
+      );
+
+      expect(mockSendMail).toHaveBeenCalledWith({
+        from: 'test@gmail.com',
+        to: 'user@example.com',
+        subject,
+        text: expect.stringContaining(textFragment),
+      });
+    },
+  );
+
+  it.each([
+    [[], ''],
+    [[2024], '2024'],
+    [[2024, 2023], '2023 y 2024'],
+    [[2025, 2022, 2023], '2022, 2023 y 2025'],
+  ])('formats the years %p as "%s"', (anios, expected) => {
+    expect(formatAnios(anios)).toBe(expected);
+  });
+
+  it('does not create a transport nor send any mail when SMTP credentials are missing', async () => {
     delete process.env.MAILER_EMAIL;
     process.env.MAILER_PASSWORD = '';
 
@@ -83,6 +157,20 @@ describe('MailerService', () => {
     expect(mockCreateTransport).not.toHaveBeenCalled();
     await expect(
       service.sendNewUserMail('user@example.com', 'secret123'),
+    ).resolves.toBeUndefined();
+    await expect(
+      service.sendSolicitudConsentimientoMail(
+        'user@example.com',
+        'Org',
+        [2024],
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      service.sendAvisoOrganizacionMail(
+        'user@example.com',
+        'organizacion_eliminada',
+        'Org',
+      ),
     ).resolves.toBeUndefined();
     expect(mockSendMail).not.toHaveBeenCalled();
   });

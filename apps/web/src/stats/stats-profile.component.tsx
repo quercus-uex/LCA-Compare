@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EfCategoryId } from '../common/constants.ts';
+import { Section } from '../components/ui/index.ts';
 import { StatsHeatmap } from './stats-heatmap.component.tsx';
-import { StatsSection } from './stats-section.component.tsx';
 import {
   StatsSpiderChart,
   type ProfileEntity,
@@ -86,7 +86,8 @@ export const StatsProfile = ({ data, selectedCategory }: Props) => {
 
   return (
     <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <StatsSection
+      <Section
+        density="compact"
         title={t('stats.sections.impactProfile')}
         hint={t('stats.sections.impactProfileHint')}
       >
@@ -103,9 +104,10 @@ export const StatsProfile = ({ data, selectedCategory }: Props) => {
             setSelection((prev) => ({ ...prev, secondaryId: entity?.id ?? null }))
           }
         />
-      </StatsSection>
+      </Section>
 
-      <StatsSection
+      <Section
+        density="compact"
         title={t('stats.sections.heatmap')}
         hint={t('stats.sections.heatmapHint')}
       >
@@ -117,7 +119,7 @@ export const StatsProfile = ({ data, selectedCategory }: Props) => {
           }
           onProvinceClick={handleProvinceClick}
         />
-      </StatsSection>
+      </Section>
     </section>
   );
 };

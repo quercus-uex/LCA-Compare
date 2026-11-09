@@ -1,4 +1,4 @@
-const SPINNER_SIZE = { xs: 'loading-xs', sm: 'loading-sm', md: 'loading-md' } as const;
+const SPINNER_SIZE = { xs: 'loading-xs', sm: 'loading-sm', md: 'loading-md', lg: 'loading-lg' } as const;
 
 export const Spinner = ({ size = 'sm' }: { size?: keyof typeof SPINNER_SIZE }) => (
   <span aria-hidden className={`loading loading-spinner ${SPINNER_SIZE[size]}`} />

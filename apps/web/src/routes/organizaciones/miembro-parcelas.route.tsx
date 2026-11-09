@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiInfo, FiUsers } from 'react-icons/fi';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { FiUsers } from 'react-icons/fi';
+import { GiFarmTractor } from 'react-icons/gi';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { ApiError } from '../../common/api.ts';
-import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
-import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
+import { ButtonLink, Callout, EmptyState, ErrorAlert, Page, PageHeader, Skeleton } from '../../components/ui/index.ts';
 import {
   type MiembroParcelas,
   organizacionApi,
@@ -12,7 +12,7 @@ import {
 } from '../../hooks/organizacion.hook.tsx';
 import { ParcelaBreadcrumbs } from '../parcelas/parcela-hero.component.tsx';
 import { ParcelasBrowser, useParcelasBrowser } from '../parcelas/parcelas-browser.component.tsx';
-import { EmptyState, ParcelasListSkeleton } from '../parcelas/parcelas-states.component.tsx';
+import { ParcelasListSkeleton } from '../parcelas/parcelas-states.component.tsx';
 import type { ParcelaLinkState } from '../parcelas/parcelas.utils.ts';
 import { CampaniaChip } from './campania-chip.component.tsx';
 import { OrganizacionNotFound } from './organizacion-not-found.component.tsx';
@@ -70,40 +70,40 @@ export const MiembroParcelasRoute = () => {
 
   if (state.status === 'loading') {
     return (
-      <div className={PAGE_CLASS}>
-        <div className="skeleton h-5 w-64 max-w-full" />
+      <Page busy>
+        <Skeleton className="h-5 w-64 max-w-full" />
         <ParcelasListSkeleton />
-      </div>
+      </Page>
     );
   }
 
   if (state.status === 'sin-campanias') {
     const { organizacion } = state;
     return (
-      <div className={PAGE_CLASS}>
+      <Page>
         <ParcelaBreadcrumbs root={root} items={[{ label: organizacion.nombre, to: organizacionUrl(organizacion.id) }]} />
         <EmptyState
           icon={FiUsers}
           title={t('organizaciones.miembroParcelas.noAccessTitle')}
           description={t('organizaciones.miembroParcelas.noAccessDescription', { organizacion: organizacion.nombre })}
           action={
-            <Link to={organizacionUrl(organizacion.id)} className="btn btn-primary btn-sm">
+            <ButtonLink variant="primary" size="sm" to={organizacionUrl(organizacion.id)}>
               {t('organizaciones.miembroParcelas.backToPanel')}
-            </Link>
+            </ButtonLink>
           }
         />
-      </div>
+      </Page>
     );
   }
 
   if (state.status !== 'ready') {
     return (
-      <div className={PAGE_CLASS}>
+      <Page>
         <ParcelaBreadcrumbs root={root} />
         {state.status === 'not-found'
           ? <OrganizacionNotFound />
           : (
-            <LoadErrorAlert
+            <ErrorAlert
               message={t('organizaciones.miembroParcelas.loadError')}
               onRetry={() => {
                 setState({ status: 'loading' });
@@ -111,7 +111,7 @@ export const MiembroParcelasRoute = () => {
               }}
             />
           )}
-      </div>
+      </Page>
     );
   }
 
@@ -122,7 +122,7 @@ export const MiembroParcelasRoute = () => {
   const { filtered } = browser;
 
   return (
-    <div className={PAGE_CLASS}>
+    <Page>
       <ParcelaBreadcrumbs
         root={root}
         items={[{ label: organizacion.nombre, to: organizacionUrl(organizacion.id) }, { label: nombre }]}
@@ -140,22 +140,24 @@ export const MiembroParcelasRoute = () => {
         )}
       />
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-box bg-base-100 p-4 text-sm shadow-sm">
-        <FiInfo aria-hidden className="shrink-0 text-secondary" />
-        <span>{t('organizaciones.miembroParcelas.note', { organizacion: organizacion.nombre })}</span>
-        <ul className="flex flex-wrap gap-1.5" aria-label={t('organizaciones.miembroParcelas.acceptedYears')}>
-          {anios.map((anio) => <li key={anio}><CampaniaChip anio={anio} estado="aceptado" /></li>)}
-        </ul>
-      </div>
+      <Callout tone="neutral">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span>{t('organizaciones.miembroParcelas.note', { organizacion: organizacion.nombre })}</span>
+          <ul className="flex flex-wrap gap-1.5" aria-label={t('organizaciones.miembroParcelas.acceptedYears')}>
+            {anios.map((anio) => <li key={anio}><CampaniaChip anio={anio} estado="aceptado" /></li>)}
+          </ul>
+        </div>
+      </Callout>
 
       {miembro.parcelas.length === 0 ? (
         <EmptyState
+          icon={GiFarmTractor}
           title={t('organizaciones.miembroParcelas.emptyTitle')}
           description={t('organizaciones.miembroParcelas.emptyDescription')}
         />
       ) : (
         <ParcelasBrowser browser={browser} linkState={linkState} />
       )}
-    </div>
+    </Page>
   );
 };

@@ -1,6 +1,6 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
+import { type AnchorHTMLAttributes, type ButtonHTMLAttributes, isValidElement, type ReactElement, type ReactNode } from 'react';
 import type { IconType } from 'react-icons';
-import { Link, type LinkProps } from 'react-router';
+import { Link, type LinkProps, NavLink, type NavLinkProps } from 'react-router';
 import { Spinner } from './loading.component.tsx';
 
 /**
@@ -89,8 +89,27 @@ export const ButtonLink = ({ variant, size, block, icon, className, children, ..
   return <Link {...rest} className={classes}>{content}</Link>;
 };
 
+type ButtonNavLinkProps = Omit<StyleProps, 'variant' | 'block'> & Omit<NavLinkProps, 'className' | 'children'> & {
+  /** Corrige el estado activo que calcula el router (marcar otra sección según de dónde se llegó, p. ej.) */
+  isActive?: (routerActive: boolean) => boolean;
+  className?: string;
+  children: ReactNode;
+};
+
+/** Enlace de navegación principal: botón fantasma que se resalta cuando su sección está activa */
+export const ButtonNavLink = ({ size, icon, isActive = (active) => active, className, children, ...rest }: ButtonNavLinkProps) => (
+  <NavLink
+    {...rest}
+    className={({ isActive: routerActive }) =>
+      buttonClass({ variant: 'ghost', size }, `${isActive(routerActive) ? 'bg-base-200 text-secondary' : ''} ${className ?? ''}`)}
+  >
+    <Content icon={icon}>{children}</Content>
+  </NavLink>
+);
+
 type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label'> & {
-  icon: IconType;
+  /** Icono o, si necesita algo más (un contador encima), el elemento ya pintado */
+  icon: IconType | ReactElement;
   /** Nombre accesible, también visible como tooltip: un botón de solo icono no puede ir sin él */
   label: string;
   variant?: Extract<ButtonVariant, 'ghost' | 'outline' | 'danger-ghost'>;
@@ -106,7 +125,7 @@ export const IconButton = ({ icon: Icon, label, variant = 'ghost', size = 'sm', 
     title={label}
     className={buttonClass({ variant, size }, className, 'circle')}
   >
-    <Icon aria-hidden className={size === 'xs' ? 'size-3.5' : 'size-4'} />
+    {isValidElement(Icon) ? Icon : <Icon aria-hidden className={size === 'xs' ? 'size-3.5' : 'size-4'} />}
   </button>
 );
 
@@ -120,19 +139,30 @@ export const ToggleButton = ({ pressed, ...rest }: ToggleButtonProps) => (
 type SegmentedControlProps<T extends string> = {
   /** Nombre accesible del grupo */
   label: string;
-  options: readonly { value: T; label: ReactNode }[];
+  options: readonly { value: T; label: ReactNode; icon?: IconType }[];
   value: T | undefined;
   onChange: (value: T) => void;
-  size?: Exclude<ButtonSize, 'lg'>;
+  size?: SegmentSize;
+  /** Tamaño desde la anchura `md`, si cambia respecto al de móvil */
+  mdSize?: SegmentSize;
   /** Ocupa todo el ancho y reparte el espacio entre las opciones */
   block?: boolean;
 };
 
-// Misma altura total que los botones (24, 32 y 40 px) descontando el borde del contenedor
+type SegmentSize = Exclude<ButtonSize, 'lg'>;
+
+// Misma altura total que los botones (24, 32 y 40 px) descontando el borde del contenedor.
+// Clases literales: Tailwind solo genera las que encuentra escritas
 const SEGMENT_SIZE = {
   xs: 'h-[calc(1.5rem-2px)] px-2 text-xs',
   sm: 'h-[calc(2rem-2px)] px-3 text-xs',
   md: 'h-[calc(2.5rem-2px)] px-4 text-sm',
+} as const;
+
+const MD_SEGMENT_SIZE = {
+  xs: 'md:h-[calc(1.5rem-2px)] md:px-2 md:text-xs',
+  sm: 'md:h-[calc(2rem-2px)] md:px-3 md:text-xs',
+  md: 'md:h-[calc(2.5rem-2px)] md:px-4 md:text-sm',
 } as const;
 
 /**
@@ -140,25 +170,26 @@ const SEGMENT_SIZE = {
  * divisores son del contenedor, no de cada opción: así no cambian ni se mueven
  * al elegir otra, solo cambia el relleno.
  */
-export const SegmentedControl = <T extends string>({ label, options, value, onChange, size = 'sm', block }: SegmentedControlProps<T>) => (
+export const SegmentedControl = <T extends string>({ label, options, value, onChange, size = 'sm', mdSize, block }: SegmentedControlProps<T>) => (
   <div
     role="group"
     aria-label={label}
     className={`${block ? 'flex w-full' : 'inline-flex'} divide-x divide-secondary overflow-hidden rounded-field border border-secondary`}
   >
-    {options.map((option) => {
-      const pressed = option.value === value;
+    {options.map(({ value: optionValue, label: optionLabel, icon: Icon }) => {
+      const pressed = optionValue === value;
       return (
         <button
-          key={option.value}
+          key={optionValue}
           type="button"
           aria-pressed={pressed}
-          className={`${SEGMENT_SIZE[size]} ${block ? 'flex-1' : ''} inline-flex cursor-pointer items-center justify-center font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-secondary ${
+          className={`${SEGMENT_SIZE[size]} ${mdSize ? MD_SEGMENT_SIZE[mdSize] : ''} ${block ? 'flex-1' : ''} inline-flex cursor-pointer items-center justify-center gap-2 font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-secondary ${
             pressed ? 'bg-primary text-primary-content' : 'text-secondary hover:bg-secondary/10'
           }`}
-          onClick={() => onChange(option.value)}
+          onClick={() => onChange(optionValue)}
         >
-          {option.label}
+          {Icon && <Icon aria-hidden className="shrink-0" />}
+          {optionLabel}
         </button>
       );
     })}

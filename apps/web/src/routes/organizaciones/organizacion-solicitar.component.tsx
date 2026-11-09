@@ -4,6 +4,7 @@ import { FiCheck, FiSend } from 'react-icons/fi';
 import { toast } from 'sonner';
 import { ApiError } from '../../common/api.ts';
 import { formatList } from '../../common/format.ts';
+import { Button, Callout, Card, Field, Input, SectionHeader, ToggleButton } from '../../components/ui/index.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { organizacionApi, type OrganizacionDetalle } from '../../hooks/organizacion.hook.tsx';
 import { campaniasSolicitables, describeOrganizacionError } from './organizaciones.utils.ts';
@@ -104,33 +105,26 @@ export const OrganizacionSolicitar = ({ organizacion, onSent }: Props) => {
   const errorId = `${id}-error`;
 
   return (
-    <form className="card bg-base-100 shadow-sm" noValidate onSubmit={(e) => void submit(e)}>
-      <div className="card-body max-w-2xl gap-5 p-4 sm:p-6">
-        <div>
-          <h2 className="text-xl font-semibold">{t('organizaciones.solicitar.title')}</h2>
-          <p className="text-sm text-base-content/70">{t('organizaciones.solicitar.description')}</p>
-        </div>
+    <Card>
+      <form className="flex max-w-2xl flex-col gap-5" noValidate onSubmit={(e) => void submit(e)}>
+        <SectionHeader title={t('organizaciones.solicitar.title')} hint={t('organizaciones.solicitar.description')} />
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor={`${id}-email`} className="text-sm font-medium">{t('organizaciones.solicitar.email')}</label>
-          <input
-            id={`${id}-email`}
+        <Field
+          label={t('organizaciones.solicitar.email')}
+          // El error se anuncia al aparecer
+          error={error?.field === 'email' ? <span role="alert">{error.message}</span> : undefined}
+        >
+          <Input
             type="email"
             autoComplete="off"
-            className={`input w-full ${error?.field === 'email' ? 'input-error' : ''}`}
             placeholder={t('organizaciones.solicitar.emailPlaceholder')}
             value={email}
-            aria-invalid={error?.field === 'email'}
-            aria-describedby={error?.field === 'email' ? errorId : undefined}
             onChange={(e) => {
               setEmail(e.target.value);
               if (error?.field === 'email') setError(null);
             }}
           />
-          {error?.field === 'email' && (
-            <span id={errorId} role="alert" className="text-sm font-medium text-red-700">{error.message}</span>
-          )}
-        </div>
+        </Field>
 
         <fieldset className="flex flex-col gap-2" aria-describedby={error?.field === 'anios' ? errorId : `${id}-anios-hint`}>
           <legend className="mb-1 text-sm font-medium">{t('organizaciones.solicitar.years')}</legend>
@@ -139,52 +133,51 @@ export const OrganizacionSolicitar = ({ organizacion, onSent }: Props) => {
               const activa = yaActivas.get(anio);
               const selected = !activa && seleccion.has(anio);
               return (
-                <button
+                <ToggleButton
                   key={anio}
-                  type="button"
-                  className={`btn btn-sm tabular-nums ${selected ? 'btn-primary' : 'btn-outline'}`}
-                  aria-pressed={selected}
+                  size="sm"
+                  className="tabular-nums"
+                  pressed={selected}
+                  icon={selected ? FiCheck : undefined}
                   disabled={!!activa}
                   title={activa ? t('organizaciones.solicitar.alreadyActive', { estado: t(`organizaciones.estados.${activa}`) }) : undefined}
                   onClick={() => toggle(anio)}
                 >
-                  {selected && <FiCheck aria-hidden />}
                   {anio}
                   {activa && <span className="sr-only">: {t(`organizaciones.estados.${activa}`)}</span>}
-                </button>
+                </ToggleButton>
               );
             })}
           </div>
           <div className="flex flex-wrap items-center gap-1 text-sm">
-            <button type="button" className="btn btn-ghost btn-xs" onClick={() => setSeleccion(new Set(anios))}>
+            <Button variant="ghost" size="xs" onClick={() => setSeleccion(new Set(anios))}>
               {t('organizaciones.solicitar.selectAll')}
-            </button>
-            <button type="button" className="btn btn-ghost btn-xs" onClick={() => setSeleccion(new Set())}>
+            </Button>
+            <Button variant="ghost" size="xs" onClick={() => setSeleccion(new Set())}>
               {t('organizaciones.solicitar.selectNone')}
-            </button>
-            <span id={`${id}-anios-hint`} className="ml-1 text-base-content/70" aria-live="polite">
+            </Button>
+            <span id={`${id}-anios-hint`} className="ml-1 text-muted" aria-live="polite">
               {t('organizaciones.solicitar.selected', { count: elegidas.length })}
             </span>
           </div>
           {miembro && yaActivas.size > 0 && (
-            <p className="text-sm text-base-content/70">
+            <p className="text-sm text-muted">
               {t('organizaciones.solicitar.memberHint', { nombre: miembro.usuario.nombre })}
             </p>
           )}
           {error?.field === 'anios' && (
-            <span id={errorId} role="alert" className="text-sm font-medium text-red-700">{error.message}</span>
+            <span id={errorId} role="alert" className="text-sm font-medium text-danger">{error.message}</span>
           )}
         </fieldset>
 
-        {error?.field === 'form' && <div role="alert" className="alert alert-error text-sm">{error.message}</div>}
+        {error?.field === 'form' && <Callout tone="error" live>{error.message}</Callout>}
 
         <div className="flex justify-end">
-          <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={sending}>
-            {sending ? <span className="loading loading-spinner loading-sm" aria-hidden /> : <FiSend aria-hidden />}
+          <Button variant="primary" type="submit" icon={FiSend} loading={sending} className="w-full sm:w-auto">
             {t('organizaciones.solicitar.submit')}
-          </button>
+          </Button>
         </div>
-      </div>
-    </form>
+      </form>
+    </Card>
   );
 };

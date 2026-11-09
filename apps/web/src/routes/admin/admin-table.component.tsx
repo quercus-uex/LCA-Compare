@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FiAlertTriangle, FiChevronDown, FiChevronRight, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { formatNumericDate, formatQuantity } from '../../common/format.ts';
 import { safeString } from '../../common/utils.ts';
+import { Badge, Button, EmptyState, IconButton, Skeleton } from '../../components/ui/index.ts';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { EstadoBadge } from '../organizaciones/campania-chip.component.tsx';
 import { canDo, CONFIG, ENTITY_DISPLAY, type ColumnConfig, type Entity, type Item } from './admin.config.ts';
@@ -28,7 +29,7 @@ const formatAdminDate = (value: unknown) => {
   return str ? formatNumericDate(str) : null;
 };
 
-const Empty = () => <span className="text-base-content/70">—</span>;
+const Empty = () => <span className="text-muted">—</span>;
 
 const isEstado = (value: unknown): value is ConsentimientoEstado =>
   CONSENTIMIENTO_ESTADOS.includes(value as ConsentimientoEstado);
@@ -74,15 +75,15 @@ export const AdminTable = ({
       }
       case 'role':
         return (
-          <span className={`badge badge-sm ${raw === 'admin' ? 'badge-secondary' : 'badge-ghost'}`}>
+          <Badge tone={raw === 'admin' ? 'secondary' : 'neutral'} size="sm">
             {t(`admin.roles.${safeString(raw) ?? 'usuario'}`)}
-          </span>
+          </Badge>
         );
       case 'boolean':
         return raw === true ? (
-          <span className="badge badge-sm badge-success">{t('common.yes')}</span>
+          <Badge tone="success" size="sm">{t('common.yes')}</Badge>
         ) : (
-          <span className="text-base-content/70 text-sm">{t('common.no')}</span>
+          <span className="text-muted text-sm">{t('common.no')}</span>
         );
       case 'date':
         return formatAdminDate(raw) ?? <Empty />;
@@ -91,7 +92,7 @@ export const AdminTable = ({
         return (
           <span className="tabular-nums">
             {formatQuantity(raw)}
-            {column.unitKey && <span className="text-base-content/70 text-xs"> {t(column.unitKey)}</span>}
+            {column.unitKey && <span className="text-muted text-xs"> {t(column.unitKey)}</span>}
           </span>
         );
       }
@@ -120,7 +121,7 @@ export const AdminTable = ({
           <div className="flex flex-col gap-0.5">
             {ids.map(([label, v]) => (
               <span key={String(label)} className="text-xs">
-                <span className="text-base-content/70">{String(label)}</span>{' '}
+                <span className="text-muted">{String(label)}</span>{' '}
                 <span className="font-mono">{String(v)}</span>
               </span>
             ))}
@@ -132,10 +133,9 @@ export const AdminTable = ({
         const id = safeString(raw);
         if (!id) {
           return column.missingKey ? (
-            <span className="badge badge-sm badge-warning gap-1">
-              <FiAlertTriangle aria-hidden />
+            <Badge tone="warning" size="sm" icon={FiAlertTriangle}>
               {t(column.missingKey)}
-            </span>
+            </Badge>
           ) : (
             <Empty />
           );
@@ -152,7 +152,7 @@ export const AdminTable = ({
             onClick={() => onNavigate(column.entity, id, label)}
           >
             <span className="link link-hover text-secondary">{label}</span>
-            {detail && <span className="block text-xs text-base-content/70">{detail}</span>}
+            {detail && <span className="block text-xs text-muted">{detail}</span>}
           </button>
         );
       }
@@ -167,27 +167,19 @@ export const AdminTable = ({
     return (
       <div className="flex justify-end gap-1">
         {canDo(actionEntity, 'edit') && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-square tooltip tooltip-left"
-            data-tip={t('common.actions.edit')}
-            aria-label={t('common.actions.edit')}
-            onClick={() => onEdit(item, target)}
-          >
-            <FiEdit2 aria-hidden />
-          </button>
+          <IconButton icon={FiEdit2} label={t('common.actions.edit')} onClick={() => onEdit(item, target)} />
         )}
         {canDo(actionEntity, 'delete') && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-square tooltip tooltip-left hover:bg-error hover:text-error-content disabled:bg-transparent"
-            data-tip={isSelf ? t('admin.delete.ownAccount') : t('common.actions.delete')}
-            aria-label={t('common.actions.delete')}
-            disabled={isSelf}
-            onClick={() => onDelete(item, target)}
-          >
-            <FiTrash2 aria-hidden />
-          </button>
+          // Un botón desactivado no muestra su tooltip: el motivo va en el contenedor
+          <span className="flex" title={isSelf ? t('admin.delete.ownAccount') : undefined}>
+            <IconButton
+              icon={FiTrash2}
+              label={t('common.actions.delete')}
+              variant="danger-ghost"
+              disabled={isSelf}
+              onClick={() => onDelete(item, target)}
+            />
+          </span>
         )}
       </div>
     );
@@ -197,33 +189,32 @@ export const AdminTable = ({
     return (
       <div className="flex flex-col gap-2 p-4" aria-busy="true">
         {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="skeleton h-10 w-full" />
+          <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>
     );
   }
 
   if (data.length === 0) {
-    const Icon = config.icon;
     return (
-      <div className="flex flex-col items-center text-center gap-3 py-16 px-4">
-        <div className="size-12 rounded-full bg-base-200 flex items-center justify-center">
-          <Icon className="size-5 text-base-content/70" aria-hidden />
-        </div>
-        <div>
-          <p className="font-medium">{filtered ? t('common.empty.noResults') : t('admin.empty.title')}</p>
-          <p className="text-sm text-base-content/70">
-            {filtered
-              ? t('admin.empty.filtered')
-              : t(canDo(entity, 'create') ? 'admin.empty.create' : 'admin.empty.readOnly')}
-          </p>
-        </div>
-        {!filtered && canDo(entity, 'create') && (
-          <button type="button" className="btn btn-primary btn-sm" onClick={onCreate}>
-            <FiPlus aria-hidden /> {t(`admin.createTitles.${config.titleKey}`)}
-          </button>
-        )}
-      </div>
+      <EmptyState
+        icon={config.icon}
+        headingLevel="h3"
+        title={filtered ? t('common.empty.noResults') : t('admin.empty.title')}
+        description={
+          filtered ? t('admin.empty.filtered') : t(canDo(entity, 'create') ? 'admin.empty.create' : 'admin.empty.readOnly')
+        }
+        action={
+          !filtered &&
+          canDo(entity, 'create') && (
+            <Button variant="primary" size="sm" icon={FiPlus} onClick={onCreate}>
+              {t(`admin.createTitles.${config.titleKey}`)}
+            </Button>
+          )
+        }
+        variant="inset"
+        className="py-16"
+      />
     );
   }
 
@@ -233,7 +224,7 @@ export const AdminTable = ({
     <div className={`overflow-x-auto transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
       <table className="table">
         <thead>
-          <tr className="text-base-content/70">
+          <tr className="text-muted">
             {expandable && <th className="w-10" aria-label={t('admin.viewCrops')} />}
             {config.columns.map((column) => (
               <th key={column.key} className="font-medium">
@@ -254,16 +245,13 @@ export const AdminTable = ({
                   {expandable && (
                     <td className="px-2">
                       {cultivos.length > 0 && (
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-xs btn-square"
+                        <IconButton
+                          icon={isExpanded ? FiChevronDown : FiChevronRight}
+                          label={t('admin.viewCrops')}
+                          size="xs"
                           aria-expanded={isExpanded}
-                          aria-label={t('admin.viewCrops')}
-                          title={t('admin.viewCrops')}
                           onClick={() => toggleExpand(id)}
-                        >
-                          {isExpanded ? <FiChevronDown aria-hidden /> : <FiChevronRight aria-hidden />}
-                        </button>
+                        />
                       )}
                     </td>
                   )}
@@ -282,7 +270,7 @@ export const AdminTable = ({
                         <div className="rounded-box border border-base-300 bg-base-100 overflow-x-auto">
                           <table className="table table-sm">
                             <thead>
-                              <tr className="text-base-content/70">
+                              <tr className="text-muted">
                                 <th className="font-medium">{t('admin.fields.tipo')}</th>
                                 <th className="font-medium">{t('admin.fields.fechaInicioCampania')}</th>
                                 <th className="font-medium">{t('admin.fields.superficieCultivada')}</th>
@@ -311,7 +299,7 @@ export const AdminTable = ({
                                       {typeof value === 'number' ? (
                                         <>
                                           {formatQuantity(value)}
-                                          <span className="text-base-content/70 text-xs"> {t(unit)}</span>
+                                          <span className="text-muted text-xs"> {t(unit)}</span>
                                         </>
                                       ) : (
                                         <Empty />

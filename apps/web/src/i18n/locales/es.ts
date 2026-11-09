@@ -246,7 +246,6 @@ export const es = {
       noneWithLocation: 'Ninguna de estas parcelas tiene ubicación.',
     },
     detail: {
-      breadcrumb: 'Ruta de navegación',
       loadError: 'No se ha podido cargar la parcela.',
       compare: 'Comparar esta parcela',
       compareAsTarget: 'Como conjunto objetivo',

@@ -7,6 +7,11 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import importPlugin from 'eslint-plugin-import'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
+// Clases de DaisyUI que ya cubre la librería de components/ui: fuera de ella se usa su componente
+// (Button, Badge, Field/Input, Card, Tabs, Dialog…). Catálogo en /dev/ui
+const UI_CLASS_PATTERN = String.raw`(?:^|\s)(?:[\w-]+:)*(?:btn|badge|input|select(?!-(?:none|text|all|auto)(?:\s|$))|textarea|toggle|checkbox|alert|card|tabs?|menu|modal|join|loading|skeleton|dropdown)(?:-[\w-]+)?(?:\s|$)`
+const UI_CLASS_MESSAGE = 'Usa el componente de components/ui en lugar de la clase de DaisyUI (catálogo en /dev/ui).'
+
 export default defineConfig([
   globalIgnores(['dist']),
   {
@@ -38,12 +43,21 @@ export default defineConfig([
         controlComponents: ['IdLookupField'],
         assert: 'either',
       }],
+      'no-restricted-syntax': ['error',
+        { selector: `JSXAttribute[name.name="className"] Literal[value=/${UI_CLASS_PATTERN}/]`, message: UI_CLASS_MESSAGE },
+        { selector: `JSXAttribute[name.name="className"] TemplateElement[value.raw=/${UI_CLASS_PATTERN}/]`, message: UI_CLASS_MESSAGE },
+      ],
       'import/order': ['warn', {
         'newlines-between': 'never',
         groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         alphabetize: { order: 'asc', caseInsensitive: true },
       }],
     },
+  },
+  {
+    // La librería es la única que pinta las clases de DaisyUI que envuelve
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: { 'no-restricted-syntax': 'off' },
   },
   {
     files: ['*.config.{ts,js}', '*.config.ts'],

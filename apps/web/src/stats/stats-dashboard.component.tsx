@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
+import { Section } from '../components/ui/index.ts';
 import { StatsCropDonut } from './stats-crop-donut.component.tsx';
 import { StatsOverview } from './stats-overview.component.tsx';
 import { StatsProfile } from './stats-profile.component.tsx';
 import { StatsRankings } from './stats-rankings.component.tsx';
-import { StatsSection } from './stats-section.component.tsx';
 import { StatsTimeline } from './stats-timeline.component.tsx';
 import { StatsWaterChart } from './stats-water-chart.component.tsx';
 import type { GlobalStatsDto } from './stats.hook.tsx';
@@ -39,7 +39,8 @@ export const StatsDashboard = ({ data, filters, onFiltersChange }: Props) => {
         onProvinciaFilterChange={(provincia) => onFiltersChange({ provincia })}
       />
 
-      <StatsSection
+      <Section
+        density="compact"
         title={t('stats.sections.timeline')}
         hint={t('stats.sections.timelineHint')}
       >
@@ -48,12 +49,13 @@ export const StatsDashboard = ({ data, filters, onFiltersChange }: Props) => {
           selectedCategory={filters.categoria}
           anio={filters.anio}
         />
-      </StatsSection>
+      </Section>
 
       <StatsProfile data={data} selectedCategory={filters.categoria} />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <StatsSection
+        <Section
+          density="compact"
           title={t('stats.sections.cropDistribution')}
           hint={t('stats.sections.cropDistributionHint')}
         >
@@ -62,8 +64,9 @@ export const StatsDashboard = ({ data, filters, onFiltersChange }: Props) => {
             selected={filters.tipoCultivo}
             onSelect={(tipoCultivo) => onFiltersChange({ tipoCultivo })}
           />
-        </StatsSection>
-        <StatsSection
+        </Section>
+        <Section
+          density="compact"
           title={t('stats.sections.waterProductivity')}
           hint={t('stats.sections.waterProductivityHint')}
         >
@@ -73,7 +76,7 @@ export const StatsDashboard = ({ data, filters, onFiltersChange }: Props) => {
             tiposCultivo={data.tiposCultivoDisponibles}
             onSelectCrop={(tipoCultivo) => onFiltersChange({ tipoCultivo })}
           />
-        </StatsSection>
+        </Section>
       </div>
     </div>
   );

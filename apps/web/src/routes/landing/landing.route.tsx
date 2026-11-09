@@ -1,35 +1,36 @@
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiBarChart2, FiLayers, FiMap } from 'react-icons/fi';
-import { useNavigate } from 'react-router';
 import { DOCS_URL } from '../../common/constants.ts';
+import { ButtonLink, CardLink } from '../../components/ui/index.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 
 export const LandingRoute = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const auth = useAuth();
+  const descriptionId = useId();
 
   const features = [
     {
-      icon: <FiLayers className="text-3xl text-primary" aria-hidden="true" />,
+      icon: FiLayers,
       title: t('landing.features.compare.title'),
       description: t('landing.features.compare.description'),
       ariaLabel: t('landing.features.compare.ariaLabel'),
-      action: () => navigate('/compare'),
+      to: '/compare',
     },
     {
-      icon: <FiBarChart2 className="text-3xl text-primary" aria-hidden="true" />,
+      icon: FiBarChart2,
       title: t('landing.features.stats.title'),
       description: t('landing.features.stats.description'),
       ariaLabel: t('landing.features.stats.ariaLabel'),
-      action: () => navigate('/estadisticas'),
+      to: '/estadisticas',
     },
     {
-      icon: <FiMap className="text-3xl text-primary" aria-hidden="true" />,
+      icon: FiMap,
       title: t('landing.features.plots.title'),
       description: t('landing.features.plots.description'),
       ariaLabel: t('landing.features.plots.ariaLabel'),
-      action: () => navigate(auth.usuario ? '/parcelas' : '/auth/login'),
+      to: auth.usuario ? '/parcelas' : '/auth/login',
     },
   ];
 
@@ -43,46 +44,23 @@ export const LandingRoute = () => {
           {t('landing.hero.subtitle')}
         </p>
         <div className="flex gap-3 flex-wrap justify-center mt-2">
-          <button
-            type="button"
-            className="btn btn-primary btn-lg focus-visible:outline-2 focus-visible:outline-offset-2"
-            aria-label={t('landing.hero.cta.primaryAriaLabel')}
-            onClick={() => void navigate('/compare')}
-          >
+          <ButtonLink variant="primary" size="lg" to="/compare" aria-label={t('landing.hero.cta.primaryAriaLabel')}>
             {t('landing.hero.cta.primary')}
-          </button>
-          <a
-            className="btn btn-outline btn-lg focus-visible:outline-2 focus-visible:outline-offset-2"
-            href={DOCS_URL}
-            target="_blank"
-            rel="noopener noreferrer external"
-            aria-label={t('landing.hero.cta.secondaryAriaLabel')}
-          >
+          </ButtonLink>
+          <ButtonLink variant="outline" size="lg" href={DOCS_URL} aria-label={t('landing.hero.cta.secondaryAriaLabel')}>
             {t('landing.hero.cta.secondary')}
-          </a>
+          </ButtonLink>
         </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6" aria-label={t('landing.hero.title')}>
-        {features.map((feature, index) => {
-          const descId = `landing-feature-${index}-desc`;
-          return (
-            <button
-              key={feature.title}
-              type="button"
-              className="card bg-base-100 shadow-sm text-left transition hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-box"
-              aria-label={feature.ariaLabel}
-              aria-describedby={descId}
-              onClick={() => void feature.action()}
-            >
-              <div className="card-body items-center text-center gap-3">
-                {feature.icon}
-                <h2 className="card-title text-xl">{feature.title}</h2>
-                <p id={descId} className="text-base-content/80">{feature.description}</p>
-              </div>
-            </button>
-          );
-        })}
+        {features.map(({ icon: Icon, title, description, ariaLabel, to }, i) => (
+          <CardLink key={title} to={to} label={ariaLabel} aria-describedby={`${descriptionId}-${i}`} className="text-center">
+            <Icon aria-hidden className="mx-auto text-3xl text-primary" />
+            <h2 className="text-xl font-semibold">{title}</h2>
+            <p id={`${descriptionId}-${i}`} className="text-base-content/80">{description}</p>
+          </CardLink>
+        ))}
       </section>
     </div>
   );

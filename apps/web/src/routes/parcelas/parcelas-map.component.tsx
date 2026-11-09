@@ -4,11 +4,11 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiInfo } from 'react-icons/fi';
 import { CircleMarker, GeoJSON, MapContainer, Popup, useMap, useMapEvents } from 'react-leaflet';
-import { Link } from 'react-router';
 import { formatCampaignDate } from '../../common/format.ts';
 import { polygonsBounds } from '../../common/geo.ts';
 import { CropTypeBadge } from '../../components/crop-type-badge.component.tsx';
 import { BaseLayers, MAP_BOUNDS_PADDING } from '../../components/map-preview.component.tsx';
+import { ButtonLink, EmptyState } from '../../components/ui/index.ts';
 import type { ParcelaResumen } from '../../hooks/parcela.hook.tsx';
 import { getCropTypeStyle } from '../../hooks/use-crop-type-label.ts';
 import { formatPoblacion, type ParcelaLinkState } from './parcelas.utils.ts';
@@ -47,16 +47,14 @@ export const ParcelasMap = ({ parcelas, linkState }: { parcelas: ParcelaResumen[
 
   if (!bounds) {
     return (
-      <div className="flex h-96 w-full items-center justify-center rounded-box bg-base-100 text-base-content/70 shadow-sm">
-        {t('parcelas.map.noneWithLocation')}
-      </div>
+      <EmptyState icon={false} description={t('parcelas.map.noneWithLocation')} className="h-96" />
     );
   }
 
   return (
     <div className="flex w-full flex-col gap-2">
       {sinGeom > 0 && (
-        <p className="flex items-center gap-2 text-sm text-base-content/70">
+        <p className="flex items-center gap-2 text-sm text-muted">
           <FiInfo aria-hidden />
           {t('parcelas.map.withoutLocation', { count: sinGeom })}
         </p>
@@ -80,13 +78,14 @@ export const ParcelasMap = ({ parcelas, linkState }: { parcelas: ParcelaResumen[
                 <span>{formatPoblacion(p.poblacion, t)}</span>
                 {p.ultimoCultivo && (
                   <span className="flex flex-wrap items-center gap-1.5">
-                    <CropTypeBadge tipo={p.ultimoCultivo.tipo} className="badge-sm" />
+                    <CropTypeBadge tipo={p.ultimoCultivo.tipo} size="sm" />
                     {formatCampaignDate(p.ultimoCultivo.fechaInicioCampania)}
                   </span>
                 )}
-                <Link to={`/parcelas/${p.id}`} state={linkState} className="btn btn-primary btn-sm mt-1 text-primary-content!">
+                {/* Los enlaces de Leaflet imponen su color: `!` devuelve el del botón */}
+                <ButtonLink variant="primary" size="sm" to={`/parcelas/${p.id}`} state={linkState} className="mt-1 text-primary-content!">
                   {t('parcelas.viewPlot')}
-                </Link>
+                </ButtonLink>
               </div>
             </Popup>
           );

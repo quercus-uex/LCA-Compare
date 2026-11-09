@@ -74,13 +74,27 @@ export const Menu = ({ children }: { children: ReactNode }) => <ul className="me
 /** Encabezado de un grupo de opciones */
 export const MenuTitle = ({ children }: { children: ReactNode }) => <li className="menu-title">{children}</li>;
 
-type MenuItemProps = { children: ReactNode; danger?: boolean } & ({ onClick: () => void } | { to: To });
+type MenuItemProps = {
+  children: ReactNode;
+  danger?: boolean;
+  /** Opción de la vista actual (sección elegida en un menú lateral, p. ej.) */
+  active?: boolean;
+} & ({ onClick: () => void } | { to: To } | { href: string });
 
-/** Opción del menú: acción con `onClick` o navegación con `to` */
-export const MenuItem = ({ children, danger, ...action }: MenuItemProps) => (
-  <li>
-    {'to' in action
-      ? <Link to={action.to} className={danger ? 'text-danger' : undefined}>{children}</Link>
-      : <button type="button" className={danger ? 'text-danger' : undefined} onClick={action.onClick}>{children}</button>}
-  </li>
-);
+/** Opción del menú: acción con `onClick`, navegación con `to` o enlace externo con `href` */
+export const MenuItem = ({ children, danger, active, ...action }: MenuItemProps) => {
+  // Mismo resaltado que los enlaces de la barra de navegación (`ButtonNavLink`)
+  const className = [active && 'bg-base-200 font-semibold text-secondary', danger && 'text-danger'].filter(Boolean).join(' ') || undefined;
+  const current = active ? 'page' : undefined;
+  return (
+    <li>
+      {'to' in action && <Link to={action.to} className={className} aria-current={current}>{children}</Link>}
+      {'href' in action && (
+        <a href={action.href} target="_blank" rel="noreferrer" className={className}>{children}</a>
+      )}
+      {'onClick' in action && (
+        <button type="button" className={className} aria-current={current} onClick={action.onClick}>{children}</button>
+      )}
+    </li>
+  );
+};

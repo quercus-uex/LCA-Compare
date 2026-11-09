@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { FiBarChart2 } from 'react-icons/fi';
-import { Link } from 'react-router';
 import { formatCampaignDate, formatQuantity } from '../../common/format.ts';
 import { CropTypeBadge } from '../../components/crop-type-badge.component.tsx';
+import { Badge, ButtonLink, Card, SectionHeader } from '../../components/ui/index.ts';
 import type { CultivoConImpacto } from '../../hooks/parcela.hook.tsx';
 
 // Columnas que se ocultan al estrechar la pantalla, para que la tabla quepa sin scroll lateral
@@ -21,8 +21,8 @@ export const CampaniasTable = ({ cultivos, linkState }: Props) => {
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="historial-title">
-      <h2 id="historial-title" className="text-2xl font-bold">{t('parcelas.detail.history')}</h2>
-      <div className="overflow-x-auto rounded-box bg-base-100 shadow-sm">
+      <SectionHeader level="page" id="historial-title" title={t('parcelas.detail.history')} />
+      <Card flush className="overflow-x-auto">
         <table className="table">
           <thead>
             <tr>
@@ -41,7 +41,7 @@ export const CampaniasTable = ({ cultivos, linkState }: Props) => {
                 <td>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 whitespace-nowrap">
                     {formatCampaignDate(c.fechaInicioCampania)}
-                    {i === 0 && <span className="badge badge-primary badge-sm">{t('parcelas.detail.current')}</span>}
+                    {i === 0 && <Badge tone="primary" size="sm">{t('parcelas.detail.current')}</Badge>}
                   </div>
                 </td>
                 <td><CropTypeBadge tipo={c.tipo} /></td>
@@ -51,25 +51,27 @@ export const CampaniasTable = ({ cultivos, linkState }: Props) => {
                 <td className={`${LG} text-right tabular-nums`}>{formatQuantity(c.ciclo, 0)}</td>
                 <td className="text-right">
                   {c.idResultadoImpacto ? (
-                    <Link
+                    <ButtonLink
+                      variant="outline"
+                      size="xs"
+                      icon={FiBarChart2}
                       to={`/resultados/${c.idResultadoImpacto}`}
                       state={linkState}
-                      className="btn btn-outline btn-secondary btn-xs whitespace-nowrap"
+                      className="whitespace-nowrap"
                       aria-label={t('parcelas.viewImpacts')}
                       title={t('parcelas.viewImpacts')}
                     >
-                      <FiBarChart2 aria-hidden />
                       <span className="hidden sm:inline">{t('parcelas.viewImpacts')}</span>
-                    </Link>
+                    </ButtonLink>
                   ) : (
-                    <span className="text-sm text-base-content/70">{t('parcelas.noImpactResult')}</span>
+                    <span className="text-sm text-muted">{t('parcelas.noImpactResult')}</span>
                   )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </Card>
     </section>
   );
 };

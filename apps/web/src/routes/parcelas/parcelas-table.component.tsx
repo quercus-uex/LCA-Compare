@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { formatCampaignDate, formatQuantity } from '../../common/format.ts';
 import { CropTypeBadge } from '../../components/crop-type-badge.component.tsx';
+import { Badge, Card } from '../../components/ui/index.ts';
 import type { ParcelaResumen } from '../../hooks/parcela.hook.tsx';
 import { formatPoblacion, getIdentificadores, type ParcelaLinkState } from './parcelas.utils.ts';
 
@@ -15,7 +16,7 @@ export const ParcelasTable = ({ parcelas, linkState }: { parcelas: ParcelaResume
   const navigate = useNavigate();
 
   return (
-    <div className="w-full overflow-x-auto rounded-box bg-base-100 shadow-sm">
+    <Card flush className="w-full overflow-x-auto">
       <table className="table table-zebra">
         <thead>
           <tr>
@@ -47,7 +48,7 @@ export const ParcelasTable = ({ parcelas, linkState }: { parcelas: ParcelaResume
                     {p.nombre}
                   </Link>
                   {p.esParcelaReferencia && (
-                    <span className="badge badge-success badge-sm">{t('parcelas.referenceBadge')}</span>
+                    <Badge tone="success" size="sm">{t('parcelas.referenceBadge')}</Badge>
                   )}
                 </div>
               </td>
@@ -55,7 +56,7 @@ export const ParcelasTable = ({ parcelas, linkState }: { parcelas: ParcelaResume
               <td>
                 {p.ultimoCultivo
                   ? <CropTypeBadge tipo={p.ultimoCultivo.tipo} />
-                  : <span className="text-base-content/70">{t('parcelas.noCrops')}</span>}
+                  : <span className="text-muted">{t('parcelas.noCrops')}</span>}
               </td>
               <td className={`${SM} whitespace-nowrap`}>
                 {p.ultimoCultivo ? formatCampaignDate(p.ultimoCultivo.fechaInicioCampania) : '—'}
@@ -75,6 +76,6 @@ export const ParcelasTable = ({ parcelas, linkState }: { parcelas: ParcelaResume
           ))}
         </tbody>
       </table>
-    </div>
+    </Card>
   );
 };

@@ -4,7 +4,6 @@ import { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';
 import {
-  FiAlertTriangle,
   FiBell,
   FiCheck,
   FiCheckCircle,
@@ -15,12 +14,11 @@ import {
   FiX,
   FiXCircle,
 } from 'react-icons/fi';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { formatDateTime, formatList, formatRelativeTime } from '../common/format.ts';
 import { type SolicitudPendienteDto, useNotificaciones } from '../hooks/notificaciones.hook.tsx';
 import { nombreCompleto } from '../routes/organizaciones/organizaciones.utils.ts';
-import { Dropdown } from './dropdown.component.tsx';
+import { Badge, Button, ButtonLink, Callout, ColorDot, Dropdown, Skeleton } from './ui/index.ts';
 
 const AVISO_ICONS: Record<NotificacionTipo, IconType> = {
   consentimiento_revocado: FiSlash,
@@ -46,9 +44,8 @@ export const BellIcon = ({ total }: { total: number }) => (
   <span className="indicator">
     <FiBell aria-hidden className="size-5" />
     {total > 0 && (
-      <span aria-hidden className="indicator-item badge badge-secondary badge-xs min-w-4 px-1 tabular-nums">
-        {total > 9 ? '9+' : total}
-      </span>
+      // El número ya está en el nombre accesible del botón
+      <Badge aria-hidden tone="secondary" size="xs" className="indicator-item min-w-4 px-1 tabular-nums">{total > 9 ? '9+' : total}</Badge>
     )}
   </span>
 );
@@ -74,10 +71,10 @@ const RequestCard = ({ solicitud, busy, onRespond }: RequestCardProps) => {
   return (
     <li className="rounded-box border border-base-300 p-3">
       <div className="font-semibold break-words">{organizacion.nombre}</div>
-      <div className="text-xs text-base-content/70 break-words">
+      <div className="text-xs text-muted break-words">
         {t('notificaciones.admin', { nombre: nombreCompleto(organizacion.administrador) })}
       </div>
-      <div className="truncate text-xs text-base-content/70" title={organizacion.administrador.email}>
+      <div className="truncate text-xs text-muted" title={organizacion.administrador.email}>
         {organizacion.administrador.email}
       </div>
       <ul className="mt-2 flex flex-col divide-y divide-base-200">
@@ -85,51 +82,51 @@ const RequestCard = ({ solicitud, busy, onRespond }: RequestCardProps) => {
           <li key={c.idConsentimiento} className="flex items-center justify-between gap-2 py-1.5">
             <span className="text-sm font-medium tabular-nums">{t('notificaciones.campaign', { anio: c.anio })}</span>
             <span className="flex gap-1">
-              <button
-                type="button"
+              <Button
                 // Con varias campañas, la acción principal es «Aceptar todas»
-                className={`btn btn-xs ${ordenadas.length > 1 ? 'btn-outline btn-secondary' : 'btn-primary'}`}
+                variant={ordenadas.length > 1 ? 'outline' : 'primary'}
+                size="xs"
+                icon={FiCheck}
                 disabled={busy}
                 aria-label={t('notificaciones.acceptYear', { anio: c.anio, organizacion: organizacion.nombre })}
                 onClick={() => onRespond([c.idConsentimiento], 'aceptado')}
               >
-                <FiCheck aria-hidden />
                 {t('notificaciones.accept')}
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost btn-xs"
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                icon={FiX}
                 disabled={busy}
                 aria-label={t('notificaciones.rejectYear', { anio: c.anio, organizacion: organizacion.nombre })}
                 onClick={() => onRespond([c.idConsentimiento], 'rechazado')}
               >
-                <FiX aria-hidden />
                 {t('notificaciones.reject')}
-              </button>
+              </Button>
             </span>
           </li>
         ))}
       </ul>
       {ordenadas.length > 1 && (
         <div className="mt-2 flex flex-wrap justify-end gap-1 border-t border-base-200 pt-2">
-          <button
-            type="button"
-            className="btn btn-ghost btn-xs"
+          <Button
+            variant="ghost"
+            size="xs"
             disabled={busy}
             aria-label={t('notificaciones.rejectAllOf', { organizacion: organizacion.nombre })}
             onClick={() => onRespond(ids, 'rechazado')}
           >
             {t('notificaciones.rejectAll')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-xs"
+          </Button>
+          <Button
+            variant="primary"
+            size="xs"
             disabled={busy}
             aria-label={t('notificaciones.acceptAllOf', { organizacion: organizacion.nombre })}
             onClick={() => onRespond(ids, 'aceptado')}
           >
             {t('notificaciones.acceptAll')}
-          </button>
+          </Button>
         </div>
       )}
     </li>
@@ -175,24 +172,21 @@ export const NotificationsPanel = () => {
 
       {!data && (
         <div className="flex flex-col gap-2" aria-busy="true">
-          <div className="skeleton h-16 w-full" />
-          <div className="skeleton h-10 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
       )}
 
       {data && solicitudes.length === 0 && avisos.length === 0 && (
-        <p className="px-1 py-6 text-center text-sm text-base-content/70">{t('notificaciones.empty')}</p>
+        <p className="px-1 py-6 text-center text-sm text-muted">{t('notificaciones.empty')}</p>
       )}
 
       {solicitudes.length > 0 && (
         <section className="flex flex-col gap-2" aria-labelledby={`${id}-solicitudes`}>
-          <h3 id={`${id}-solicitudes`} className="px-1 text-xs font-semibold uppercase tracking-wide text-base-content/70">
+          <h3 id={`${id}-solicitudes`} className="eyebrow px-1">
             {t('notificaciones.requests')}
           </h3>
-          <div className="flex items-start gap-2 rounded-box bg-warning/60 px-3 py-2 text-sm">
-            <FiAlertTriangle aria-hidden className="mt-0.5 shrink-0" />
-            <span>{t('notificaciones.warning')}</span>
-          </div>
+          <Callout tone="warning">{t('notificaciones.warning')}</Callout>
           <ul className="flex flex-col gap-2">
             {solicitudes.map((s) => (
               <RequestCard key={s.organizacion.id} solicitud={s} busy={busy} onRespond={onRespond} />
@@ -204,13 +198,13 @@ export const NotificationsPanel = () => {
       {avisos.length > 0 && (
         <section className="flex flex-col gap-2" aria-labelledby={`${id}-avisos`}>
           <div className="flex items-center justify-between gap-2 px-1">
-            <h3 id={`${id}-avisos`} className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
+            <h3 id={`${id}-avisos`} className="eyebrow">
               {t('notificaciones.notices')}
             </h3>
             {sinLeer > 0 && (
-              <button type="button" className="btn btn-ghost btn-xs" disabled={busy} onClick={() => void run(() => markRead())}>
+              <Button variant="ghost" size="xs" disabled={busy} onClick={() => void run(() => markRead())}>
                 {t('notificaciones.markAllRead')}
-              </button>
+              </Button>
             )}
           </div>
           <ul className="flex flex-col gap-1.5">
@@ -224,12 +218,13 @@ export const NotificationsPanel = () => {
                   <Icon aria-hidden className="mt-0.5 shrink-0 text-secondary" />
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="break-words">{avisoText(aviso, t)}</span>
-                    <time dateTime={aviso.fechaCreacion} title={formatDateTime(aviso.fechaCreacion)} className="text-xs text-base-content/70">
+                    <time dateTime={aviso.fechaCreacion} title={formatDateTime(aviso.fechaCreacion)} className="text-xs text-muted">
                       {formatRelativeTime(aviso.fechaCreacion)}
                     </time>
                   </div>
                   {!aviso.leida && (
-                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-secondary" title={t('notificaciones.unread')}>
+                    <span className="mt-1.5 flex shrink-0" title={t('notificaciones.unread')}>
+                      <ColorDot color="var(--color-secondary)" size="sm" />
                       <span className="sr-only">{t('notificaciones.unread')}</span>
                     </span>
                   )}
@@ -240,9 +235,9 @@ export const NotificationsPanel = () => {
         </section>
       )}
 
-      <Link to="/organizaciones" className="btn btn-ghost btn-sm justify-center">
+      <ButtonLink variant="ghost" size="sm" to="/organizaciones">
         {t('notificaciones.viewOrganizations')}
-      </Link>
+      </ButtonLink>
     </div>
   );
 };
@@ -254,10 +249,11 @@ export const NotificationsBell = () => {
 
   return (
     <Dropdown
-      triggerClassName="btn btn-circle btn-ghost"
-      contentClassName="w-96 max-w-[calc(100vw-2rem)] max-h-[75vh] overflow-y-auto"
+      variant="ghost"
+      circle
+      width="w-96"
+      contentClassName="max-h-[75vh] overflow-y-auto"
       label={label}
-      title={label}
       closeOn="a"
       trigger={<BellIcon total={total} />}
     >

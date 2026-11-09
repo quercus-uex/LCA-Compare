@@ -1,14 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';
 import { FiCheck, FiClock, FiSlash, FiX, FiXCircle } from 'react-icons/fi';
+import { Badge, type BadgeTone, IconButton } from '../../components/ui/index.ts';
 import type { ConsentimientoEstado } from '../../hooks/organizacion.hook.tsx';
 
 // El estado se distingue por color y por icono, no solo por color
-const ESTADO_STYLE: Record<ConsentimientoEstado, { className: string; icon: IconType }> = {
-  aceptado: { className: 'badge-success', icon: FiCheck },
-  pendiente: { className: 'badge-warning', icon: FiClock },
-  rechazado: { className: 'badge-error', icon: FiXCircle },
-  revocado: { className: 'badge-ghost text-base-content/70', icon: FiSlash },
+const ESTADO_STYLE: Record<ConsentimientoEstado, { tone: BadgeTone; className?: string; icon: IconType }> = {
+  aceptado: { tone: 'success', icon: FiCheck },
+  pendiente: { tone: 'warning', icon: FiClock },
+  rechazado: { tone: 'error', icon: FiXCircle },
+  revocado: { tone: 'neutral', className: 'text-muted', icon: FiSlash },
 };
 
 type Props = {
@@ -21,38 +22,28 @@ type Props = {
 /** Año de campaña con el estado de su consentimiento */
 export const CampaniaChip = ({ anio, estado, action }: Props) => {
   const { t } = useTranslation();
-  const { className, icon: Icon } = ESTADO_STYLE[estado];
+  const { tone, className, icon } = ESTADO_STYLE[estado];
   const estadoLabel = t(`organizaciones.estados.${estado}`);
 
   return (
-    <span className={`badge gap-1 tabular-nums ${className} ${action ? 'pr-0.5' : ''}`} title={estadoLabel}>
-      <Icon aria-hidden className="size-3.5 shrink-0" />
+    <Badge tone={tone} icon={icon} title={estadoLabel} className={`tabular-nums ${className ?? ''} ${action ? 'pr-0.5' : ''}`}>
       {anio}
       <span className="sr-only">: {estadoLabel}</span>
       {action && (
-        <button
-          type="button"
-          className="btn btn-ghost btn-xs btn-circle size-5 min-h-0"
-          aria-label={action.label}
-          title={action.label}
-          onClick={action.onClick}
-        >
-          <FiX aria-hidden className="size-3.5" />
-        </button>
+        <IconButton icon={FiX} label={action.label} size="xs" className="size-5 min-h-0" onClick={action.onClick} />
       )}
-    </span>
+    </Badge>
   );
 };
 
 /** Solo el estado, para tablas en las que el año va en otra columna */
 export const EstadoBadge = ({ estado }: { estado: ConsentimientoEstado }) => {
   const { t } = useTranslation();
-  const { className, icon: Icon } = ESTADO_STYLE[estado];
+  const { tone, className, icon } = ESTADO_STYLE[estado];
   return (
-    <span className={`badge badge-sm gap-1 ${className}`}>
-      <Icon aria-hidden className="size-3 shrink-0" />
+    <Badge tone={tone} size="sm" icon={icon} className={className}>
       {t(`organizaciones.estados.${estado}`)}
-    </span>
+    </Badge>
   );
 };
 
@@ -60,7 +51,7 @@ export const EstadoBadge = ({ estado }: { estado: ConsentimientoEstado }) => {
 export const CampaniaLegend = ({ estados }: { estados: readonly ConsentimientoEstado[] }) => {
   const { t } = useTranslation();
   return (
-    <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-base-content/70" aria-label={t('organizaciones.legend')}>
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted" aria-label={t('organizaciones.legend')}>
       {estados.map((estado) => {
         const { icon: Icon } = ESTADO_STYLE[estado];
         return (

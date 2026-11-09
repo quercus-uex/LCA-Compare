@@ -1,15 +1,14 @@
 import type { AccesoOrganizacion } from 'common/organizacion';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiInfo, FiMapPin } from 'react-icons/fi';
-import { Link, useLocation } from 'react-router';
+import { FiMapPin } from 'react-icons/fi';
+import { useLocation } from 'react-router';
 import { formatList } from '../../common/format.ts';
 import { MapPreview } from '../../components/map-preview.component.tsx';
+import { Badge, Breadcrumbs, Callout, Card, type Crumb } from '../../components/ui/index.ts';
 import type { ParcelaDetalle } from '../../hooks/parcela.hook.tsx';
 import { miembroUrl, nombreCompleto, organizacionUrl } from '../organizaciones/organizaciones.utils.ts';
 import { formatPoblacion, type ParcelaLinkState } from './parcelas.utils.ts';
-
-export type Crumb = { label: string; to?: string };
 
 /**
  * Migas desde «Mis parcelas», o desde `root` si se indica; el último elemento
@@ -23,17 +22,7 @@ export const ParcelaBreadcrumbs = ({ items = [], root }: { items?: Crumb[]; root
   const listUrl = `/parcelas${(location.state as ParcelaLinkState | null)?.listSearch ?? ''}`;
   const crumbs: Crumb[] = [...(root ?? [{ label: t('parcelas.title'), to: listUrl }]), ...items];
 
-  return (
-    <nav className="breadcrumbs text-sm [&>ul]:flex-wrap [&>ul]:whitespace-normal" aria-label={t('parcelas.detail.breadcrumb')}>
-      <ul>
-        {crumbs.map((c, i) => (
-          <li key={i} aria-current={i === crumbs.length - 1 && i > 0 ? 'page' : undefined}>
-            {c.to ? <Link to={c.to} state={location.state as unknown}>{c.label}</Link> : c.label}
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
+  return <Breadcrumbs items={crumbs} state={location.state as unknown} />;
 };
 
 /**
@@ -70,16 +59,13 @@ export const useAccesoEyebrow = (acceso: AccesoOrganizacion | undefined): string
 export const AccesoNote = ({ acceso }: { acceso: AccesoOrganizacion }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-start gap-2 rounded-box bg-info/50 px-3 py-2 text-sm">
-      <FiInfo aria-hidden className="mt-0.5 shrink-0" />
-      <span>
-        {t('organizaciones.acceso.note', {
-          nombre: nombreCompleto(acceso.propietario),
-          count: acceso.anios.length,
-          anios: formatList([...acceso.anios].sort((a, b) => a - b)),
-        })}
-      </span>
-    </div>
+    <Callout tone="info">
+      {t('organizaciones.acceso.note', {
+        nombre: nombreCompleto(acceso.propietario),
+        count: acceso.anios.length,
+        anios: formatList([...acceso.anios].sort((a, b) => a - b)),
+      })}
+    </Callout>
   );
 };
 
@@ -96,7 +82,8 @@ export const ParcelaHeroCard = ({ parcela, eyebrow, actions, children }: HeroPro
   const { t } = useTranslation();
 
   return (
-    <div className="card bg-base-100 shadow-sm lg:card-side">
+    // eslint-disable-next-line no-restricted-syntax -- `card-side` coloca el mapa a la izquierda y redondea solo sus esquinas exteriores
+    <Card flush className="lg:card-side">
       <figure className="lg:w-96 lg:shrink-0 lg:self-stretch">
         <MapPreview
           polygon={parcela.geom ?? undefined}
@@ -104,19 +91,19 @@ export const ParcelaHeroCard = ({ parcela, eyebrow, actions, children }: HeroPro
           className="h-64 w-full sm:h-80 lg:h-full lg:min-h-96"
         />
       </figure>
-      <div className="card-body gap-5 min-w-0">
+      <div className="flex min-w-0 flex-auto flex-col gap-5 p-4 text-sm sm:p-6">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1 min-w-0">
             {eyebrow && (
-              <div className="text-sm font-semibold uppercase tracking-wide text-base-content/70">{eyebrow}</div>
+              <div className="eyebrow">{eyebrow}</div>
             )}
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-semibold break-words">{parcela.nombre}</h1>
               {parcela.esParcelaReferencia && (
-                <span className="badge badge-success">{t('parcelas.referenceBadge')}</span>
+                <Badge tone="success">{t('parcelas.referenceBadge')}</Badge>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-base-content/70">
+            <div className="flex items-center gap-1.5 text-muted">
               <FiMapPin aria-hidden />
               {formatPoblacion(parcela.poblacion, t)}
             </div>
@@ -125,6 +112,6 @@ export const ParcelaHeroCard = ({ parcela, eyebrow, actions, children }: HeroPro
         </header>
         {children}
       </div>
-    </div>
+    </Card>
   );
 };

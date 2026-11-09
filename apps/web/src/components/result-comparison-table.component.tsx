@@ -36,15 +36,8 @@ export const ResultComparisonTable = ({
               )}
               <th>{i.unit}</th>
               {hasTarget && (
-                <th
-                  className={
-                    i.diff != null
-                      ? i.diff >= 0
-                        ? 'text-red-400'
-                        : 'text-green-400'
-                      : ''
-                  }
-                >
+                // Más impacto que la referencia es desfavorable
+                <th className={i.diff == null ? '' : i.diff >= 0 ? 'text-danger' : 'text-favorable'}>
                   {i.diff != null ? formatPercent(i.diff, 2) : 'n/a'}
                 </th>
               )}
@@ -52,9 +45,9 @@ export const ResultComparisonTable = ({
           ))}
         </tbody>
       </table>
-      <p className="text-sm text-base-content/70 mt-2">{t('compare.result.meanNote')}</p>
+      <p className="text-sm text-muted mt-2">{t('compare.result.meanNote')}</p>
       {hasTarget && (
-        <p className="text-sm text-base-content/70 mt-1">{t('compare.result.differenceNote')}</p>
+        <p className="text-sm text-muted mt-1">{t('compare.result.differenceNote')}</p>
       )}
     </div>
   );

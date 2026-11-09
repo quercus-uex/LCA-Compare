@@ -3,6 +3,7 @@ export { Badge, type BadgeTone, ColorDot } from './badge.component.tsx';
 export {
   Button,
   ButtonLink,
+  ButtonNavLink,
   type ButtonSize,
   type ButtonVariant,
   IconButton,

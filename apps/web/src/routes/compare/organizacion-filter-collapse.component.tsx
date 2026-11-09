@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import type { OrganizacionResumen } from '../../hooks/organizacion.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
@@ -15,7 +16,7 @@ export const OrganizacionFilterCollapse = ({
   organizaciones: OrganizacionResumen[];
 }) => {
   const { t } = useTranslation();
-  const selectId = useId();
+  const hintId = useId();
   const enabled = filters.organizacion !== undefined;
 
   const select = (id: string) => {
@@ -34,18 +35,17 @@ export const OrganizacionFilterCollapse = ({
       }}
     >
       <div className="flex flex-col gap-1">
-        <label htmlFor={selectId} className="sr-only">{t('compare.filters.organization')}</label>
-        <select
-          id={selectId}
-          className="select w-full"
+        <Select
+          aria-label={t('compare.filters.organization')}
+          aria-describedby={hintId}
           value={filters.organizacion?.id ?? ''}
           onChange={(e) => select(e.target.value)}
         >
           {organizaciones.map((o) => (
             <option key={o.id} value={o.id}>{o.nombre}</option>
           ))}
-        </select>
-        <p className="text-sm text-base-content/70">{t('compare.filters.organizationHint')}</p>
+        </Select>
+        <p id={hintId} className="text-sm text-muted">{t('compare.filters.organizationHint')}</p>
       </div>
     </FilterCollapse>
   );

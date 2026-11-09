@@ -1,13 +1,13 @@
 import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
+import { Badge } from './ui/index.ts';
 
-export const CropTypeBadge = ({ tipo, className = '' }: { tipo: string; className?: string }) => {
+export const CropTypeBadge = ({ tipo, size, className }: { tipo: string; size?: 'xs' | 'sm' | 'md'; className?: string }) => {
   const getCropTypeLabel = useCropTypeLabel();
-  const { color, icon: Icon } = getCropTypeStyle(tipo);
+  const { color, icon } = getCropTypeStyle(tipo);
 
   return (
-    <span className={`badge badge-outline gap-1.5 ${className}`} style={{ borderColor: color }}>
-      <Icon aria-hidden className="size-4 shrink-0" style={{ color }} />
+    <Badge tone="outline" color={color} icon={icon} size={size} className={className}>
       {getCropTypeLabel(tipo)}
-    </span>
+    </Badge>
   );
 };

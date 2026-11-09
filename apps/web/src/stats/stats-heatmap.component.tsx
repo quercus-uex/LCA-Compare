@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
 import { formatImpactValue } from '../common/format.ts';
+import { ColorDot, EmptyState } from '../components/ui/index.ts';
 import { PROFILE_COLORS } from './stats-chart-theme.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -38,7 +38,7 @@ export const StatsHeatmap = ({
   const [sortCategory, setSortCategory] = useState<EfCategoryId | null>(null);
 
   if (ranking.length === 0) {
-    return <StatsPlaceholder>{t('stats.chart.noImpactData')}</StatsPlaceholder>;
+    return <EmptyState variant="inset" icon={false} description={t('stats.chart.noImpactData')} className="h-72" />;
   }
 
   const byCategory = (categoria: EfCategoryId) =>
@@ -104,13 +104,8 @@ export const StatsHeatmap = ({
                     className="flex w-full items-center gap-1.5 truncate px-2 py-2 text-left group-hover:underline"
                     onClick={() => onProvinceClick(prov.idProvincia)}
                   >
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor:
-                          highlight >= 0 ? PROFILE_COLORS[highlight] : 'transparent',
-                      }}
-                    />
+                    {/* Sin resaltar, el hueco se mantiene para que los nombres queden alineados */}
+                    <ColorDot size="sm" color={PROFILE_COLORS[highlight] ?? 'transparent'} />
                     <span className="truncate">{prov.nombreProvincia}</span>
                   </button>
                 </th>

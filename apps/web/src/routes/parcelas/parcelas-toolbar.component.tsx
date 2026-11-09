@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';
 import { FiGrid, FiList, FiMap, FiSearch } from 'react-icons/fi';
+import { Button, Card, Input, SegmentedControl, Select, Toggle } from '../../components/ui/index.ts';
 import type { ParcelaPoblacion } from '../../hooks/parcela.hook.tsx';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import {
@@ -29,39 +30,36 @@ export const ParcelasToolbar = ({ query, onChange, onClear, tipos, poblaciones }
   const getCropTypeLabel = useCropTypeLabel();
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-box bg-base-100 p-4 shadow-sm">
+    <Card density="compact" className="w-full">
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <label className="input w-full md:flex-1">
-          <FiSearch aria-hidden className="opacity-60" />
-          <input
-            type="search"
-            aria-label={t('parcelas.searchLabel')}
-            placeholder={t('parcelas.searchPlaceholder')}
-            value={query.q}
-            // Escribir no debe llenar el historial con una entrada por tecla
-            onChange={(e) => onChange({ q: e.target.value }, { replace: true })}
-          />
-        </label>
+        <Input
+          icon={FiSearch}
+          type="search"
+          className="md:flex-1"
+          aria-label={t('parcelas.searchLabel')}
+          placeholder={t('parcelas.searchPlaceholder')}
+          value={query.q}
+          // Escribir no debe llenar el historial con una entrada por tecla
+          onChange={(e) => onChange({ q: e.target.value }, { replace: true })}
+        />
 
-        <div role="group" aria-label={t('parcelas.views.label')} className="join w-full md:w-auto">
-          {VIEW_OPTIONS.map(({ value, labelKey, icon: Icon }) => (
-            <button
-              key={value}
-              type="button"
-              className={`btn join-item btn-sm flex-1 md:btn-md md:flex-none ${query.vista === value ? 'btn-primary' : ''}`}
-              aria-pressed={query.vista === value}
-              onClick={() => onChange({ vista: value })}
-            >
-              <Icon aria-hidden />
-              {t(labelKey)}
-            </button>
-          ))}
+        <div className="w-full md:w-auto">
+          <SegmentedControl
+            label={t('parcelas.views.label')}
+            size="sm"
+            mdSize="md"
+            block
+            options={VIEW_OPTIONS.map(({ value, labelKey, icon }) => ({ value, icon, label: t(labelKey) }))}
+            value={query.vista}
+            onChange={(vista) => onChange({ vista })}
+          />
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          className="select select-sm w-full sm:w-auto"
+        <Select
+          size="sm"
+          className="sm:w-auto"
           aria-label={t('parcelas.filters.cropType')}
           value={query.tipo}
           onChange={(e) => onChange({ tipo: e.target.value })}
@@ -70,10 +68,11 @@ export const ParcelasToolbar = ({ query, onChange, onClear, tipos, poblaciones }
           {tipos.map((tipo) => (
             <option key={tipo} value={tipo}>{getCropTypeLabel(tipo)}</option>
           ))}
-        </select>
+        </Select>
 
-        <select
-          className="select select-sm w-full sm:w-auto"
+        <Select
+          size="sm"
+          className="sm:w-auto"
           aria-label={t('parcelas.filters.poblacion')}
           value={query.poblacion}
           onChange={(e) => onChange({ poblacion: e.target.value })}
@@ -82,39 +81,38 @@ export const ParcelasToolbar = ({ query, onChange, onClear, tipos, poblaciones }
           {poblaciones.map((p) => (
             <option key={p.id} value={p.id}>{p.nombre} ({p.provincia.nombre})</option>
           ))}
-        </select>
+        </Select>
 
-        <label className="label cursor-pointer gap-2 text-sm text-base-content">
-          <input
-            type="checkbox"
-            className="toggle toggle-sm toggle-success"
-            checked={query.soloReferencia}
-            onChange={(e) => onChange({ soloReferencia: e.target.checked })}
-          />
-          {t('parcelas.filters.onlyReference')}
-        </label>
+        <Toggle
+          size="sm"
+          label={t('parcelas.filters.onlyReference')}
+          checked={query.soloReferencia}
+          onChange={(e) => onChange({ soloReferencia: e.target.checked })}
+        />
 
         {hasActiveFilters(query) && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClear}>
+          <Button variant="ghost" size="sm" onClick={onClear}>
             {t('parcelas.filters.clear')}
-          </button>
+          </Button>
         )}
 
         {query.vista !== 'mapa' && (
           <label className="flex items-center gap-2 text-sm sm:ml-auto">
             <span>{t('parcelas.sort.label')}</span>
-            <select
-              className="select select-sm w-auto"
+            <Select
+              size="sm"
+              // `Select` ocupa todo el ancho: aquí se ajusta a la opción elegida
+              className="max-w-fit"
               value={query.orden}
               onChange={(e) => onChange({ orden: e.target.value as ParcelasQuery['orden'] })}
             >
               {PARCELAS_SORTS.map((s) => (
                 <option key={s} value={s}>{t(`parcelas.sort.${s}`)}</option>
               ))}
-            </select>
+            </Select>
           </label>
         )}
       </div>
-    </div>
+    </Card>
   );
 };

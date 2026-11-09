@@ -4,7 +4,7 @@ import { useLocation } from 'react-router';
 import { toast } from 'sonner';
 import { ApiError } from '../../common/api.ts';
 import { exportJSON, exportCSV, hasTargetSet, omitNullish } from '../../common/utils.ts';
-import { Dropdown } from '../../components/dropdown.component.tsx';
+import { Button, Dropdown, Menu, MenuItem, MenuTitle } from '../../components/ui/index.ts';
 import {
   type CompareFilterType,
   type CompareResult,
@@ -89,8 +89,8 @@ export const CompareRoute = () => {
         {result && (
           <div className="flex gap-2 justify-end flex-wrap">
             {hasTargetSet(result) && (
-              <button
-                className="btn btn-secondary"
+              <Button
+                variant="secondary"
                 onClick={() => {
                   void (async () => {
                     try {
@@ -102,35 +102,25 @@ export const CompareRoute = () => {
                 }}
               >
                 {t('compare.actions.generateReport')}
-              </button>
+              </Button>
             )}
 
-            <Dropdown triggerClassName="btn btn-accent" contentClassName="w-56" trigger={t('common.actions.export')}>
-              <ul className="menu w-full p-0">
+            <Dropdown variant="outline" trigger={t('common.actions.export')}>
+              <Menu>
                 {exportOptions
                   .filter((option) => !option.needsTarget || hasTargetSet(result))
                   .map(({ mode, titleKey, filePrefix, metadata }) => (
                     <Fragment key={mode}>
-                      <li className="menu-title">{t(titleKey)}</li>
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => exportJSON({ metadata, result: buildCompareExportPayload(result, mode) })}
-                        >
-                          JSON
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => exportCSV(`${filePrefix}-${Date.now()}.csv`, buildCompareCSV(result, mode, t))}
-                        >
-                          CSV
-                        </button>
-                      </li>
+                      <MenuTitle>{t(titleKey)}</MenuTitle>
+                      <MenuItem onClick={() => exportJSON({ metadata, result: buildCompareExportPayload(result, mode) })}>
+                        JSON
+                      </MenuItem>
+                      <MenuItem onClick={() => exportCSV(`${filePrefix}-${Date.now()}.csv`, buildCompareCSV(result, mode, t))}>
+                        CSV
+                      </MenuItem>
                     </Fragment>
                   ))}
-              </ul>
+              </Menu>
             </Dropdown>
           </div>
         )}

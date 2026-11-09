@@ -1,6 +1,7 @@
 import type { CreateOrganizacionDto } from 'common/organizacion';
-import { type FormEvent, type ReactNode, useId, useState } from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button, Callout, Field, Input, Textarea } from '../../components/ui/index.ts';
 import { describeOrganizacionError } from './organizaciones.utils.ts';
 
 const NOMBRE_MAX = 120;
@@ -17,7 +18,6 @@ type Props = {
 /** Nombre y descripción de una organización, para crearla o editarla */
 export const OrganizacionForm = ({ initial, submitLabel, onSubmit, extraActions }: Props) => {
   const { t } = useTranslation();
-  const id = useId();
   const [nombre, setNombre] = useState(initial?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(initial?.descripcion ?? '');
   const [nombreError, setNombreError] = useState(false);
@@ -45,57 +45,35 @@ export const OrganizacionForm = ({ initial, submitLabel, onSubmit, extraActions 
 
   return (
     <form className="flex flex-col gap-4" noValidate onSubmit={(e) => void submit(e)}>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-nombre`} className="text-sm font-medium">
-          {t('organizaciones.form.nombre')}
-          <span className="text-base-content/70" aria-hidden> *</span>
-        </label>
-        <input
-          id={`${id}-nombre`}
-          className={`input w-full ${nombreError ? 'input-error' : ''}`}
+      <Field
+        label={t('organizaciones.form.nombre')}
+        error={nombreError ? t('organizaciones.form.nombreRequired') : undefined}
+        required
+      >
+        <Input
           value={nombre}
           maxLength={NOMBRE_MAX}
-          required
-          aria-invalid={nombreError}
-          aria-describedby={nombreError ? `${id}-nombre-error` : undefined}
           onChange={(e) => {
             setNombre(e.target.value);
             if (e.target.value.trim()) setNombreError(false);
           }}
         />
-        {nombreError && (
-          <span id={`${id}-nombre-error`} className="text-sm font-medium text-red-700">
-            {t('organizaciones.form.nombreRequired')}
-          </span>
-        )}
-      </div>
+      </Field>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor={`${id}-descripcion`} className="text-sm font-medium">
-          {t('organizaciones.form.descripcion')}
-        </label>
-        <textarea
-          id={`${id}-descripcion`}
-          className="textarea w-full"
+      <Field label={t('organizaciones.form.descripcion')} hint={t('organizaciones.form.descripcionHint')}>
+        <Textarea
           rows={3}
           value={descripcion}
           maxLength={DESCRIPCION_MAX}
-          aria-describedby={`${id}-descripcion-hint`}
           onChange={(e) => setDescripcion(e.target.value)}
         />
-        <span id={`${id}-descripcion-hint`} className="text-sm text-base-content/70">
-          {t('organizaciones.form.descripcionHint')}
-        </span>
-      </div>
+      </Field>
 
-      {error && <div role="alert" className="alert alert-error text-sm">{error}</div>}
+      {error && <Callout tone="error" live>{error}</Callout>}
 
       <div className="flex flex-wrap justify-end gap-2">
         {extraActions}
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving && <span className="loading loading-spinner loading-sm" aria-hidden />}
-          {submitLabel}
-        </button>
+        <Button variant="primary" type="submit" loading={saving}>{submitLabel}</Button>
       </div>
     </form>
   );

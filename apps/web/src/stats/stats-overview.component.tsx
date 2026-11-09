@@ -6,6 +6,7 @@ import {
   type EfCategoryId,
 } from '../common/constants.ts';
 import { formatImpactValue, formatNumber, formatPercent } from '../common/format.ts';
+import { Badge, type BadgeTone, Card } from '../components/ui/index.ts';
 import type { KpiDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -19,15 +20,13 @@ type Props = {
 };
 
 // En todas las categorías EF un valor menor es mejor
-const yoyClass = (value: number) =>
-  value < 0 ? 'text-success-content bg-success' : value > 0 ? 'text-error-content bg-error' : 'bg-base-200';
+const yoyTone = (value: number): BadgeTone =>
+  value < 0 ? 'success' : value > 0 ? 'error' : 'neutral';
 
 const YoyBadge = ({ value, small = false }: { value: number; small?: boolean }) => (
-  <span
-    className={`badge ${small ? 'badge-xs' : 'badge-sm'} border-0 font-mono ${yoyClass(value)}`}
-  >
+  <Badge tone={yoyTone(value)} size={small ? 'xs' : 'sm'} className="font-mono">
     {value < 0 ? '↓' : value > 0 ? '↑' : '='} {formatPercent(Math.abs(value))}
-  </span>
+  </Badge>
 );
 
 export const StatsOverview = ({
@@ -72,14 +71,10 @@ export const StatsOverview = ({
   return (
     <section className="space-y-3">
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
-        <div
-          className="card bg-base-100 shadow-sm border-l-8"
-          style={{ borderLeftColor: selected?.color }}
-        >
-          <div className="card-body gap-1 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-base-content/70">
-              {t('stats.kpis.meanPerCrop')}
-            </p>
+        {/* El borde lleva el color de la categoría */}
+        <Card density="compact" className="border-l-8" style={{ borderLeftColor: selected?.color }}>
+          <div className="flex flex-col gap-1">
+            <p className="eyebrow">{t('stats.kpis.meanPerCrop')}</p>
             <p className="font-semibold">
               {getCategoryLabel(selectedCategory)}
             </p>
@@ -87,9 +82,9 @@ export const StatsOverview = ({
               <span className="text-3xl font-bold tabular-nums">
                 {formatImpactValue(selectedValue, '0')}
               </span>
-              <span className="text-sm text-base-content/70">{selected?.unit}</span>
+              <span className="text-sm text-muted">{selected?.unit}</span>
             </p>
-            <div className="mt-1 text-xs text-base-content/70">
+            <div className="mt-1 text-xs text-muted">
               {anio === undefined ? (
                 t('stats.kpis.yoyHint')
               ) : selectedYoy === null ? (
@@ -105,7 +100,7 @@ export const StatsOverview = ({
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         <div className="stats stats-vertical bg-base-100 shadow-sm sm:stats-horizontal">
           {contextStats.map((stat) => (
@@ -117,7 +112,7 @@ export const StatsOverview = ({
               <div className="stat-value text-2xl tabular-nums">
                 {stat.value}
                 {stat.unit && (
-                  <span className="ml-1 text-sm font-normal text-base-content/70">
+                  <span className="ml-1 text-sm font-normal text-muted">
                     {stat.unit}
                   </span>
                 )}
@@ -155,7 +150,7 @@ export const StatsOverview = ({
                   </span>
                   {yoy !== null && <YoyBadge value={yoy} small />}
                 </span>
-                <span className="truncate text-xs text-base-content/70">{cat.unit}</span>
+                <span className="truncate text-xs text-muted">{cat.unit}</span>
               </button>
             );
           })}

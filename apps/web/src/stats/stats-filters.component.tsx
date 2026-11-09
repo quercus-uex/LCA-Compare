@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { FiX } from 'react-icons/fi';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { Button, Card, Field, Select, Spinner } from '../components/ui/index.ts';
 import type { OrganizacionResumen } from '../hooks/organizacion.hook.tsx';
 import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
 import type { GlobalStatsDto } from './stats.hook.tsx';
@@ -32,14 +33,11 @@ export const StatsFiltersBar = ({
   const getCropTypeLabel = useCropTypeLabel();
 
   return (
-    <div className="z-20 rounded-box bg-base-100 p-4 shadow-sm md:sticky md:top-2">
+    <Card density="compact" className="z-20 md:sticky md:top-2">
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex min-w-56 flex-1 flex-col gap-1 sm:flex-none">
-          <span className="text-xs font-medium text-base-content/70">
-            {t('stats.filters.category')}
-          </span>
-          <select
-            className="select select-bordered select-sm w-full"
+        <Field label={t('stats.filters.category')} className="min-w-56 flex-1 sm:flex-none">
+          <Select
+            size="sm"
             value={filters.categoria}
             onChange={(e) =>
               onChange({ categoria: e.target.value as EfCategoryId })
@@ -50,15 +48,12 @@ export const StatsFiltersBar = ({
                 {getCategoryLabel(cat.id)}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex min-w-44 flex-1 flex-col gap-1 sm:flex-none">
-          <span className="text-xs font-medium text-base-content/70">
-            {t('stats.filters.crop')}
-          </span>
-          <select
-            className="select select-bordered select-sm w-full"
+        <Field label={t('stats.filters.crop')} className="min-w-44 flex-1 sm:flex-none">
+          <Select
+            size="sm"
             value={filters.tipoCultivo ?? ''}
             onChange={(e) =>
               onChange({ tipoCultivo: e.target.value || undefined })
@@ -70,15 +65,12 @@ export const StatsFiltersBar = ({
                 {getCropTypeLabel(tipo)}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="flex min-w-40 flex-1 flex-col gap-1 sm:flex-none">
-          <span className="text-xs font-medium text-base-content/70">
-            {t('stats.filters.year')}
-          </span>
-          <select
-            className="select select-bordered select-sm w-full"
+        <Field label={t('stats.filters.year')} className="min-w-40 flex-1 sm:flex-none">
+          <Select
+            size="sm"
             value={filters.anio ?? ''}
             onChange={(e) =>
               onChange({
@@ -92,16 +84,13 @@ export const StatsFiltersBar = ({
                 {anio}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
 
         {organizaciones.length > 0 && (
-          <label className="flex min-w-48 flex-1 flex-col gap-1 sm:flex-none">
-            <span className="text-xs font-medium text-base-content/70">
-              {t('stats.filters.organization')}
-            </span>
-            <select
-              className="select select-bordered select-sm w-full"
+          <Field label={t('stats.filters.organization')} className="min-w-48 flex-1 sm:flex-none">
+            <Select
+              size="sm"
               value={filters.organizacion ?? ''}
               onChange={(e) => onChange({ organizacion: e.target.value || undefined })}
             >
@@ -113,27 +102,26 @@ export const StatsFiltersBar = ({
               {organizaciones.map((o) => (
                 <option key={o.id} value={o.id}>{o.nombre}</option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
 
         {hasActiveFilters && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onReset}>
-            <FiX />
+          <Button variant="ghost" size="sm" icon={FiX} onClick={onReset}>
             {t('stats.filters.reset')}
-          </button>
+          </Button>
         )}
 
         {isFetching && (
           <span
-            className="ml-auto flex items-center gap-2 self-center text-xs text-base-content/70"
+            className="ml-auto flex items-center gap-2 self-center text-xs text-muted"
             role="status"
           >
-            <span className="loading loading-spinner loading-xs" />
+            <Spinner size="xs" />
             {t('stats.updating')}
           </span>
         )}
       </div>
-    </div>
+    </Card>
   );
 };

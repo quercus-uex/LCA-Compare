@@ -1,13 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
-import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
+import { FiBarChart2 } from 'react-icons/fi';
+import { Button, EmptyState, ErrorAlert, Page, PageHeader } from '../../components/ui/index.ts';
 import { useOrganizacionesAdministradas } from '../../hooks/organizacion.hook.tsx';
 import { StatsDashboard } from '../../stats/stats-dashboard.component.tsx';
 import { StatsFiltersBar } from '../../stats/stats-filters.component.tsx';
-import {
-  StatsEmptyState,
-  StatsLoadingSkeleton,
-} from '../../stats/stats-states.component.tsx';
+import { StatsLoadingSkeleton } from '../../stats/stats-states.component.tsx';
 import { useStats } from '../../stats/stats.hook.tsx';
 import { useStatsFilters } from '../../stats/use-stats-filters.ts';
 
@@ -22,18 +19,19 @@ export const StatsRoute = () => {
   });
 
   const header = <PageHeader title={t('stats.title')} />;
+  const loadFailed = failed && !isFetching;
 
   if (!data) {
     return (
-      <div className={PAGE_CLASS}>
+      <Page busy={!loadFailed}>
         {header}
-        {failed && !isFetching ? <LoadErrorAlert message={t('stats.errors.load')} onRetry={refetch} /> : <StatsLoadingSkeleton />}
-      </div>
+        {loadFailed ? <ErrorAlert message={t('stats.errors.load')} onRetry={refetch} /> : <StatsLoadingSkeleton />}
+      </Page>
     );
   }
 
   return (
-    <div className={PAGE_CLASS}>
+    <Page>
       {header}
 
       <StatsFiltersBar
@@ -46,18 +44,26 @@ export const StatsRoute = () => {
         onReset={resetFilters}
       />
 
-      {failed && !isFetching && <LoadErrorAlert variant="warning" message={t('stats.errors.stale')} onRetry={refetch} />}
+      {loadFailed && <ErrorAlert tone="warning" message={t('stats.errors.stale')} onRetry={refetch} />}
 
       <div
         aria-busy={isFetching}
         className={`transition-opacity ${isFetching ? 'opacity-60' : ''}`}
       >
         {data.kpis.totalCultivos === 0 ? (
-          <StatsEmptyState filtered={hasActiveFilters} onReset={resetFilters} />
+          <EmptyState
+            icon={FiBarChart2}
+            description={hasActiveFilters ? t('stats.noDataForFilters') : t('stats.noData')}
+            action={hasActiveFilters && (
+              <Button variant="primary" size="sm" onClick={resetFilters}>
+                {t('stats.filters.reset')}
+              </Button>
+            )}
+          />
         ) : (
           <StatsDashboard data={data} filters={filters} onFiltersChange={setFilters} />
         )}
       </div>
-    </div>
+    </Page>
   );
 };

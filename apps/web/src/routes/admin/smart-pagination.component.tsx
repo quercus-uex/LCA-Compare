@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+import { Button, IconButton } from '../../components/ui/index.ts';
 
 interface SmartPaginationProps {
   page: number;
@@ -27,67 +28,47 @@ export const SmartPagination = ({ page, pageSize, total, onPageChange }: SmartPa
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p className="text-sm text-base-content/70">{t('admin.pagination.range', { from, to, total })}</p>
+      <p className="text-sm text-muted">{t('admin.pagination.range', { from, to, total })}</p>
 
       {totalPages > 1 && (
-        <nav className="join" aria-label={t('admin.pagination.label')}>
-          <button
-            type="button"
-            className="join-item btn btn-sm btn-ghost"
-            disabled={page === 0}
-            onClick={() => onPageChange(0)}
-            aria-label={t('admin.pagination.first')}
-            title={t('admin.pagination.first')}
-          >
-            <FiChevronsLeft aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="join-item btn btn-sm btn-ghost"
+        <nav className="flex items-center gap-1" aria-label={t('admin.pagination.label')}>
+          <IconButton icon={FiChevronsLeft} label={t('admin.pagination.first')} disabled={page === 0} onClick={() => onPageChange(0)} />
+          <IconButton
+            icon={FiChevronLeft}
+            label={t('admin.pagination.previous')}
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
-            aria-label={t('admin.pagination.previous')}
-            title={t('admin.pagination.previous')}
-          >
-            <FiChevronLeft aria-hidden />
-          </button>
+          />
           {getVisiblePages(page, totalPages).map((item) =>
             typeof item === 'number' ? (
-              <button
+              <Button
                 key={item}
-                type="button"
-                className={`join-item btn btn-sm ${item === page ? 'btn-primary' : 'btn-ghost'}`}
+                variant={item === page ? 'primary' : 'ghost'}
+                size="sm"
+                className="min-w-8 tabular-nums"
                 aria-current={item === page ? 'page' : undefined}
                 onClick={() => onPageChange(item)}
               >
                 {item + 1}
-              </button>
+              </Button>
             ) : (
-              <span key={item} className="join-item btn btn-sm btn-ghost btn-disabled" aria-hidden>
+              <span key={item} className="px-1 text-muted" aria-hidden>
                 …
               </span>
             ),
           )}
-          <button
-            type="button"
-            className="join-item btn btn-sm btn-ghost"
+          <IconButton
+            icon={FiChevronRight}
+            label={t('admin.pagination.next')}
             disabled={page >= totalPages - 1}
             onClick={() => onPageChange(page + 1)}
-            aria-label={t('admin.pagination.next')}
-            title={t('admin.pagination.next')}
-          >
-            <FiChevronRight aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="join-item btn btn-sm btn-ghost"
+          />
+          <IconButton
+            icon={FiChevronsRight}
+            label={t('admin.pagination.last')}
             disabled={page >= totalPages - 1}
             onClick={() => onPageChange(totalPages - 1)}
-            aria-label={t('admin.pagination.last')}
-            title={t('admin.pagination.last')}
-          >
-            <FiChevronsRight aria-hidden />
-          </button>
+          />
         </nav>
       )}
     </div>

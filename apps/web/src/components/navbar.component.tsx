@@ -1,29 +1,23 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiExternalLink, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router';
+import { Link, matchPath, useLocation, useNavigate } from 'react-router';
 import { AVATAR_URL, DOCS_URL } from '../common/constants.ts';
 import { useAuth } from '../hooks/auth.hook.tsx';
 import { useNotificaciones } from '../hooks/notificaciones.hook.tsx';
 import { useClickOutside } from '../hooks/use-click-outside.ts';
 import { supportedLanguages, toSupportedLanguage } from '../i18n/index.ts';
 import type { ParcelaLinkState } from '../routes/parcelas/parcelas.utils.ts';
-import { Dropdown } from './dropdown.component.tsx';
 import { LanguageSelector } from './language-selector.component.tsx';
 import { BellIcon, NotificationsBell, NotificationsPanel, useBellLabel } from './notifications-bell.component.tsx';
+import { ButtonLink, ButtonNavLink, Dropdown, IconButton, Menu, MenuItem, SegmentedControl, Skeleton } from './ui/index.ts';
 
 type NavItem = { to: string; labelKey: string };
-
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `btn btn-ghost ${isActive ? 'bg-base-200 text-secondary' : ''}`;
-
-const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-  isActive ? 'menu-active bg-base-200 font-semibold text-secondary' : '';
 
 const UserHeader = ({ nombre, apellidos, email }: { nombre: string; apellidos: string; email: string }) => (
   <div className="flex flex-col border-b border-base-300 px-3 pb-2 pt-1 text-left">
     <span className="font-semibold">{nombre} {apellidos}</span>
-    <span className="truncate text-xs text-base-content/70">{email}</span>
+    <span className="truncate text-xs text-muted">{email}</span>
   </div>
 );
 
@@ -35,20 +29,15 @@ const LanguageSegmented = () => {
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2">
       <span>{t('language.label')}</span>
-      <div role="group" aria-label={t('language.label')} className="join">
-        {supportedLanguages.map(({ code, labelKey }) => (
-          <button
-            key={code}
-            type="button"
-            className={`btn btn-sm join-item ${code === current ? 'btn-secondary' : ''}`}
-            aria-pressed={code === current}
-            title={t(labelKey)}
-            onClick={() => void i18n.changeLanguage(code)}
-          >
-            {code.toUpperCase()}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        label={t('language.label')}
+        options={supportedLanguages.map(({ code, labelKey }) => ({
+          value: code,
+          label: <span title={t(labelKey)}>{code.toUpperCase()}</span>,
+        }))}
+        value={current}
+        onChange={(code) => void i18n.changeLanguage(code)}
+      />
     </div>
   );
 };
@@ -90,6 +79,8 @@ export const NavBar = () => {
     if (to === '/organizaciones') return true;
     return to === '/parcelas' ? false : isActive;
   };
+  // Para el menú móvil, que no usa NavLink: la sección está activa si la ruta empieza por ella
+  const isRouteActive = (to: string) => !!matchPath({ path: to, end: false }, location.pathname);
 
   // Los paneles móviles se cierran al navegar, al pulsar fuera y con Escape
   const closeMenu = useCallback(() => setOpenPanel(null), []);
@@ -118,50 +109,48 @@ export const NavBar = () => {
         <ul className="hidden flex-1 items-center gap-1 lg:flex">
           {items.map((item) => (
             <li key={item.to}>
-              <NavLink to={item.to} className={({ isActive }) => navLinkClass({ isActive: isItemActive(item.to, isActive) })}>{t(item.labelKey)}</NavLink>
+              <ButtonNavLink to={item.to} isActive={(active) => isItemActive(item.to, active)}>{t(item.labelKey)}</ButtonNavLink>
             </li>
           ))}
         </ul>
 
         <div className="hidden items-center gap-1 lg:flex">
           <LanguageSelector />
-          <a className="btn btn-ghost" href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-            <FiExternalLink aria-hidden />
+          <ButtonLink variant="ghost" href={DOCS_URL} icon={FiExternalLink}>
             {t('nav.documentation')}
-          </a>
+          </ButtonLink>
 
-          {auth.loading && <div className="skeleton size-10 rounded-full" />}
+          {auth.loading && <Skeleton className="size-10 rounded-full" />}
 
           {!auth.loading && !usuario && (
-            <Link to="/auth/login" className="btn btn-primary">{t('nav.login')}</Link>
+            <ButtonLink variant="primary" to="/auth/login">{t('nav.login')}</ButtonLink>
           )}
 
           {usuario && <NotificationsBell />}
 
           {usuario && (
             <Dropdown
-              triggerClassName="btn btn-circle btn-ghost avatar"
-              contentClassName="w-64"
+              variant="ghost"
+              circle
+              width="w-64"
               label={t('nav.account')}
               title={`${usuario.nombre} ${usuario.apellidos}`}
               trigger={
-                <div className="w-10 rounded-full">
-                  <img src={AVATAR_URL} alt={t('nav.profileImageAlt')} />
-                </div>
+                <span className="block size-10 overflow-hidden rounded-full">
+                  <img src={AVATAR_URL} alt={t('nav.profileImageAlt')} className="size-full object-cover" />
+                </span>
               }
             >
               <UserHeader {...usuario} />
-              <ul className="menu w-full p-0 pt-1">
-                {usuario.rol === 'admin' && (
-                  <li><Link to="/admin">{t('nav.admin')}</Link></li>
-                )}
-                <li>
-                  <button type="button" className="text-red-700" onClick={logout}>
+              <div className="pt-1">
+                <Menu>
+                  {usuario.rol === 'admin' && <MenuItem to="/admin">{t('nav.admin')}</MenuItem>}
+                  <MenuItem danger onClick={logout}>
                     <FiLogOut aria-hidden />
                     {t('nav.logout')}
-                  </button>
-                </li>
-              </ul>
+                  </MenuItem>
+                </Menu>
+              </div>
             </Dropdown>
           )}
         </div>
@@ -169,27 +158,23 @@ export const NavBar = () => {
         {/* Móvil y tablet */}
         <div className="ml-auto flex items-center gap-1 lg:hidden">
           {usuario && (
-            <button
-              type="button"
-              className="btn btn-square btn-ghost"
+            <IconButton
+              icon={notificacionesOpen ? <FiX aria-hidden className="size-5" /> : <BellIcon total={total} />}
+              label={notificacionesOpen ? t('notificaciones.close') : bellLabel}
+              size="md"
               aria-expanded={notificacionesOpen}
               aria-controls={notificacionesId}
-              aria-label={notificacionesOpen ? t('notificaciones.close') : bellLabel}
               onClick={() => togglePanel('notificaciones')}
-            >
-              {notificacionesOpen ? <FiX aria-hidden className="size-5" /> : <BellIcon total={total} />}
-            </button>
+            />
           )}
-          <button
-            type="button"
-            className="btn btn-square btn-ghost"
+          <IconButton
+            icon={menuOpen ? FiX : FiMenu}
+            label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+            size="md"
             aria-expanded={menuOpen}
             aria-controls={menuId}
-            aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             onClick={() => togglePanel('menu')}
-          >
-            {menuOpen ? <FiX aria-hidden className="size-5" /> : <FiMenu aria-hidden className="size-5" />}
-          </button>
+          />
         </div>
       </nav>
 
@@ -210,49 +195,46 @@ export const NavBar = () => {
       )}
 
       {menuOpen && (
+        // En el panel móvil las opciones van a tamaño de texto normal, más fáciles de pulsar
         <div
           id={menuId}
-          className="absolute inset-x-0 top-full mt-2 rounded-xl bg-white p-2 shadow-lg lg:hidden"
+          className="absolute inset-x-0 top-full mt-2 rounded-xl bg-white p-2 shadow-lg lg:hidden [&_.menu]:text-base"
         >
           {usuario && <div className="mb-1"><UserHeader {...usuario} /></div>}
-          <ul className="menu w-full gap-0.5 p-0 text-base">
+          <Menu>
             {items.map((item) => (
-              <li key={item.to}>
-                <NavLink to={item.to} className={({ isActive }) => mobileLinkClass({ isActive: isItemActive(item.to, isActive) })}>{t(item.labelKey)}</NavLink>
-              </li>
+              <MenuItem key={item.to} to={item.to} active={isItemActive(item.to, isRouteActive(item.to))}>
+                {t(item.labelKey)}
+              </MenuItem>
             ))}
             {usuario?.rol === 'admin' && (
-              <li><NavLink to="/admin" className={mobileLinkClass}>{t('nav.admin')}</NavLink></li>
+              <MenuItem to="/admin" active={isRouteActive('/admin')}>{t('nav.admin')}</MenuItem>
             )}
-          </ul>
+          </Menu>
 
           <div className="my-2 border-t border-base-300" />
 
-          <ul className="menu w-full gap-0.5 p-0 text-base">
-            <li>
-              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-                {t('nav.documentation')}
-                <FiExternalLink aria-hidden className="ml-auto" />
-              </a>
-            </li>
-          </ul>
+          <Menu>
+            <MenuItem href={DOCS_URL}>
+              {t('nav.documentation')}
+              <FiExternalLink aria-hidden className="ml-auto" />
+            </MenuItem>
+          </Menu>
           <LanguageSegmented />
 
           <div className="my-2 border-t border-base-300" />
 
           {auth.loading ? (
-            <div className="skeleton h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           ) : usuario ? (
-            <ul className="menu w-full p-0 text-base">
-              <li>
-                <button type="button" className="text-red-700" onClick={logout}>
-                  <FiLogOut aria-hidden />
-                  {t('nav.logout')}
-                </button>
-              </li>
-            </ul>
+            <Menu>
+              <MenuItem danger onClick={logout}>
+                <FiLogOut aria-hidden />
+                {t('nav.logout')}
+              </MenuItem>
+            </Menu>
           ) : (
-            <Link to="/auth/login" className="btn btn-primary w-full">{t('nav.login')}</Link>
+            <ButtonLink variant="primary" to="/auth/login" block>{t('nav.login')}</ButtonLink>
           )}
         </div>
       )}

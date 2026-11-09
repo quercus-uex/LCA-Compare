@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { SegmentedControl } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Pais, useLocation } from '../../hooks/location.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
@@ -18,13 +19,13 @@ export const PaisFilterCollapse = (
   const { t } = useTranslation();
   const [paises, setPaises] = useState<Pais[]>([]);
   const [enabled, setEnabled] = useState<boolean>(false);
-  
+
   useEffect(() => {
     location.getPaises()
       .then(p => setPaises(p))
       .catch(() => toast.error(t('location.countriesError')));
   }, [location, t]);
-  
+
   return (
     <FilterCollapse
       title={t('compare.filters.country')}
@@ -34,18 +35,15 @@ export const PaisFilterCollapse = (
         if (!isEnabled) setFilters({ ...filters, pais: undefined });
       }}
     >
-      <div className="join flex">
-        {paises.map((pais) => (
-          <button
-            key={pais.id}
-            className={`btn join-item grow ${filters.pais?.id === pais.id ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setFilters({ ...filters, pais })}
-          >
-            {pais.nombre}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        label={t('compare.filters.country')}
+        size="md"
+        block
+        options={paises.map((pais) => ({ value: pais.id, label: pais.nombre }))}
+        value={filters.pais?.id}
+        onChange={(id) => setFilters({ ...filters, pais: paises.find((p) => p.id === id) })}
+      />
     </FilterCollapse>
   );
-  
+
 }

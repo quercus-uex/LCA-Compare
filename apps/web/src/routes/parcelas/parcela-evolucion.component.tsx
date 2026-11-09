@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { DEFAULT_EF_CATEGORY, EF_CATEGORIES, type EfCategoryId } from '../../common/constants.ts';
 import { formatAxisValue, formatCampaignDate, formatCampaignMonth, formatImpactValue, formatQuantity } from '../../common/format.ts';
+import { ColorDot, Section, Select } from '../../components/ui/index.ts';
 import type { CultivoConImpacto } from '../../hooks/parcela.hook.tsx';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import { CHART_GRID_STROKE, CHART_TICK } from '../../stats/stats-chart-theme.ts';
@@ -57,70 +58,70 @@ export const ParcelaEvolucion = ({ cultivos }: { cultivos: CultivoConImpacto[] }
   }));
 
   return (
-    <section className="card bg-base-100 shadow-sm" aria-labelledby="evolucion-title">
-      <div className="card-body gap-3 p-4">
-        <header className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="evolucion-title" className="card-title">{t('parcelas.detail.evolution')}</h2>
-          <select
-            className="select select-sm w-full sm:w-auto"
-            aria-label={t('parcelas.detail.metric')}
-            value={metric}
-            onChange={(e) => setMetric(e.target.value as Metric)}
-          >
-            <optgroup label={t('parcelas.detail.cropData')}>
-              {CROP_METRICS.map((m) => <option key={m.id} value={m.id}>{t(m.labelKey)}</option>)}
+    <Section
+      title={t('parcelas.detail.evolution')}
+      density="compact"
+      actions={
+        <Select
+          size="sm"
+          className="sm:w-auto"
+          aria-label={t('parcelas.detail.metric')}
+          value={metric}
+          onChange={(e) => setMetric(e.target.value as Metric)}
+        >
+          <optgroup label={t('parcelas.detail.cropData')}>
+            {CROP_METRICS.map((m) => <option key={m.id} value={m.id}>{t(m.labelKey)}</option>)}
+          </optgroup>
+          {categories.length > 0 && (
+            <optgroup label={t('parcelas.detail.impactTotal')}>
+              {categories.map((c) => <option key={c.id} value={c.id}>{getCategoryLabel(c.id)}</option>)}
             </optgroup>
-            {categories.length > 0 && (
-              <optgroup label={t('parcelas.detail.impactTotal')}>
-                {categories.map((c) => <option key={c.id} value={c.id}>{getCategoryLabel(c.id)}</option>)}
-              </optgroup>
-            )}
-          </select>
-        </header>
-
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data} margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
-            <XAxis dataKey="fecha" tick={CHART_TICK} tickFormatter={formatCampaignMonth} />
-            <YAxis
-              tick={CHART_TICK}
-              width={72}
-              tickFormatter={formatAxisValue}
-              label={{ value: unit, angle: -90, position: 'insideLeft', style: CHART_TICK }}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                const point = payload?.[0]?.payload as Point | undefined;
-                if (!active || !point) return null;
-                return (
-                  <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
-                    <p className="font-bold">{formatCampaignDate(point.fecha)}</p>
-                    <p className="text-base-content/70">{getCropTypeLabel(point.tipo)}</p>
-                    <p className="flex items-center gap-1.5">
-                      <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                      <span>
-                        <span className="font-mono font-semibold">
-                          {point.value === null ? '—' : formatValue(point.value)}
-                        </span>{' '}
-                        {unit}
-                      </span>
-                    </p>
-                  </div>
-                );
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={color}
-              strokeWidth={3}
-              dot={{ r: 4, fill: color }}
-              activeDot={{ r: 6 }}
-              isAnimationActive={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </section>
+          )}
+        </Select>
+      }
+    >
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data} margin={{ top: 10, right: 16, left: 8, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+          <XAxis dataKey="fecha" tick={CHART_TICK} tickFormatter={formatCampaignMonth} />
+          <YAxis
+            tick={CHART_TICK}
+            width={72}
+            tickFormatter={formatAxisValue}
+            label={{ value: unit, angle: -90, position: 'insideLeft', style: CHART_TICK }}
+          />
+          <Tooltip
+            content={({ active, payload }) => {
+              const point = payload?.[0]?.payload as Point | undefined;
+              if (!active || !point) return null;
+              return (
+                <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
+                  <p className="font-bold">{formatCampaignDate(point.fecha)}</p>
+                  <p className="text-muted">{getCropTypeLabel(point.tipo)}</p>
+                  <p className="flex items-center gap-1.5">
+                    <ColorDot color={color} />
+                    <span>
+                      <span className="font-mono font-semibold">
+                        {point.value === null ? '—' : formatValue(point.value)}
+                      </span>{' '}
+                      {unit}
+                    </span>
+                  </p>
+                </div>
+              );
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={3}
+            dot={{ r: 4, fill: color }}
+            activeDot={{ r: 6 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </Section>
   );
 };

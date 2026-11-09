@@ -6,9 +6,7 @@ import { ApiError } from '../../common/api.ts';
 import { formatCampaignDate } from '../../common/format.ts';
 import { exportJSON } from '../../common/utils.ts';
 import { CropTypeBadge } from '../../components/crop-type-badge.component.tsx';
-import { Dropdown } from '../../components/dropdown.component.tsx';
-import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
-import { PAGE_CLASS } from '../../components/page-header.component.tsx';
+import { Badge, Dropdown, ErrorAlert, Menu, MenuItem, Page } from '../../components/ui/index.ts';
 import { type ParcelaDetalle, useParcela } from '../../hooks/parcela.hook.tsx';
 import {
   type ResultadoImpacto,
@@ -67,10 +65,10 @@ export const ResultadoRoute = () => {
 
   if (state.status === 'error') {
     return (
-      <div className={PAGE_CLASS}>
+      <Page>
         <ParcelaBreadcrumbs />
-        <LoadErrorAlert message={t('resultados.loadError')} onRetry={load} />
-      </div>
+        <ErrorAlert message={t('resultados.loadError')} onRetry={load} />
+      </Page>
     );
   }
 
@@ -79,7 +77,7 @@ export const ResultadoRoute = () => {
   const fecha = formatCampaignDate(cultivo.fechaInicioCampania);
 
   return (
-    <div className={PAGE_CLASS}>
+    <Page>
       <ParcelaBreadcrumbs
         root={accesoCrumbs}
         items={[
@@ -96,22 +94,23 @@ export const ResultadoRoute = () => {
             {/* Comparar por parcela usaría todas sus campañas, también las no consentidas */}
             {!acceso && <CompararParcelaDropdown parcela={parcela} />}
             <Dropdown
-              triggerClassName="btn btn-outline btn-sm"
-              contentClassName="w-40"
+              variant="outline"
+              size="sm"
+              width="w-40"
               trigger={<><FiDownload aria-hidden />{t('common.actions.export')}</>}
             >
-              <ul className="menu w-full p-0">
-                <li><button type="button" onClick={() => exportJSON(resultado.datos)}>JSON</button></li>
-                <li><button type="button" onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}>CSV</button></li>
-              </ul>
+              <Menu>
+                <MenuItem onClick={() => exportJSON(resultado.datos)}>JSON</MenuItem>
+                <MenuItem onClick={() => buildResultadoCSV(resultado, parcela.nombre, t)}>CSV</MenuItem>
+              </Menu>
             </Dropdown>
           </div>
         }
       >
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <CropTypeBadge tipo={cultivo.tipo} />
-          <span className="text-base-content/70">{t('parcelas.campaignStarted', { date: fecha })}</span>
-          <span className="badge badge-ghost">{t('resultados.method')}: {resultado.impacto.nombre}</span>
+          <span className="text-muted">{t('parcelas.campaignStarted', { date: fecha })}</span>
+          <Badge tone="neutral">{t('resultados.method')}: {resultado.impacto.nombre}</Badge>
         </div>
 
         <CultivoMetricas cultivo={cultivo} />
@@ -120,6 +119,6 @@ export const ResultadoRoute = () => {
       </ParcelaHeroCard>
 
       <ResultadoTable resultado={resultado} />
-    </div>
+    </Page>
   );
 };

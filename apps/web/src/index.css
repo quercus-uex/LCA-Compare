@@ -46,11 +46,13 @@ body {
 }
 
 /* Colores semánticos del texto, ya comprobados contra WCAG AA sobre base-100 y
-   base-200: `text-muted` para lo secundario y `text-danger` para lo destructivo
-   (el `error` del tema es un fondo pastel y como texto no llega a 2:1) */
+   base-200: `text-muted` para lo secundario, `text-danger` para lo destructivo o
+   desfavorable y `text-favorable` para lo favorable (los `error` y `success` del
+   tema son fondos pastel y como texto no llegan a 2:1) */
 @theme inline {
   --color-muted: color-mix(in oklab, var(--color-base-content) 70%, transparent);
   --color-danger: var(--color-red-700);
+  --color-favorable: var(--color-green-700);
 }
 
 /* Etiqueta pequeña en mayúsculas que encabeza un grupo de datos */

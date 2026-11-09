@@ -1,3 +1,5 @@
+import { Toggle } from '../../components/ui/index.ts';
+
 export const FilterCollapse = ({
   title,
   enabled,
@@ -18,9 +20,9 @@ export const FilterCollapse = ({
       <div className="flex p-5">
         <div className="flex gap-2 items-center justify-between w-full">
           <p className="font-semibold text-lg">{title}</p>
-          <input
-            type="checkbox"
-            className="toggle toggle-lg"
+          <Toggle
+            size="lg"
+            aria-label={title}
             checked={enabled}
             disabled={disabled}
             onChange={(e) => onToggle(e.target.checked)}

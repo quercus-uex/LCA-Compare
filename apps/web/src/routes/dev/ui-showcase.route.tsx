@@ -1,12 +1,13 @@
 // Catálogo de la librería de componentes. Solo existe en desarrollo (/dev/ui), así que sus
 // textos no pasan por i18n: es una herramienta para quien desarrolla, no una vista de la app
 import { type ReactNode, useId, useState } from 'react';
-import { FiBarChart2, FiDownload, FiMap, FiPlus, FiSearch, FiSend, FiSettings, FiTrash2, FiUserMinus, FiUsers } from 'react-icons/fi';
+import { FiBarChart2, FiBell, FiDownload, FiGrid, FiList, FiMap, FiPlus, FiSearch, FiSend, FiSettings, FiTrash2, FiUserMinus, FiUsers } from 'react-icons/fi';
 import {
   Badge,
   Breadcrumbs,
   Button,
   ButtonLink,
+  ButtonNavLink,
   Callout,
   Card,
   CardLink,
@@ -118,12 +119,15 @@ export const UiShowcaseRoute = () => {
       />
 
       <Group title="Tokens">
-        <Showcase name="text-muted · text-danger · eyebrow" use="Colores de texto semánticos y etiqueta de grupo, definidos en index.css. Cumplen el contraste AA.">
+        <Showcase name="text-muted · text-danger · text-favorable · eyebrow" use="Colores de texto semánticos y etiqueta de grupo, definidos en index.css. Cumplen el contraste AA.">
           <Example code={'<p className="text-muted">…</p>'}>
             <p className="text-muted">Texto secundario: fechas, ayudas, unidades.</p>
           </Example>
           <Example code={'<p className="text-danger">…</p>'}>
             <p className="text-danger">Texto de error o de una acción destructiva.</p>
+          </Example>
+          <Example code={'<p className="text-favorable">…</p>'}>
+            <p className="text-favorable">Valor favorable: −12,4 % frente a la referencia.</p>
           </Example>
           <Example code={'<span className="eyebrow">Tus campañas</span>'}>
             <span className="eyebrow">Tus campañas</span>
@@ -157,12 +161,27 @@ export const UiShowcaseRoute = () => {
           </Example>
         </Showcase>
 
+        <Showcase name="ButtonNavLink" use="Enlace de la navegación principal: se resalta cuando su sección está activa. isActive corrige el cálculo del router.">
+          <Example code={'<ButtonNavLink to="/dev/ui">'}>
+            <ButtonNavLink to="/dev/ui">Catálogo (activo)</ButtonNavLink>
+            <ButtonNavLink to="/parcelas">Mis parcelas</ButtonNavLink>
+          </Example>
+        </Showcase>
+
         <Showcase name="IconButton" use="Botón de solo icono. label es obligatorio: da el nombre accesible y el tooltip.">
           <Example code={'<IconButton icon={FiSettings} label="Ajustes" />'}>
             <IconButton icon={FiSettings} label="Ajustes" />
             <IconButton icon={FiPlus} label="Añadir" variant="outline" />
             <IconButton icon={FiTrash2} label="Eliminar" variant="danger-ghost" />
             <IconButton icon={FiTrash2} label="Eliminar" variant="danger-ghost" size="xs" />
+          </Example>
+          <Example code={'<IconButton icon={<BellIcon total={3} />} label="…" />'}>
+            <IconButton
+              label="Notificaciones (3)"
+              size="md"
+              icon={<span className="indicator"><FiBell aria-hidden className="size-5" /><Badge aria-hidden tone="secondary" size="xs" className="indicator-item">3</Badge></span>}
+            />
+            <span className="text-sm text-muted">Si el icono necesita algo más (un contador), se pasa el elemento ya pintado.</span>
           </Example>
         </Showcase>
 
@@ -181,6 +200,14 @@ export const UiShowcaseRoute = () => {
           </Example>
           <Example code={'<SegmentedControl label="País" options={…} value={…} onChange={…} />'}>
             <SegmentedControl label="País" options={[{ value: 'ES', label: 'España' }, { value: 'PT', label: 'Portugal' }]} value={pais} onChange={setPais} />
+            <SegmentedControl
+              label="Vista"
+              size="sm"
+              mdSize="md"
+              options={[{ value: 'tarjetas', label: 'Tarjetas', icon: FiGrid }, { value: 'tabla', label: 'Tabla', icon: FiList }]}
+              value="tarjetas"
+              onChange={() => undefined}
+            />
             <SegmentedControl label="Idioma" size="xs" options={[{ value: 'es', label: 'ES' }, { value: 'en', label: 'EN' }, { value: 'pt', label: 'PT' }]} value="es" onChange={() => undefined} />
           </Example>
         </Showcase>
@@ -192,7 +219,10 @@ export const UiShowcaseRoute = () => {
                 <MenuTitle>Comparativa</MenuTitle>
                 <MenuItem onClick={() => undefined}>JSON</MenuItem>
                 <MenuItem onClick={() => undefined}>CSV</MenuItem>
-                <MenuItem to="/dev/ui" danger>Eliminar</MenuItem>
+                <MenuTitle>Navegación</MenuTitle>
+                <MenuItem to="/dev/ui" active>Catálogo (activa)</MenuItem>
+                <MenuItem href="https://example.com">Documentación</MenuItem>
+                <MenuItem onClick={() => undefined} danger>Eliminar</MenuItem>
               </Menu>
             </Dropdown>
           </Example>

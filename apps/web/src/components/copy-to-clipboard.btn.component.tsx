@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaCheck, FaRegClipboard } from 'react-icons/fa6';
 import { toast } from 'sonner';
+import { IconButton } from './ui/index.ts';
 
 export const CopyToClipboardBtn = ({ text, label }: { text: string | null; label?: string }) => {
   const [copied, setCopied] = useState(false);
@@ -10,11 +11,11 @@ export const CopyToClipboardBtn = ({ text, label }: { text: string | null; label
   if (!text) return null;
 
   return (
-    <button
-      type="button"
-      className="btn btn-outline w-7 h-7 btn-square"
-      aria-label={t('clipboard.copy', { label: label ?? text })}
-      title={t('clipboard.copy', { label: label ?? text })}
+    <IconButton
+      icon={copied ? FaCheck : FaRegClipboard}
+      label={t('clipboard.copy', { label: label ?? text })}
+      variant="outline"
+      size="xs"
       onClick={() => {
         navigator.clipboard
           .writeText(text)
@@ -26,8 +27,6 @@ export const CopyToClipboardBtn = ({ text, label }: { text: string | null; label
             toast.error(t('clipboard.error', { error: String(e) }));
           });
       }}
-    >
-      {copied ? <FaCheck aria-hidden /> : <FaRegClipboard aria-hidden />}
-    </button>
+    />
   );
 }

@@ -29,14 +29,17 @@ type Props = {
   /** Color del borde y del icono, solo con `tone="outline"` */
   color?: string;
   title?: string;
+  /** Para badges decorativos cuyo contenido ya se anuncia de otra forma (un contador, p. ej.) */
+  'aria-hidden'?: boolean;
   className?: string;
   children: ReactNode;
 };
 
-export const Badge = ({ tone = 'neutral', size = 'md', icon: Icon, color, title, className, children }: Props) => {
+export const Badge = ({ tone = 'neutral', size = 'md', icon: Icon, color, title, className, children, ...rest }: Props) => {
   const style: CSSProperties | undefined = color ? { borderColor: color } : undefined;
   return (
     <span
+      {...rest}
       title={title}
       style={style}
       className={`badge gap-1 whitespace-nowrap ${TONE_CLASS[tone]} ${SIZE_CLASS[size]} ${className ?? ''}`}
@@ -48,6 +51,10 @@ export const Badge = ({ tone = 'neutral', size = 'md', icon: Icon, color, title,
 };
 
 /** Punto de color que identifica una serie o categoría junto a su nombre */
-export const ColorDot = ({ color, size = 'md' }: { color: string; size?: 'sm' | 'md' }) => (
-  <span aria-hidden className={`shrink-0 rounded-full ${size === 'sm' ? 'size-2' : 'size-2.5'}`} style={{ backgroundColor: color }} />
+export const ColorDot = ({ color, size = 'md', className }: { color: string; size?: 'sm' | 'md'; className?: string }) => (
+  <span
+    aria-hidden
+    className={`shrink-0 rounded-full ${size === 'sm' ? 'size-2' : 'size-2.5'} ${className ?? ''}`}
+    style={{ backgroundColor: color }}
+  />
 );

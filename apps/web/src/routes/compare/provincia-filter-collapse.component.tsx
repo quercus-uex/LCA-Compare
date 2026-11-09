@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { matchesSearch, toggleInArray } from '../../common/utils.ts';
+import { Badge, Input } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Provincia, useLocation } from '../../hooks/location.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
@@ -44,8 +45,8 @@ export const ProvinciaFilterCollapse = (
       }}
     >
       <div className="flex flex-col gap-5 w-full">
-        <input
-          className="input w-full"
+        <Input
+          aria-label={t('compare.filters.province')}
           placeholder={t('compare.filters.placeholders.province')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -64,10 +65,11 @@ export const ProvinciaFilterCollapse = (
                 <button
                   type="button"
                   className="flex w-full items-center justify-between"
+                  aria-pressed={!!filters.provincias?.find((i) => i.id === p.id)}
                   onClick={() => toggleProvincia(p)}
                 >
                   {p.nombre}
-                  <div className="badge badge-md badge-primary line-clamp-1">{p.pais!.codigo}</div>
+                  <Badge tone="primary" className="line-clamp-1">{p.pais!.codigo}</Badge>
                 </button>
               </li>
             ))}

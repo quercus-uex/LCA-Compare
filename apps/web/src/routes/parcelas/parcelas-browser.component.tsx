@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { GiFarmTractor } from 'react-icons/gi';
 import { useSearchParams } from 'react-router';
+import { Button, EmptyState } from '../../components/ui/index.ts';
 import type { ParcelaResumen } from '../../hooks/parcela.hook.tsx';
 import { ParcelasItem } from './parcelas-item.component.tsx';
 import { ParcelasMap } from './parcelas-map.component.tsx';
-import { EmptyState } from './parcelas-states.component.tsx';
 import { ParcelasTable } from './parcelas-table.component.tsx';
 import { ParcelasToolbar } from './parcelas-toolbar.component.tsx';
 import {
@@ -59,12 +60,13 @@ export const ParcelasBrowser = ({ browser, linkState }: Props) => {
 
       {filtered.length === 0 ? (
         <EmptyState
+          icon={GiFarmTractor}
           title={t('parcelas.empty.filteredTitle')}
           description={t('parcelas.empty.filteredDescription')}
           action={hasActiveFilters(query) && (
-            <button type="button" className="btn btn-primary btn-sm" onClick={clearFilters}>
+            <Button variant="primary" size="sm" onClick={clearFilters}>
               {t('parcelas.filters.clear')}
-            </button>
+            </Button>
           )}
         />
       ) : (

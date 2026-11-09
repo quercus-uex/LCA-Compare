@@ -5,13 +5,13 @@ import { FiInfo } from 'react-icons/fi';
 import { useNavigate } from 'react-router';
 import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
 import { formatNumber } from '../common/format.ts';
+import { Section, Select } from '../components/ui/index.ts';
 import { StatsRankingList } from './stats-ranking-list.component.tsx';
 import {
   poblacionToCompareState,
   provinciaToCompareState,
   rankByCategory,
 } from './stats-ranking.helpers.ts';
-import { StatsSection } from './stats-section.component.tsx';
 import type { GlobalStatsDto } from './stats.hook.tsx';
 
 type Props = {
@@ -65,11 +65,13 @@ export const StatsRankings = ({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <StatsSection
+        <Section
+          density="compact"
           title={t('stats.sections.provinceRanking')}
           hint={t('stats.sections.rankingHint')}
         >
           <StatsRankingList
+            label={t('stats.sections.provinceRanking')}
             entries={provincias}
             getId={(item) => item.idProvincia}
             getName={(item) => item.nombreProvincia}
@@ -87,13 +89,15 @@ export const StatsRankings = ({
               void navigate('/compare', { state: provinciaToCompareState(item) })
             }
           />
-        </StatsSection>
+        </Section>
 
-        <StatsSection
+        <Section
+          density="compact"
           title={t('stats.sections.townRanking')}
           hint={t('stats.sections.rankingHint')}
         >
           <StatsRankingList
+            label={t('stats.sections.townRanking')}
             entries={poblaciones}
             getId={(item) => item.idPoblacion}
             getName={(item) => item.nombrePoblacion}
@@ -110,8 +114,8 @@ export const StatsRankings = ({
             emptyLabel={emptyLabel}
             searchPlaceholder={t('stats.filters.searchTown')}
             toolbar={
-              <select
-                className="select select-bordered select-sm w-full"
+              <Select
+                size="sm"
                 aria-label={t('stats.chart.province')}
                 value={provinciaFilter ?? ''}
                 onChange={(e) =>
@@ -124,17 +128,17 @@ export const StatsRankings = ({
                     {nombre}
                   </option>
                 ))}
-              </select>
+              </Select>
             }
             onActivate={(item) =>
               void navigate('/compare', { state: poblacionToCompareState(item) })
             }
           />
-        </StatsSection>
+        </Section>
       </div>
 
       {(provinciasOcultas > 0 || poblacionesOcultas > 0) && (
-        <p className="flex items-start gap-2 px-1 text-sm text-base-content/70">
+        <p className="flex items-start gap-2 px-1 text-sm text-muted">
           <FiInfo className="mt-0.5 shrink-0" aria-hidden />
           {t('stats.ranking.hiddenZones', {
             provincias: provinciasOcultas,

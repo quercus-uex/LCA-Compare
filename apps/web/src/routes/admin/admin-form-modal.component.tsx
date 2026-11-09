@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiAlertCircle, FiX } from 'react-icons/fi';
+import { Button, Callout, DatePicker, Dialog, Field, Input, Select, Toggle } from '../../components/ui/index.ts';
 import {
   formFromItem,
   isFieldRequired,
@@ -12,7 +12,6 @@ import {
   type FormMode,
   type FormState,
 } from './admin-api.ts';
-import { AdminDialog } from './admin-dialog.component.tsx';
 import { CONFIG, type Entity, type FieldConfig, type Item } from './admin.config.ts';
 import { IdLookupField } from './id-lookup-field.component.tsx';
 
@@ -27,7 +26,6 @@ type Props = {
 
 export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onSaved }: Props) => {
   const { t } = useTranslation();
-  const titleId = useId();
   const formId = useId();
   const config = CONFIG[entity];
   const [initial] = useState(() => formFromItem(entity, item));
@@ -92,36 +90,15 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
     }
   };
 
-  const renderControl = (field: FieldConfig, inputId: string, describedBy: string | undefined) => {
+  const renderControl = (field: FieldConfig) => {
     const value = form[field.name];
-    const invalid = Boolean(errors[field.name]);
+    const text = typeof value === 'string' ? value : '';
     const locked = (field.lockedOnEdit && mode === 'edit') || (isSelf && field.name === 'rol');
-    const common = {
-      id: inputId,
-      'aria-invalid': invalid,
-      'aria-describedby': describedBy,
-      disabled: locked || saving,
-    };
+    const disabled = locked || saving;
 
-    if (field.type === 'checkbox') {
-      return (
-        <input
-          {...common}
-          type="checkbox"
-          className="toggle toggle-primary"
-          checked={value === true}
-          onChange={(e) => setValue(field.name, e.target.checked)}
-        />
-      );
-    }
     if (field.type === 'select') {
       return (
-        <select
-          {...common}
-          className={`select w-full ${invalid ? 'select-error' : ''}`}
-          value={typeof value === 'string' ? value : ''}
-          onChange={(e) => setValue(field.name, e.target.value)}
-        >
+        <Select value={text} disabled={disabled} onChange={(e) => setValue(field.name, e.target.value)}>
           <option value="" disabled>
             {t('admin.form.selectPlaceholder')}
           </option>
@@ -131,135 +108,107 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
             </option>
           ))}
           {/* Valores guardados fuera de la lista (p. ej. tipos de cultivo antiguos) */}
-          {typeof value === 'string' && value && !field.options?.some((o) => o.value === value) && (
-            <option value={value}>{value}</option>
-          )}
-        </select>
+          {text && !field.options?.some((o) => o.value === text) && <option value={text}>{text}</option>}
+        </Select>
       );
     }
     if (field.type === 'fk' && field.entity) {
       return (
         <IdLookupField
-          id={inputId}
           entity={field.entity}
-          value={typeof value === 'string' ? value : ''}
+          value={text}
           initialLabel={initial.labels[field.name]}
           onChange={(v) => setValue(field.name, v)}
-          disabled={locked || saving}
-          invalid={invalid}
+          disabled={disabled}
+          clearable={!isFieldRequired(field, mode)}
+        />
+      );
+    }
+    if (field.type === 'date') {
+      return (
+        <DatePicker
+          value={text}
+          onChange={(v) => setValue(field.name, v)}
+          disabled={disabled}
           clearable={!isFieldRequired(field, mode)}
         />
       );
     }
     return (
-      <input
-        {...common}
+      <Input
         type={field.type}
         step={field.step}
         min={field.type === 'number' ? 0 : undefined}
         autoComplete={field.type === 'password' ? 'new-password' : 'off'}
-        className={`input w-full ${invalid ? 'input-error' : ''} ${field.lockedOnEdit ? 'font-mono text-sm' : ''}`}
-        value={typeof value === 'string' ? value : ''}
+        className={field.lockedOnEdit ? 'font-mono text-sm' : undefined}
+        value={text}
+        disabled={disabled}
         onChange={(e) => setValue(field.name, e.target.value)}
       />
     );
   };
 
   return (
-    <AdminDialog labelledBy={titleId} onClose={onClose} locked={saving} className="max-w-2xl">
-      <form id={formId} noValidate onSubmit={(e) => void submit(e)} className="flex flex-col max-h-[calc(100dvh-5em)]">
-        <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-base-200">
-          <div>
-            <h3 id={titleId} className="text-lg font-semibold">
-              {t(`admin.${mode === 'create' ? 'createTitles' : 'editTitles'}.${config.titleKey}`)}
-            </h3>
-            <p className="text-sm text-base-content/70">
-              {mode === 'create' ? t('admin.form.createHelp') : t('admin.form.editHelp')}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-circle"
-            onClick={onClose}
-            disabled={saving}
-            aria-label={t('common.actions.close')}
-          >
-            <FiX aria-hidden />
-          </button>
-        </div>
+    <Dialog
+      title={t(`admin.${mode === 'create' ? 'createTitles' : 'editTitles'}.${config.titleKey}`)}
+      description={mode === 'create' ? t('admin.form.createHelp') : t('admin.form.editHelp')}
+      onClose={onClose}
+      locked={saving}
+      size="lg"
+      footer={
+        <>
+          <p className="mr-auto text-sm text-muted">{t('admin.form.requiredHint')}</p>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
+            {t('common.actions.cancel')}
+          </Button>
+          <Button variant="primary" type="submit" form={formId} loading={saving}>
+            {mode === 'create' ? t('common.actions.create') : t('common.actions.save')}
+          </Button>
+        </>
+      }
+    >
+      <form id={formId} noValidate onSubmit={(e) => void submit(e)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {serverError && (
+          <Callout tone="error" live className="sm:col-span-2">
+            {serverError}
+          </Callout>
+        )}
 
-        <div className="px-6 py-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-          {serverError && (
-            <div role="alert" className="alert alert-error sm:col-span-2">
-              <FiAlertCircle aria-hidden />
-              <span>{serverError}</span>
-            </div>
-          )}
+        {config.formFields.map((field) => {
+          const help = mode === 'edit' && field.helpEditKey ? field.helpEditKey : field.helpKey;
+          const error = errors[field.name];
+          const spanClass = field.span === 'full' ? 'sm:col-span-2' : '';
 
-          {config.formFields.map((field) => {
-            const inputId = `${formId}-${field.name}`;
-            const required = isFieldRequired(field, mode);
-            const help = mode === 'edit' && field.helpEditKey ? field.helpEditKey : field.helpKey;
-            const error = errors[field.name];
-            const describedBy = error || help ? `${inputId}-desc` : undefined;
-            const spanClass = field.span === 'full' ? 'sm:col-span-2' : '';
-
-            if (field.type === 'checkbox') {
-              return (
-                <div key={field.name} className={`flex items-start gap-3 rounded-box bg-base-200/60 p-3 ${spanClass}`}>
-                  {renderControl(field, inputId, describedBy)}
-                  <div>
-                    <label htmlFor={inputId} className="font-medium text-sm cursor-pointer">
-                      {t(field.labelKey)}
-                    </label>
-                    {help && (
-                      <p id={describedBy} className="text-sm text-base-content/70">
-                        {t(help)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-
+          if (field.type === 'checkbox') {
             return (
-              <div key={field.name} className={`flex flex-col gap-1 ${spanClass}`}>
-                <label htmlFor={inputId} className="text-sm font-medium">
-                  {t(field.labelKey)}
-                  {required && (
-                    <span className="text-base-content/70" aria-hidden>
-                      {' '}
-                      *
-                    </span>
-                  )}
-                </label>
-                {renderControl(field, inputId, describedBy)}
-                {(error || help) && (
-                  <p id={describedBy} className={`text-sm ${error ? 'text-red-700 font-medium' : 'text-base-content/70'}`}>
-                    {error ? t(error) : t(help!)}
-                  </p>
-                )}
-                {isSelf && field.name === 'rol' && (
-                  <p className="text-sm text-base-content/70">{t('admin.help.ownRole')}</p>
-                )}
-              </div>
+              <Toggle
+                key={field.name}
+                label={t(field.labelKey)}
+                hint={help && t(help)}
+                className={`rounded-box bg-base-200/60 p-3 ${spanClass}`}
+                checked={form[field.name] === true}
+                disabled={(field.lockedOnEdit && mode === 'edit') || saving}
+                onChange={(e) => setValue(field.name, e.target.checked)}
+              />
             );
-          })}
-        </div>
+          }
 
-        <div className="flex items-center justify-between gap-2 px-6 py-4 border-t border-base-200 bg-base-200/40">
-          <p className="text-sm text-base-content/70">{t('admin.form.requiredHint')}</p>
-          <div className="flex gap-2">
-            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>
-              {t('common.actions.cancel')}
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving && <span className="loading loading-spinner loading-sm" aria-hidden />}
-              {mode === 'create' ? t('common.actions.create') : t('common.actions.save')}
-            </button>
-          </div>
-        </div>
+          // El rol propio no se puede cambiar: la ayuda lo explica
+          const ownRole = isSelf && field.name === 'rol';
+          return (
+            <Field
+              key={field.name}
+              label={t(field.labelKey)}
+              required={isFieldRequired(field, mode)}
+              hint={help ? t(help) : ownRole ? t('admin.help.ownRole') : undefined}
+              error={error && t(error)}
+              className={spanClass}
+            >
+              {renderControl(field)}
+            </Field>
+          );
+        })}
       </form>
-    </AdminDialog>
+    </Dialog>
   );
 };

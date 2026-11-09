@@ -4,11 +4,11 @@ import type { Cultivo } from '../../hooks/parcela.hook.tsx';
 
 const Metrica = ({ title, value, unit, desc }: { title: string; value: number; unit: string; desc?: string }) => (
   <div className="flex flex-col gap-0.5 bg-base-200 px-4 py-3">
-    <div className="text-xs text-base-content/70">{title}</div>
+    <div className="text-xs text-muted">{title}</div>
     <div className="text-2xl font-bold tabular-nums">
       {formatQuantity(value)} <span className="text-base font-normal">{unit}</span>
     </div>
-    {desc && <div className="text-xs text-base-content/70">{desc}</div>}
+    {desc && <div className="text-xs text-muted">{desc}</div>}
   </div>
 );
 

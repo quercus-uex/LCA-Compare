@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { GiFarmTractor } from 'react-icons/gi';
 import { useLocation, useNavigate } from 'react-router';
 import { ApiError } from '../../common/api.ts';
-import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
-import { PAGE_CLASS, PageHeader } from '../../components/page-header.component.tsx';
+import { EmptyState, ErrorAlert, Page, PageHeader } from '../../components/ui/index.ts';
 import { type ParcelaResumen, useParcela } from '../../hooks/parcela.hook.tsx';
 import { ParcelasBrowser, useParcelasBrowser } from './parcelas-browser.component.tsx';
-import { EmptyState, ParcelasListSkeleton } from './parcelas-states.component.tsx';
+import { ParcelasListSkeleton } from './parcelas-states.component.tsx';
 import type { ParcelaLinkState } from './parcelas.utils.ts';
 
 type LoadState =
@@ -40,7 +40,7 @@ export const ParcelasRoute = () => {
   const linkState: ParcelaLinkState = { listSearch: location.search };
 
   return (
-    <div className={PAGE_CLASS}>
+    <Page>
       <PageHeader
         title={t('parcelas.title')}
         aside={parcelas && parcelas.length > 0 && (
@@ -54,13 +54,13 @@ export const ParcelasRoute = () => {
 
       {state.status === 'loading' && <ParcelasListSkeleton />}
 
-      {state.status === 'error' && <LoadErrorAlert message={t('parcelas.loadError')} onRetry={load} />}
+      {state.status === 'error' && <ErrorAlert message={t('parcelas.loadError')} onRetry={load} />}
 
       {parcelas && parcelas.length === 0 && (
-        <EmptyState title={t('parcelas.empty.title')} description={t('parcelas.empty.description')} />
+        <EmptyState icon={GiFarmTractor} title={t('parcelas.empty.title')} description={t('parcelas.empty.description')} />
       )}
 
       {parcelas && parcelas.length > 0 && <ParcelasBrowser browser={browser} linkState={linkState} />}
-    </div>
+    </Page>
   );
 };

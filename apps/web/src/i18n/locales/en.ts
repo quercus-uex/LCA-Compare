@@ -246,7 +246,6 @@ export const en = {
       noneWithLocation: 'None of these plots has a location.',
     },
     detail: {
-      breadcrumb: 'Breadcrumb',
       loadError: 'The plot could not be loaded.',
       compare: 'Compare this plot',
       compareAsTarget: 'As target set',

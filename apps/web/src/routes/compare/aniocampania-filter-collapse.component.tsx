@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Checkbox, Input } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { FilterCollapse } from './filter-collapse.component';
 
@@ -28,19 +29,18 @@ export const AniocampaniaFilterCollapse = (
     >
       <div className="flex flex-col gap-2">
         <div className="flex gap-2 items-center w-full">
-          <input
-            type="checkbox"
-            className="checkbox"
+          <Checkbox
+            label={t('common.fields.start')}
+            className="shrink-0"
             onChange={(e) => {
               setStartEnabled(e.target.checked);
               if (!e.target.checked) setFilters({ ...filters, anioCampaniaInicio: undefined });
             }}
           />
-          <p>{t('common.fields.start')} </p>
-          <input
+          <Input
             type="number"
             min="2020"
-            className="input"
+            aria-label={t('common.fields.start')}
             onChange={(e) => {
               if (startEnabled)
                 setFilters({
@@ -51,19 +51,18 @@ export const AniocampaniaFilterCollapse = (
           />
         </div>
         <div className="flex gap-2 items-center w-full">
-          <input
-            type="checkbox"
-            className="checkbox"
+          <Checkbox
+            label={t('common.fields.end')}
+            className="shrink-0"
             onChange={(e) => {
               setEndEnabled(e.target.checked);
               if (!e.target.checked) setFilters({ ...filters, anioCampaniaFin: undefined });
             }}
           />
-          <p>{t('common.fields.end')} </p>
-          <input
+          <Input
             type="number"
             min="2020"
-            className="input"
+            aria-label={t('common.fields.end')}
             onChange={(e) => {
               if (endEnabled)
                 setFilters({

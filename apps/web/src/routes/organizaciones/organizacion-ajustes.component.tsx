@@ -4,36 +4,37 @@ import { FiRepeat, FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ApiError } from '../../common/api.ts';
+import { Button, Card, ConfirmDialog, Field, Section, Select } from '../../components/ui/index.ts';
 import {
   organizacionApi,
   type OrganizacionDetalle,
   type OrganizacionResumen,
 } from '../../hooks/organizacion.hook.tsx';
-import { ConfirmActionDialog } from './confirm-action-dialog.component.tsx';
 import { OrganizacionForm } from './organizacion-form.component.tsx';
-import { nombreCompleto, tieneAceptadas } from './organizaciones.utils.ts';
+import { describeOrganizacionError, nombreCompleto, tieneAceptadas } from './organizaciones.utils.ts';
 
 type Props = {
   organizacion: OrganizacionDetalle;
   onUpdated: (resumen: OrganizacionResumen) => void;
 };
 
-const Section = ({ title, description, danger, children }: { title: string; description: string; danger?: boolean; children: ReactNode }) => (
-  <section className={`card bg-base-100 shadow-sm ${danger ? 'border border-red-700/40' : ''}`}>
-    <div className="card-body gap-4 p-4 sm:p-6">
-      <div>
-        <h2 className={`text-xl font-semibold ${danger ? 'text-red-700' : ''}`}>{title}</h2>
-        <p className="text-sm text-base-content/70">{description}</p>
-      </div>
+// Section no tiene variante de peligro: el bloque de eliminar marca en rojo su borde y su título
+const DangerSection = ({ title, hint, children }: { title: string; hint: string; children: ReactNode }) => {
+  const id = useId();
+  return (
+    <Card as="section" aria-labelledby={id} className="border border-danger/40">
+      <header>
+        <h2 id={id} className="text-lg font-semibold text-danger">{title}</h2>
+        <p className="text-sm text-muted">{hint}</p>
+      </header>
       {children}
-    </div>
-  </section>
-);
+    </Card>
+  );
+};
 
 export const OrganizacionAjustes = ({ organizacion, onUpdated }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const selectId = useId();
   const [idDestino, setIdDestino] = useState('');
   const [dialog, setDialog] = useState<'transferir' | 'eliminar' | null>(null);
 
@@ -43,7 +44,7 @@ export const OrganizacionAjustes = ({ organizacion, onUpdated }: Props) => {
 
   return (
     <div className="flex flex-col gap-5">
-      <Section title={t('organizaciones.ajustes.general.title')} description={t('organizaciones.ajustes.general.description')}>
+      <Section title={t('organizaciones.ajustes.general.title')} hint={t('organizaciones.ajustes.general.description')}>
         <div className="max-w-2xl">
           <OrganizacionForm
             key={organizacion.id}
@@ -57,41 +58,38 @@ export const OrganizacionAjustes = ({ organizacion, onUpdated }: Props) => {
         </div>
       </Section>
 
-      <Section title={t('organizaciones.ajustes.transfer.title')} description={t('organizaciones.ajustes.transfer.description')}>
+      <Section title={t('organizaciones.ajustes.transfer.title')} hint={t('organizaciones.ajustes.transfer.description')}>
         {candidatos.length === 0 ? (
-          <p className="rounded-box bg-base-200 p-3 text-sm text-base-content/70">{t('organizaciones.ajustes.transfer.none')}</p>
+          <p className="rounded-box bg-base-200 p-3 text-sm text-muted">{t('organizaciones.ajustes.transfer.none')}</p>
         ) : (
           <div className="flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <label htmlFor={selectId} className="text-sm font-medium">{t('organizaciones.ajustes.transfer.label')}</label>
-              <select id={selectId} className="select w-full" value={idDestino} onChange={(e) => setIdDestino(e.target.value)}>
+            <Field label={t('organizaciones.ajustes.transfer.label')} className="min-w-0 flex-1">
+              <Select value={idDestino} onChange={(e) => setIdDestino(e.target.value)}>
                 <option value="">{t('organizaciones.ajustes.transfer.placeholder')}</option>
                 {candidatos.map((m) => (
                   <option key={m.usuario.id} value={m.usuario.id}>
                     {nombreCompleto(m.usuario)} ({m.usuario.email})
                   </option>
                 ))}
-              </select>
-            </div>
-            <button type="button" className="btn btn-outline" disabled={!destino} onClick={() => setDialog('transferir')}>
-              <FiRepeat aria-hidden />
+              </Select>
+            </Field>
+            <Button variant="outline" icon={FiRepeat} disabled={!destino} onClick={() => setDialog('transferir')}>
               {t('organizaciones.ajustes.transfer.submit')}
-            </button>
+            </Button>
           </div>
         )}
       </Section>
 
-      <Section danger title={t('organizaciones.ajustes.delete.title')} description={t('organizaciones.ajustes.delete.description')}>
+      <DangerSection title={t('organizaciones.ajustes.delete.title')} hint={t('organizaciones.ajustes.delete.description')}>
         <div>
-          <button type="button" className="btn btn-error" onClick={() => setDialog('eliminar')}>
-            <FiTrash2 aria-hidden />
+          <Button variant="danger" icon={FiTrash2} onClick={() => setDialog('eliminar')}>
             {t('organizaciones.ajustes.delete.submit')}
-          </button>
+          </Button>
         </div>
-      </Section>
+      </DangerSection>
 
       {dialog === 'transferir' && destino && (
-        <ConfirmActionDialog
+        <ConfirmDialog
           title={t('organizaciones.ajustes.transfer.confirmTitle', {
             organizacion: organizacion.nombre,
             nombre: nombreCompleto(destino.usuario),
@@ -99,8 +97,11 @@ export const OrganizacionAjustes = ({ organizacion, onUpdated }: Props) => {
           body={t('organizaciones.ajustes.transfer.confirmBody')}
           confirmLabel={t('organizaciones.ajustes.transfer.submit')}
           onClose={() => setDialog(null)}
+          cancelLabel={t('organizaciones.confirm.dismiss')}
           describeError={(e) =>
-            e instanceof ApiError && e.status === 400 ? t('organizaciones.ajustes.transfer.invalid') : undefined}
+            e instanceof ApiError && e.status === 400
+              ? t('organizaciones.ajustes.transfer.invalid')
+              : describeOrganizacionError(e, t)}
           onConfirm={async () => {
             await organizacionApi.transferir(organizacion.id, { idUsuario: destino.usuario.id });
             toast.success(t('organizaciones.ajustes.transfer.done', { nombre: nombreCompleto(destino.usuario) }));
@@ -111,10 +112,12 @@ export const OrganizacionAjustes = ({ organizacion, onUpdated }: Props) => {
       )}
 
       {dialog === 'eliminar' && (
-        <ConfirmActionDialog
+        <ConfirmDialog
           title={t('organizaciones.ajustes.delete.confirmTitle', { nombre: organizacion.nombre })}
           body={t('organizaciones.ajustes.delete.confirmBody')}
           confirmLabel={t('organizaciones.ajustes.delete.submit')}
+          cancelLabel={t('organizaciones.confirm.dismiss')}
+          describeError={(e) => describeOrganizacionError(e, t)}
           onClose={() => setDialog(null)}
           onConfirm={async () => {
             await organizacionApi.remove(organizacion.id);

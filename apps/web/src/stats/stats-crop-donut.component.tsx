@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatNumber, formatPercent } from '../common/format.ts';
+import { ColorDot, EmptyState } from '../components/ui/index.ts';
 import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
+import { ChartTooltip } from './chart-tooltip.component.tsx';
 import type { DistribucionCultivoItemDto } from './stats.hook.tsx';
 
 type Props = {
@@ -20,7 +21,7 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
   const toggle = (tipo: string) => onSelect(selected === tipo ? undefined : tipo);
 
   if (data.length === 0) {
-    return <StatsPlaceholder>{t('stats.noData')}</StatsPlaceholder>;
+    return <EmptyState variant="inset" icon={false} description={t('stats.noData')} className="h-72" />;
   }
 
   return (
@@ -55,14 +56,13 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
                 const item = payload?.[0]?.payload as DistribucionCultivoItemDto | undefined;
                 if (!active || !item) return null;
                 return (
-                  <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
-                    <p className="font-bold">{getCropTypeLabel(item.tipo)}</p>
+                  <ChartTooltip title={getCropTypeLabel(item.tipo)}>
                     <p>
                       {t('stats.chart.cropsCount', { count: item.count })} (
                       {formatPercent(total > 0 ? (item.count / total) * 100 : 0)})
                     </p>
                     <p>{formatNumber(item.superficieTotal, 1)} ha</p>
-                  </div>
+                  </ChartTooltip>
                 );
               }}
             />
@@ -70,7 +70,7 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold tabular-nums">{formatNumber(total)}</span>
-          <span className="text-xs text-base-content/70">{t('stats.kpis.crops')}</span>
+          <span className="text-xs text-muted">{t('stats.kpis.crops')}</span>
         </div>
       </div>
 
@@ -88,15 +88,12 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
                 }`}
               >
                 {/* Se atenúa solo el color: el texto debe seguir cumpliendo el contraste */}
-                <span
-                  className={`h-3 w-3 shrink-0 rounded-full transition ${selected && !isSelected ? 'opacity-30' : ''}`}
-                  style={{ backgroundColor: colorOf(d.tipo) }}
-                />
+                <ColorDot color={colorOf(d.tipo)} className={`transition ${selected && !isSelected ? 'opacity-30' : ''}`} />
                 <span className="min-w-0 flex-1 truncate">{getCropTypeLabel(d.tipo)}</span>
-                <span className="font-mono text-xs text-base-content/70">
+                <span className="font-mono text-xs text-muted">
                   {formatPercent(total > 0 ? (d.count / total) * 100 : 0, 0)}
                 </span>
-                <span className="w-20 text-right font-mono text-xs text-base-content/70">
+                <span className="w-20 text-right font-mono text-xs text-muted">
                   {formatNumber(d.superficieTotal, 1)} ha
                 </span>
               </button>

@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { ApiError } from '../../common/api.ts';
 import { CopyToClipboardBtn } from '../../components/copy-to-clipboard.btn.component.tsx';
-import { LoadErrorAlert } from '../../components/load-error-alert.component.tsx';
-import { PAGE_CLASS } from '../../components/page-header.component.tsx';
+import { EmptyState, ErrorAlert, Page } from '../../components/ui/index.ts';
 import { type ParcelaDetalle, useParcela } from '../../hooks/parcela.hook.tsx';
 import { CampaniasTable } from './campanias-table.component.tsx';
 import { CompararParcelaDropdown } from './comparar-parcela.component.tsx';
@@ -57,10 +56,10 @@ export const ParcelaRoute = () => {
 
   if (state.status === 'error') {
     return (
-      <div className={PAGE_CLASS}>
+      <Page>
         <ParcelaBreadcrumbs />
-        <LoadErrorAlert message={t('parcelas.detail.loadError')} onRetry={load} />
-      </div>
+        <ErrorAlert message={t('parcelas.detail.loadError')} onRetry={load} />
+      </Page>
     );
   }
 
@@ -69,7 +68,7 @@ export const ParcelaRoute = () => {
   const identificadores = getIdentificadores(parcela, t);
 
   return (
-    <div className={PAGE_CLASS}>
+    <Page>
       <ParcelaBreadcrumbs root={accesoCrumbs} items={[{ label: parcela.nombre }]} />
 
       <ParcelaHeroCard
@@ -85,8 +84,11 @@ export const ParcelaRoute = () => {
             {identificadores.map((i) => (
               <div key={i.key} className="flex flex-wrap items-center gap-2">
                 <dt className="font-semibold">{i.label}:</dt>
-                <dd className="font-mono break-all">{i.value}</dd>
-                <CopyToClipboardBtn text={i.value} label={i.label} />
+                {/* El botón va dentro de <dd>: en una lista de definiciones solo caben <dt> y <dd> */}
+                <dd className="flex items-center gap-2">
+                  <span className="font-mono break-all">{i.value}</span>
+                  <CopyToClipboardBtn text={i.value} label={i.label} />
+                </dd>
               </div>
             ))}
           </dl>
@@ -94,12 +96,12 @@ export const ParcelaRoute = () => {
 
         {cultivoActual
           ? <CultivoActual cultivo={cultivoActual} />
-          : <div className="rounded-box bg-base-200 p-4 text-base-content/70">{t('parcelas.detail.noCrops')}</div>}
+          : <EmptyState variant="inset" icon={false} description={t('parcelas.detail.noCrops')} />}
       </ParcelaHeroCard>
 
       {parcela.cultivos.length > 1 && <ParcelaEvolucion cultivos={parcela.cultivos} />}
 
       {parcela.cultivos.length > 0 && <CampaniasTable cultivos={parcela.cultivos} linkState={location.state as unknown} />}
-    </div>
+    </Page>
   );
 };

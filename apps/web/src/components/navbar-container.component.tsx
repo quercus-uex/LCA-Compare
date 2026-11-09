@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { ErrorBoundary } from './error-boundary.component.tsx';
 import { NavBar } from './navbar.component.tsx';
+import { Spinner } from './ui/index.ts';
 
 export const NavbarContainer = () => {
   const location = useLocation();
@@ -12,7 +13,13 @@ export const NavbarContainer = () => {
       <div className="p-5 flex flex-col gap-5 items-center flex-1">
         <NavBar />
         <ErrorBoundary key={location.pathname}>
-          <Suspense fallback={<span role="status" className="loading loading-spinner loading-lg mt-10" aria-label={t('common.loading')} />}>
+          <Suspense
+            fallback={
+              <span role="status" className="mt-10 flex" aria-label={t('common.loading')}>
+                <Spinner size="lg" />
+              </span>
+            }
+          >
             <Outlet />
           </Suspense>
         </ErrorBoundary>

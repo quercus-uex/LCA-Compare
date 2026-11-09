@@ -65,6 +65,8 @@ type CardProps = {
   /** Sin relleno interior: para listas con separadores que llegan al borde */
   flush?: boolean;
   className?: string;
+  /** Solo para valores que dependen de los datos (el color de una categoría, p. ej.) */
+  style?: React.CSSProperties;
   children: ReactNode;
 } & Pick<React.HTMLAttributes<HTMLElement>, 'aria-labelledby' | 'aria-label'>;
 
@@ -75,10 +77,23 @@ export const Card = ({ as: Tag = 'div', density = 'comfortable', flush, classNam
   </Tag>
 );
 
+type CardLinkProps = {
+  to: To;
+  /** Estado de navegación (filtros de la lista de origen, p. ej.) */
+  state?: unknown;
+  /** Nombre accesible del enlace, si no basta su contenido */
+  label?: string;
+  'aria-describedby'?: string;
+  className?: string;
+  children: ReactNode;
+};
+
 /** Tarjeta entera enlazada: se eleva al pasar el ratón */
-export const CardLink = ({ to, label, className, children }: { to: To; label?: string; className?: string; children: ReactNode }) => (
+export const CardLink = ({ to, state, label, className, children, ...rest }: CardLinkProps) => (
   <Link
+    {...rest}
     to={to}
+    state={state}
     aria-label={label}
     className={`card min-w-0 bg-base-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary ${className ?? ''}`}
   >

@@ -1,12 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiArrowRight } from 'react-icons/fi';
 import { formatImpactValue } from '../common/format.ts';
 import { matchesSearch } from '../common/utils.ts';
+import { Button, EmptyState, Input, TabPanel, Tabs } from '../components/ui/index.ts';
 import { RANKING_PAGE_SIZE, type RankedEntry } from './stats-ranking.helpers.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
 
 type Props<T> = {
+  /** Nombre del ranking, para las pestañas de orden */
+  label: string;
   /** Ranking completo, de menor a mayor impacto */
   entries: RankedEntry<T>[];
   getId: (item: T) => string;
@@ -24,6 +26,7 @@ type Props<T> = {
 type View = 'best' | 'worst';
 
 export function StatsRankingList<T>({
+  label,
   entries,
   getId,
   getName,
@@ -40,9 +43,11 @@ export function StatsRankingList<T>({
   const [view, setView] = useState<View>('best');
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState('');
+  const tabsId = useId();
 
   const isPaged = entries.length > RANKING_PAGE_SIZE;
   const searchTerm = query.trim();
+  const showTabs = isPaged && !searchTerm;
 
   let visible: RankedEntry<T>[];
   if (searchTerm) {
@@ -60,15 +65,64 @@ export function StatsRankingList<T>({
 
   const maxAbs = Math.max(...entries.map(({ item }) => Math.abs(getValue(item))), 0);
 
+  const list = visible.length === 0 ? (
+    <EmptyState variant="inset" icon={false} description={emptyLabel} className="h-40" />
+  ) : (
+    <ol className={`space-y-1 ${expanded ? 'max-h-[32rem] overflow-y-auto pr-1' : ''}`}>
+      {visible.map(({ item, position }) => {
+        const value = getValue(item);
+        const width = maxAbs > 0 ? (Math.abs(value) / maxAbs) * 100 : 0;
+        return (
+          <li key={getId(item)}>
+            <button
+              type="button"
+              title={t('stats.ranking.compare')}
+              className="group flex w-full items-center gap-3 rounded-field bg-base-200/60 px-3 py-2 text-left transition hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => onActivate(item)}
+            >
+              <span className="w-7 shrink-0 text-right font-mono text-xs font-bold text-muted">
+                {position}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{getName(item)}</span>
+                <span className="block truncate text-xs text-muted">
+                  {getDetail(item)}
+                </span>
+                <span className="mt-1 block h-1 rounded-full bg-base-300">
+                  <span
+                    className="block h-1 rounded-full"
+                    style={{ width: `${width}%`, backgroundColor: color }}
+                  />
+                </span>
+              </span>
+              <span className="shrink-0 text-right font-mono text-sm font-bold whitespace-nowrap">
+                {formatImpactValue(value, '0')}
+                {unit && (
+                  <span className="block text-xs font-normal text-muted">
+                    {unit}
+                  </span>
+                )}
+              </span>
+              <FiArrowRight
+                aria-hidden
+                className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-secondary"
+              />
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+
   return (
     <div className="flex flex-col gap-3">
       {(toolbar || searchPlaceholder) && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {toolbar}
           {searchPlaceholder && (
-            <input
+            <Input
               type="search"
-              className="input input-bordered input-sm w-full"
+              size="sm"
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
               value={query}
@@ -78,94 +132,34 @@ export function StatsRankingList<T>({
         </div>
       )}
 
-      {isPaged && !searchTerm && (
-        <div role="tablist" className="tabs tabs-box tabs-sm w-fit">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'best'}
-            className={`tab ${view === 'best' ? 'tab-active' : ''}`}
-            onClick={() => setView('best')}
-          >
-            {t('stats.ranking.lowerImpact')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'worst'}
-            className={`tab ${view === 'worst' ? 'tab-active' : ''}`}
-            onClick={() => setView('worst')}
-          >
-            {t('stats.ranking.higherImpact')}
-          </button>
-        </div>
+      {showTabs && (
+        <Tabs
+          id={tabsId}
+          label={label}
+          size="sm"
+          items={[
+            { id: 'best', label: t('stats.ranking.lowerImpact') },
+            { id: 'worst', label: t('stats.ranking.higherImpact') },
+          ]}
+          value={view}
+          onChange={setView}
+        />
       )}
 
       {searchTerm && (
-        <p className="text-sm text-base-content/70">
+        <p className="text-sm text-muted">
           {t('stats.ranking.searchResults', { count: visible.length })}
         </p>
       )}
 
-      {visible.length === 0 ? (
-        <StatsPlaceholder className="h-40">{emptyLabel}</StatsPlaceholder>
-      ) : (
-        <ol className={`space-y-1 ${expanded ? 'max-h-[32rem] overflow-y-auto pr-1' : ''}`}>
-          {visible.map(({ item, position }) => {
-            const value = getValue(item);
-            const width = maxAbs > 0 ? (Math.abs(value) / maxAbs) * 100 : 0;
-            return (
-              <li key={getId(item)}>
-                <button
-                  type="button"
-                  title={t('stats.ranking.compare')}
-                  className="group flex w-full items-center gap-3 rounded-field bg-base-200/60 px-3 py-2 text-left transition hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  onClick={() => onActivate(item)}
-                >
-                  <span className="w-7 shrink-0 text-right font-mono text-xs font-bold text-base-content/70">
-                    {position}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{getName(item)}</span>
-                    <span className="block truncate text-xs text-base-content/70">
-                      {getDetail(item)}
-                    </span>
-                    <span className="mt-1 block h-1 rounded-full bg-base-300">
-                      <span
-                        className="block h-1 rounded-full"
-                        style={{ width: `${width}%`, backgroundColor: color }}
-                      />
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right font-mono text-sm font-bold whitespace-nowrap">
-                    {formatImpactValue(value, '0')}
-                    {unit && (
-                      <span className="block text-xs font-normal text-base-content/70">
-                        {unit}
-                      </span>
-                    )}
-                  </span>
-                  <FiArrowRight
-                    aria-hidden
-                    className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-secondary"
-                  />
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      {showTabs ? <TabPanel tabsId={tabsId} value={view}>{list}</TabPanel> : list}
 
-      {isPaged && !searchTerm && (
-        <button
-          type="button"
-          className="btn btn-ghost btn-xs self-center"
-          onClick={() => setExpanded((prev) => !prev)}
-        >
+      {showTabs && (
+        <Button variant="ghost" size="xs" className="self-center" onClick={() => setExpanded((prev) => !prev)}>
           {expanded
             ? t('stats.ranking.showLess')
             : t('stats.ranking.showAll', { count: entries.length })}
-        </button>
+        </Button>
       )}
     </div>
   );

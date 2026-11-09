@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { FiGlobe } from 'react-icons/fi';
 import { supportedLanguages, toSupportedLanguage } from '../i18n/index.ts';
-import { Dropdown } from './dropdown.component.tsx';
+import { Dropdown, Menu, MenuItem } from './ui/index.ts';
 
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
@@ -9,30 +9,23 @@ export const LanguageSelector = () => {
 
   return (
     <Dropdown
-      triggerClassName="btn btn-ghost"
-      contentClassName="w-32"
+      variant="ghost"
+      width="w-32"
       label={t('language.label')}
-      title={t('language.label')}
       trigger={
         <>
-          <FiGlobe />
+          <FiGlobe aria-hidden />
           <span className="uppercase">{currentLanguage}</span>
         </>
       }
     >
-      <ul className="menu w-full p-0">
+      <Menu>
         {supportedLanguages.map(({ code }) => (
-          <li key={code}>
-            <button
-              type="button"
-              className={code === currentLanguage ? 'active' : ''}
-              onClick={() => void i18n.changeLanguage(code)}
-            >
-              {code.toUpperCase()}
-            </button>
-          </li>
+          <MenuItem key={code} onClick={() => void i18n.changeLanguage(code)}>
+            {code.toUpperCase()}
+          </MenuItem>
         ))}
-      </ul>
+      </Menu>
     </Dropdown>
   );
 };

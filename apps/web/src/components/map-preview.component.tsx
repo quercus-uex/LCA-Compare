@@ -47,7 +47,7 @@ export const MapPreview = ({ className, polygon, center, zoom = 16, satellite, c
   // Parcelas ingestadas sin geolocalización
   if (!bounds && !center) {
     return (
-      <div className={`${className ?? ''} flex items-center justify-center bg-base-200 text-base-content/70`}>
+      <div className={`${className ?? ''} flex items-center justify-center bg-base-200 text-muted`}>
         {t('parcelas.noLocation')}
       </div>
     );

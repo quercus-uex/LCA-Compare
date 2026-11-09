@@ -16,6 +16,10 @@ const ParcelaRoute = lazy(() => import('./routes/parcelas/parcela.route.tsx').th
 const ParcelasRoute = lazy(() => import('./routes/parcelas/parcelas.route.tsx').then((m) => ({ default: m.ParcelasRoute })));
 const ResultadoRoute = lazy(() => import('./routes/resultados/resultado.route.tsx').then((m) => ({ default: m.ResultadoRoute })));
 const StatsRoute = lazy(() => import('./routes/stats/stats.route.tsx').then((m) => ({ default: m.StatsRoute })));
+// Catálogo de la librería de componentes: en producción la condición es falsa y no se incluye
+const UiShowcaseRoute = import.meta.env.DEV
+  ? lazy(() => import('./routes/dev/ui-showcase.route.tsx').then((m) => ({ default: m.UiShowcaseRoute })))
+  : null;
 
 function App() {
   return (
@@ -40,6 +44,7 @@ function App() {
           <Route path="/resultados">
             <Route path=":id" element={<ResultadoRoute />} />
           </Route>
+          {UiShowcaseRoute && <Route path="/dev/ui" element={<UiShowcaseRoute />} />}
           <Route path="*" element={<NotFoundRoute />} />
         </Route>
       </Routes>

@@ -1,6 +1,18 @@
 export const en = {
   common: {
     loading: 'Loading…',
+    breadcrumb: 'Breadcrumb',
+    unexpectedError: 'An unexpected error occurred.',
+    datePicker: {
+      dialog: 'Choose date',
+      placeholder: 'Select a date',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      month: 'Month',
+      year: 'Year',
+      today: 'Today',
+      clear: 'Clear',
+    },
     actions: {
       applyFilters: 'Apply filters',
       cancel: 'Cancel',

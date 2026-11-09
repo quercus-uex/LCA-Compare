@@ -1,6 +1,18 @@
 export const es = {
   common: {
     loading: 'Cargando…',
+    breadcrumb: 'Ruta de navegación',
+    unexpectedError: 'Se ha producido un error inesperado.',
+    datePicker: {
+      dialog: 'Elegir fecha',
+      placeholder: 'Selecciona una fecha',
+      previousMonth: 'Mes anterior',
+      nextMonth: 'Mes siguiente',
+      month: 'Mes',
+      year: 'Año',
+      today: 'Hoy',
+      clear: 'Borrar',
+    },
     actions: {
       applyFilters: 'Aplicar filtros',
       cancel: 'Cancelar',

@@ -170,7 +170,7 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
             </div>
           )}
           {!loading && !error && options.length === 0 && (
-            <p className="p-3 text-center text-sm text-base-content/60">
+            <p className="p-3 text-center text-sm text-base-content/70">
               {query ? t('common.empty.noResults') : t('common.empty.noOptions')}
             </p>
           )}
@@ -188,11 +188,11 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
                 onClick={() => select(option)}
               >
                 <span>{option.label}</span>
-                {option.detail && <span className="text-xs text-base-content/60">{option.detail}</span>}
+                {option.detail && <span className="text-xs text-base-content/70">{option.detail}</span>}
               </button>
             ))}
           {!loading && !error && options.length === ADMIN_LOOKUP_TAKE && (
-            <p className="px-3 py-2 text-xs text-base-content/60 border-t border-base-200">
+            <p className="px-3 py-2 text-sm text-base-content/70 border-t border-base-200">
               {t('admin.lookup.refine')}
             </p>
           )}

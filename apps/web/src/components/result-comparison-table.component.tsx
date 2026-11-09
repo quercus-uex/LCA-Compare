@@ -52,9 +52,9 @@ export const ResultComparisonTable = ({
           ))}
         </tbody>
       </table>
-      <p className="text-xs text-base-content/60 mt-2">{t('compare.result.meanNote')}</p>
+      <p className="text-sm text-base-content/70 mt-2">{t('compare.result.meanNote')}</p>
       {hasTarget && (
-        <p className="text-xs text-base-content/60 mt-1">{t('compare.result.differenceNote')}</p>
+        <p className="text-sm text-base-content/70 mt-1">{t('compare.result.differenceNote')}</p>
       )}
     </div>
   );

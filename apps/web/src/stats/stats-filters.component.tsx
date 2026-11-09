@@ -126,7 +126,7 @@ export const StatsFiltersBar = ({
 
         {isFetching && (
           <span
-            className="ml-auto flex items-center gap-2 self-center text-xs text-base-content/60"
+            className="ml-auto flex items-center gap-2 self-center text-xs text-base-content/70"
             role="status"
           >
             <span className="loading loading-spinner loading-xs" />

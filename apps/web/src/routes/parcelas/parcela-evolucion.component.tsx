@@ -96,11 +96,14 @@ export const ParcelaEvolucion = ({ cultivos }: { cultivos: CultivoConImpacto[] }
                   <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
                     <p className="font-bold">{formatCampaignDate(point.fecha)}</p>
                     <p className="text-base-content/70">{getCropTypeLabel(point.tipo)}</p>
-                    <p style={{ color }}>
-                      <span className="font-mono font-semibold">
-                        {point.value === null ? '—' : formatValue(point.value)}
-                      </span>{' '}
-                      {unit}
+                    <p className="flex items-center gap-1.5">
+                      <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                      <span>
+                        <span className="font-mono font-semibold">
+                          {point.value === null ? '—' : formatValue(point.value)}
+                        </span>{' '}
+                        {unit}
+                      </span>
                     </p>
                   </div>
                 );

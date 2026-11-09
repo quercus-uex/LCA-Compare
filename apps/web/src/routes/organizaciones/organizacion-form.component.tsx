@@ -48,7 +48,7 @@ export const OrganizacionForm = ({ initial, submitLabel, onSubmit, extraActions 
       <div className="flex flex-col gap-1">
         <label htmlFor={`${id}-nombre`} className="text-sm font-medium">
           {t('organizaciones.form.nombre')}
-          <span className="text-base-content/50" aria-hidden> *</span>
+          <span className="text-base-content/70" aria-hidden> *</span>
         </label>
         <input
           id={`${id}-nombre`}
@@ -64,7 +64,7 @@ export const OrganizacionForm = ({ initial, submitLabel, onSubmit, extraActions 
           }}
         />
         {nombreError && (
-          <span id={`${id}-nombre-error`} className="text-xs font-medium text-red-700">
+          <span id={`${id}-nombre-error`} className="text-sm font-medium text-red-700">
             {t('organizaciones.form.nombreRequired')}
           </span>
         )}
@@ -83,7 +83,7 @@ export const OrganizacionForm = ({ initial, submitLabel, onSubmit, extraActions 
           aria-describedby={`${id}-descripcion-hint`}
           onChange={(e) => setDescripcion(e.target.value)}
         />
-        <span id={`${id}-descripcion-hint`} className="text-xs text-base-content/70">
+        <span id={`${id}-descripcion-hint`} className="text-sm text-base-content/70">
           {t('organizaciones.form.descripcionHint')}
         </span>
       </div>

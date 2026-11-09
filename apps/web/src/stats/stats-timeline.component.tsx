@@ -46,12 +46,15 @@ const TimelineTooltip = ({ active, payload, selectedCategory }: TooltipProps) =>
   return (
     <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
       <p className="font-bold">{item.anio}</p>
-      <p style={{ color: category?.color }}>
-        {getCategoryLabel(selectedCategory)}:{' '}
-        <span className="font-mono font-semibold">
-          {formatImpactValue(item.categorias[selectedCategory] ?? 0, '0')}
-        </span>{' '}
-        {category?.unit}
+      <p className="flex items-center gap-1.5">
+        <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: category?.color }} />
+        <span>
+          {getCategoryLabel(selectedCategory)}:{' '}
+          <span className="font-mono font-semibold">
+            {formatImpactValue(item.categorias[selectedCategory] ?? 0, '0')}
+          </span>{' '}
+          {category?.unit}
+        </span>
       </p>
       <p className="text-base-content/70">
         {t('stats.chart.cropsCount', { count: item.numCultivos })}

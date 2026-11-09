@@ -134,7 +134,7 @@ export const StatsRankings = ({
       </div>
 
       {(provinciasOcultas > 0 || poblacionesOcultas > 0) && (
-        <p className="flex items-start gap-2 px-1 text-xs text-base-content/60">
+        <p className="flex items-start gap-2 px-1 text-sm text-base-content/70">
           <FiInfo className="mt-0.5 shrink-0" aria-hidden />
           {t('stats.ranking.hiddenZones', {
             provincias: provinciasOcultas,

@@ -163,14 +163,17 @@ export const StatsSpiderChart = ({
                   <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
                     <p className="font-bold">{row.category}</p>
                     {lines.map((line) => (
-                      <p key={line.entity.id} style={{ color: line.color }}>
-                        {line.entity.nombre}:{' '}
-                        <span className="font-mono font-semibold">
-                          {formatImpactValue(line.raw, '0')}
-                        </span>{' '}
-                        {row.unit}{' '}
-                        <span className="text-base-content/60">
-                          ({t('stats.chart.percentOfMax', { value: formatNumber(line.ratio * 100) })})
+                      <p key={line.entity.id} className="flex items-baseline gap-1.5">
+                        <span aria-hidden className="size-2.5 shrink-0 self-center rounded-full" style={{ backgroundColor: line.color }} />
+                        <span>
+                          {line.entity.nombre}:{' '}
+                          <span className="font-mono font-semibold">
+                            {formatImpactValue(line.raw, '0')}
+                          </span>{' '}
+                          {row.unit}{' '}
+                          <span className="text-base-content/70">
+                            ({t('stats.chart.percentOfMax', { value: formatNumber(line.ratio * 100) })})
+                          </span>
                         </span>
                       </p>
                     ))}

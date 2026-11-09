@@ -61,7 +61,7 @@ export const ConfirmDeleteDialog = ({ entity, item, onClose, onDeleted }: Props)
           )}
           {entity === 'cultivos' && <p className="text-sm">{t('admin.delete.cultivoCascade')}</p>}
           {entity === 'organizaciones' && <p className="text-sm">{t('admin.delete.organizacionCascade')}</p>}
-          <p className="text-sm text-base-content/60">{t('admin.delete.irreversible')}</p>
+          <p className="text-sm text-base-content/70">{t('admin.delete.irreversible')}</p>
           {error && (
             <div role="alert" className="alert alert-error text-sm mt-1">
               {error}

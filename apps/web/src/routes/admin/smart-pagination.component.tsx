@@ -27,7 +27,7 @@ export const SmartPagination = ({ page, pageSize, total, onPageChange }: SmartPa
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p className="text-sm text-base-content/60">{t('admin.pagination.range', { from, to, total })}</p>
+      <p className="text-sm text-base-content/70">{t('admin.pagination.range', { from, to, total })}</p>
 
       {totalPages > 1 && (
         <nav className="join" aria-label={t('admin.pagination.label')}>

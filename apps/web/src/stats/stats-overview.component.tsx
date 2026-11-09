@@ -77,19 +77,19 @@ export const StatsOverview = ({
           style={{ borderLeftColor: selected?.color }}
         >
           <div className="card-body gap-1 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-base-content/60">
+            <p className="text-xs font-medium uppercase tracking-wide text-base-content/70">
               {t('stats.kpis.meanPerCrop')}
             </p>
-            <p className="font-semibold" style={{ color: selected?.color }}>
+            <p className="font-semibold">
               {getCategoryLabel(selectedCategory)}
             </p>
             <p className="flex flex-wrap items-baseline gap-x-2">
               <span className="text-3xl font-bold tabular-nums">
                 {formatImpactValue(selectedValue, '0')}
               </span>
-              <span className="text-sm text-base-content/60">{selected?.unit}</span>
+              <span className="text-sm text-base-content/70">{selected?.unit}</span>
             </p>
-            <div className="mt-1 text-xs text-base-content/60">
+            <div className="mt-1 text-xs text-base-content/70">
               {anio === undefined ? (
                 t('stats.kpis.yoyHint')
               ) : selectedYoy === null ? (
@@ -117,7 +117,7 @@ export const StatsOverview = ({
               <div className="stat-value text-2xl tabular-nums">
                 {stat.value}
                 {stat.unit && (
-                  <span className="ml-1 text-sm font-normal text-base-content/60">
+                  <span className="ml-1 text-sm font-normal text-base-content/70">
                     {stat.unit}
                   </span>
                 )}
@@ -146,7 +146,7 @@ export const StatsOverview = ({
                 }`}
                 style={{ borderLeftColor: cat.color }}
               >
-                <span className="truncate text-xs font-semibold" style={{ color: cat.color }}>
+                <span className="truncate text-xs font-semibold">
                   {getCategoryLabel(cat.id)}
                 </span>
                 <span className="flex items-baseline justify-between gap-1">
@@ -155,7 +155,7 @@ export const StatsOverview = ({
                   </span>
                   {yoy !== null && <YoyBadge value={yoy} small />}
                 </span>
-                <span className="truncate text-[10px] text-base-content/50">{cat.unit}</span>
+                <span className="truncate text-xs text-base-content/70">{cat.unit}</span>
               </button>
             );
           })}

@@ -59,7 +59,7 @@ export const StatsHeatmap = ({
 
   return (
     <div className="w-full min-w-0 overflow-x-auto">
-      <table lang={i18n.language} className="w-full min-w-[40rem] table-fixed border-separate border-spacing-0 text-xs">
+      <table lang={i18n.language} className="w-full min-w-[56rem] table-fixed border-separate border-spacing-0 text-xs">
         <thead>
           <tr>
             <th className="sticky left-0 z-10 w-28 bg-base-200 px-2 py-2 text-left font-semibold rounded-tl-field">
@@ -79,8 +79,8 @@ export const StatsHeatmap = ({
                   <button
                     type="button"
                     title={`${getCategoryLabel(cat.id)} (${cat.unit})`}
-                    className="flex h-full w-full items-end justify-center px-1 py-2 text-[10px] font-semibold leading-tight hover:underline xl:text-xs"
-                    style={{ color: cat.color }}
+                    className="flex h-full w-full items-end justify-center border-b-4 px-1 py-2 font-semibold leading-tight hover:underline"
+                    style={{ borderBottomColor: cat.color }}
                     onClick={() => setSortCategory(isSorted ? null : cat.id)}
                   >
                     <span className="line-clamp-3 hyphens-auto break-words">
@@ -119,7 +119,7 @@ export const StatsHeatmap = ({
                   return (
                     <td
                       key={cat.id}
-                      className="truncate border-t border-base-200 px-1 py-2 text-center font-mono text-[10px] xl:text-xs"
+                      className="truncate border-t border-base-200 px-1 py-2 text-center font-mono"
                       style={{ backgroundColor: cellColor(value, colRange[cat.id], cat.color) }}
                       title={`${prov.nombreProvincia} · ${getCategoryLabel(cat.id)}: ${formatImpactValue(value)} ${cat.unit}`}
                     >

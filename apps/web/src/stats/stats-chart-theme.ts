@@ -11,7 +11,7 @@ export const CHART_MUTED_FILL = baseContent(12);
 export const CHART_SELECTED_FILL = baseContent(30);
 
 export const CHART_TICK = { fontSize: 12, fill: baseContent(70) };
-export const CHART_SMALL_TICK = { fontSize: 10, fill: baseContent(70) };
+export const CHART_SMALL_TICK = { fontSize: 11, fill: baseContent(70) };
 
 export const CHART_POINT_LABEL_STYLE: CSSProperties = {
   fontSize: 11,

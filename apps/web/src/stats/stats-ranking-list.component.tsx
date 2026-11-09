@@ -102,7 +102,7 @@ export function StatsRankingList<T>({
       )}
 
       {searchTerm && (
-        <p className="text-xs text-base-content/60">
+        <p className="text-sm text-base-content/70">
           {t('stats.ranking.searchResults', { count: visible.length })}
         </p>
       )}
@@ -122,12 +122,12 @@ export function StatsRankingList<T>({
                   className="group flex w-full items-center gap-3 rounded-field bg-base-200/60 px-3 py-2 text-left transition hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   onClick={() => onActivate(item)}
                 >
-                  <span className="w-7 shrink-0 text-right font-mono text-xs font-bold text-base-content/60">
+                  <span className="w-7 shrink-0 text-right font-mono text-xs font-bold text-base-content/70">
                     {position}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{getName(item)}</span>
-                    <span className="block truncate text-xs text-base-content/60">
+                    <span className="block truncate text-xs text-base-content/70">
                       {getDetail(item)}
                     </span>
                     <span className="mt-1 block h-1 rounded-full bg-base-300">
@@ -140,14 +140,14 @@ export function StatsRankingList<T>({
                   <span className="shrink-0 text-right font-mono text-sm font-bold whitespace-nowrap">
                     {formatImpactValue(value, '0')}
                     {unit && (
-                      <span className="block text-[10px] font-normal text-base-content/60">
+                      <span className="block text-xs font-normal text-base-content/70">
                         {unit}
                       </span>
                     )}
                   </span>
                   <FiArrowRight
                     aria-hidden
-                    className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-primary"
+                    className="shrink-0 text-base-content/30 transition group-hover:translate-x-0.5 group-hover:text-secondary"
                   />
                 </button>
               </li>

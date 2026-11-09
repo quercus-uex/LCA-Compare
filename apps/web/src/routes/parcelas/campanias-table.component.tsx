@@ -54,7 +54,7 @@ export const CampaniasTable = ({ cultivos, linkState }: Props) => {
                     <Link
                       to={`/resultados/${c.idResultadoImpacto}`}
                       state={linkState}
-                      className="btn btn-outline btn-primary btn-xs whitespace-nowrap"
+                      className="btn btn-outline btn-secondary btn-xs whitespace-nowrap"
                       aria-label={t('parcelas.viewImpacts')}
                       title={t('parcelas.viewImpacts')}
                     >
@@ -62,7 +62,7 @@ export const CampaniasTable = ({ cultivos, linkState }: Props) => {
                       <span className="hidden sm:inline">{t('parcelas.viewImpacts')}</span>
                     </Link>
                   ) : (
-                    <span className="text-xs text-base-content/70">{t('parcelas.noImpactResult')}</span>
+                    <span className="text-sm text-base-content/70">{t('parcelas.noImpactResult')}</span>
                   )}
                 </td>
               </tr>

@@ -45,7 +45,7 @@ export const OrganizacionFilterCollapse = ({
             <option key={o.id} value={o.id}>{o.nombre}</option>
           ))}
         </select>
-        <p className="text-xs text-base-content/70">{t('compare.filters.organizationHint')}</p>
+        <p className="text-sm text-base-content/70">{t('compare.filters.organizationHint')}</p>
       </div>
     </FilterCollapse>
   );

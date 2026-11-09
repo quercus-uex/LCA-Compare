@@ -117,7 +117,7 @@ export function SearchableLocationSelect<T>({
         {value && (
           <button
             type="button"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-base-content/70 hover:text-base-content"
             onClick={clearSelection}
             tabIndex={-1}
           >
@@ -129,7 +129,7 @@ export function SearchableLocationSelect<T>({
       {isOpen && (
         <ul className="absolute z-50 mt-1 w-full bg-base-200 border border-base-300 rounded-box shadow-lg max-h-48 overflow-auto">
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-base-content/50">
+            <li className="px-3 py-2 text-sm text-base-content/70">
               {emptyMessage}
             </li>
           ) : (

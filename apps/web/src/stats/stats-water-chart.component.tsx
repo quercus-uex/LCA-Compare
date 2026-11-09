@@ -64,7 +64,7 @@ const WaterTooltip = ({
           {t('stats.chart.waterProductivity')}: {formatNumber(d.productividadAgua, 2)} kg/m³
         </p>
       )}
-      <p className="text-base-content/60">
+      <p className="text-base-content/70">
         {t('stats.chart.area')}: {formatNumber(d.superficieTotal, 1)} ha
       </p>
     </div>
@@ -166,7 +166,7 @@ export const StatsWaterChart = ({
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
-      <p className="text-xs text-base-content/60">{t('stats.chart.quadrantHint')}</p>
+      <p className="text-sm text-base-content/70">{t('stats.chart.quadrantHint')}</p>
     </div>
   );
 };

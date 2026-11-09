@@ -128,7 +128,7 @@ export const OrganizacionSolicitar = ({ organizacion, onSent }: Props) => {
             }}
           />
           {error?.field === 'email' && (
-            <span id={errorId} role="alert" className="text-xs font-medium text-red-700">{error.message}</span>
+            <span id={errorId} role="alert" className="text-sm font-medium text-red-700">{error.message}</span>
           )}
         </div>
 
@@ -167,12 +167,12 @@ export const OrganizacionSolicitar = ({ organizacion, onSent }: Props) => {
             </span>
           </div>
           {miembro && yaActivas.size > 0 && (
-            <p className="text-xs text-base-content/70">
+            <p className="text-sm text-base-content/70">
               {t('organizaciones.solicitar.memberHint', { nombre: miembro.usuario.nombre })}
             </p>
           )}
           {error?.field === 'anios' && (
-            <span id={errorId} role="alert" className="text-xs font-medium text-red-700">{error.message}</span>
+            <span id={errorId} role="alert" className="text-sm font-medium text-red-700">{error.message}</span>
           )}
         </fieldset>
 

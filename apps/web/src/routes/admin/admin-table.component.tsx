@@ -28,7 +28,7 @@ const formatAdminDate = (value: unknown) => {
   return str ? formatNumericDate(str) : null;
 };
 
-const Empty = () => <span className="text-base-content/40">—</span>;
+const Empty = () => <span className="text-base-content/70">—</span>;
 
 const isEstado = (value: unknown): value is ConsentimientoEstado =>
   CONSENTIMIENTO_ESTADOS.includes(value as ConsentimientoEstado);
@@ -62,7 +62,7 @@ export const AdminTable = ({
           return (
             <button
               type="button"
-              className="font-medium text-left hover:text-primary hover:underline underline-offset-2"
+              className="font-medium text-left hover:text-secondary hover:underline underline-offset-2"
               onClick={() => onEdit(item)}
             >
               {value}
@@ -82,7 +82,7 @@ export const AdminTable = ({
         return raw === true ? (
           <span className="badge badge-sm badge-success">{t('common.yes')}</span>
         ) : (
-          <span className="text-base-content/50 text-sm">{t('common.no')}</span>
+          <span className="text-base-content/70 text-sm">{t('common.no')}</span>
         );
       case 'date':
         return formatAdminDate(raw) ?? <Empty />;
@@ -91,7 +91,7 @@ export const AdminTable = ({
         return (
           <span className="tabular-nums">
             {formatQuantity(raw)}
-            {column.unitKey && <span className="text-base-content/60 text-xs"> {t(column.unitKey)}</span>}
+            {column.unitKey && <span className="text-base-content/70 text-xs"> {t(column.unitKey)}</span>}
           </span>
         );
       }
@@ -99,7 +99,7 @@ export const AdminTable = ({
         return typeof raw === 'string' ? (
           <button
             type="button"
-            className="font-medium text-left hover:text-primary hover:underline underline-offset-2"
+            className="font-medium text-left hover:text-secondary hover:underline underline-offset-2"
             onClick={() => onEdit(item)}
           >
             {getCropTypeLabel(raw)}
@@ -120,7 +120,7 @@ export const AdminTable = ({
           <div className="flex flex-col gap-0.5">
             {ids.map(([label, v]) => (
               <span key={String(label)} className="text-xs">
-                <span className="text-base-content/60">{String(label)}</span>{' '}
+                <span className="text-base-content/70">{String(label)}</span>{' '}
                 <span className="font-mono">{String(v)}</span>
               </span>
             ))}
@@ -152,7 +152,7 @@ export const AdminTable = ({
             onClick={() => onNavigate(column.entity, id, label)}
           >
             <span className="link link-hover text-secondary">{label}</span>
-            {detail && <span className="block text-xs text-base-content/60">{detail}</span>}
+            {detail && <span className="block text-xs text-base-content/70">{detail}</span>}
           </button>
         );
       }
@@ -208,11 +208,11 @@ export const AdminTable = ({
     return (
       <div className="flex flex-col items-center text-center gap-3 py-16 px-4">
         <div className="size-12 rounded-full bg-base-200 flex items-center justify-center">
-          <Icon className="size-5 text-base-content/60" aria-hidden />
+          <Icon className="size-5 text-base-content/70" aria-hidden />
         </div>
         <div>
           <p className="font-medium">{filtered ? t('common.empty.noResults') : t('admin.empty.title')}</p>
-          <p className="text-sm text-base-content/60">
+          <p className="text-sm text-base-content/70">
             {filtered
               ? t('admin.empty.filtered')
               : t(canDo(entity, 'create') ? 'admin.empty.create' : 'admin.empty.readOnly')}
@@ -233,7 +233,7 @@ export const AdminTable = ({
     <div className={`overflow-x-auto transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
       <table className="table">
         <thead>
-          <tr className="text-base-content/60">
+          <tr className="text-base-content/70">
             {expandable && <th className="w-10" aria-label={t('admin.viewCrops')} />}
             {config.columns.map((column) => (
               <th key={column.key} className="font-medium">
@@ -282,7 +282,7 @@ export const AdminTable = ({
                         <div className="rounded-box border border-base-300 bg-base-100 overflow-x-auto">
                           <table className="table table-sm">
                             <thead>
-                              <tr className="text-base-content/60">
+                              <tr className="text-base-content/70">
                                 <th className="font-medium">{t('admin.fields.tipo')}</th>
                                 <th className="font-medium">{t('admin.fields.fechaInicioCampania')}</th>
                                 <th className="font-medium">{t('admin.fields.superficieCultivada')}</th>
@@ -311,7 +311,7 @@ export const AdminTable = ({
                                       {typeof value === 'number' ? (
                                         <>
                                           {formatQuantity(value)}
-                                          <span className="text-base-content/60 text-xs"> {t(unit)}</span>
+                                          <span className="text-base-content/70 text-xs"> {t(unit)}</span>
                                         </>
                                       ) : (
                                         <Empty />

@@ -70,7 +70,7 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold tabular-nums">{formatNumber(total)}</span>
-          <span className="text-xs text-base-content/60">{t('stats.kpis.crops')}</span>
+          <span className="text-xs text-base-content/70">{t('stats.kpis.crops')}</span>
         </div>
       </div>
 
@@ -85,14 +85,18 @@ export const StatsCropDonut = ({ data, selected, onSelect }: Props) => {
                 onClick={() => toggle(d.tipo)}
                 className={`flex w-full items-center gap-2 rounded-field px-2 py-1.5 text-left text-sm transition hover:bg-base-200 ${
                   isSelected ? 'bg-base-200 font-semibold' : ''
-                } ${selected && !isSelected ? 'opacity-50' : ''}`}
+                }`}
               >
-                <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: colorOf(d.tipo) }} />
+                {/* Se atenúa solo el color: el texto debe seguir cumpliendo el contraste */}
+                <span
+                  className={`h-3 w-3 shrink-0 rounded-full transition ${selected && !isSelected ? 'opacity-30' : ''}`}
+                  style={{ backgroundColor: colorOf(d.tipo) }}
+                />
                 <span className="min-w-0 flex-1 truncate">{getCropTypeLabel(d.tipo)}</span>
                 <span className="font-mono text-xs text-base-content/70">
                   {formatPercent(total > 0 ? (d.count / total) * 100 : 0, 0)}
                 </span>
-                <span className="w-20 text-right font-mono text-xs text-base-content/60">
+                <span className="w-20 text-right font-mono text-xs text-base-content/70">
                   {formatNumber(d.superficieTotal, 1)} ha
                 </span>
               </button>

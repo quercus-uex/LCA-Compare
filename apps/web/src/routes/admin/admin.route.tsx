@@ -203,7 +203,7 @@ export const AdminRoute = () => {
                           <EntityIcon aria-hidden className="size-4" />
                           <span className="flex-1">{t(CONFIG[e].labelKey)}</span>
                           {summary[e] !== undefined && (
-                            <span className={`text-xs tabular-nums ${active ? '' : 'text-base-content/50'}`}>
+                            <span className={`text-xs tabular-nums ${active ? '' : 'text-base-content/70'}`}>
                               {formatQuantity(summary[e])}
                             </span>
                           )}
@@ -242,7 +242,7 @@ export const AdminRoute = () => {
                       <span className="badge badge-sm badge-ghost tabular-nums">{formatQuantity(total)}</span>
                     )}
                   </h2>
-                  <p className="text-sm text-base-content/60">{t(config.descriptionKey)}</p>
+                  <p className="text-sm text-base-content/70">{t(config.descriptionKey)}</p>
                 </div>
               </div>
               {canDo(entity, 'create') && (

@@ -173,7 +173,7 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
             <h3 id={titleId} className="text-lg font-semibold">
               {t(`admin.${mode === 'create' ? 'createTitles' : 'editTitles'}.${config.titleKey}`)}
             </h3>
-            <p className="text-sm text-base-content/60">
+            <p className="text-sm text-base-content/70">
               {mode === 'create' ? t('admin.form.createHelp') : t('admin.form.editHelp')}
             </p>
           </div>
@@ -213,7 +213,7 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
                       {t(field.labelKey)}
                     </label>
                     {help && (
-                      <p id={describedBy} className="text-xs text-base-content/60">
+                      <p id={describedBy} className="text-sm text-base-content/70">
                         {t(help)}
                       </p>
                     )}
@@ -227,7 +227,7 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
                 <label htmlFor={inputId} className="text-sm font-medium">
                   {t(field.labelKey)}
                   {required && (
-                    <span className="text-base-content/50" aria-hidden>
+                    <span className="text-base-content/70" aria-hidden>
                       {' '}
                       *
                     </span>
@@ -235,12 +235,12 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
                 </label>
                 {renderControl(field, inputId, describedBy)}
                 {(error || help) && (
-                  <p id={describedBy} className={`text-xs ${error ? 'text-red-700 font-medium' : 'text-base-content/60'}`}>
+                  <p id={describedBy} className={`text-sm ${error ? 'text-red-700 font-medium' : 'text-base-content/70'}`}>
                     {error ? t(error) : t(help!)}
                   </p>
                 )}
                 {isSelf && field.name === 'rol' && (
-                  <p className="text-xs text-base-content/60">{t('admin.help.ownRole')}</p>
+                  <p className="text-sm text-base-content/70">{t('admin.help.ownRole')}</p>
                 )}
               </div>
             );
@@ -248,7 +248,7 @@ export const AdminFormModal = ({ entity, mode, item, currentUserId, onClose, onS
         </div>
 
         <div className="flex items-center justify-between gap-2 px-6 py-4 border-t border-base-200 bg-base-200/40">
-          <p className="text-xs text-base-content/60">{t('admin.form.requiredHint')}</p>
+          <p className="text-sm text-base-content/70">{t('admin.form.requiredHint')}</p>
           <div className="flex gap-2">
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>
               {t('common.actions.cancel')}

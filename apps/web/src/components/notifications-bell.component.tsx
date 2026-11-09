@@ -88,7 +88,7 @@ const RequestCard = ({ solicitud, busy, onRespond }: RequestCardProps) => {
               <button
                 type="button"
                 // Con varias campañas, la acción principal es «Aceptar todas»
-                className={`btn btn-primary btn-xs ${ordenadas.length > 1 ? 'btn-outline' : ''}`}
+                className={`btn btn-xs ${ordenadas.length > 1 ? 'btn-outline btn-secondary' : 'btn-primary'}`}
                 disabled={busy}
                 aria-label={t('notificaciones.acceptYear', { anio: c.anio, organizacion: organizacion.nombre })}
                 onClick={() => onRespond([c.idConsentimiento], 'aceptado')}
@@ -189,7 +189,7 @@ export const NotificationsPanel = () => {
           <h3 id={`${id}-solicitudes`} className="px-1 text-xs font-semibold uppercase tracking-wide text-base-content/70">
             {t('notificaciones.requests')}
           </h3>
-          <div className="flex items-start gap-2 rounded-box bg-warning/60 p-2 text-xs">
+          <div className="flex items-start gap-2 rounded-box bg-warning/60 px-3 py-2 text-sm">
             <FiAlertTriangle aria-hidden className="mt-0.5 shrink-0" />
             <span>{t('notificaciones.warning')}</span>
           </div>
@@ -202,7 +202,7 @@ export const NotificationsPanel = () => {
       )}
 
       {avisos.length > 0 && (
-        <section className="flex flex-col gap-1" aria-labelledby={`${id}-avisos`}>
+        <section className="flex flex-col gap-2" aria-labelledby={`${id}-avisos`}>
           <div className="flex items-center justify-between gap-2 px-1">
             <h3 id={`${id}-avisos`} className="text-xs font-semibold uppercase tracking-wide text-base-content/70">
               {t('notificaciones.notices')}
@@ -213,13 +213,13 @@ export const NotificationsPanel = () => {
               </button>
             )}
           </div>
-          <ul className="flex flex-col">
+          <ul className="flex flex-col gap-1.5">
             {avisos.map((aviso) => {
               const Icon = AVISO_ICONS[aviso.tipo];
               return (
                 <li
                   key={aviso.id}
-                  className={`flex gap-2 rounded-box px-2 py-2 text-sm ${aviso.leida ? '' : 'bg-base-200'}`}
+                  className={`flex gap-2.5 rounded-box border px-3 py-2.5 text-sm ${aviso.leida ? 'border-base-300' : 'border-transparent bg-base-200'}`}
                 >
                   <Icon aria-hidden className="mt-0.5 shrink-0 text-secondary" />
                   <div className="flex min-w-0 flex-1 flex-col">

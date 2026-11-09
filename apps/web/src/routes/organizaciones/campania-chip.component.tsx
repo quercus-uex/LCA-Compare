@@ -7,7 +7,7 @@ import type { ConsentimientoEstado } from '../../hooks/organizacion.hook.tsx';
 const ESTADO_STYLE: Record<ConsentimientoEstado, { className: string; icon: IconType }> = {
   aceptado: { className: 'badge-success', icon: FiCheck },
   pendiente: { className: 'badge-warning', icon: FiClock },
-  rechazado: { className: 'badge-error badge-outline', icon: FiXCircle },
+  rechazado: { className: 'badge-error', icon: FiXCircle },
   revocado: { className: 'badge-ghost text-base-content/70', icon: FiSlash },
 };
 

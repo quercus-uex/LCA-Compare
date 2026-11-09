@@ -44,3 +44,12 @@
 body {
   scrollbar-gutter: stable;
 }
+/* DaisyUI deja las pestañas inactivas y los títulos de menú al 50 % y al 40 % del
+   color del texto, por debajo del contraste AA (4,5:1); con :where las utilidades
+   de color de cada uso siguen pudiendo cambiarlo */
+@layer utilities {
+  :where(.tab:not(.tab-active, [aria-selected="true"])),
+  :where(.menu-title) {
+    color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  }
+}

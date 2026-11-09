@@ -143,7 +143,7 @@ export const OrganizacionMiembros = ({ organizacion, onChange, onRequest }: Prop
 
                 <div className="flex shrink-0 flex-wrap gap-2 md:justify-end">
                   {tieneAceptadas(miembro.campanias) && (
-                    <Link to={miembroUrl(organizacion.id, usuario.id)} className="btn btn-outline btn-primary btn-sm">
+                    <Link to={miembroUrl(organizacion.id, usuario.id)} className="btn btn-outline btn-secondary btn-sm">
                       <FiMap aria-hidden />
                       {t('organizaciones.miembros.viewPlots')}
                     </Link>

@@ -7,9 +7,13 @@ sidebar_position: 3
 
 O LCA Compare recebe os resultados de ACV calculados pelo **LCA Bridge**. Quando chega o primeiro cálculo de um utilizador, é criada a sua conta e, se o envio de email estiver configurado, o utilizador recebe um email com a sua palavra-passe de acesso. Não existe registo público: as restantes contas são criadas por um administrador.
 
-<p align="center">
-    <img src="/img/acv-compare/correo.png" alt="Email de boas-vindas ao LCA Compare" width="600"/>
-</p>
+O email (em espanhol) é este:
+
+```text
+Asunto: Alta en LCA Compare
+
+Has sido dado de alta en LCA Compare. Tu contraseña es <contraseña>.
+```
 
 A interface está disponível em espanhol, inglês e português. Pode mudar o idioma a partir do seletor na barra de navegação, e a escolha é mantida entre sessões.
 
@@ -81,12 +85,12 @@ Diferença (%) = (alvo − referência) / |referência| × 100
 
 ### Exportar Resultados
 
-Tanto no detalhe de um resultado de ACV como no comparador, pode exportar os dados em formato **JSON** ou **CSV** através dos botões de exportação:
+Tanto no detalhe de um resultado de ACV como no comparador, pode exportar os dados em formato **JSON** ou **CSV** a partir do menu **Exportar**:
 
 - **JSON**: preserva a estrutura completa da resposta, incluindo metadados e discriminação por categorias.
 - **CSV**: gera um ficheiro de valores separados por ponto e vírgula (`;`) com a discriminação por categoria de impacto, pronto para abrir em folhas de cálculo.
 
-No comparador, as opções disponíveis são:
+No comparador, o menu oferece três conjuntos de dados, cada um em JSON ou CSV:
 
 - **Exportar comparação**: exporta os resultados de ambos os conjuntos com os metadados dos filtros aplicados.
 - **Exportar referência**: exporta apenas os valores do conjunto de referência.

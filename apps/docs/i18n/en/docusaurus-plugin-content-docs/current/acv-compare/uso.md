@@ -7,9 +7,13 @@ sidebar_position: 3
 
 LCA Compare receives the LCA results calculated by **LCA Bridge**. When a user's first calculation arrives, their account is created and, if email sending is configured, they receive an email with their access password. There is no public sign-up: all other accounts are created by an administrator.
 
-<p align="center">
-    <img src="/img/acv-compare/correo.png" alt="Welcome email for LCA Compare" width="600"/>
-</p>
+The email (in Spanish) reads:
+
+```text
+Asunto: Alta en LCA Compare
+
+Has sido dado de alta en LCA Compare. Tu contraseña es <contraseña>.
+```
 
 The interface is available in Spanish, English, and Portuguese. You can change the language from the selector in the navigation bar, and your choice is kept between sessions.
 
@@ -81,12 +85,12 @@ Difference (%) = (target − reference) / |reference| × 100
 
 ### Export Results
 
-Both in the LCA result detail and in the comparator, you can export the data in **JSON** or **CSV** format using the export buttons:
+Both in the LCA result detail and in the comparator, you can export the data in **JSON** or **CSV** format from the **Export** menu:
 
 - **JSON**: keeps the full response structure, including metadata and category breakdown.
 - **CSV**: generates a semicolon-separated (`;`) file with the impact category breakdown, ready to open in spreadsheets.
 
-In the comparator, the available options are:
+In the comparator, the menu offers three data sets, each in JSON or CSV:
 
 - **Export comparison**: exports the results of both sets with the metadata of the applied filters.
 - **Export reference**: exports only the values from the reference set.

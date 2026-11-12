@@ -116,6 +116,7 @@ pnpm --filter server admin:create -- --email="admin@example.com" --password="sec
 | `pnpm build` | Builds packages and applications through Turbo |
 | `pnpm lint` | Runs configured linters through Turbo |
 | `pnpm screenshots` | Captures the web views at mobile, tablet, and desktop sizes (`utils/responsive-screenshots.mjs`; requires the web app, the backend, and `SHOTS_EMAIL`/`SHOTS_PASSWORD`) |
+| `pnpm docs:screenshots` | Regenerates the screenshots in this documentation and the ER diagram (`utils/docs-screenshots.mjs`; same requirements, plus `pdftoppm` for the report) |
 
 ### Backend (`apps/server`)
 

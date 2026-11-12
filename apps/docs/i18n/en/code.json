@@ -337,5 +337,38 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "homepage.capture.description": {
+    "message": "API for the sensor data (flow meter, fertilizer and tractor) that feeds the LCA calculation."
+  },
+  "homepage.link.introduction": {
+    "message": "Introduction"
+  },
+  "homepage.link.authentication": {
+    "message": "Authentication"
+  },
+  "homepage.bridge.description": {
+    "message": "Service that calculates the environmental impact of each crop with openLCA and sends the result to LCA Compare."
+  },
+  "homepage.link.input": {
+    "message": "Input JSON"
+  },
+  "homepage.link.deployment": {
+    "message": "Deployment"
+  },
+  "homepage.compare.description": {
+    "message": "Web app to browse, compare and analyze the LCA results of plots and campaigns."
+  },
+  "homepage.link.usage": {
+    "message": "User guide"
+  },
+  "homepage.link.development": {
+    "message": "Development"
+  },
+  "homepage.eyebrow": {
+    "message": "Life Cycle Assessment of crops"
+  },
+  "homepage.usageButton": {
+    "message": "LCA Compare user guide"
   }
 }

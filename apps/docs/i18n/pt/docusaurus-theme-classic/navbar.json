@@ -1,11 +1,7 @@
 {
   "title": {
-    "message": "Documentação do LCA Capture, LCA Bridge e LCA Compare",
+    "message": "Documentação LCA",
     "description": "The title in the navbar"
-  },
-  "logo.alt": {
-    "message": "LCA Compare",
-    "description": "The alt text of navbar logo"
   },
   "item.label.Documentación": {
     "message": "Documentação",
@@ -18,5 +14,9 @@
   "item.label.LCA Compare": {
     "message": "LCA Compare",
     "description": "Navbar item with label LCA Compare"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
   }
 }

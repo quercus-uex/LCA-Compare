@@ -10,7 +10,8 @@ export default function RedactedSecret({id, language, redacted}: Props): ReactNo
   const languageClass = language ? ` language-${language}` : '';
 
   return (
-    <pre className={`redacted-secret${languageClass}`} data-secret-id={id}>
+    // tabIndex: el bloque puede desplazarse en horizontal y tiene que poder hacerse con el teclado
+    <pre className={`redacted-secret${languageClass}`} data-secret-id={id} tabIndex={0}>
       <code>{redacted}</code>
     </pre>
   );

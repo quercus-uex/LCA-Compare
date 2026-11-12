@@ -1,27 +1,127 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
-
-.heroBanner {
-  padding: 4rem 0;
+.hero {
+  padding: clamp(3rem, 8vw, 6rem) 0 clamp(2.5rem, 6vw, 4rem);
   text-align: center;
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background:
+    radial-gradient(60rem 24rem at 50% -6rem, color-mix(in srgb, var(--lca-teal) 22%, transparent), transparent 70%),
+    var(--lca-bg);
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
+.heroInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 52rem;
 }
 
-.buttons {
+.eyebrow {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lca-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  color: var(--ifm-color-primary);
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 38rem;
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  color: var(--lca-muted);
+  text-wrap: balance;
+}
+
+.actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* Botón principal como el de la aplicación: turquesa de marca con texto oscuro (8,4:1) */
+.primaryButton,
+.primaryButton:hover {
+  text-decoration: none;
+}
+
+.primaryButton {
+  background: var(--lca-teal);
+  border-color: var(--lca-teal);
+  color: var(--lca-teal-content);
+}
+
+.primaryButton:hover {
+  background: color-mix(in srgb, var(--lca-teal) 85%, #000);
+  border-color: color-mix(in srgb, var(--lca-teal) 85%, #000);
+  color: var(--lca-teal-content);
+}
+
+.services {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 4rem;
+  max-width: 72rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--lca-border);
+  border-radius: 1rem;
+  background: var(--lca-surface);
+  box-shadow: var(--lca-shadow);
+}
+
+.icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  color: var(--ifm-color-primary);
+  background: color-mix(in srgb, var(--lca-teal) 18%, transparent);
+}
+
+.cardTitle {
+  margin: 0.5rem 0 0;
+  font-size: 1.25rem;
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--lca-muted);
+  flex: 1;
+}
+
+.cardLinks {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--lca-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.cardLinks a {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.cardLinks a:hover {
+  text-decoration-color: currentColor;
 }

@@ -341,7 +341,7 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 ├── deploy/                 # Production compose.yaml and .env.example
 │   └── demo/               # Temporary demo instance (compose.yaml and demo.sh)
 ├── docker/backup/          # Backup image
-├── utils/                  # Development tools (responsive screenshots: `pnpm screenshots`)
+├── utils/                  # Development tools (`pnpm screenshots`, `pnpm docs:screenshots`)
 ├── pnpm-workspace.yaml     # pnpm workspace
 ├── turbo.json              # Turborepo pipeline
 └── docker-compose.yaml     # Development database

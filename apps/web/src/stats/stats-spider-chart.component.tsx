@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Legend,
@@ -8,6 +8,7 @@ import {
   Radar,
   RadarChart,
   ResponsiveContainer,
+  Text,
   Tooltip,
 } from 'recharts';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
@@ -42,6 +43,12 @@ type Props = {
 
 const MODES: ProfileMode[] = ['province', 'town'];
 
+// En móvil el radar se encoge y las etiquetas se parten en líneas más cortas: si no,
+// las de los lados se salen de la tarjeta. Los móviles más estrechos necesitan un
+// radio aún menor, porque palabras como «Eutrofización» no se pueden partir
+const radarRadius = (width: number) => (width < 340 ? '44%' : width < 480 ? '52%' : '72%');
+const COMPACT_WIDTH = 480;
+
 type ChartRow = {
   category: string;
   unit: string;
@@ -64,6 +71,8 @@ export const StatsSpiderChart = ({
   const { getCategoryLabel } = useTranslatedEfCategories();
   const entityLabel = t(`stats.chart.${mode}`).toLowerCase();
   const tabsId = useId();
+  const [chartWidth, setChartWidth] = useState(COMPACT_WIDTH);
+  const compact = chartWidth < COMPACT_WIDTH;
 
   // Cada eje se normaliza respecto a la zona con mayor impacto en esa categoría
   const maxByCategory = Object.fromEntries(
@@ -143,10 +152,18 @@ export const StatsSpiderChart = ({
             className="h-80"
           />
         ) : (
-          <ResponsiveContainer width="100%" height={340}>
-            <RadarChart cx="50%" cy="50%" outerRadius="72%" data={chartData}>
+          <ResponsiveContainer width="100%" height={340} onResize={setChartWidth}>
+            <RadarChart cx="50%" cy="50%" outerRadius={radarRadius(chartWidth)} data={chartData}>
               <PolarGrid stroke={CHART_GRID_STROKE} />
-              <PolarAngleAxis dataKey="category" tick={CHART_SMALL_TICK} />
+              <PolarAngleAxis
+                dataKey="category"
+                // `Text` parte la etiqueta en líneas que no pasan de `width`
+                tick={(props: { payload: { value: string } }) => (
+                  <Text {...props} {...CHART_SMALL_TICK} width={compact ? 76 : 130}>
+                    {props.payload.value}
+                  </Text>
+                )}
+              />
               <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} tickCount={5} />
               <Tooltip
                 content={({ active, payload }) => {

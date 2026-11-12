@@ -34,7 +34,9 @@ export const Callout = ({ tone = 'info', icon, action, live, className, children
       role={live ? 'alert' : undefined}
       className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-box px-4 py-3 text-sm ${style.className} ${className ?? ''}`}
     >
-      <div className="flex min-w-0 flex-1 items-start gap-2.5">
+      {/* Con base propia: si no cabe junto a la acción, la acción baja de línea
+          en lugar de estrechar el texto hasta una palabra por línea */}
+      <div className="flex min-w-0 grow basis-64 items-start gap-2.5">
         {Icon && <Icon aria-hidden className={`mt-0.5 shrink-0 ${style.iconClassName ?? ''}`} />}
         <div className="min-w-0 flex-1">{children}</div>
       </div>

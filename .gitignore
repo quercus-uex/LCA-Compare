@@ -75,3 +75,5 @@ apps/server/src/generated
 .agents/
 
 /backups/
+# Capturas de utils/responsive-screenshots.mjs
+/utils/screenshots/

@@ -45,7 +45,8 @@ export const Tabs = <T extends string>({ id, label, items, value, onChange, size
     <div
       role="tablist"
       aria-label={label}
-      className={`tabs tabs-box ${size === 'sm' ? 'tabs-sm' : ''} ${fill ? 'w-full sm:w-fit' : 'w-fit'}`}
+      // Siempre en una fila: si no caben, se desplazan en horizontal en lugar de saltar de línea
+      className={`tabs tabs-box max-w-full flex-nowrap overflow-x-auto [scrollbar-width:thin] ${size === 'sm' ? 'tabs-sm' : ''} ${fill ? 'w-full sm:w-fit' : 'w-fit'}`}
     >
       {items.map(({ id: itemId, label: itemLabel, icon: Icon }) => {
         const selected = itemId === value;

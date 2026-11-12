@@ -10,7 +10,8 @@ export const NavbarContainer = () => {
   const { t } = useTranslation();
   return (
     <>
-      <div className="p-5 flex flex-col gap-5 items-center flex-1">
+      {/* La barra y el contenido comparten el ancho máximo, para que sus bordes coincidan en pantallas anchas */}
+      <div className="mx-auto flex w-full max-w-[96rem] flex-1 flex-col items-center gap-5 p-5">
         <NavBar />
         <ErrorBoundary key={location.pathname}>
           <Suspense

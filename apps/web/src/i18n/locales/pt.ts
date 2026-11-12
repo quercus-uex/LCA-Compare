@@ -211,6 +211,7 @@ export const pt = {
       allPoblaciones: 'Todas as localidades',
       onlyReference: 'Só de referência',
       clear: 'Limpar filtros',
+      toggle: 'Filtros e ordenação',
     },
     sort: {
       label: 'Ordenar por',

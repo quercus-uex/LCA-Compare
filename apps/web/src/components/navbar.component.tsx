@@ -109,15 +109,18 @@ export const NavBar = () => {
         <ul className="hidden flex-1 items-center gap-1 lg:flex">
           {items.map((item) => (
             <li key={item.to}>
-              <ButtonNavLink to={item.to} isActive={(active) => isItemActive(item.to, active)}>{t(item.labelKey)}</ButtonNavLink>
+              <ButtonNavLink to={item.to} isActive={(active) => isItemActive(item.to, active)} className="whitespace-nowrap">
+                {t(item.labelKey)}
+              </ButtonNavLink>
             </li>
           ))}
         </ul>
 
         <div className="hidden items-center gap-1 lg:flex">
           <LanguageSelector />
-          <ButtonLink variant="ghost" href={DOCS_URL} icon={FiExternalLink}>
-            {t('nav.documentation')}
+          {/* Entre lg y xl no cabe el texto junto al resto de la barra: queda el icono, con el nombre como tooltip */}
+          <ButtonLink variant="ghost" href={DOCS_URL} icon={FiExternalLink} title={t('nav.documentation')} className="whitespace-nowrap">
+            <span className="max-xl:sr-only">{t('nav.documentation')}</span>
           </ButtonLink>
 
           {auth.loading && <Skeleton className="size-10 rounded-full" />}

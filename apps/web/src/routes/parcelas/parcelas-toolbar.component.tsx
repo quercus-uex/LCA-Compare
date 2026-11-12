@@ -1,7 +1,8 @@
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';
-import { FiGrid, FiList, FiMap, FiSearch } from 'react-icons/fi';
-import { Button, Card, Input, SegmentedControl, Select, Toggle } from '../../components/ui/index.ts';
+import { FiGrid, FiList, FiMap, FiSearch, FiSliders } from 'react-icons/fi';
+import { Badge, Button, Card, Input, SegmentedControl, Select, Toggle } from '../../components/ui/index.ts';
 import type { ParcelaPoblacion } from '../../hooks/parcela.hook.tsx';
 import { useCropTypeLabel } from '../../hooks/use-crop-type-label.ts';
 import {
@@ -28,20 +29,40 @@ type Props = {
 export const ParcelasToolbar = ({ query, onChange, onClear, tipos, poblaciones }: Props) => {
   const { t } = useTranslation();
   const getCropTypeLabel = useCropTypeLabel();
+  // En móvil los filtros y el orden van plegados para que las parcelas se vean antes;
+  // desde md siempre están a la vista
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersId = useId();
+  const activeFilters = [query.tipo, query.poblacion, query.soloReferencia].filter(Boolean).length;
 
   return (
     <Card density="compact" className="w-full">
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <Input
-          icon={FiSearch}
-          type="search"
-          className="md:flex-1"
-          aria-label={t('parcelas.searchLabel')}
-          placeholder={t('parcelas.searchPlaceholder')}
-          value={query.q}
-          // Escribir no debe llenar el historial con una entrada por tecla
-          onChange={(e) => onChange({ q: e.target.value }, { replace: true })}
-        />
+        <div className="flex gap-2 md:flex-1">
+          <Input
+            icon={FiSearch}
+            type="search"
+            className="flex-1"
+            aria-label={t('parcelas.searchLabel')}
+            placeholder={t('parcelas.searchPlaceholder')}
+            value={query.q}
+            // Escribir no debe llenar el historial con una entrada por tecla
+            onChange={(e) => onChange({ q: e.target.value }, { replace: true })}
+          />
+          <Button
+            variant={filtersOpen ? 'primary' : 'outline'}
+            icon={FiSliders}
+            className="md:hidden"
+            aria-label={activeFilters > 0 ? `${t('parcelas.filters.toggle')} (${activeFilters})` : t('parcelas.filters.toggle')}
+            title={t('parcelas.filters.toggle')}
+            aria-expanded={filtersOpen}
+            aria-controls={filtersId}
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            {/* Cuántos filtros hay puestos, para no olvidarlos con el panel plegado */}
+            {activeFilters > 0 && <Badge tone={filtersOpen ? 'neutral' : 'secondary'} size="xs" aria-hidden>{activeFilters}</Badge>}
+          </Button>
+        </div>
 
         <div className="w-full md:w-auto">
           <SegmentedControl
@@ -56,7 +77,7 @@ export const ParcelasToolbar = ({ query, onChange, onClear, tipos, poblaciones }
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div id={filtersId} className={`${filtersOpen ? 'flex' : 'hidden'} flex-wrap items-center gap-3 md:flex`}>
         <Select
           size="sm"
           className="sm:w-auto"

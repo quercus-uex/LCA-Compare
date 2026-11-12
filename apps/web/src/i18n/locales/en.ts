@@ -211,6 +211,7 @@ export const en = {
       allPoblaciones: 'All towns',
       onlyReference: 'Reference only',
       clear: 'Clear filters',
+      toggle: 'Filters and sorting',
     },
     sort: {
       label: 'Sort by',

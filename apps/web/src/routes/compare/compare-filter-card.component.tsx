@@ -53,7 +53,7 @@ export const CompareFilterCard = ({ name, required = false, initialFilters, orga
   return (
     // eslint-disable-next-line no-restricted-syntax -- plegable en móvil y tarjeta desde xl: `Card` no cubre esta mezcla
     <div className="collapse max-xl:collapse-close xl:collapse-open xl:card bg-base-100 xl:min-w-72 xl:w-1/5 h-fit xl:flex-1">
-      <input type="checkbox" name="compare-filters" className="xl:hidden" />
+      <input type="checkbox" name="compare-filters" aria-label={name} className="xl:hidden" />
 
       <div className="collapse-title font-semibold xl:hidden">{name}</div>
 

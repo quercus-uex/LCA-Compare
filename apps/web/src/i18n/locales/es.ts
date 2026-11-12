@@ -211,6 +211,7 @@ export const es = {
       allPoblaciones: 'Todos los municipios',
       onlyReference: 'Solo de referencia',
       clear: 'Limpiar filtros',
+      toggle: 'Filtros y orden',
     },
     sort: {
       label: 'Ordenar por',

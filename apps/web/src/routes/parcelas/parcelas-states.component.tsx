@@ -12,7 +12,7 @@ export const ParcelasListSkeleton = () => (
 );
 
 export const ParcelaDetailSkeleton = () => (
-  <div className="w-full max-w-[96rem] space-y-5" aria-busy="true">
+  <div className="w-full space-y-5" aria-busy="true">
     <Skeleton className="h-5 w-48" />
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[24rem_minmax(0,1fr)]">
       <Skeleton className="aspect-square rounded-box" />

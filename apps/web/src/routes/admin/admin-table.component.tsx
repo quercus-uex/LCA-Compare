@@ -31,6 +31,13 @@ const formatAdminDate = (value: unknown) => {
 
 const Empty = () => <span className="text-muted">—</span>;
 
+// Cuando la tabla no cabe y se desplaza en horizontal (móvil, tablet), la columna de
+// acciones se queda fija a la derecha para no tener que buscarla. Su fondo es opaco,
+// con el mismo tono que el hover de la fila, para que no se vea lo que pasa por debajo;
+// la línea de la izquierda la separa de las columnas que se desplazan
+const STICKY_ACTIONS =
+  'sticky right-0 z-[1] bg-base-100 group-hover:bg-[color-mix(in_oklab,var(--color-base-200)_50%,var(--color-base-100))] max-xl:shadow-[inset_1px_0_0_var(--color-base-200)]';
+
 const isEstado = (value: unknown): value is ConsentimientoEstado =>
   CONSENTIMIENTO_ESTADOS.includes(value as ConsentimientoEstado);
 
@@ -231,7 +238,7 @@ export const AdminTable = ({
                 {t(column.labelKey)}
               </th>
             ))}
-            {hasActions && <th className="w-24 text-right font-medium">{t('common.fields.actions')}</th>}
+            {hasActions && <th className={`w-24 text-right font-medium ${STICKY_ACTIONS}`}>{t('common.fields.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -241,7 +248,7 @@ export const AdminTable = ({
             const isExpanded = expandable && expanded.has(id);
             return (
               <Fragment key={id}>
-                <tr className="hover:bg-base-200/50">
+                <tr className="group hover:bg-base-200/50">
                   {expandable && (
                     <td className="px-2">
                       {cultivos.length > 0 && (
@@ -258,7 +265,7 @@ export const AdminTable = ({
                   {config.columns.map((column) => (
                     <td key={column.key}>{renderCell(column, item)}</td>
                   ))}
-                  {hasActions && <td>{actions(item)}</td>}
+                  {hasActions && <td className={STICKY_ACTIONS}>{actions(item)}</td>}
                 </tr>
                 {isExpanded && (
                   <tr>
@@ -277,12 +284,12 @@ export const AdminTable = ({
                                 <th className="font-medium">{t('admin.fields.produccion')}</th>
                                 <th className="font-medium">{t('admin.fields.consumoAgua')}</th>
                                 <th className="font-medium">{t('admin.fields.ciclo')}</th>
-                                <th className="w-24 text-right font-medium">{t('common.fields.actions')}</th>
+                                <th className={`w-24 text-right font-medium ${STICKY_ACTIONS}`}>{t('common.fields.actions')}</th>
                               </tr>
                             </thead>
                             <tbody>
                               {cultivos.map((c) => (
-                                <tr key={c.id as string}>
+                                <tr key={c.id as string} className="group">
                                   <td>{typeof c.tipo === 'string' ? getCropTypeLabel(c.tipo) : <Empty />}</td>
                                   <td>{formatAdminDate(c.fechaInicioCampania) ?? <Empty />}</td>
                                   {(
@@ -307,7 +314,7 @@ export const AdminTable = ({
                                     </td>
                                     );
                                   })}
-                                  <td>{actions({ ...c, parcela: { id, nombre: item.nombre } }, 'cultivos')}</td>
+                                  <td className={STICKY_ACTIONS}>{actions({ ...c, parcela: { id, nombre: item.nombre } }, 'cultivos')}</td>
                                 </tr>
                               ))}
                             </tbody>

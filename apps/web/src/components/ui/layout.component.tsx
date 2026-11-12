@@ -5,7 +5,7 @@ import { Skeleton } from './loading.component.tsx';
 
 /** Contenedor de cada página: mismo ancho máximo y espaciado en todas */
 export const Page = ({ busy, children }: { busy?: boolean; children: ReactNode }) => (
-  <div className="flex w-full max-w-[96rem] flex-col gap-5" aria-busy={busy || undefined}>
+  <div className="flex w-full flex-col gap-5" aria-busy={busy || undefined}>
     {children}
   </div>
 );

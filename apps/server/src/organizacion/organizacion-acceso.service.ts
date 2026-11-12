@@ -12,9 +12,9 @@ export type ConsentimientoAceptado = { idUsuario: string; anio: number };
 
 /**
  * Única fuente de la regla de acceso de una organización: su administrador
- * ve los datos de las campañas que cada miembro ha aceptado. Los datos del
- * propio administrador nunca cuentan, aunque tenga consentimientos de cuando
- * aún no administraba la organización.
+ * ve los datos de las campañas que cada miembro ha aceptado. Las del propio
+ * administrador también cuentan: las que aporta él mismo y las que aceptó
+ * cuando aún no administraba la organización.
  *
  * Vive aparte de `OrganizacionService` para que parcelas, resultados,
  * comparativas y estadísticas puedan usarla sin depender del módulo de
@@ -24,21 +24,37 @@ export type ConsentimientoAceptado = { idUsuario: string; anio: number };
 export class OrganizacionAccesoService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Pares usuario-año aceptados en la organización, sin los del administrador */
+  /** Pares usuario-año aceptados en la organización, con los del administrador */
   async getConsentimientosAceptados(
     idOrganizacion: string,
   ): Promise<ConsentimientoAceptado[]> {
     const consentimientos = await this.prisma.consentimiento.findMany({
+      where: { idOrganizacion, estado: ESTADO.aceptado },
+      select: { idUsuario: true, anioCampania: true },
+      orderBy: [{ idUsuario: 'asc' }, { anioCampania: 'asc' }],
+    });
+    return consentimientos.map((c) => ({
+      idUsuario: c.idUsuario,
+      anio: c.anioCampania,
+    }));
+  }
+
+  /**
+   * Pares usuario-año de los propietarios de `idsParcela` que `viewerId` ve
+   * como administrador de sus organizaciones
+   */
+  async getConsentimientosDeParcelas(
+    viewerId: string,
+    idsParcela: string[],
+  ): Promise<ConsentimientoAceptado[]> {
+    const consentimientos = await this.prisma.consentimiento.findMany({
       where: {
-        idOrganizacion,
         estado: ESTADO.aceptado,
-        NOT: {
-          usuario: {
-            organizacionesAdministradas: { some: { id: idOrganizacion } },
-          },
-        },
+        organizacion: { idAdministrador: viewerId },
+        usuario: { parcelas: { some: { id: { in: idsParcela } } } },
       },
       select: { idUsuario: true, anioCampania: true },
+      distinct: ['idUsuario', 'anioCampania'],
       orderBy: [{ idUsuario: 'asc' }, { anioCampania: 'asc' }],
     });
     return consentimientos.map((c) => ({

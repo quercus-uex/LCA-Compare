@@ -27,7 +27,7 @@ describe('OrganizacionAccesoService', () => {
   });
 
   describe('getConsentimientosAceptados', () => {
-    it('reads the accepted user-year pairs excluding the current administrator', async () => {
+    it('reads every accepted user-year pair, including those of the administrator', async () => {
       prisma.consentimiento.findMany.mockResolvedValue([
         { idUsuario: 'u-1', anioCampania: 2023 },
         { idUsuario: 'u-2', anioCampania: 2024 },
@@ -44,11 +44,27 @@ describe('OrganizacionAccesoService', () => {
           where: {
             idOrganizacion: ORG_ID,
             estado: 'aceptado',
-            NOT: {
-              usuario: {
-                organizacionesAdministradas: { some: { id: ORG_ID } },
-              },
-            },
+          },
+        }),
+      );
+    });
+  });
+
+  describe('getConsentimientosDeParcelas', () => {
+    it('reads the accepted pairs of the plot owners in the organizations the viewer administers', async () => {
+      prisma.consentimiento.findMany.mockResolvedValue([
+        { idUsuario: 'u-1', anioCampania: 2023 },
+      ]);
+
+      await expect(
+        service.getConsentimientosDeParcelas('admin', ['par-1']),
+      ).resolves.toEqual([{ idUsuario: 'u-1', anio: 2023 }]);
+      expect(prisma.consentimiento.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            estado: 'aceptado',
+            organizacion: { idAdministrador: 'admin' },
+            usuario: { parcelas: { some: { id: { in: ['par-1'] } } } },
           },
         }),
       );

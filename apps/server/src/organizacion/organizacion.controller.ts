@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -36,7 +37,10 @@ import {
   CreateOrganizacionDto,
   UpdateOrganizacionDto,
 } from './dto/create-organizacion.dto';
-import { SolicitarConsentimientoDto } from './dto/solicitar-consentimiento.dto';
+import {
+  CampaniasAdministradorDto,
+  SolicitarConsentimientoDto,
+} from './dto/solicitar-consentimiento.dto';
 import { TransferirOrganizacionDto } from './dto/transferir-organizacion.dto';
 import {
   MiembroParcelasDto,
@@ -153,6 +157,29 @@ export class OrganizacionController {
       data: await this.organizacionService.solicitarConsentimiento(
         organizacion,
         body,
+      ),
+    };
+  }
+
+  @Put(':id/campanias-administrador')
+  @UseGuards(OrganizacionAdminGuard)
+  @ApiOperation({
+    summary: 'Fijar las campañas propias que el administrador aporta',
+    description:
+      'Los años indicados quedan aceptados sin solicitud ni aviso y sustituyen a los anteriores. Sus datos cuentan como los de cualquier miembro.',
+  })
+  @ApiNotFoundResponse({ type: ApiErrorDto })
+  @ApiBadRequestResponse({ type: ApiErrorDto })
+  @ApiForbiddenResponse({ type: ApiErrorDto })
+  @ApiOkResponse({ type: ApiResponseDto(OrganizacionDetalleDto) })
+  async setCampaniasAdministrador(
+    @OrganizacionActual() organizacion: Organizacion,
+    @Body() body: CampaniasAdministradorDto,
+  ) {
+    return {
+      data: await this.organizacionService.setCampaniasAdministrador(
+        organizacion,
+        body.anios,
       ),
     };
   }

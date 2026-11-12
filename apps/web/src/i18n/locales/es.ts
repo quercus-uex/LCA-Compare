@@ -663,6 +663,14 @@ export const es = {
         ajustes: 'Ajustes',
       },
     },
+    propias: {
+      title: 'Mis campañas',
+      hint: 'Elige las campañas de tus propias parcelas que quieres aportar a la organización. Cuentan en el comparador y las estadísticas como las de cualquier miembro, sin solicitud.',
+      added: 'Campaña {{anio}} aportada',
+      removed: 'Campaña {{anio}} retirada',
+      count_one: 'Aportas {{count}} campaña',
+      count_other: 'Aportas {{count}} campañas',
+    },
     miembros: {
       hint: 'Con alguna campaña aceptada puedes ver las parcelas del miembro y usarlas en el comparador y las estadísticas.',
       campaigns: 'Campañas',
@@ -707,7 +715,7 @@ export const es = {
       nothingSent: 'No se ha enviado ninguna solicitud: las campañas ya estaban pendientes o aceptadas.',
       errors: {
         email: 'Introduce un email válido.',
-        ownEmail: 'No puedes pedirte acceso a ti mismo.',
+        ownEmail: 'No necesitas pedirte acceso: aporta tus campañas desde «Mis campañas», en la pestaña Miembros.',
         years: 'Elige al menos una campaña.',
         userNotFound: 'No hay ningún usuario registrado con ese email.',
         invalid: 'Revisa el email y las campañas: no puedes pedirte acceso a ti mismo ni a campañas fuera del rango.',

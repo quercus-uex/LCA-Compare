@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ForbiddenException,
   Controller,
   Header,
   HttpCode,
@@ -32,7 +33,7 @@ import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.s
 @ApiBearerAuth()
 @ApiForbiddenResponse({
   description:
-    'Se filtra por una organización y el usuario no es su administrador',
+    'Se filtra por una organización que el usuario no administra, o por parcelas sin haber iniciado sesión',
   type: ApiErrorDto,
 })
 @UseGuards(OptionalAuthGuard)
@@ -43,11 +44,24 @@ export class CompareController {
     private readonly accesoService: OrganizacionAccesoService,
   ) {}
 
-  /** Solo el administrador de una organización puede filtrar por ella */
-  private async assertOrganizaciones(
+  /**
+   * Solo el administrador de una organización puede filtrar por ella, y el
+   * filtro por parcelas requiere sesión: el servicio lo limita después a las
+   * parcelas y campañas que ese usuario puede ver
+   */
+  private async assertAcceso(
     body: CompareQueryDto,
     user?: UserJwt,
   ): Promise<void> {
+    const filtraPorParcelas = [body.reference, body.target].some(
+      (filters) => filters?.idsParcela?.length,
+    );
+    if (filtraPorParcelas && !user) {
+      throw new ForbiddenException(
+        'Debes iniciar sesión para filtrar por parcelas',
+      );
+    }
+
     const ids = new Set(
       [body.reference?.idOrganizacion, body.target?.idOrganizacion].filter(
         (id): id is string => !!id,
@@ -77,11 +91,11 @@ export class CompareController {
   })
   @HttpCode(HttpStatus.OK)
   async compare(@Body() body: CompareQueryDto, @AuthUser() user?: UserJwt) {
-    await this.assertOrganizaciones(body, user);
+    await this.assertAcceso(body, user);
     const [refMean, tarMean] = await Promise.all([
-      this.compareService.getMeanByFilters(body.reference),
+      this.compareService.getMeanByFilters(body.reference, user?.sub),
       body.target
-        ? this.compareService.getMeanByFilters(body.target)
+        ? this.compareService.getMeanByFilters(body.target, user?.sub)
         : Promise.resolve(undefined),
     ]);
 
@@ -118,11 +132,11 @@ export class CompareController {
       throw new BadRequestException(
         'Debes especificar los filtros del conjunto objetivo y referencia.',
       );
-    await this.assertOrganizaciones(body, user);
+    await this.assertAcceso(body, user);
 
     const [refResults, tarResults] = await Promise.all([
-      this.compareService.findResults(body.reference),
-      this.compareService.findResults(body.target),
+      this.compareService.findResults(body.reference, user?.sub),
+      this.compareService.findResults(body.target, user?.sub),
     ]);
 
     if (!refResults.length || !tarResults.length)

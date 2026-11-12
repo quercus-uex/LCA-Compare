@@ -1,4 +1,5 @@
 import type {
+  CampaniasAdministradorDto,
   CreateOrganizacionDto,
   MiembroParcelasDto,
   MisOrganizacionesDto,
@@ -28,7 +29,7 @@ export type {
 /** Parcelas de un miembro con su geometría, como en «Mis parcelas» */
 export type MiembroParcelas = Omit<MiembroParcelasDto, 'parcelas'> & { parcelas: ParcelaResumen[] };
 
-const json = (method: 'POST' | 'PATCH', body: unknown) => ({ method, body: JSON.stringify(body) });
+const json = (method: 'POST' | 'PATCH' | 'PUT', body: unknown) => ({ method, body: JSON.stringify(body) });
 
 const base = (id: string) => `/organizaciones/${encodeURIComponent(id)}`;
 
@@ -48,6 +49,10 @@ export const organizacionApi = {
 
   solicitar: (id: string, dto: SolicitarConsentimientoDto) =>
     apiFetch<SolicitudConsentimientoResultadoDto>(`${base(id)}/solicitudes`, json('POST', dto)),
+
+  /** Fija las campañas propias que el administrador aporta */
+  setCampaniasAdministrador: (id: string, dto: CampaniasAdministradorDto) =>
+    apiFetch<OrganizacionDetalle>(`${base(id)}/campanias-administrador`, json('PUT', dto)),
 
   /** Cancela una solicitud pendiente o revoca una campaña aceptada */
   retirarConsentimiento: (id: string, idConsentimiento: string) =>

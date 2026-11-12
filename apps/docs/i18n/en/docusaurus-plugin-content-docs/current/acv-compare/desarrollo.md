@@ -15,6 +15,16 @@ pnpm install
 
 The workspace includes applications under `apps/*` and shared packages under `packages/*`.
 
+## Environment Variables
+
+The backend reads the `.env` file at the repository root. Create it from the template and adjust its values:
+
+```bash
+cp .env.example .env
+```
+
+`DATABASE_URL`, `JWT_SECRET`, and `DEFAULT_IMPACT_METHOD_UUID` are required. OpenRouter and email are optional: without them, reports do not include AI-generated text and the welcome email is not sent. Keep `PORT=8000`, which is the target of the Vite proxy.
+
 ## Database
 
 Start the PostgreSQL database with PostGIS:
@@ -23,7 +33,7 @@ Start the PostgreSQL database with PostGIS:
 docker compose up -d db
 ```
 
-In local development, make sure `DATABASE_URL` points to that database. With the included Compose file, the database is created as `acv`, for example `postgres://user:password@localhost:5432/acv` if you use the credentials from `.env.example`.
+The Compose file creates the `acv` database with the `DB_USER` and `DB_PASSWORD` credentials from `.env`; with the template values, `DATABASE_URL` is `postgres://user:password@localhost:5432/acv`.
 
 After a clean install, build the shared package and generate the [Prisma](https://www.prisma.io/docs/orm) client before building or starting the backend:
 
@@ -58,9 +68,7 @@ Do not use `prisma db push`: it applies the schema without recording migrations 
 pnpm server:dev
 ```
 
-The NestJS server starts at `http://localhost:8000` with hot reload enabled. Swagger documentation is available at `http://localhost:8000/docs`.
-
-Port `8000` depends on the `PORT` variable in `.env`. If it is not defined, NestJS uses the default value `3000`.
+The NestJS server starts on the `PORT` from `.env` (`http://localhost:8000`; without the variable, `3000`) with hot reload. Swagger documentation is available at `http://localhost:8000/docs`.
 
 ### Frontend (SPA)
 
@@ -68,7 +76,9 @@ Port `8000` depends on the `PORT` variable in `.env`. If it is not defined, Nest
 pnpm web:dev
 ```
 
-The Vite development server starts at `http://localhost:5173`. Requests to `/api` are automatically redirected to the backend at `http://localhost:8000` through the proxy configured in `apps/web/vite.config.ts`.
+The Vite development server starts at `http://localhost:5173`. Requests to `/api` are redirected to the backend at `http://localhost:8000` (proxy in `apps/web/vite.config.ts`, which strips the `/api` prefix).
+
+In development, `/dev/ui` shows the component library catalog (`src/components/ui`); the route is not included in the production build.
 
 ### Whole Monorepo
 
@@ -76,7 +86,7 @@ The Vite development server starts at `http://localhost:5173`. Requests to `/api
 pnpm dev
 ```
 
-This command runs `turbo dev --ui=tui` to start the development processes defined in the workspace packages.
+Runs `turbo dev --ui=tui`, which starts the development processes of all packages at once.
 
 ### Documentation
 
@@ -85,6 +95,15 @@ pnpm docs:dev
 ```
 
 The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus start --host 0.0.0.0`.
+
+## Create an Administrator
+
+There is no public sign-up, so an empty database needs an administrator to sign in. Build the backend and run the script from the repository root:
+
+```bash
+pnpm server:build
+pnpm --filter server admin:create -- --email="admin@example.com" --password="secret" --nombre="Admin" --apellidos="Platform"
+```
 
 ## Available Scripts
 
@@ -96,6 +115,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 | `pnpm dev` | Runs Turbo in development mode for the monorepo |
 | `pnpm build` | Builds packages and applications through Turbo |
 | `pnpm lint` | Runs configured linters through Turbo |
+| `pnpm screenshots` | Captures the web views at mobile, tablet, and desktop sizes (`utils/responsive-screenshots.mjs`; requires the web app, the backend, and `SHOTS_EMAIL`/`SHOTS_PASSWORD`) |
 
 ### Backend (`apps/server`)
 
@@ -109,7 +129,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 | `pnpm server:prisma:generate` | Generates the Prisma client using `apps/server/prisma.config.ts` |
 | `pnpm server:prisma:migrate:dev` | Creates a new migration from schema changes and applies it locally |
 | `pnpm server:prisma:migrate:deploy` | Applies pending migrations (schema and initial data on an empty database) |
-| `pnpm --filter server admin:create` | Creates a user with the `admin` role (requires `--email`, `--password`, `--nombre`, `--apellidos`) |
+| `pnpm --filter server admin:create` | Creates a user with the `admin` role (see [Create an Administrator](#create-an-administrator)) |
 
 ### Frontend (`apps/web`)
 
@@ -143,8 +163,8 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   ├── src/
 │   │   │   ├── main.ts            # Application bootstrap
 │   │   │   ├── app.module.ts      # Root module
-│   │   │   ├── auth/              # JWT authentication (login, registration, guards)
-│   │   │   ├── usuario/           # User CRUD
+│   │   │   ├── auth/              # JWT authentication (login and guards)
+│   │   │   ├── usuario/           # Authenticated user's profile
 │   │   │   ├── parcela/           # Plot management with geospatial data
 │   │   │   ├── cultivo/           # Crop registration and queries
 │   │   │   ├── resultadoimpacto/  # LCA result storage and querying
@@ -164,7 +184,7 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   │   ├── mailer/            # Email delivery
 │   │   │   ├── prisma/            # PrismaService for database access
 │   │   │   ├── common/            # Internal backend DTOs and helpers
-│   │   │   ├── scripts/           # Utility scripts (e.g. create admin user)
+│   │   │   ├── scripts/           # Create administrator and demo data
 │   │   │   ├── templates/         # Handlebars templates for reports
 │   │   │   └── generated/         # Autogenerated Prisma client
 │   │   ├── prisma.config.ts       # Prisma configuration for the server package
@@ -179,7 +199,8 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   │   ├── src/
 │   │   │   ├── main.tsx           # React entry point
 │   │   │   ├── App.tsx            # Root component with routes
-│   │   │   ├── components/        # Reusable components
+│   │   │   ├── components/        # Application components
+│   │   │   │   └── ui/            # Component library (catalog at /dev/ui)
 │   │   │   ├── hooks/             # Custom hooks
 │   │   │   ├── stats/             # Statistical visualization components
 │   │   │   ├── routes/            # Application views
@@ -192,9 +213,11 @@ The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus
 │   └── common/                    # Shared DTOs, types, and constants
 ├── deploy/
 │   ├── compose.yaml               # Production compose file (GHCR images)
-│   └── .env.example               # Production environment variables
+│   ├── .env.example               # Production environment variables
+│   └── demo/                      # Demo instance
 ├── docker/
 │   └── backup/                    # Backup image
+├── utils/                         # Development tools (responsive screenshots)
 ├── docker-compose.yaml            # Database for development
 ├── pnpm-workspace.yaml            # apps/* and packages/* definition
 └── turbo.json                     # Turborepo pipeline
@@ -228,4 +251,4 @@ Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` h
 
 The `esParcelaReferencia` flag (default `false`) can only be set by an administrator and lets the comparator restrict a set to these plots through the `soloParcelasReferencia` filter.
 
-An organization's administrator can access a member's data only for the campaigns that member has accepted: the rule lives in `OrganizacionAccesoService` and is used by the plot and result details, the comparator and the statistics. The campaign is the UTC year of `Cultivo.fechaInicioCampania`, and the administrator's own plots do not count. `/compare` and `/stats` remain public: `OptionalAuthGuard` identifies the user if they send a valid token, and filtering by an organization they do not manage returns 403.
+An organization's administrator can access a member's data only for the campaigns that member has accepted: the rule lives in `OrganizacionAccesoService` and is used by the plot and result details, the comparator and the statistics. The campaign is the UTC year of `Cultivo.fechaInicioCampania`. The administrator's own plots count only for the campaigns they contribute themselves (`PUT /organizaciones/:id/campanias-administrador`), stored as accepted consents. `/compare` and `/stats` remain public: `OptionalAuthGuard` identifies the user if they send a valid token, and filtering by an organization they do not manage returns 403. The comparator's `idsParcela` filter also returns 403 without a session; with one it only reaches the user's own plots and, for other owners' plots, the campaigns consented to the organizations the user manages; any other plot is ignored.

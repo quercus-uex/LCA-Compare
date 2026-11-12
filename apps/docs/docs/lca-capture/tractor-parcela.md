@@ -16,12 +16,12 @@ Permite consultar los minutos totales de operación, así como el detalle de uso
 | ------- | ------------ | --------- | ------------------------------------------------------------------ |
 | `path`  | `plotId`     | SÍ        | Identificador único de la parcela (formato UUID)                   |
 | `path`  | `devEUI`     | SÍ        | Identificador único DevEUI del sensor del tractor                  |
-| `query` | `startDate`  | NO        | Fecha de inicio del rango. Por defecto: `1970-01-01T00:00:00.000Z` |
-| `query` | `endDate`    | NO        | Fecha de fin del rango. Por defecto: fecha y hora actual           |
 
-> **Nota:** Para filtrar los datos por fechas, se utiliza el **formato estándar ISO 8601** (`AAAA-MM-DDTHH:mm:ssZ`).
+> **Nota:** El identificador de la parcela se muestra al seleccionarla en
+> [monitoriza.dtagro.es](https://monitoriza.dtagro.es).
 
-> **Nota:** El identificador de parcela se puede observar clicando en una parcela en: monitoriza.dtagro.es
+Admite además los parámetros de consulta `startDate` y `endDate` (ver
+[Filtro por fechas](./introduccion.md#filtro-por-fechas)).
 
 ### Ejemplos de solicitud
 
@@ -42,8 +42,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Respuesta exitosa
 
-> **Nota:** El formato de respuesta no es definitivo y puede estar sujeto a cambios
-
 ```json
 {
     "plotId": "c3011f17-ea36-4567-8a52-5fbde300a3f9",
@@ -62,16 +60,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Posibles errores
 
+Además de los [errores comunes](./introduccion.md#errores-comunes):
+
 | Código                      | Causa                           | Mensaje                                       |
 | --------------------------- | ------------------------------- | --------------------------------------------- |
 | `400 Bad Request`           | Falta el parámetro `plotId`     | `Plot ID is required`                         |
 | `400 Bad Request`           | Falta el parámetro `devEUI`     | `Sensor DevEUI is required`                   |
 | `400 Bad Request`           | El `plotId` no es válido        | `Invalid Plot ID (must be UUID)`              |
 | `400 Bad Request`           | El `devEUI` no es válido        | `Invalid DevEUI (must be 16 hex characters)`  |
-| `401 Unauthorized`          | El token JWT no es válido       | `Invalid authentication token`                |
-| `401 Unauthorized`          | El token JWT ha expirado        | `Authentication token expired`                |
-| `401 Unauthorized`          | Falta el token JWT              | `Missing authentication token`                |
-| `403 Forbidden`             | Sin permiso para acceder        | `Insufficient scope`                          |
 | `404 Not Found`             | El `plotId` no está registrado  | `Plot not found with the provided PlotId`     |
 | `404 Not Found`             | El `devEUI` no está registrado  | `Sensor not found with the provided DevEUI`   |
-| `500 Internal Server Error` | Error interno del servidor	    | `Unable to retrieve sensor telemetry`         |

@@ -85,7 +85,10 @@ export type MiembroParcelas = {
   parcelas: ParcelaMiembro[];
 };
 
-/** Los miembros son quienes tienen alguna campaña aceptada, sin el administrador */
+/**
+ * Los miembros son quienes tienen alguna campaña aceptada, sin el
+ * administrador: sus campañas cuentan como datos, pero él no como miembro
+ */
 function countMiembros(
   idAdministrador: string,
   aceptados: { idUsuario: string }[],
@@ -117,8 +120,10 @@ const resumenOf = (organizacion: OrganizacionConResumen) =>
   );
 
 function toDetalle(organizacion: OrganizacionConDetalle): OrganizacionDetalle {
+  const esDelAdministrador = (c: { idUsuario: string }) =>
+    c.idUsuario === organizacion.idAdministrador;
   const consentimientos = organizacion.consentimientos.filter(
-    (c) => c.idUsuario !== organizacion.idAdministrador,
+    (c) => !esDelAdministrador(c),
   );
   const miembros: MiembroOrganizacion[] = groupBy(
     consentimientos,
@@ -139,6 +144,10 @@ function toDetalle(organizacion: OrganizacionConDetalle): OrganizacionDetalle {
       ),
     ),
     miembros,
+    campaniasAdministrador: organizacion.consentimientos
+      .filter((c) => esDelAdministrador(c) && c.estado === ESTADO.aceptado)
+      .map(toCampania)
+      .sort(byAnioDesc),
   };
 }
 
@@ -369,6 +378,52 @@ export class OrganizacionService {
   }
 
   /**
+   * Fija las campañas que el administrador aporta a su organización: los años
+   * de `anios` quedan aceptados sin solicitud ni aviso, y el resto de sus
+   * filas (en cualquier estado) se borran.
+   */
+  async setCampaniasAdministrador(
+    organizacion: Organizacion,
+    anios: number[],
+  ): Promise<OrganizacionDetalle> {
+    const where = {
+      idOrganizacion: organizacion.id,
+      idUsuario: organizacion.idAdministrador,
+    };
+    const ahora = new Date();
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.consentimiento.deleteMany({
+        where: { ...where, anioCampania: { notIn: anios } },
+      });
+      // Las que aceptó como miembro antes de administrar se conservan tal cual
+      await tx.consentimiento.updateMany({
+        where: {
+          ...where,
+          anioCampania: { in: anios },
+          estado: { not: ESTADO.aceptado },
+        },
+        data: {
+          estado: ESTADO.aceptado,
+          fechaRespuesta: ahora,
+          fechaRevocacion: null,
+        },
+      });
+      await tx.consentimiento.createMany({
+        data: anios.map((anioCampania) => ({
+          ...where,
+          anioCampania,
+          estado: ESTADO.aceptado,
+          fechaRespuesta: ahora,
+        })),
+        skipDuplicates: true,
+      });
+    });
+
+    return this.getDetalle(organizacion.id);
+  }
+
+  /**
    * Cancela una solicitud pendiente (se borra) o revoca una campaña aceptada
    * (se avisa al miembro). Las rechazadas o ya revocadas no admiten cambios.
    */
@@ -380,7 +435,7 @@ export class OrganizacionService {
       where: {
         id: idConsentimiento,
         idOrganizacion: organizacion.id,
-        // Los del administrador no cuentan mientras administra
+        // Las del administrador se gestionan con `setCampaniasAdministrador`
         idUsuario: { not: organizacion.idAdministrador },
       },
       include: { usuario: { select: USUARIO_BASICO_SELECT } },
@@ -495,7 +550,9 @@ export class OrganizacionService {
 
   /**
    * Pasa la administración a un miembro (con alguna campaña aceptada). Sus
-   * consentimientos se conservan, pero no cuentan mientras sea administrador.
+   * campañas aceptadas siguen contando y pasa a gestionarlas él mismo; las que
+   * no había aceptado se borran, porque ya no tiene a quién responder. El
+   * administrador saliente queda como miembro con las campañas que aportaba.
    */
   async transferir(
     organizacion: Organizacion,
@@ -523,6 +580,13 @@ export class OrganizacionService {
         where: { id: organizacion.id },
         data: { idAdministrador: idUsuario },
         include: RESUMEN_INCLUDE,
+      });
+      await tx.consentimiento.deleteMany({
+        where: {
+          idOrganizacion: organizacion.id,
+          idUsuario,
+          estado: { not: ESTADO.aceptado },
+        },
       });
       await tx.notificacion.create({
         data: avisoData(idUsuario, 'administracion_transferida', {

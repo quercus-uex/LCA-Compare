@@ -7,25 +7,24 @@ import RedactedSecret from '@site/src/components/RedactedSecret';
 
 # Autenticación requerida
 
-Todos los endpoints requieren un **token JWT válido** en el encabezado `Authorization`.
-Ten en cuenta que el token JWT emitido es temporal y tiene una **validez de 30 minutos**.
+Todos los endpoints requieren un **token JWT válido** en el encabezado `Authorization`:
 
 ```
 Authorization: Bearer <token>
 ```
 
-Para obtener este token, utiliza el siguiente endpoint de autenticación:  
+Para obtener este token, se utiliza el siguiente endpoint de autenticación:
 
 ## POST `/auth`
 
-Este endpoint permite la autenticación de aplicaciones/clientes externos a: monitoriza.dtagro.es.  
-Al enviar las credenciales correctas del cliente, el servicio devuelve un **token JWT de acceso firmado**.
+Este endpoint permite la autenticación de aplicaciones o clientes externos a monitoriza.dtagro.es. Con las
+credenciales correctas del cliente, el servicio devuelve un **token JWT de acceso firmado**.
 
 ### Parámetros
 
 | Tipo   | Nombre         | Requerido | Descripción                                    |
 | ------ | -------------- | --------- | ---------------------------------------------- |
-| `body` | `clientId `    | SÍ        | Identificador único de la aplicación o cliente |
+| `body` | `clientId`     | SÍ        | Identificador único de la aplicación o cliente |
 | `body` | `clientSecret` | SÍ        | Clave privada de autenticación para el cliente |
 
 Para obtener el token JWT, se deben enviar siempre las siguientes **credenciales estáticas**:
@@ -64,9 +63,9 @@ Si las credenciales son válidas, devuelve un objeto JSON con el token JWT de ac
 }
 ```
 
-Este token debe incluirse en todas las peticiones a los endpoints protegidos bajo el prefijo `/acv`.  
-Cada token tiene una validez de 30 minutos. Una vez expirado, las peticiones fallarán con un error 401.  
-Una vez caducado, solicite un nuevo token reautenticándose en `/auth` con el `clientId` y `clientSecret`.
+Este token debe incluirse en todas las peticiones a los endpoints bajo el prefijo `/api/acv`. Tiene una **validez de
+30 minutos**: una vez caducado, las peticiones fallan con un error 401 y hay que solicitar un nuevo token en `/auth`
+con el `clientId` y el `clientSecret`.
 
 ### Posibles errores
 

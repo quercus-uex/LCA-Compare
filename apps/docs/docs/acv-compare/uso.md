@@ -5,16 +5,16 @@ sidebar_position: 3
 
 # Uso
 
-Este servicio recibe los resultados de ACV calculados por **LCA Bridge** siempre que ambos se estén ejecutando
-de manera simultánea. Si es la primera vez que un usuario realiza un cálculo de ACV, se le enviará un correo con su
-contraseña de acceso.
-
-La interfaz está disponible en español, inglés y portugués. Puedes cambiar el idioma desde el selector de la barra de
-navegación y la elección se conserva entre sesiones.
+LCA Compare recibe los resultados de ACV que calcula **LCA Bridge**. Cuando llega el primer cálculo de un usuario, se
+crea su cuenta y, si el envío de correo está configurado, recibe un correo con su contraseña de acceso. No hay registro
+público: el resto de cuentas las crea un administrador.
 
 <p align="center">
     <img src="/img/acv-compare/correo.png" alt="Correo de bienvenida a LCA Compare" width="600"/>
 </p>
+
+La interfaz está disponible en español, inglés y portugués. Puedes cambiar el idioma desde el selector de la barra de
+navegación y la elección se conserva entre sesiones.
 
 ## Visualizar resultados de ACV de una parcela
 
@@ -52,8 +52,8 @@ filtros por ubicación geográfica del comparador.
 Al pulsar **Ver impactos** en el cultivo actual o en cualquier campaña del historial, se muestran los resultados de ACV
 de esa campaña: el impacto total de cada categoría y una barra con su reparto entre fertilizantes, manejo de cultivo,
 pesticidas y sistema de riego. En pantallas anchas la tabla muestra también el valor de cada etapa; el detalle completo
-está siempre en la exportación. Desde esta vista puedes exportar el resultado en JSON o CSV y usar **Comparar esta
-parcela** para abrir el comparador con la parcela precargada como conjunto objetivo o de referencia.
+está siempre en la exportación. Desde esta vista también puedes exportar el resultado en JSON o CSV y usar **Comparar
+esta parcela**.
 
 <p align="center">
     <img src="/img/acv-compare/acv_parcela.png" alt="ACV de una parcela" width="600"/>
@@ -61,13 +61,13 @@ parcela** para abrir el comparador con la parcela precargada como conjunto objet
 
 ## Comparador de ACV
 
-El comparador de ACV se accede desde el botón habilitado para ello en la barra de navegación.
+El comparador se abre desde **Comparador** en la barra de navegación.
 
 <p align="center">
-    <img src="/img/acv-compare/boton_comparador.png" alt="ACV de una parcela" width="600"/>
+    <img src="/img/acv-compare/boton_comparador.png" alt="Botón Comparador en la barra de navegación" width="600"/>
 </p>
 
-En él, podrás comparar dos conjuntos de cultivos, filtrando por:
+Compara dos conjuntos de cultivos, cada uno definido por estos filtros:
 
 - País
 - Provincia
@@ -123,17 +123,16 @@ En el comparador, las opciones disponibles son:
 
 ### Generar informe
 
-A su vez podrás generar un informe detallado de la comparativa en **PDF** pulsando en **Generar informe**. El informe
-contiene un resumen de la comparativa generado por IA, recomendaciones para el conjunto objetivo, los tres impactos con
-mayor diferencia, y el desglose completo de la comparativa por categorías. El informe se genera en el idioma activo de
-la interfaz.
+**Generar informe** crea un informe de la comparativa en **PDF**. Contiene un resumen de la comparativa generado por IA,
+recomendaciones para el conjunto objetivo, los tres impactos con mayor diferencia, y el desglose completo de la
+comparativa por categorías. El informe se genera en el idioma activo de la interfaz.
 
 <p align="center">
     <img src="/img/acv-compare/boton_generar_informe.png" alt="Botón para generar informe de ACV" width="400"/>
 </p>
 
 <p align="center">
-    <img src="/img/acv-compare/informe_acv.png" alt="Ejemplo de comparativa de ACV" width="400"/>
+    <img src="/img/acv-compare/informe_acv.png" alt="Ejemplo de informe de ACV en PDF" width="400"/>
 </p>
 
 ## Administración
@@ -169,21 +168,22 @@ la aplicación), y los **consentimientos**, de solo lectura, con su organizació
 ## Estadísticas globales
 
 La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en LCA Compare. Permite filtrar por
-año, categoría de impacto, tipo de cultivo y provincia (y por organización, si administras alguna), y visualiza:
+categoría de impacto, tipo de cultivo y año (y por organización, si administras alguna), y visualiza:
 
 - KPIs globales: número de parcelas, cultivos y superficie total, impacto medio por categoría y variación interanual
   de cada categoría. La variación interanual compara solo las parcelas con resultado en el año elegido y en el
   anterior (al menos 3), para que no influyan las altas y bajas de explotaciones.
-- La toxicidad humana se muestra en dos categorías, cancerígena y no cancerígena, como en EF 3.1.
-- La dotación de agua (m³/ha) y la productividad del agua (kg/m³) se calculan solo con cultivos de regadío (consumo de
-  agua mayor que 0); el rendimiento (kg/ha) incluye todos.
 - Ranking de provincias y poblaciones. Al pulsar en una entrada se abre el comparador con esa provincia o población
-  precargada como conjunto de Referencia. El ranking de poblaciones incluye un buscador que muestra la posición de la
-  población en el ranking.
+  precargada como conjunto de Referencia. El ranking de poblaciones se puede limitar a una provincia e incluye un
+  buscador que muestra la posición de cada población.
 - Evolución temporal de los impactos, con un gráfico de tendencia (sparkline) por categoría.
 - Perfil de impacto: gráfico de radar que permite comparar dos provincias o dos poblaciones.
 - Mapa de calor por provincia y categoría; al pulsar en el nombre de una categoría se reordena el mapa según sus valores.
 - Distribución de cultivos y relación entre producción e impacto.
+
+La toxicidad humana se muestra en dos categorías, cancerígena y no cancerígena, como en EF 3.1. La dotación de agua
+(m³/ha) y la productividad del agua (kg/m³) se calculan solo con cultivos de regadío (consumo de agua mayor que 0); el
+rendimiento (kg/ha) incluye todos.
 
 ## Organizaciones
 
@@ -206,7 +206,12 @@ Con una campaña aceptada, el administrador puede:
   resultados de ACV, pero solo de las campañas aceptadas.
 - Usar la organización como filtro en el [comparador](#comparador-de-acv) y en las
   [estadísticas](#estadísticas-globales). El filtro incluye solo los cultivos de las campañas aceptadas por los
-  miembros; las parcelas del propio administrador no cuentan.
+  miembros y de las que aporta el propio administrador.
+
+El administrador también puede aportar sus propias parcelas: en **Mis campañas**, dentro de la pestaña **Miembros**,
+marca las campañas que quiere incluir y las desmarca para retirarlas. No hace falta solicitud ni aceptación, y esas
+campañas cuentan igual que las de cualquier miembro. Si transfiere la administración, queda como miembro con las
+campañas que aportaba.
 
 En la pestaña **Miembros** el administrador ve el estado de cada campaña (pendiente, aceptada, rechazada o revocada),
 puede cancelar una solicitud pendiente, revocar una campaña aceptada o expulsar a un miembro, lo que revoca todas sus

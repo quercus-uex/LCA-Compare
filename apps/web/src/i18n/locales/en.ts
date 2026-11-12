@@ -663,6 +663,14 @@ export const en = {
         ajustes: 'Settings',
       },
     },
+    propias: {
+      title: 'My campaigns',
+      hint: 'Choose the campaigns of your own plots that you want to contribute to the organization. They count in the comparator and the statistics like those of any member, with no request needed.',
+      added: 'Campaign {{anio}} contributed',
+      removed: 'Campaign {{anio}} withdrawn',
+      count_one: 'You contribute {{count}} campaign',
+      count_other: 'You contribute {{count}} campaigns',
+    },
     miembros: {
       hint: 'With at least one accepted campaign you can view the member\'s plots and use them in the comparator and the statistics.',
       campaigns: 'Campaigns',
@@ -707,7 +715,7 @@ export const en = {
       nothingSent: 'No request was sent: the campaigns were already pending or accepted.',
       errors: {
         email: 'Enter a valid email.',
-        ownEmail: 'You cannot ask yourself for access.',
+        ownEmail: 'You do not need to ask yourself for access: contribute your campaigns under "My campaigns", in the Members tab.',
         years: 'Choose at least one campaign.',
         userNotFound: 'There is no registered user with that email.',
         invalid: 'Check the email and the campaigns: you cannot ask yourself for access or request campaigns out of range.',

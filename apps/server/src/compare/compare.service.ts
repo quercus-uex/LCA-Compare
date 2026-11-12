@@ -139,37 +139,48 @@ export class CompareService implements OnModuleDestroy {
    * `where` de los resultados que cumplen los filtros, o null si no hay
    * filtros. El filtro por radio se resuelve antes a los ids de las parcelas
    * que caen dentro, y el de organización a sus campañas consentidas (quién
-   * puede usarlo lo comprueba el controlador).
+   * puede usarlo lo comprueba el controlador). El filtro por parcelas solo
+   * alcanza las de `viewerId` y las campañas ajenas que ve como administrador
+   * de una organización; sin `viewerId` no coincide con nada.
    */
   private async buildWhere(
     filters: CompareQueryItemDto,
+    viewerId?: string,
   ): Promise<Prisma.ResultadoImpactoWhereInput | null> {
-    const { lat, long, range, idOrganizacion } = filters;
+    const { lat, long, range, idOrganizacion, idsParcela } = filters;
     const hasLocationFilter = lat != null && long != null && range != null;
 
-    const [nearbyParcelaIds, consentimientos] = await Promise.all([
-      hasLocationFilter
-        ? this.parcelaService
-            .findManyByPointRange(lat, long, range)
-            .then((parcelas) => parcelas.map((p) => p.id))
-        : undefined,
-      idOrganizacion
-        ? this.accesoService.getConsentimientosAceptados(idOrganizacion)
-        : undefined,
-    ]);
+    const [nearbyParcelaIds, consentimientos, accesoParcelas] =
+      await Promise.all([
+        hasLocationFilter
+          ? this.parcelaService
+              .findManyByPointRange(lat, long, range)
+              .then((parcelas) => parcelas.map((p) => p.id))
+          : undefined,
+        idOrganizacion
+          ? this.accesoService.getConsentimientosAceptados(idOrganizacion)
+          : undefined,
+        viewerId && idsParcela?.length
+          ? this.accesoService
+              .getConsentimientosDeParcelas(viewerId, idsParcela)
+              .then((c) => ({ idUsuario: viewerId, consentimientos: c }))
+          : undefined,
+      ]);
 
     return CompareQueryBuilder.build(
       filters,
       nearbyParcelaIds,
       consentimientos,
+      accesoParcelas,
     );
   }
 
   /** Resultados con su cultivo y ubicación, que necesita el informe */
   async findResults(
     filters: CompareQueryItemDto,
+    viewerId?: string,
   ): Promise<ResultadoImpactoWithRelations[]> {
-    const where = await this.buildWhere(filters);
+    const where = await this.buildWhere(filters, viewerId);
     return where ? this.resultadoImpactoService.findMany({ where }) : [];
   }
 
@@ -213,8 +224,8 @@ export class CompareService implements OnModuleDestroy {
   }
 
   // La media solo lee `datos`, así que no se cargan cultivo ni ubicación
-  async getMeanByFilters(filters: CompareQueryItemDto) {
-    const where = await this.buildWhere(filters);
+  async getMeanByFilters(filters: CompareQueryItemDto, viewerId?: string) {
+    const where = await this.buildWhere(filters, viewerId);
     if (!where) return undefined;
     return this.getMeanOfResults(
       await this.resultadoImpactoService.findManyDatos(where),

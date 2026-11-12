@@ -11,12 +11,12 @@
     "message": "Documentação",
     "description": "Navbar item with label Documentación"
   },
-  "item.label.Capture ACV": {
+  "item.label.LCA Bridge": {
     "message": "LCA Bridge",
-    "description": "Navbar item with label Capture ACV"
+    "description": "Navbar item with label LCA Bridge"
   },
-  "item.label.ACV Compare": {
+  "item.label.LCA Compare": {
     "message": "LCA Compare",
-    "description": "Navbar item with label ACV Compare"
+    "description": "Navbar item with label LCA Compare"
   }
 }

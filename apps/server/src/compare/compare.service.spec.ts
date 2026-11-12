@@ -117,13 +117,16 @@ describe('CompareService', () => {
   let accesoService: jest.Mocked<
     Pick<
       OrganizacionAccesoService,
-      'getConsentimientosAceptados' | 'getOrganizacionRef'
+      | 'getConsentimientosAceptados'
+      | 'getConsentimientosDeParcelas'
+      | 'getOrganizacionRef'
     >
   >;
 
   beforeEach(() => {
     accesoService = {
       getConsentimientosAceptados: jest.fn(),
+      getConsentimientosDeParcelas: jest.fn(),
       getOrganizacionRef: jest.fn(),
     };
     resultadoImpactoService = {
@@ -215,6 +218,40 @@ describe('CompareService', () => {
       );
       expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
         where: CompareQueryBuilder.build(filters, undefined, consentimientos),
+      });
+    });
+
+    it('limits a plot filter to what the viewer can see', async () => {
+      const consentimientos = [{ idUsuario: 'u-1', anio: 2023 }];
+      accesoService.getConsentimientosDeParcelas.mockResolvedValue(
+        consentimientos,
+      );
+      resultadoImpactoService.findMany.mockResolvedValue([]);
+      const filters: CompareQueryItemDto = { idsParcela: ['par-1'] };
+
+      await service.findResults(filters, 'me');
+
+      expect(accesoService.getConsentimientosDeParcelas).toHaveBeenCalledWith(
+        'me',
+        ['par-1'],
+      );
+      expect(resultadoImpactoService.findMany).toHaveBeenCalledWith({
+        where: CompareQueryBuilder.build(filters, undefined, [], {
+          idUsuario: 'me',
+          consentimientos,
+        }),
+      });
+    });
+
+    it('matches no plot for an anonymous plot filter', async () => {
+      resultadoImpactoService.findManyDatos.mockResolvedValue([]);
+      const filters: CompareQueryItemDto = { idsParcela: ['par-1'] };
+
+      await service.getMeanByFilters(filters);
+
+      expect(accesoService.getConsentimientosDeParcelas).not.toHaveBeenCalled();
+      expect(resultadoImpactoService.findManyDatos).toHaveBeenCalledWith({
+        AND: [{ OR: [{ OR: [] }] }],
       });
     });
 

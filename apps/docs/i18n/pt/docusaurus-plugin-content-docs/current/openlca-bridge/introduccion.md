@@ -5,59 +5,30 @@ sidebar_position: 1
 
 # Introdução
 
-**LCA Bridge** é um microsserviço **Python 3.12+** com **FastAPI** que atua como ponte entre a plataforma **LCA Capture** e o motor de cálculo de Avaliação do Ciclo de Vida **openLCA**, com base de dados em formato **.zolca**. Recebe os dados de uma cultura a partir do LCA Capture, executa o cálculo de impacto ambiental em openLCA através do [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) e envia o resultado para [LCA Compare](https://github.com/quercus-uex/LCA-Compare) para visualização e comparação.
+**LCA Bridge** é um microsserviço **Python 3.12** com **FastAPI** que atua como ponte entre a plataforma **LCA Capture** e o motor de cálculo de Avaliação do Ciclo de Vida **openLCA**. Recebe os dados de uma cultura exportados pelo LCA Capture, calcula o seu impacto ambiental em openLCA através do [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) e envia o resultado para o [LCA Compare](https://github.com/quercus-uex/LCA-Compare) para visualização e comparação.
 
-Ambos os serviços são implantados com o mesmo Docker Compose e comunicam através da sua rede interna, o que permite orquestrar todo o fluxo de cálculo e visualização de ACV de forma desacoplada.
-
-## Fluxo de Processamento
-
-```
-POST /capture-acv    →    ACVService.execute()
-                         ├── validate_parcela()
-                         ├── get_process_class()  →  TomateProcess | OlivoProcess | VinedoProcess
-                         ├── update_processes()   →  OLCAClient (olca-ipc)
-                         ├── calculate_impacts()  →  usa process.uuid (UUID do sistema de produto)
-                         ├── build_final_result()
-                          └── send_result_to_app() →  POST para LCA Compare (best-effort, erros registados)
-```
-
-- **`IMPACT_METHOD_UUID`**: UUID do método de impacto selecionado para o cálculo. Por defeito é utilizado **EF 3.1** (Environmental Footprint 3.1), o método recomendado pela Comissão Europeia para a avaliação de impacto ambiental de produtos. É configurável através de variável de ambiente.
-- **`CALCULATION_AMOUNT`**: quantidade do processo usada como referência no cálculo de ACV. O valor por defeito é `0.001` porque os processos na base de dados estão definidos para 1 tonelada (1000 kg), pelo que com `0.001` se calcula o impacto de 1 kg de produção. É configurável através de variável de ambiente.
+O LCA Bridge, o servidor IPC do openLCA e o LCA Compare são implantados no mesmo Docker Compose (`deploy/compose.yaml`) e comunicam através da sua rede interna. O fluxo de dados é: LCA Capture → LCA Bridge (cálculo) → LCA Compare (persistência e visualização).
 
 ## Funcionalidades
 
-- **Receção de dados de cultura** a partir do LCA Capture através do endpoint `POST /capture-acv`.
-- **Cálculo de ACV** delegado no servidor IPC do openLCA com os processos definidos na base de dados .zolca.
-- **Processos específicos por tipo de cultura**: `TomateProcess`, `OlivoProcess` e `VinedoProcess`, selecionados automaticamente de acordo com os metadados da cultura.
-- **Envio de resultados** para o LCA Compare para persistência, visualização e comparação (best-effort).
-- **Documentação Swagger** interativa na rota `/docs`.
+- **Cálculo de ACV** de uma cultura através de dois endpoints com a mesma entrada e saída: `POST /capture-acv` (escreve os fluxos em openLCA e calcula) e `POST /capture-acv-coeficientes` (calcula com coeficientes em memória, sem escrever em openLCA). O fluxo de processamento é descrito em [Utilização](./uso.md).
+- **Processos por tipo de cultura**: `TomateProcess`, `OlivoProcess` e `VinedoProcess`, selecionados de acordo com `metadatos.cultivo.tipo` (ver [Definição de processos](./procesos.md)).
+- **Método de impacto EF 3.1** (Environmental Footprint 3.1); os resultados são expressos por kg de produto.
+- **Envio de resultados** para o LCA Compare (best-effort: uma falha no envio é registada no log e não afeta a resposta).
+- **Documentação Swagger** na rota `/docs`.
 
-## Variáveis de Ambiente
-
-| Variável | Descrição |
-|---|---|
-| `OLCA_HOST` | Host do servidor IPC do openLCA |
-| `OLCA_PORT` | Porta do servidor IPC do openLCA |
-| `LCA_COMPARE_BASE_URL` | URL base do serviço LCA Compare para envio de resultados |
-| `IMPACT_METHOD_UUID` | UUID do método de impacto para o cálculo (por defeito, EF 3.1) |
-| `CALCULATION_AMOUNT` | Quantidade do processo usada como referência no cálculo (por defeito `0.001`, equivalente a 1 kg) |
+A configuração (variáveis de ambiente) é detalhada em [Implantação](./despliegue.md#variáveis-de-ambiente).
 
 ## Arquitetura
 
-O serviço segue uma arquitetura de microsserviço com dois componentes:
-
 | Componente | Tecnologia | Porta |
 |---|---|---|
-| **LCA Bridge** | FastAPI (Python 3.12+) | 3000 |
-| **openLCA IPC** | Java (Maven, `openlca-docker/`) | *(interno)* |
-
-O fluxo de dados é: LCA Capture → LCA Bridge (cálculo) → LCA Compare (persistência e visualização).
+| **LCA Bridge** | FastAPI (Python 3.12) | 3000 |
+| **openLCA IPC** | Java 21 (Maven, `openlca-docker/`) | 8080 *(interno)* |
 
 ## Stack Tecnológico
 
-- **Python 3.12+** com **FastAPI** como framework REST
-- **openLCA** como motor de cálculo de ACV (servidor IPC Java)
-- **Base de dados .zolca** para processos de impacto ambiental
-- **Docker** para implantação e orquestração de serviços
-- **Swagger/OpenAPI** para documentação da API
-- **tox + pytest** para testes com cobertura
+- **Python 3.12** com **FastAPI**; dependências geridas com **uv** (`pyproject.toml` + `uv.lock`)
+- **openLCA** como motor de cálculo de ACV (servidor IPC Java) com a base de dados de processos montada como volume
+- **Docker** para implantação
+- **pytest** (com cobertura) para testes

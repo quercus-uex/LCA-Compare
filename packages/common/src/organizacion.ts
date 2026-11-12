@@ -70,6 +70,8 @@ export type MiembroOrganizacion = {
 
 export type OrganizacionDetalle = OrganizacionResumen & {
   miembros: MiembroOrganizacion[];
+  /** Campañas propias que el administrador aporta: todas aceptadas */
+  campaniasAdministrador: CampaniaConsentimiento[];
 };
 
 /** Organización de la que el usuario es miembro o invitado */
@@ -92,6 +94,11 @@ export type UpdateOrganizacionDto = Partial<CreateOrganizacionDto>;
 
 export type SolicitarConsentimientoDto = {
   email: string;
+  anios: number[];
+};
+
+/** Campañas propias que el administrador aporta; sustituyen a las anteriores */
+export type CampaniasAdministradorDto = {
   anios: number[];
 };
 

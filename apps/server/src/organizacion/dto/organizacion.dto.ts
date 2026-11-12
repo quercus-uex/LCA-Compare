@@ -75,6 +75,13 @@ export class OrganizacionDetalleDto
       'Usuarios con alguna solicitud en la organización (sin el administrador), por apellidos y nombre',
   })
   miembros: MiembroOrganizacionDto[];
+
+  @ApiProperty({
+    type: [CampaniaConsentimientoDto],
+    description:
+      'Campañas propias que el administrador aporta a la organización, del año más reciente al más antiguo',
+  })
+  campaniasAdministrador: CampaniaConsentimientoDto[];
 }
 
 export class MembresiaOrganizacionDto implements MembresiaOrganizacion {

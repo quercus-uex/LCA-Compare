@@ -16,6 +16,7 @@ import {
 import { organizacionApi, type OrganizacionDetalle } from '../../hooks/organizacion.hook.tsx';
 import { ParcelaBreadcrumbs } from '../parcelas/parcela-hero.component.tsx';
 import { OrganizacionAjustes } from './organizacion-ajustes.component.tsx';
+import { OrganizacionCampaniasPropias } from './organizacion-campanias-propias.component.tsx';
 import { OrganizacionMiembros } from './organizacion-miembros.component.tsx';
 import { OrganizacionNotFound } from './organizacion-not-found.component.tsx';
 import { OrganizacionSolicitar } from './organizacion-solicitar.component.tsx';
@@ -118,11 +119,14 @@ export const OrganizacionRoute = () => {
 
       <TabPanel tabsId={tabsId} value={tab}>
         {tab === 'miembros' && (
-          <OrganizacionMiembros
-            organizacion={organizacion}
-            onChange={setOrganizacion}
-            onRequest={() => selectTab('solicitar')}
-          />
+          <div className="flex flex-col gap-4">
+            <OrganizacionCampaniasPropias organizacion={organizacion} onChange={setOrganizacion} />
+            <OrganizacionMiembros
+              organizacion={organizacion}
+              onChange={setOrganizacion}
+              onRequest={() => selectTab('solicitar')}
+            />
+          </div>
         )}
         {tab === 'solicitar' && <OrganizacionSolicitar organizacion={organizacion} onSent={() => load()} />}
         {tab === 'ajustes' && (

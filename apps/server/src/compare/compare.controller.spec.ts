@@ -112,6 +112,49 @@ describe('CompareController', () => {
       expect(compareService.getMeanByFilters).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['reference', { reference: { idsParcela: ['par-1'] } }],
+      [
+        'target',
+        { reference: { idPais: 'p1' }, target: { idsParcela: ['par-1'] } },
+      ],
+    ])(
+      'rejects an anonymous plot filter in the %s with 403',
+      async (_name, body) => {
+        const expected = new ForbiddenException(
+          'Debes iniciar sesión para filtrar por parcelas',
+        );
+
+        await expect(controller.compare(body)).rejects.toStrictEqual(expected);
+        await expect(
+          controller.compareToReport({ target: { idPais: 'p2' }, ...body }),
+        ).rejects.toStrictEqual(expected);
+        expect(compareService.getMeanByFilters).not.toHaveBeenCalled();
+        expect(compareService.findResults).not.toHaveBeenCalled();
+      },
+    );
+
+    it('passes the viewer so the service can limit a plot filter', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+      compareService.findResults.mockResolvedValue([{} as never]);
+      compareService.generateReport.mockResolvedValue(Buffer.from('pdf'));
+      const filters = { idsParcela: ['par-1'] };
+
+      await controller.compare({ reference: filters }, user);
+      await controller.compareToReport(
+        { reference: filters, target: filters },
+        user,
+      );
+
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [filters, 'u1'],
+      ]);
+      expect(compareService.findResults.mock.calls).toEqual([
+        [filters, 'u1'],
+        [filters, 'u1'],
+      ]);
+    });
+
     it('rejects the report for a user who does not administer the organization', async () => {
       accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
 

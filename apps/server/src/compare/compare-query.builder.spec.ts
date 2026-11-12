@@ -43,11 +43,8 @@ describe('CompareQueryBuilder', () => {
         ],
       },
     ],
-    [
-      'parcela',
-      { idsParcela: ['par-1'] },
-      { OR: [{ cultivo: { parcela: { id: { in: ['par-1'] } } } }] },
-    ],
+    // Sin saber quién consulta, el filtro por parcelas no coincide con nada
+    ['parcela (anonymous)', { idsParcela: ['par-1'] }, { OR: [{ OR: [] }] }],
     [
       'pais',
       { idPais: 'pais-1' },
@@ -76,6 +73,57 @@ describe('CompareQueryBuilder', () => {
   ])('builds a %s filter', (_name, filters, expectedCondition) => {
     expect(CompareQueryBuilder.build(filters)).toEqual({
       AND: [expectedCondition],
+    });
+  });
+
+  describe('parcela filter', () => {
+    const id = { in: ['par-1', 'par-2'] };
+
+    it('matches only the plots owned by the viewer when they have no consents', () => {
+      expect(
+        CompareQueryBuilder.build({ idsParcela: id.in }, undefined, [], {
+          idUsuario: 'me',
+          consentimientos: [],
+        }),
+      ).toEqual({
+        AND: [
+          {
+            OR: [
+              { OR: [{ cultivo: { parcela: { id, idPropietario: 'me' } } }] },
+            ],
+          },
+        ],
+      });
+    });
+
+    it("limits other owners' plots to the campaigns consented to the viewer", () => {
+      expect(
+        CompareQueryBuilder.build({ idsParcela: id.in }, undefined, [], {
+          idUsuario: 'me',
+          consentimientos: [{ idUsuario: 'u-1', anio: 2023 }],
+        }),
+      ).toEqual({
+        AND: [
+          {
+            OR: [
+              {
+                OR: [
+                  { cultivo: { parcela: { id, idPropietario: 'me' } } },
+                  {
+                    cultivo: {
+                      parcela: { id, idPropietario: 'u-1' },
+                      fechaInicioCampania: {
+                        gte: new Date('2023-01-01T00:00:00.000Z'),
+                        lt: new Date('2024-01-01T00:00:00.000Z'),
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
     });
   });
 
@@ -209,7 +257,7 @@ describe('CompareQueryBuilder', () => {
                 },
               },
             },
-            { cultivo: { parcela: { id: { in: ['par-1'] } } } },
+            { OR: [] },
             { cultivo: { idParcela: { in: ['par-loc'] } } },
             {
               cultivo: {

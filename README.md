@@ -163,6 +163,7 @@ The local backend reads its variables from `.env` (see `.env.example`):
 | `DB_PASSWORD` | Database password (used by `docker-compose.yaml`) |
 | `JWT_SECRET` | Secret used to sign JWT tokens |
 | `OPENROUTER_API_KEY` | OpenRouter API key (optional: without it, reports omit the AI-generated text) |
+| `OPENROUTER_MODEL` | OpenRouter model (optional; defaults to `openai/gpt-oss-120b:nitro`) |
 | `MAILER_EMAIL` | Email account used to send notifications (optional: without `MAILER_*`, new users get no welcome email) |
 | `MAILER_PASSWORD` | Email service password |
 | `MAILER_HOST` / `MAILER_PORT` | SMTP server and port (default `587`); leave `MAILER_HOST` empty to use Gmail |
@@ -176,10 +177,11 @@ built from `DB_USER` and `DB_PASSWORD`.
 
 | Variable | Description |
 |----------|-------------|
-| `TAG` | Image tag: `main`, or `sha-<hash>` to pin a specific version |
+| `TAG` | Image tag for every service, LCA Bridge included (default `main`); see the note below before pinning a version |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Secret used to sign JWT tokens |
 | `OPENROUTER_API_KEY` | OpenRouter API key (optional) |
+| `OPENROUTER_MODEL` | OpenRouter model (optional; defaults to `openai/gpt-oss-120b:nitro`) |
 | `MAILER_EMAIL` / `MAILER_PASSWORD` | Account used to send notifications (optional) |
 | `MAILER_HOST` / `MAILER_PORT` | SMTP server and port (default `587`); leave `MAILER_HOST` empty to use Gmail |
 | `CALC_API_KEY` | Key nginx requires in the `x-api-key` header for `/calc` |
@@ -193,6 +195,7 @@ built from `DB_USER` and `DB_PASSWORD`.
 
 ## Development
 ```bash
+cp .env.example .env   # then adjust the values
 pnpm install
 pnpm --filter common build
 pnpm server:prisma:generate
@@ -246,8 +249,10 @@ docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/cr
 ```
 
 ### Updating
-The `Build images` workflow publishes the images on every push to `main` (tags `main` and `sha-<hash>`). Deployment
-on the server is manual:
+The `Build images` workflow publishes the images on every push to `main` (tags `main` and `sha-<hash>`) and on every
+`vX.Y.Z` git tag (tags `X.Y.Z`, `X.Y` and `sha-<hash>`). LCA Bridge publishes `lca-bridge` and `openlca-ipc` only with
+`main` and its own `sha-<hash>`, so setting `TAG` to a release or to an LCA Compare commit breaks the pull of those two
+images. Deployment on the server is manual:
 
 ```bash
 # from your local machine, only if deploy/compose.yaml has changed
@@ -280,8 +285,9 @@ The script only asks for what the demo needs, either from the environment or int
 | `DEMO_ADMIN_EMAIL` | Email of the demo administrator |
 | `DEMO_PASSWORD` | Password (min. 8 characters) for the administrator and all sample users |
 | `DEMO_PORT` | Optional. Host port for the web app (default `8080`) |
-| `TAG` | Optional. Image tag (default `main`) |
+| `TAG` | Optional. Image tag (default `1.3.0`, set in `deploy/demo/compose.yaml`) |
 | `OPENROUTER_API_KEY` | Optional. Without it, comparison reports omit the AI-generated text |
+| `OPENROUTER_MODEL` | Optional. OpenRouter model for that text |
 
 The internal secrets (`DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`) are generated at random into `deploy/demo/.env` on
 the first run.
@@ -335,6 +341,7 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 ├── deploy/                 # Production compose.yaml and .env.example
 │   └── demo/               # Temporary demo instance (compose.yaml and demo.sh)
 ├── docker/backup/          # Backup image
+├── utils/                  # Development tools (responsive screenshots: `pnpm screenshots`)
 ├── pnpm-workspace.yaml     # pnpm workspace
 ├── turbo.json              # Turborepo pipeline
 └── docker-compose.yaml     # Development database

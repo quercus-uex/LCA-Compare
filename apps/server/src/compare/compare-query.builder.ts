@@ -3,6 +3,12 @@ import { buildCampaignYearRangeFilter } from '../common/helpers/campaign-year.he
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import type { ConsentimientoAceptado } from '../organizacion/organizacion-acceso.service';
 
+/** Quién filtra por parcelas concretas y qué campañas ajenas puede ver */
+export type AccesoParcelas = {
+  idUsuario: string;
+  consentimientos: ConsentimientoAceptado[];
+};
+
 /**
  * Builds the Prisma `where` clause for a comparison query.
  *
@@ -18,11 +24,16 @@ export class CompareQueryBuilder {
    * `consentimientos` son los pares usuario-año aceptados en
    * `filters.idOrganizacion`. Con la organización elegida y ningún par, la
    * condición (`OR` vacío) tampoco coincide con nada.
+   *
+   * `accesoParcelas` limita `filters.idsParcela` a lo que ve quien consulta:
+   * sus propias parcelas y, de las ajenas, solo las campañas consentidas a las
+   * organizaciones que administra. Sin él, `idsParcela` no coincide con nada.
    */
   static build(
     filters: CompareQueryItemDto,
     nearbyParcelaIds?: string[],
     consentimientos: ConsentimientoAceptado[] = [],
+    accesoParcelas?: AccesoParcelas,
   ): Prisma.ResultadoImpactoWhereInput | null {
     const orConditions: Prisma.ResultadoImpactoWhereInput[] = [];
 
@@ -47,8 +58,23 @@ export class CompareQueryBuilder {
     }
 
     if (filters.idsParcela && filters.idsParcela.length > 0) {
+      const id = { in: filters.idsParcela };
       orConditions.push({
-        cultivo: { parcela: { id: { in: filters.idsParcela } } },
+        OR: accesoParcelas
+          ? [
+              {
+                cultivo: {
+                  parcela: { id, idPropietario: accesoParcelas.idUsuario },
+                },
+              },
+              ...accesoParcelas.consentimientos.map(({ idUsuario, anio }) => ({
+                cultivo: {
+                  parcela: { id, idPropietario: idUsuario },
+                  ...buildCampaignYearRangeFilter(anio, anio),
+                },
+              })),
+            ]
+          : [],
       });
     }
 

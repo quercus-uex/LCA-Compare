@@ -221,12 +221,18 @@ describe('OrganizacionService', () => {
         consentimiento('u-a', 2024, 'rechazado', {
           usuario: usuario('u-a', 'Alba', 'Gómez'),
         }),
+        consentimiento(ADMIN.id, 2022, 'aceptado', { usuario: ADMIN }),
         consentimiento(ADMIN.id, 2024, 'aceptado', { usuario: ADMIN }),
+        consentimiento(ADMIN.id, 2023, 'pendiente', { usuario: ADMIN }),
       ]);
 
       const detalle = await service.getDetalle(ORG_ID);
 
       expect(detalle.numMiembros).toBe(1);
+      // Del administrador solo se listan las campañas que aporta
+      expect(detalle.campaniasAdministrador.map((c) => c.anio)).toEqual([
+        2024, 2022,
+      ]);
       expect(detalle.miembros.map((m) => m.usuario.nombre)).toEqual([
         'Alba',
         'Berta',
@@ -382,6 +388,63 @@ describe('OrganizacionService', () => {
           anios: [2024],
         }),
       ).resolves.toEqual({ solicitados: [2024], omitidos: [] });
+    });
+  });
+
+  describe('setCampaniasAdministrador', () => {
+    const where = { idOrganizacion: ORG_ID, idUsuario: ADMIN.id };
+
+    it('accepts the chosen years without notice and drops the rest', async () => {
+      mockDetalle([
+        consentimiento(ADMIN.id, 2024, 'aceptado', { usuario: ADMIN }),
+        consentimiento(ADMIN.id, 2023, 'aceptado', { usuario: ADMIN }),
+      ]);
+
+      const detalle = await service.setCampaniasAdministrador(
+        organizacion,
+        [2023, 2024],
+      );
+
+      expect(detalle.campaniasAdministrador.map((c) => c.anio)).toEqual([
+        2024, 2023,
+      ]);
+      expect(prisma.consentimiento.deleteMany).toHaveBeenCalledWith({
+        where: { ...where, anioCampania: { notIn: [2023, 2024] } },
+      });
+      expect(prisma.consentimiento.updateMany).toHaveBeenCalledWith({
+        where: {
+          ...where,
+          anioCampania: { in: [2023, 2024] },
+          estado: { not: 'aceptado' },
+        },
+        data: {
+          estado: 'aceptado',
+          fechaRespuesta: expect.any(Date) as Date,
+          fechaRevocacion: null,
+        },
+      });
+      expect(prisma.consentimiento.createMany).toHaveBeenCalledWith({
+        data: [2023, 2024].map((anioCampania) => ({
+          ...where,
+          anioCampania,
+          estado: 'aceptado',
+          fechaRespuesta: expect.any(Date) as Date,
+        })),
+        skipDuplicates: true,
+      });
+      expect(prisma.notificacion.create).not.toHaveBeenCalled();
+      expect(mailer.sendAvisoOrganizacionMail).not.toHaveBeenCalled();
+    });
+
+    it('removes every own campaign with an empty list', async () => {
+      mockDetalle([]);
+
+      const detalle = await service.setCampaniasAdministrador(organizacion, []);
+
+      expect(detalle.campaniasAdministrador).toEqual([]);
+      expect(prisma.consentimiento.deleteMany).toHaveBeenCalledWith({
+        where: { ...where, anioCampania: { notIn: [] } },
+      });
     });
   });
 
@@ -594,6 +657,14 @@ describe('OrganizacionService', () => {
           data: { idAdministrador: 'u-1' },
         }),
       );
+      // Las solicitudes que no había aceptado ya no tienen quién las responda
+      expect(prisma.consentimiento.deleteMany).toHaveBeenCalledWith({
+        where: {
+          idOrganizacion: ORG_ID,
+          idUsuario: 'u-1',
+          estado: { not: 'aceptado' },
+        },
+      });
       expect(prisma.notificacion.create).toHaveBeenCalledWith({
         data: {
           idUsuario: 'u-1',

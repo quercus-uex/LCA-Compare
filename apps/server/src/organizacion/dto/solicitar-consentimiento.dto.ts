@@ -12,6 +12,7 @@ import {
 import {
   CAMPANIA_MIN_ANIO,
   campaniaMaxAnio,
+  type CampaniasAdministradorDto as CampaniasAdministradorShape,
   type SolicitarConsentimientoDto as SolicitarConsentimientoShape,
 } from 'common/organizacion';
 
@@ -53,6 +54,18 @@ export class SolicitarConsentimientoDto implements SolicitarConsentimientoShape 
   })
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayUnique()
+  @IsInt({ each: true })
+  @IsAnioCampania({ each: true })
+  anios: number[];
+}
+
+export class CampaniasAdministradorDto implements CampaniasAdministradorShape {
+  @ApiProperty({
+    type: [Number],
+    description: `Años de campaña distintos, de ${CAMPANIA_MIN_ANIO} al siguiente al actual. Vacío para no aportar ninguna`,
+  })
+  @IsArray()
   @ArrayUnique()
   @IsInt({ each: true })
   @IsAnioCampania({ each: true })

@@ -5,7 +5,10 @@ import {
   CreateOrganizacionDto,
   UpdateOrganizacionDto,
 } from './create-organizacion.dto';
-import { SolicitarConsentimientoDto } from './solicitar-consentimiento.dto';
+import {
+  CampaniasAdministradorDto,
+  SolicitarConsentimientoDto,
+} from './solicitar-consentimiento.dto';
 import { ResponderConsentimientosDto } from './responder-consentimientos.dto';
 import { MarcarAvisosLeidosDto } from './marcar-avisos-leidos.dto';
 import { TransferirOrganizacionDto } from './transferir-organizacion.dto';
@@ -87,6 +90,21 @@ describe('organization DTOs', () => {
         anios: [2024],
       });
       expect(result.errors).toEqual(['email']);
+    });
+  });
+
+  describe('CampaniasAdministradorDto', () => {
+    it.each([
+      [[2024, 2023], []],
+      [[], []],
+      [[2024, 2024], ['anios']],
+      [[CAMPANIA_MIN_ANIO - 1], ['anios']],
+      [[campaniaMaxAnio() + 1], ['anios']],
+      ['2024', ['anios']],
+      [undefined, ['anios']],
+    ])('validates the years %p', async (anios, errors) => {
+      const result = await parse(CampaniasAdministradorDto, { anios });
+      expect(result.errors).toEqual(errors);
     });
   });
 

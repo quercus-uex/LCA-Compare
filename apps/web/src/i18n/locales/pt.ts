@@ -663,6 +663,14 @@ export const pt = {
         ajustes: 'Definições',
       },
     },
+    propias: {
+      title: 'As minhas campanhas',
+      hint: 'Escolha as campanhas das suas próprias parcelas que quer contribuir para a organização. Contam no comparador e nas estatísticas como as de qualquer membro, sem pedido.',
+      added: 'Campanha {{anio}} contribuída',
+      removed: 'Campanha {{anio}} retirada',
+      count_one: 'Contribui com {{count}} campanha',
+      count_other: 'Contribui com {{count}} campanhas',
+    },
     miembros: {
       hint: 'Com alguma campanha aceite pode ver as parcelas do membro e usá-las no comparador e nas estatísticas.',
       campaigns: 'Campanhas',
@@ -707,7 +715,7 @@ export const pt = {
       nothingSent: 'Não foi enviado nenhum pedido: as campanhas já estavam pendentes ou aceites.',
       errors: {
         email: 'Introduza um email válido.',
-        ownEmail: 'Não pode pedir acesso a si próprio.',
+        ownEmail: 'Não precisa de pedir acesso a si próprio: contribua com as suas campanhas em «As minhas campanhas», no separador Membros.',
         years: 'Escolha pelo menos uma campanha.',
         userNotFound: 'Não há nenhum utilizador registado com esse email.',
         invalid: 'Verifique o email e as campanhas: não pode pedir acesso a si próprio nem a campanhas fora do intervalo.',

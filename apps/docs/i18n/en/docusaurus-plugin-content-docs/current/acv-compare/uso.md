@@ -98,9 +98,25 @@ In the comparator, the menu offers three data sets, each in JSON or CSV:
 
 ### Export a comparison's traceability
 
-If you manage an organization and have filtered either set by it, the **Export traceability** button downloads the individual results of the campaigns behind the comparison, together with their metadata. It only includes campaigns from organizations you manage, so to export the full comparison both sets must be filtered by one of them. The menu offers **Full comparison**, **Reference only** or **Target only**.
+{/* <!-- coderabbit-ai-generated:v1 --> */}
 
-The content is calculated when you download it and matches the comparison on screen. It includes the applied filters with their names, each set's mean, the aggregated comparison and one row per individual result, with the impact method, the crop (type, campaign, area, production, water consumption and cycle), the plot, the owner (name and email) and the location. It also keeps the impact data exactly as received from openLCA, without averaging. It does not include the plot geometry or other personal data.
+{/* <!-- coderabbit-ai-generated-section:v1:7d63731bac3f5bf448d371b95c22df6d84660ca722f87ad64856f2a6028da17b --> */}
+
+If you manage an organization and have filtered either set by it, the **Export traceability** button downloads the individual results of the campaigns that meet the applied filters, together with their metadata.
+
+{/* <!-- /coderabbit-ai-generated:v1 --> */}
+
+It only includes campaigns from organizations you manage, so to export the full comparison both sets must be filtered by one of them. The menu offers **Full comparison**, **Reference only** or **Target only**.
+
+{/* <!-- coderabbit-ai-generated:v1 --> */}
+
+{/* <!-- coderabbit-ai-generated-section:v1:d10aa5785099a6f3260019bf79c51e18b4e142122d6466fba9659901b893162b --> */}
+
+When you download the export, it reapplies the filters using current data and consent. Its campaigns and averages may therefore differ from the comparison on screen.
+
+{/* <!-- /coderabbit-ai-generated:v1 --> */}
+
+It includes the applied filters with their names, each set's mean, the aggregated comparison and one row per individual result, with the impact method, the crop (type, campaign, area, production, water consumption and cycle), the plot, the owner (name and email) and the location. It also keeps the impact data exactly as received from openLCA, without averaging. It does not include the plot geometry or other personal data.
 
 - **JSON**: full structure with `reference`, `target` and `comparison` where applicable, plus the same individual data.
 - **CSV**: one row per result and impact category, with one column per stage (fertilizers, crop management, pesticides, irrigation system and total) and the set metadata repeated on every row. It uses `;` as the separator and can be opened in a spreadsheet application.

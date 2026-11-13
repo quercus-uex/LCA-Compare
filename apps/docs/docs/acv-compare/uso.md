@@ -128,9 +128,25 @@ En el comparador, el menú ofrece tres conjuntos de datos, cada uno en JSON o CS
 
 ### Exportar la trazabilidad de una comparativa
 
-Si administras una organización y has filtrado alguno de los conjuntos por ella, el botón **Exportar trazabilidad** descarga los resultados individuales de las campañas que han intervenido en la comparativa, además de sus metadatos. Solo incluye campañas de organizaciones que administras, por lo que para exportar la comparativa completa los dos conjuntos deben estar filtrados por una de ellas. El menú permite elegir **Comparativa completa**, **Solo referencia** o **Solo objetivo**.
+{/* <!-- coderabbit-ai-generated:v1 --> */}
 
-El contenido se calcula al descargarlo y coincide con el de la comparativa mostrada. Incluye los filtros aplicados con sus nombres, la media de cada conjunto, la comparativa agregada y una fila por cada resultado individual, con el método de impacto, el cultivo (tipo, campaña, superficie, producción, consumo de agua y ciclo), la parcela, el propietario (nombre y email) y la ubicación. También conserva los datos de impacto tal y como llegaron de openLCA, sin promediar. No incluye la geometría de la parcela ni otros datos personales.
+{/* <!-- coderabbit-ai-generated-section:v1:8eaa1fbe4ff244ff73ce5eb312270a10484c2ee9811476cd1deca269e8a5afc3 --> */}
+
+Si administras una organización y has filtrado alguno de los conjuntos por ella, el botón **Exportar trazabilidad** descarga los resultados individuales de las campañas que cumplen los filtros aplicados, además de sus metadatos.
+
+{/* <!-- /coderabbit-ai-generated:v1 --> */}
+
+Solo incluye campañas de organizaciones que administras, por lo que para exportar la comparativa completa los dos conjuntos deben estar filtrados por una de ellas. El menú permite elegir **Comparativa completa**, **Solo referencia** o **Solo objetivo**.
+
+{/* <!-- coderabbit-ai-generated:v1 --> */}
+
+{/* <!-- coderabbit-ai-generated-section:v1:641c30cf041134fbbe6a2f22bc1334f6e3e53b6ec41c2c5dd687cc66e76e7321 --> */}
+
+Al descargar, la exportación vuelve a aplicar los filtros con los datos y consentimientos vigentes. Por ello, las campañas y las medias pueden diferir de las de la comparativa mostrada.
+
+{/* <!-- /coderabbit-ai-generated:v1 --> */}
+
+Incluye los filtros aplicados con sus nombres, la media de cada conjunto, la comparativa agregada y una fila por cada resultado individual, con el método de impacto, el cultivo (tipo, campaña, superficie, producción, consumo de agua y ciclo), la parcela, el propietario (nombre y email) y la ubicación. También conserva los datos de impacto tal y como llegaron de openLCA, sin promediar. No incluye la geometría de la parcela ni otros datos personales.
 
 - **JSON**: estructura completa con `reference`, `target` y `comparison` cuando correspondan, más los mismos datos individuales.
 - **CSV**: una fila por resultado y categoría de impacto, con una columna por etapa (fertilizantes, manejo del cultivo, pesticidas, sistema de riego y total) y los metadatos del conjunto repetidos en cada fila. Usa `;` como separador y se puede abrir con una hoja de cálculo.

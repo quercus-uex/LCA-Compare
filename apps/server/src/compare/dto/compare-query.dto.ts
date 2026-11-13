@@ -15,6 +15,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type {
+  CompareExportFormat,
+  CompareExportScope,
   CompareQueryItemDto as CompareQueryItemShape,
   CompareReportLanguage,
 } from 'common/compare';
@@ -98,4 +100,25 @@ export class CompareQueryDto {
   @IsOptional()
   @IsIn(COMPARE_REPORT_LANGUAGES)
   language?: CompareReportLanguage;
+}
+
+export const COMPARE_EXPORT_SCOPES: readonly CompareExportScope[] = [
+  'full',
+  'reference',
+  'target',
+];
+
+export const COMPARE_EXPORT_FORMATS: readonly CompareExportFormat[] = [
+  'json',
+  'csv',
+];
+
+export class CompareTraceQueryDto extends CompareQueryDto {
+  @IsOptional()
+  @IsIn(COMPARE_EXPORT_SCOPES)
+  scope?: CompareExportScope;
+
+  @IsOptional()
+  @IsIn(COMPARE_EXPORT_FORMATS)
+  format?: CompareExportFormat;
 }

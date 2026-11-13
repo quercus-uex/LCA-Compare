@@ -7,8 +7,8 @@ sidebar_position: 6
 
 ## GET `/sector/:sectorId/tractor/:devEUI`
 
-Gets the **tractor** activity measurements associated with a sector identified by `sectorId`.  
-It allows querying the total operation minutes, as well as the usage breakdown per detected implement.
+Gets the tractor activity measurements associated with a sector identified by `sectorId`.  
+It returns the total operation minutes and the usage breakdown per detected implement.
 
 ### Parameters
 

@@ -23,7 +23,7 @@ The service requires a running openLCA IPC server. The openLCA database must be 
 docker compose up openlca-ipc
 ```
 
-This compose file publishes the IPC server on host port **3333**, while the service looks for it at `localhost:8080` by default. To run the service outside Docker against this container, set `OLCA_PORT=3333` in the `.env` file at the repository root.
+This compose file publishes the IPC server on host port 3333, while the service looks for it at `localhost:8080` by default. To run the service outside Docker against this container, set `OLCA_PORT=3333` in the `.env` file at the repository root.
 
 ## Start the Development Server
 
@@ -37,7 +37,7 @@ Swagger documentation is available at `http://localhost:3000/docs`.
 
 ## Testing
 
-Tests use **pytest** with the **Starlette** `TestClient` and do not need an openLCA server: the openLCA client and the delivery to LCA-Compare are replaced by mocks (`test/mocks.py`), so the valid input test expects **HTTP 200**. The test input files are located in `test/`.
+Tests use pytest with the Starlette `TestClient` and do not need an openLCA server, because the openLCA client and the delivery to LCA-Compare are replaced by mocks (`test/mocks.py`). As a result, the valid input test expects HTTP 200. The test input files are located in `test/`.
 
 ```bash
 # Run all tests with coverage (equivalent to CI)

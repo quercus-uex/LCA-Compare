@@ -5,9 +5,9 @@ sidebar_position: 5
 
 # Definición de procesos en LCA Bridge
 
-Los **procesos** son el núcleo del cálculo de ACV en LCA Bridge. Cada tipo de cultivo soportado tiene asociado un
-proceso que calcula, a partir de los datos de LCA Capture, las cantidades de los flujos de entrada y salida de sus
-subprocesos en openLCA, siempre **por tonelada de producto**.
+En LCA Bridge, cada tipo de cultivo soportado tiene asociado un **proceso** que calcula, a partir de los datos de LCA
+Capture, las cantidades de los flujos de entrada y salida de sus subprocesos en openLCA, siempre **por tonelada de
+producto**.
 
 Actualmente existen tres procesos implementados:
 
@@ -73,7 +73,7 @@ class Process:
 
 `OlivoProcess` y `VinedoProcess` tienen además `estructuras_flow_name` (`"Estructuras permanentes O"` y
 `"Estructuras permanentes V"`), un quinto subproceso con el acero de la espaldera y los materiales de la caseta de
-riego. Su impacto no tiene lista propia en la respuesta: solo se suma en `impacto_total`.
+riego. Su impacto se suma en `impacto_total`, sin lista propia en la respuesta.
 
 ### Métodos estáticos
 
@@ -102,8 +102,8 @@ class FlowDict:
   distingue con la forma `"nombre [compartimento]"` (p. ej. `"Metribuzin [Emission to soil/agricultural]"`); se
   busca primero esa clave y después el nombre solo.
 - Los **valores** son cantidades por tonelada de producto.
-- Al escribir el subproceso, los intercambios sin valor (salvo el de referencia) se ponen a **0**, para que no quede
-  ningún valor de un cálculo anterior, y se registra un aviso. Las claves que no corresponden a ningún intercambio
+- Al escribir el subproceso, los intercambios sin valor (salvo el de referencia) se ponen a 0 en lugar de
+  conservar el valor de un cálculo anterior, y se registra un aviso. Las claves que no corresponden a ningún intercambio
   se ignoran, también con un aviso.
 
 ### Ejemplo: flujo de fertilizantes en `TomateProcess`
@@ -234,8 +234,8 @@ PROCESS_MAP = {
 
 ### 5. Añadir tests
 
-Los tests no usan openLCA: el cliente se sustituye por los mocks de `test/mocks.py`. Para el nuevo cultivo:
+Los tests no se conectan a openLCA; el cliente se sustituye por los mocks de `test/mocks.py`. Para el nuevo cultivo:
 
 - Añadir una ficha de prueba en `test/` (por ejemplo, `almendro_input.json`).
 - Verificar que `get_all_flows` devuelve los flujos esperados para esa ficha.
-- Verificar que `POST /capture-acv` responde **HTTP 200** con el cliente de openLCA simulado.
+- Verificar que `POST /capture-acv` responde HTTP 200 con el cliente de openLCA simulado.

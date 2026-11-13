@@ -1,6 +1,12 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ParcelaService } from '../parcela/parcela.service';
+import type { Organizacion } from '../generated/prisma/client';
 import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
 import { CompareResultDto } from './dto/compare-result.dto';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
@@ -12,9 +18,18 @@ import { PoblacionService } from '../poblacion/poblacion.service';
 import path from 'node:path';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
-import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
+import {
+  IMPACT_KEYS,
+  type ResultadoImpactoTrace,
+  ResultadoImpactoWithRelations,
+} from './compare.types';
 import { CompareQueryBuilder } from './compare-query.builder';
-import { extractLocationData } from './compare.helpers';
+import { extractLocationData, getCategoryKey } from './compare.helpers';
+import {
+  hasCultivo,
+  type ResultadoImpactoTraceWithCultivo,
+  toTraceResult,
+} from './compare-trace.helpers';
 import {
   ResultadoImpactoDto,
   type ResultadoImpactoItemDto,
@@ -26,23 +41,15 @@ import {
   translateCategory,
   translateCropType,
 } from './compare-report.i18n';
-import type { CompareReportLanguage } from 'common/compare';
-import { getEfCategoryId, normalizeEfName } from 'common/impact';
+import type {
+  CompareExportScope,
+  CompareReportLanguage,
+  CompareTraceDto,
+  CompareTraceFiltersDto,
+  CompareTraceSetDto,
+} from 'common/compare';
 import { errorMessage } from '../common/helpers/error.helper';
 import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
-
-// openLCA no siempre escribe igual el nombre de una categoría; se comparan por
-// su categoría EF o, si no es una conocida, por el nombre normalizado. Los
-// nombres distintos son pocos, así que la clave de cada uno se calcula una vez
-const categoryKeys = new Map<string, string>();
-const getCategoryKey = (name: string): string => {
-  let key = categoryKeys.get(name);
-  if (key === undefined) {
-    key = getEfCategoryId(name) ?? normalizeEfName(name);
-    categoryKeys.set(name, key);
-  }
-  return key;
-};
 
 /**
  * Formats an impact amount with `significant` significant digits. Values
@@ -182,6 +189,148 @@ export class CompareService implements OnModuleDestroy {
   ): Promise<ResultadoImpactoWithRelations[]> {
     const where = await this.buildWhere(filters, viewerId);
     return where ? this.resultadoImpactoService.findMany({ where }) : [];
+  }
+
+  /** Resultados con los metadatos (propietario incluido) de la trazabilidad */
+  async findTraceResults(
+    filters: CompareQueryItemDto,
+    viewerId?: string,
+  ): Promise<ResultadoImpactoTrace[]> {
+    const where = await this.buildWhere(filters, viewerId);
+    return where ? this.resultadoImpactoService.findManyTrace(where) : [];
+  }
+
+  /**
+   * Filtros aplicados con los nombres resueltos, para que el fichero sea
+   * legible. País, provincias y poblaciones son datos de referencia públicos;
+   * los nombres de las parcelas salen de los resultados exportados, así que
+   * nunca se nombra una parcela que el usuario no puede ver.
+   */
+  private async buildTraceFilters(
+    filters: CompareQueryItemDto,
+    results: ResultadoImpactoTraceWithCultivo[],
+    organizacion: Pick<Organizacion, 'id' | 'nombre'>,
+  ): Promise<CompareTraceFiltersDto> {
+    const [paises, provincias, poblaciones] = await Promise.all([
+      filters.idPais
+        ? this.paisService.findMany({ where: { id: filters.idPais } })
+        : Promise.resolve([]),
+      filters.idsProvincia?.length
+        ? this.provinciaService.findMany({
+            where: { id: { in: filters.idsProvincia } },
+          })
+        : Promise.resolve([]),
+      filters.idsPoblacion?.length
+        ? this.poblacionService.findMany({
+            where: { id: { in: filters.idsPoblacion } },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const parcelasVisibles = new Map(
+      results.map(({ cultivo: { parcela } }) => [parcela.id, parcela.nombre]),
+    );
+    const parcelas = (filters.idsParcela ?? []).flatMap((id) => {
+      const nombre = parcelasVisibles.get(id);
+      return nombre === undefined ? [] : [{ id, nombre }];
+    });
+
+    const pais = paises.at(0);
+    return {
+      ...filters,
+      idOrganizacion: organizacion.id,
+      organizacion: { id: organizacion.id, nombre: organizacion.nombre },
+      ...(pais && {
+        pais: { id: pais.id, nombre: pais.nombre, codigo: pais.codigo },
+      }),
+      ...(provincias.length > 0 && {
+        provincias: provincias.map((p) => ({ id: p.id, nombre: p.nombre })),
+      }),
+      ...(poblaciones.length > 0 && {
+        poblaciones: poblaciones.map((p) => ({ id: p.id, nombre: p.nombre })),
+      }),
+      ...(parcelas.length > 0 && { parcelas }),
+    };
+  }
+
+  private async buildTraceSet(
+    filters: CompareQueryItemDto,
+    results: ResultadoImpactoTrace[],
+    organizacion: Pick<Organizacion, 'id' | 'nombre'>,
+  ): Promise<CompareTraceSetDto> {
+    // Los filtros siempre restringen el cultivo, así que todos deberían tenerlo
+    const exportable = results.filter(hasCultivo);
+    const mean = this.getMeanOfResults(exportable);
+    if (!mean)
+      throw new UnprocessableEntityException('No hay datos suficientes.');
+
+    const traceResults = exportable
+      .map(toTraceResult)
+      .sort(
+        (a, b) =>
+          a.cultivo.parcela.nombre.localeCompare(
+            b.cultivo.parcela.nombre,
+            'es',
+          ) ||
+          a.cultivo.fechaInicioCampania.localeCompare(
+            b.cultivo.fechaInicioCampania,
+          ) ||
+          a.id.localeCompare(b.id),
+      );
+
+    return {
+      filters: await this.buildTraceFilters(filters, exportable, organizacion),
+      count: exportable.length,
+      mean,
+      results: traceResults,
+    };
+  }
+
+  /**
+   * Payload de trazabilidad: las mismas filas que alimentan la comparativa,
+   * con sus metadatos, más la media y la comparativa agregada.
+   */
+  async buildTraceExport(params: {
+    scope: CompareExportScope;
+    reference?: {
+      filters: CompareQueryItemDto;
+      results: ResultadoImpactoTrace[];
+      organizacion: Pick<Organizacion, 'id' | 'nombre'>;
+    };
+    target?: {
+      filters: CompareQueryItemDto;
+      results: ResultadoImpactoTrace[];
+      organizacion: Pick<Organizacion, 'id' | 'nombre'>;
+    };
+  }): Promise<CompareTraceDto> {
+    const [reference, target] = await Promise.all([
+      params.reference
+        ? this.buildTraceSet(
+            params.reference.filters,
+            params.reference.results,
+            params.reference.organizacion,
+          )
+        : undefined,
+      params.target
+        ? this.buildTraceSet(
+            params.target.filters,
+            params.target.results,
+            params.target.organizacion,
+          )
+        : undefined,
+    ]);
+
+    return {
+      schemaVersion: 1,
+      generatedAt: new Date().toISOString(),
+      scope: params.scope,
+      ...(reference && { reference }),
+      ...(target && { target }),
+      ...(reference &&
+        target && {
+          comparison: this.compareResults(reference.mean, target.mean),
+        }),
+    };
   }
 
   /**

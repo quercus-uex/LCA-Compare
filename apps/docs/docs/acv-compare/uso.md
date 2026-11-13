@@ -7,7 +7,7 @@ sidebar_position: 3
 
 LCA-Compare recibe los resultados de ACV que calcula **LCA Bridge**. Cuando llega el primer cálculo de un usuario, se
 crea su cuenta y, si el envío de correo está configurado, recibe un correo con su contraseña de acceso. No hay registro
-público: el resto de cuentas las crea un administrador.
+público; el resto de cuentas las crea un administrador.
 
 El correo es este:
 
@@ -45,7 +45,7 @@ identificadores, los datos de su cultivo actual y el historial de todas sus camp
 campaña, una gráfica muestra la evolución de la producción, el rendimiento, el consumo de agua o el impacto total de
 cualquier categoría EF 3.1. **Comparar esta parcela** abre el comparador con la parcela precargada como conjunto
 objetivo o de referencia. Las parcelas marcadas por un administrador como **parcelas de referencia** se identifican con
-la etiqueta «Referencia» junto a su nombre. Si no se pudo determinar la ubicación de la parcela al ingestarla, en lugar
+la etiqueta «Referencia» junto a su nombre. Si no se pudo determinar la ubicación de la parcela al recibirla, en lugar
 del mapa se muestra «Ubicación no disponible»; esas parcelas no aparecen en la vista de mapa del listado ni en los
 filtros por ubicación geográfica del comparador.
 
@@ -97,7 +97,7 @@ Los valores son por kg de producto. El valor de cada conjunto es la **media simp
 cuenta igual, sin ponderar por producción ni superficie. Cada categoría se promedia solo con las campañas que la
 incluyen, de modo que una categoría ausente en una campaña no cuenta como 0.
 
-La **Referencia** actúa siempre como línea base y el **Objetivo** es el conjunto que se evalúa frente a ella:
+La **Referencia** es la línea base y el **Objetivo** es el conjunto que se evalúa frente a ella:
 
 ```
 Diferencia (%) = (objetivo − referencia) / |referencia| × 100
@@ -118,13 +118,24 @@ Tanto en el detalle de un resultado de ACV como en el comparador, el menú **Exp
 **JSON** o **CSV**:
 
 - **JSON**: conserva la estructura completa de la respuesta, incluyendo metadatos y desglose por categorías.
-- **CSV**: genera un archivo de valores separados por punto y coma (`;`) con el desglose por categoría de impacto, listo para abrir en hojas de cálculo.
+- **CSV**: genera un archivo de valores separados por punto y coma (`;`) con el desglose por categoría de impacto, que se puede abrir con cualquier hoja de cálculo.
 
 En el comparador, el menú ofrece tres conjuntos de datos, cada uno en JSON o CSV:
 
 - **Exportar comparativa**: exporta los resultados de ambos conjuntos con los metadatos de los filtros aplicados.
 - **Exportar referencia**: exporta únicamente los valores del conjunto de referencia.
 - **Exportar objetivo**: exporta únicamente los valores del conjunto objetivo.
+
+### Exportar la trazabilidad de una comparativa
+
+Si administras una organización y has filtrado alguno de los conjuntos por ella, el botón **Exportar trazabilidad** descarga los resultados individuales de las campañas que han intervenido en la comparativa, además de sus metadatos. Solo incluye campañas de organizaciones que administras, por lo que para exportar la comparativa completa los dos conjuntos deben estar filtrados por una de ellas. El menú permite elegir **Comparativa completa**, **Solo referencia** o **Solo objetivo**.
+
+El contenido se calcula al descargarlo y coincide con el de la comparativa mostrada. Incluye los filtros aplicados con sus nombres, la media de cada conjunto, la comparativa agregada y una fila por cada resultado individual, con el método de impacto, el cultivo (tipo, campaña, superficie, producción, consumo de agua y ciclo), la parcela, el propietario (nombre y email) y la ubicación. También conserva los datos de impacto tal y como llegaron de openLCA, sin promediar. No incluye la geometría de la parcela ni otros datos personales.
+
+- **JSON**: estructura completa con `reference`, `target` y `comparison` cuando correspondan, más los mismos datos individuales.
+- **CSV**: una fila por resultado y categoría de impacto, con una columna por etapa (fertilizantes, manejo del cultivo, pesticidas, sistema de riego y total) y los metadatos del conjunto repetidos en cada fila. Usa `;` como separador y se puede abrir con una hoja de cálculo.
+
+La exportación usa los consentimientos aceptados en el momento de la descarga. Si después el administrador revoca una campaña o expulsa a un miembro, las campañas revocadas dejan de aparecer en exportaciones posteriores, pero el fichero ya generado no cambia.
 
 ### Generar informe
 
@@ -201,9 +212,9 @@ indicando el correo de un usuario ya registrado y las campañas (años, desde 20
 quiere acceder. El consentimiento se da por usuario y por campaña.
 
 El usuario recibe la solicitud en las notificaciones de la barra de navegación (icono de campana) y, si el envío de
-correo está configurado, también por correo. Desde ahí acepta o rechaza cada campaña, o todas a la vez. **Una campaña
-aceptada solo puede revocarla el administrador de la organización**: el usuario no puede retirarla ni salir de la
-organización. Si rechaza una campaña, el administrador puede volver a pedirla.
+correo está configurado, también por correo. Desde ahí acepta o rechaza cada campaña, o todas a la vez. **Una vez aceptada
+una campaña, el usuario no puede retirarla ni salir de la organización**; solo el administrador de la organización
+puede revocarla. Si rechaza una campaña, el administrador puede volver a pedirla.
 
 Con una campaña aceptada, el administrador puede:
 

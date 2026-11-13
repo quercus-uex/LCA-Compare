@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Utilização
 
-O LCA-Compare recebe os resultados de ACV calculados pelo **LCA Bridge**. Quando chega o primeiro cálculo de um utilizador, é criada a sua conta e, se o envio de email estiver configurado, o utilizador recebe um email com a sua palavra-passe de acesso. Não existe registo público: as restantes contas são criadas por um administrador.
+O LCA-Compare recebe os resultados de ACV calculados pelo **LCA Bridge**. Quando chega o primeiro cálculo de um utilizador, é criada a sua conta e, se o envio de email estiver configurado, o utilizador recebe um email com a sua palavra-passe de acesso. Não existe registo público; as restantes contas são criadas por um administrador.
 
 O email (em espanhol) é este:
 
@@ -31,7 +31,7 @@ Para visualizar as parcelas do seu utilizador, com sessão iniciada selecione *A
 
 A lista mostra cada parcela com a sua localidade, a cultura atual, a área e o número de campanhas. Pode pesquisar por nome, identificador (SIGPAC, referência cadastral ou ID predial) ou localidade, filtrar por cultura atual, por localidade ou só as parcelas de referência, e ordenar por nome, última campanha ou área. As parcelas podem ser vistas como cartões, como tabela ou sobre um mapa, onde cada uma é colorida segundo a sua cultura atual. A pesquisa, os filtros e a vista ficam guardados no endereço da página, pelo que se mantêm ao voltar do detalhe de uma parcela.
 
-Ao abrir uma parcela é apresentado um mapa com o seu polígono (com camada de ruas ou de satélite), a sua localidade, os seus identificadores, os dados da cultura atual e o histórico de todas as campanhas. Se a parcela tiver mais de uma campanha, um gráfico mostra a evolução da produção, do rendimento, do consumo de água ou do impacto total de qualquer categoria EF 3.1. **Comparar esta parcela** abre o comparador com a parcela pré-carregada como conjunto objetivo ou de referência. As parcelas marcadas por um administrador como **parcelas de referência** são identificadas com o distintivo «Referência» junto ao nome. Se não foi possível determinar a localização da parcela ao ingeri-la, é apresentado «Localização não disponível» em vez do mapa; essas parcelas não aparecem na vista de mapa da lista nem nos filtros por localização geográfica do comparador.
+Ao abrir uma parcela é apresentado um mapa com o seu polígono (com camada de ruas ou de satélite), a sua localidade, os seus identificadores, os dados da cultura atual e o histórico de todas as campanhas. Se a parcela tiver mais de uma campanha, um gráfico mostra a evolução da produção, do rendimento, do consumo de água ou do impacto total de qualquer categoria EF 3.1. **Comparar esta parcela** abre o comparador com a parcela pré-carregada como conjunto objetivo ou de referência. As parcelas marcadas por um administrador como **parcelas de referência** são identificadas com o distintivo «Referência» junto ao nome. Se não foi possível determinar a localização da parcela ao recebê-la, é apresentado «Localização não disponível» em vez do mapa; essas parcelas não aparecem na vista de mapa da lista nem nos filtros por localização geográfica do comparador.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Exemplo de parcela" width="600"/>
@@ -69,7 +69,7 @@ O conjunto de **Referência** é obrigatório. Se apenas for especificada a refe
 
 Os valores são por kg de produto. O valor de cada conjunto é a **média simples** das suas campanhas: cada campanha conta o mesmo, sem ponderar por produção nem área. Cada categoria é calculada só com as campanhas que a incluem, pelo que uma categoria ausente numa campanha não conta como 0.
 
-A **Referência** atua sempre como linha de base e o **Alvo** é o conjunto que se avalia em relação a ela:
+A **Referência** é a linha de base e o **Alvo** é o conjunto que se avalia em relação a ela:
 
 ```
 Diferença (%) = (alvo − referência) / |referência| × 100
@@ -88,13 +88,24 @@ Diferença (%) = (alvo − referência) / |referência| × 100
 Tanto no detalhe de um resultado de ACV como no comparador, pode exportar os dados em formato **JSON** ou **CSV** a partir do menu **Exportar**:
 
 - **JSON**: preserva a estrutura completa da resposta, incluindo metadados e discriminação por categorias.
-- **CSV**: gera um ficheiro de valores separados por ponto e vírgula (`;`) com a discriminação por categoria de impacto, pronto para abrir em folhas de cálculo.
+- **CSV**: gera um ficheiro de valores separados por ponto e vírgula (`;`) com a discriminação por categoria de impacto, que pode ser aberto em qualquer folha de cálculo.
 
 No comparador, o menu oferece três conjuntos de dados, cada um em JSON ou CSV:
 
 - **Exportar comparação**: exporta os resultados de ambos os conjuntos com os metadados dos filtros aplicados.
 - **Exportar referência**: exporta apenas os valores do conjunto de referência.
 - **Exportar alvo**: exporta apenas os valores do conjunto alvo.
+
+### Exportar a rastreabilidade de uma comparação
+
+Se administra uma organização e filtrou algum dos conjuntos por ela, o botão **Exportar rastreabilidade** descarrega os resultados individuais das campanhas que integram a comparação, juntamente com os seus metadados. Inclui apenas campanhas de organizações que administra, pelo que, para exportar a comparação completa, os dois conjuntos têm de estar filtrados por uma delas. O menu permite escolher **Comparação completa**, **Apenas referência** ou **Apenas alvo**.
+
+O conteúdo é calculado ao descarregar e coincide com o da comparação apresentada. Inclui os filtros aplicados com os seus nomes, a média de cada conjunto, a comparação agregada e uma linha por cada resultado individual, com o método de impacto, a cultura (tipo, campanha, área, produção, consumo de água e ciclo), a parcela, o proprietário (nome e email) e a localização. Também conserva os dados de impacto tal como chegaram do openLCA, sem calcular médias. Não inclui a geometria da parcela nem outros dados pessoais.
+
+- **JSON**: estrutura completa com `reference`, `target` e `comparison` quando se justifique, mais os mesmos dados individuais.
+- **CSV**: uma linha por resultado e categoria de impacto, com uma coluna por etapa (fertilizantes, maneio da cultura, pesticidas, sistema de rega e total) e os metadados do conjunto repetidos em cada linha. Usa `;` como separador e pode ser aberto numa folha de cálculo.
+
+A exportação usa os consentimentos aceites no momento da descarga. Se o administrador revogar mais tarde uma campanha ou remover um membro, as campanhas revogadas deixam de aparecer em exportações posteriores, mas um ficheiro já gerado não muda.
 
 ### Gerar Relatório
 
@@ -147,7 +158,7 @@ Uma organização permite analisar em conjunto as campanhas de vários utilizado
 
 O administrador pede acesso a outros utilizadores no separador **Pedir acesso** do painel da organização, indicando o email de um utilizador já registado e as campanhas (anos, de 2020 até ao seguinte ao atual) a que quer aceder. O consentimento é dado por utilizador e por campanha.
 
-O utilizador recebe o pedido nas notificações da barra de navegação (ícone de sino) e, se o envio de email estiver configurado, também por email. A partir daí aceita ou rejeita cada campanha, ou todas de uma vez. **Uma campanha aceite só pode ser revogada pelo administrador da organização**: o utilizador não a pode retirar nem sair da organização. Se rejeitar uma campanha, o administrador pode voltar a pedi-la.
+O utilizador recebe o pedido nas notificações da barra de navegação (ícone de sino) e, se o envio de email estiver configurado, também por email. A partir daí aceita ou rejeita cada campanha, ou todas de uma vez. **Depois de aceitar uma campanha, o utilizador não a pode retirar nem sair da organização**; só o administrador da organização a pode revogar. Se rejeitar uma campanha, o administrador pode voltar a pedi-la.
 
 Com uma campanha aceite, o administrador pode:
 

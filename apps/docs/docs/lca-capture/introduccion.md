@@ -19,14 +19,14 @@ https://monitoriza.dtagro.es/api/acv
 ## Filtro por fechas
 
 Los endpoints de sensores admiten dos parámetros de consulta opcionales para acotar el rango de datos. Si no se
-especifican, se devuelven **todos los datos disponibles** del sensor.
+especifican, se devuelven todos los datos disponibles del sensor.
 
 | Tipo    | Nombre      | Requerido | Descripción                                                        |
 | ------- | ----------- | --------- | ------------------------------------------------------------------ |
 | `query` | `startDate` | NO        | Fecha de inicio del rango. Por defecto: `1970-01-01T00:00:00.000Z` |
 | `query` | `endDate`   | NO        | Fecha de fin del rango. Por defecto: fecha y hora actual           |
 
-Las fechas siguen el formato **ISO 8601** (`YYYY-MM-DDTHH:mm:ssZ`).
+Las fechas siguen el formato ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`).
 
 :::note
 El formato de respuesta de los endpoints de sensores no es definitivo y puede cambiar.

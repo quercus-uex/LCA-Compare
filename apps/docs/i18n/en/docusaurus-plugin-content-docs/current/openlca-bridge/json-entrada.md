@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # Input JSON
 
-The `POST /capture-acv` and `POST /capture-acv-coeficientes` endpoints receive as the request body the JSON of a crop exported by **LCA Capture**. The model is generated from the `schema/lca_capture_schema_v1.json` schema in the LCA Bridge repository and does not accept undefined fields: an unknown field, a missing required field, or a wrong type returns **HTTP 422**.
+The `POST /capture-acv` and `POST /capture-acv-coeficientes` endpoints receive in the request body the JSON of a crop exported by LCA Capture. The model is generated from the `schema/lca_capture_schema_v1.json` schema in the LCA Bridge repository and does not accept undefined fields. An unknown field, a missing required field, or a wrong type returns HTTP 422.
 
 Unless another unit is stated, "per production" amounts (`*_produccion`, fertilizers) are expressed **per tonne of product**, since `metadatos.cultivo.produccion` is in t/ha.
 
@@ -40,7 +40,7 @@ The calculation criteria for each field are described in [Process calculation](h
 | `nombre` | `string` | Yes | Plot name. |
 
 :::note
-At least one of the three identifiers (`es_sigpac` with `provincia`, `es_referencia_catastral`, or `pt_id_parcela_predial`) must be provided; otherwise, the service returns **HTTP 400**.
+At least one of the three identifiers (`es_sigpac` with `provincia`, `es_referencia_catastral`, or `pt_id_parcela_predial`) must be provided; otherwise, the service returns HTTP 400.
 :::
 
 ### `metadatos.cultivo`

@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Dependency Installation
 
-LCA-Compare is part of a **pnpm 10** monorepo with **Turborepo**. Install dependencies from the repository root, not from each application separately:
+LCA-Compare is part of a pnpm 10 monorepo with Turborepo. Install dependencies from the repository root, not from each application separately:
 
 ```bash
 pnpm install
@@ -94,7 +94,7 @@ Runs `turbo dev --ui=tui`, which starts the development processes of all package
 pnpm docs:dev
 ```
 
-The Docusaurus documentation lives in `apps/docs` and is served with `docusaurus start --host 0.0.0.0`.
+The Docusaurus documentation is in `apps/docs` and is served with `docusaurus start --host 0.0.0.0`.
 
 ## Create an Administrator
 
@@ -252,4 +252,4 @@ Geographic location is modeled with the `Pais` → `Provincia` → `Poblacion` h
 
 The `esParcelaReferencia` flag (default `false`) can only be set by an administrator and lets the comparator restrict a set to these plots through the `soloParcelasReferencia` filter.
 
-An organization's administrator can access a member's data only for the campaigns that member has accepted: the rule lives in `OrganizacionAccesoService` and is used by the plot and result details, the comparator and the statistics. The campaign is the UTC year of `Cultivo.fechaInicioCampania`. The administrator's own plots count only for the campaigns they contribute themselves (`PUT /organizaciones/:id/campanias-administrador`), stored as accepted consents. `/compare` and `/stats` remain public: `OptionalAuthGuard` identifies the user if they send a valid token, and filtering by an organization they do not manage returns 403. The comparator's `idsParcela` filter also returns 403 without a session; with one it only reaches the user's own plots and, for other owners' plots, the campaigns consented to the organizations the user manages; any other plot is ignored.
+An organization's administrator can access a member's data only for the campaigns that member has accepted. The rule is in `OrganizacionAccesoService`, which is used by the plot and result details, the comparator and the statistics. The campaign is the UTC year of `Cultivo.fechaInicioCampania`. The administrator's own plots count only for the campaigns they contribute themselves (`PUT /organizaciones/:id/campanias-administrador`), stored as accepted consents. `/compare` and `/stats` remain public. `OptionalAuthGuard` identifies the user if they send a valid token, and filtering by an organization they do not manage returns 403. The comparator's `idsParcela` filter also returns 403 without a session; with one it only reaches the user's own plots and, for other owners' plots, the campaigns consented to the organizations the user manages; any other plot is ignored.

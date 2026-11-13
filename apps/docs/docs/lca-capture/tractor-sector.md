@@ -7,8 +7,8 @@ sidebar_position: 6
 
 ## GET `/sector/:sectorId/tractor/:devEUI`
 
-Obtiene las mediciones de actividad del **tractor** asociadas a un sector identificado por `sectorId`.  
-Permite consultar los minutos totales de operación, así como el detalle de uso por cada apero detectado.
+Obtiene las mediciones de actividad del tractor asociadas a un sector identificado por `sectorId`.  
+Devuelve los minutos totales de operación y el detalle de uso de cada apero detectado.
 
 ### Parámetros
 

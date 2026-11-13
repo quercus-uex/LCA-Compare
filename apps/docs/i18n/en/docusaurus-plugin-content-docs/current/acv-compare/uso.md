@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Usage
 
-LCA-Compare receives the LCA results calculated by **LCA Bridge**. When a user's first calculation arrives, their account is created and, if email sending is configured, they receive an email with their access password. There is no public sign-up: all other accounts are created by an administrator.
+LCA-Compare receives the LCA results calculated by **LCA Bridge**. When a user's first calculation arrives, their account is created and, if email sending is configured, they receive an email with their access password. There is no public sign-up; all other accounts are created by an administrator.
 
 The email (in Spanish) reads:
 
@@ -31,7 +31,7 @@ To view the plots for your user, sign in and select *My plots* in the navigation
 
 The list shows each plot with its town, current crop, area and number of campaigns. You can search by name, identifier (SIGPAC, cadastral reference or Portuguese land ID) or town, filter by current crop, by town or by reference plots only, and sort by name, latest campaign or area. Plots can be shown as cards, as a table or on a map, where each one is colored by its current crop. The search, filters and view are kept in the page address, so they are preserved when you come back from a plot's details.
 
-Opening a plot shows a map with its polygon (with a streets or satellite layer), its town, its identifiers, the data of its current crop and the history of all its campaigns. If the plot has more than one campaign, a chart shows how production, yield, water consumption or the total impact of any EF 3.1 category evolves. **Compare this plot** opens the comparator with the plot preloaded as the target or reference set. Plots marked by an administrator as **reference plots** are identified with a «Reference» badge next to their name. If the plot's location could not be determined when it was ingested, «Location not available» is shown instead of the map; those plots do not appear in the list's map view or in the comparator's geographic location filters.
+Opening a plot shows a map with its polygon (with a streets or satellite layer), its town, its identifiers, the data of its current crop and the history of all its campaigns. If the plot has more than one campaign, a chart shows how production, yield, water consumption or the total impact of any EF 3.1 category evolves. **Compare this plot** opens the comparator with the plot preloaded as the target or reference set. Plots marked by an administrator as **reference plots** are identified with a "Reference" badge next to their name. If the plot's location could not be determined when it was received, "Location not available" is shown instead of the map; those plots do not appear in the list's map view or in the comparator's geographic location filters.
 
 <p align="center">
     <img src="/img/acv-compare/parcela_ejemplo.png" alt="Plot example" width="600"/>
@@ -51,7 +51,7 @@ The comparator opens from **Compare** in the navigation bar.
     <img src="/img/acv-compare/boton_comparador.png" alt="Compare button in the navigation bar" width="600"/>
 </p>
 
-Compare two crop sets, each defined by these filters:
+It compares two crop sets, each defined by these filters:
 
 - Country
 - Province
@@ -69,7 +69,7 @@ The **Reference** set is required. If only the reference is specified, the avera
 
 Values are per kg of product. Each set's value is the **simple mean** of its campaigns: every campaign counts the same, without weighting by production or area. Each category is averaged only over the campaigns that include it, so a category missing from a campaign does not count as 0.
 
-The **Reference** always acts as the baseline and the **Target** is the set being evaluated against it:
+The **Reference** is the baseline and the **Target** is the set evaluated against it:
 
 ```
 Difference (%) = (target − reference) / |reference| × 100
@@ -88,13 +88,24 @@ Difference (%) = (target − reference) / |reference| × 100
 Both in the LCA result detail and in the comparator, you can export the data in **JSON** or **CSV** format from the **Export** menu:
 
 - **JSON**: keeps the full response structure, including metadata and category breakdown.
-- **CSV**: generates a semicolon-separated (`;`) file with the impact category breakdown, ready to open in spreadsheets.
+- **CSV**: generates a semicolon-separated (`;`) file with the impact category breakdown, which can be opened in any spreadsheet application.
 
 In the comparator, the menu offers three data sets, each in JSON or CSV:
 
 - **Export comparison**: exports the results of both sets with the metadata of the applied filters.
 - **Export reference**: exports only the values from the reference set.
 - **Export target**: exports only the values from the target set.
+
+### Export a comparison's traceability
+
+If you manage an organization and have filtered either set by it, the **Export traceability** button downloads the individual results of the campaigns behind the comparison, together with their metadata. It only includes campaigns from organizations you manage, so to export the full comparison both sets must be filtered by one of them. The menu offers **Full comparison**, **Reference only** or **Target only**.
+
+The content is calculated when you download it and matches the comparison on screen. It includes the applied filters with their names, each set's mean, the aggregated comparison and one row per individual result, with the impact method, the crop (type, campaign, area, production, water consumption and cycle), the plot, the owner (name and email) and the location. It also keeps the impact data exactly as received from openLCA, without averaging. It does not include the plot geometry or other personal data.
+
+- **JSON**: full structure with `reference`, `target` and `comparison` where applicable, plus the same individual data.
+- **CSV**: one row per result and impact category, with one column per stage (fertilizers, crop management, pesticides, irrigation system and total) and the set metadata repeated on every row. It uses `;` as the separator and can be opened in a spreadsheet application.
+
+The export uses the consents accepted at download time. If the administrator later revokes a campaign or removes a member, the revoked campaigns no longer appear in later exports, but an already generated file does not change.
 
 ### Generate Report
 
@@ -134,7 +145,7 @@ The **Statistics** route shows an aggregated view of the results registered in L
 
 - Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of each category. The year-over-year variation compares only the plots with a result in both the selected year and the previous one (at least 3), so farms joining or leaving do not affect it.
 - Province and town ranking. Clicking an entry opens the comparator with that province or town preloaded as the Reference set. The town ranking can be limited to a province and includes a search box that shows each town's position.
-- Time evolution of impacts, with a trend (sparkline) chart per category.
+- Impact trends over time, with a trend (sparkline) chart per category.
 - Impact profile: a radar chart that allows comparing two provinces or two towns.
 - Heat map by province and category; clicking a category name reorders the map by its values.
 - Crop distribution and relationship between production and impact.
@@ -147,7 +158,7 @@ An organization lets you analyze the campaigns of several users together. Any si
 
 The administrator asks other users for access from the **Request access** tab of the organization's panel, entering the email of an already registered user and the campaigns (years, from 2020 to the one after the current year) they want to access. Consent is given per user and per campaign.
 
-The user receives the request in the navigation bar notifications (bell icon) and, if email sending is configured, also by email. From there they accept or reject each campaign, or all of them at once. **An accepted campaign can only be revoked by the organization's administrator**: the user cannot withdraw it or leave the organization. If they reject a campaign, the administrator can request it again.
+The user receives the request in the navigation bar notifications (bell icon) and, if email sending is configured, also by email. From there they accept or reject each campaign, or all of them at once. **Once a campaign is accepted, the user cannot withdraw it or leave the organization**; only the organization's administrator can revoke it. If they reject a campaign, the administrator can request it again.
 
 With an accepted campaign, the administrator can:
 

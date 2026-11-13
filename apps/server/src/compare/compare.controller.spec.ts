@@ -12,6 +12,7 @@ jest.mock('./compare.service', () => ({
 import { CompareController } from './compare.controller';
 import type { CompareService } from './compare.service';
 import { CompareQueryDto, CompareQueryItemDto } from './dto/compare-query.dto';
+import type { CompareTraceDto } from 'common/compare';
 import { IMPACT_KEYS } from './compare.types';
 import type { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
 import type { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
@@ -34,11 +35,24 @@ function makeImpactDto(
   return base as unknown as ResultadoImpactoDto;
 }
 
+async function streamToText(file: StreamableFile): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of file.getStream()) {
+    chunks.push(Buffer.from(chunk as Uint8Array));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
 describe('CompareController', () => {
   let compareService: jest.Mocked<
     Pick<
       CompareService,
-      'getMeanByFilters' | 'compareResults' | 'findResults' | 'generateReport'
+      | 'getMeanByFilters'
+      | 'compareResults'
+      | 'findResults'
+      | 'findTraceResults'
+      | 'generateReport'
+      | 'buildTraceExport'
     >
   >;
   let accesoService: jest.Mocked<
@@ -52,7 +66,9 @@ describe('CompareController', () => {
       getMeanByFilters: jest.fn(),
       compareResults: jest.fn(),
       findResults: jest.fn(),
+      findTraceResults: jest.fn(),
       generateReport: jest.fn(),
+      buildTraceExport: jest.fn(),
     };
     controller = new CompareController(
       compareService as unknown as CompareService,
@@ -240,6 +256,229 @@ describe('CompareController', () => {
       ).rejects.toThrow(UnprocessableEntityException);
 
       expect(compareService.compareResults).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('exportTrace', () => {
+    const org1 = { id: 'org-1', nombre: 'Cooperativa Sur' };
+    const org2 = { id: 'org-2', nombre: 'Cooperativa Norte' };
+    const refFilters: CompareQueryItemDto = {
+      idOrganizacion: org1.id,
+      tipoCultivo: 'trigo',
+    };
+    const tarFilters: CompareQueryItemDto = {
+      idOrganizacion: org2.id,
+      tipoCultivo: 'cebada',
+    };
+    const user = { sub: 'u1', email: 'u1@example.com' };
+    const forbidden = new ForbiddenException(
+      'No eres el administrador de esta organización',
+    );
+
+    beforeEach(() => {
+      accesoService.getOrganizacionAdministrada.mockImplementation(
+        (id: string) => Promise.resolve({ id, nombre: `Org ${id}` }) as never,
+      );
+    });
+
+    it('rejects an anonymous requester with 403 before touching any data', async () => {
+      await expect(
+        controller.exportTrace({ reference: refFilters, scope: 'reference' }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(accesoService.getOrganizacionAdministrada).not.toHaveBeenCalled();
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+    });
+
+    it('rejects a set that is not filtered by an organization with 403', async () => {
+      await expect(
+        controller.exportTrace(
+          { reference: { idPais: 'p1' }, scope: 'reference' },
+          user,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(accesoService.getOrganizacionAdministrada).not.toHaveBeenCalled();
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+    });
+
+    it('rejects a target set without an organization with 403', async () => {
+      await expect(
+        controller.exportTrace(
+          { reference: refFilters, target: { tipoCultivo: 'cebada' } },
+          user,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+    });
+
+    it('rejects a target-only export without target filters with 400', async () => {
+      await expect(
+        controller.exportTrace(
+          { reference: refFilters, scope: 'target' },
+          user,
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+    });
+
+    it('rejects a user who does not administer the organization with 403', async () => {
+      accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
+
+      await expect(
+        controller.exportTrace(
+          { reference: refFilters, target: tarFilters },
+          user,
+        ),
+      ).rejects.toStrictEqual(forbidden);
+
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+      expect(compareService.buildTraceExport).not.toHaveBeenCalled();
+    });
+
+    it('checks each distinct organization once against the requester', async () => {
+      compareService.findTraceResults.mockResolvedValue([
+        { id: 'ri-1' },
+      ] as never);
+      compareService.buildTraceExport.mockResolvedValue({
+        schemaVersion: 1,
+        generatedAt: '2026-01-01T00:00:00.000Z',
+        scope: 'full',
+      });
+
+      await controller.exportTrace(
+        { reference: refFilters, target: tarFilters },
+        user,
+      );
+
+      expect(accesoService.getOrganizacionAdministrada.mock.calls).toEqual([
+        [org1.id, 'u1'],
+        [org2.id, 'u1'],
+      ]);
+    });
+
+    it('rejects a full export without target filters with 400', async () => {
+      await expect(
+        controller.exportTrace({ reference: refFilters, scope: 'full' }, user),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        controller.exportTrace({ reference: refFilters }, user),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(compareService.findTraceResults).not.toHaveBeenCalled();
+    });
+
+    it('rejects an empty set with UnprocessableEntityException', async () => {
+      compareService.findTraceResults.mockResolvedValue([]);
+
+      await expect(
+        controller.exportTrace(
+          { reference: refFilters, scope: 'reference' },
+          user,
+        ),
+      ).rejects.toThrow(UnprocessableEntityException);
+
+      expect(compareService.buildTraceExport).not.toHaveBeenCalled();
+    });
+
+    it('returns a self-contained JSON file with the individual results', async () => {
+      const refResults = [{ id: 'ri-1' }] as never;
+      const tarResults = [{ id: 'ri-2' }] as never;
+      const trace: CompareTraceDto = {
+        schemaVersion: 1,
+        generatedAt: '2026-01-01T00:00:00.000Z',
+        scope: 'full',
+      };
+      compareService.findTraceResults
+        .mockResolvedValueOnce(refResults)
+        .mockResolvedValueOnce(tarResults);
+      compareService.buildTraceExport.mockResolvedValue(trace);
+
+      const file = await controller.exportTrace(
+        { reference: refFilters, target: tarFilters, format: 'json' },
+        user,
+      );
+
+      expect(compareService.findTraceResults.mock.calls).toEqual([
+        [refFilters, 'u1'],
+        [tarFilters, 'u1'],
+      ]);
+      expect(compareService.buildTraceExport).toHaveBeenCalledWith({
+        scope: 'full',
+        reference: {
+          filters: refFilters,
+          results: refResults,
+          organizacion: { id: org1.id, nombre: `Org ${org1.id}` },
+        },
+        target: {
+          filters: tarFilters,
+          results: tarResults,
+          organizacion: { id: org2.id, nombre: `Org ${org2.id}` },
+        },
+      });
+      expect(file).toBeInstanceOf(StreamableFile);
+      expect(file.getHeaders().type).toContain('application/json');
+      expect(file.getHeaders().disposition).toMatch(
+        /^attachment; filename="trazabilidad-full-\d{14}\.json"$/,
+      );
+      expect(JSON.parse(await streamToText(file))).toEqual(trace);
+    });
+
+    it('exports only the target set when the scope is target', async () => {
+      const tarResults = [{ id: 'ri-2' }] as never;
+      compareService.findTraceResults.mockResolvedValue(tarResults);
+      compareService.buildTraceExport.mockResolvedValue({
+        schemaVersion: 1,
+        generatedAt: '2026-01-01T00:00:00.000Z',
+        scope: 'target',
+      });
+
+      await controller.exportTrace(
+        { reference: refFilters, target: tarFilters, scope: 'target' },
+        user,
+      );
+
+      expect(compareService.findTraceResults.mock.calls).toEqual([
+        [tarFilters, 'u1'],
+      ]);
+      expect(compareService.buildTraceExport).toHaveBeenCalledWith({
+        scope: 'target',
+        target: {
+          filters: tarFilters,
+          results: tarResults,
+          organizacion: { id: org2.id, nombre: `Org ${org2.id}` },
+        },
+      });
+      expect(accesoService.getOrganizacionAdministrada.mock.calls).toEqual([
+        [org2.id, 'u1'],
+      ]);
+    });
+
+    it('returns a CSV file with the wide header', async () => {
+      compareService.findTraceResults.mockResolvedValue([
+        { id: 'ri-1' },
+      ] as never);
+      compareService.buildTraceExport.mockResolvedValue({
+        schemaVersion: 1,
+        generatedAt: '2026-01-01T00:00:00.000Z',
+        scope: 'reference',
+      });
+
+      const file = await controller.exportTrace(
+        { reference: refFilters, scope: 'reference', format: 'csv' },
+        user,
+      );
+
+      expect(file.getHeaders().type).toContain('text/csv');
+      expect(file.getHeaders().disposition).toMatch(
+        /^attachment; filename="trazabilidad-reference-\d{14}\.csv"$/,
+      );
+      const text = await streamToText(file);
+      expect(text.startsWith('\ufeffversion_esquema;generado_en;')).toBe(true);
+      expect(text.split('\r\n')).toHaveLength(1);
     });
   });
 

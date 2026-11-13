@@ -5,7 +5,7 @@ sidebar_position: 5
 
 # Process Definition in LCA Bridge
 
-**Processes** are the core of LCA calculation in LCA Bridge. Each supported crop type has an associated process that calculates, from the LCA Capture data, the amounts of the input and output flows of its openLCA subprocesses, always **per tonne of product**.
+In LCA Bridge, each supported crop type has an associated **process** that calculates, from the LCA Capture data, the amounts of the input and output flows of its openLCA subprocesses, always **per tonne of product**.
 
 There are currently three implemented processes:
 
@@ -60,13 +60,13 @@ class Process:
 | Attribute | Description |
 |---|---|
 | `name` | Crop name; it matches the `PROCESS_MAP` key. |
-| `uuid` | UUID of the product system in the openLCA database. It is the object that is calculated. |
+| `uuid` | UUID of the product system in the openLCA database. This is the object that gets calculated. |
 | `fertilizantes_flow_name` | Name of the fertilizer subprocess (and of its reference flow) in openLCA. |
 | `manejo_cultivo_flow_name` | Name of the crop management subprocess. |
 | `pesticidas_flow_name` | Name of the pesticide subprocess. |
 | `sistema_riego_flow_name` | Name of the irrigation system subprocess. |
 
-`OlivoProcess` and `VinedoProcess` also have `estructuras_flow_name` (`"Estructuras permanentes O"` and `"Estructuras permanentes V"`), a fifth subprocess with the trellis steel and the irrigation shed materials. Its impact has no list of its own in the response: it is only added to `impacto_total`.
+`OlivoProcess` and `VinedoProcess` also have `estructuras_flow_name` (`"Estructuras permanentes O"` and `"Estructuras permanentes V"`), a fifth subprocess with the trellis steel and the irrigation shed materials. Its impact is added to `impacto_total`, with no list of its own in the response.
 
 ### Static Methods
 
@@ -93,7 +93,7 @@ class FlowDict:
 
 - **Keys** are the flow names in openLCA. An elementary flow that appears in several compartments is distinguished with the form `"name [compartment]"` (e.g. `"Metribuzin [Emission to soil/agricultural]"`); that key is looked up first, then the name alone.
 - **Values** are amounts per tonne of product.
-- When the subprocess is written, exchanges without a value (except the reference one) are set to **0**, so that no value from a previous calculation remains, and a warning is logged. Keys that do not match any exchange are ignored, also with a warning.
+- When the subprocess is written, exchanges without a value (except the reference one) are set to 0 instead of keeping the value from a previous calculation, and a warning is logged. Keys that do not match any exchange are ignored, also with a warning.
 
 ### Example: Fertilizer Flow in `TomateProcess`
 
@@ -213,8 +213,8 @@ PROCESS_MAP = {
 
 ### 5. Add Tests
 
-Tests do not use openLCA: the client is replaced by the mocks in `test/mocks.py`. For the new crop:
+Tests do not connect to openLCA; the client is replaced by the mocks in `test/mocks.py`. For the new crop:
 
 - Add a test input file in `test/` (for example, `almendro_input.json`).
 - Verify that `get_all_flows` returns the expected flows for that input.
-- Verify that `POST /capture-acv` returns **HTTP 200** with the mocked openLCA client.
+- Verify that `POST /capture-acv` returns HTTP 200 with the mocked openLCA client.

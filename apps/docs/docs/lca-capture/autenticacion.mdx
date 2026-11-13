@@ -7,7 +7,7 @@ import RedactedSecret from '@site/src/components/RedactedSecret';
 
 # Autenticación requerida
 
-Todos los endpoints requieren un **token JWT válido** en el encabezado `Authorization`:
+Todos los endpoints requieren un token JWT válido en el encabezado `Authorization`:
 
 ```
 Authorization: Bearer <token>
@@ -17,8 +17,8 @@ Para obtener este token, se utiliza el siguiente endpoint de autenticación:
 
 ## POST `/auth`
 
-Este endpoint permite la autenticación de aplicaciones o clientes externos a monitoriza.dtagro.es. Con las
-credenciales correctas del cliente, el servicio devuelve un **token JWT de acceso firmado**.
+Este endpoint autentica aplicaciones o clientes externos a monitoriza.dtagro.es. Con las credenciales correctas del
+cliente, el servicio devuelve un token JWT de acceso firmado.
 
 ### Parámetros
 
@@ -27,7 +27,7 @@ credenciales correctas del cliente, el servicio devuelve un **token JWT de acces
 | `body` | `clientId`     | SÍ        | Identificador único de la aplicación o cliente |
 | `body` | `clientSecret` | SÍ        | Clave privada de autenticación para el cliente |
 
-Para obtener el token JWT, se deben enviar siempre las siguientes **credenciales estáticas**:
+Para obtener el token JWT, se deben enviar siempre las siguientes credenciales estáticas:
 
 <RedactedSecret
   id="lca-capture-auth-credentials"

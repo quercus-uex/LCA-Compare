@@ -21,12 +21,19 @@ export type {
 } from './stats.js';
 
 export type {
+  CompareExportFormat,
+  CompareExportScope,
   CompareFilterDto,
   CompareQueryItemDto,
   CompareQueryDto,
   CompareReportLanguage,
   CompareResultItemDto,
   CompareResultDto,
+  CompareTraceDto,
+  CompareTraceFiltersDto,
+  CompareTracePropietarioDto,
+  CompareTraceResultDto,
+  CompareTraceSetDto,
 } from './compare.js';
 
 export type { Pais, Provincia, Poblacion } from './location.js';

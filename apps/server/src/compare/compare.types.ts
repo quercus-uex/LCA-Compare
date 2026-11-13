@@ -4,4 +4,7 @@ export {
   type EfCategoryId,
   type ImpactKey,
 } from 'common/impact';
-export type { ResultadoImpactoWithRelations } from '../resultadoimpacto/resultado-impacto.service';
+export type {
+  ResultadoImpactoTrace,
+  ResultadoImpactoWithRelations,
+} from '../resultadoimpacto/resultado-impacto.service';

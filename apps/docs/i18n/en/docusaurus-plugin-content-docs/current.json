@@ -16,7 +16,7 @@
     "description": "The label for category 'LCA Bridge' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.LCA Bridge.link.generated-index.description": {
-    "message": "Documentation for LCA Bridge, the bridge service between LCA Capture and openLCA.",
+    "message": "Documentation for LCA Bridge, the service that calculates the LCA of LCA Capture data with openLCA.",
     "description": "The generated-index page description for category 'LCA Bridge' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.LCA-Compare": {

@@ -339,7 +339,7 @@
     "description": "The title of the tag list page"
   },
   "homepage.capture.description": {
-    "message": "API for the sensor data (flow meter, fertilizer and tractor) that feeds the LCA calculation."
+    "message": "API for the sensor data (flowmeter, fertilizer and tractor) used in the LCA calculation."
   },
   "homepage.link.introduction": {
     "message": "Introduction"

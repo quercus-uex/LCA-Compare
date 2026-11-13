@@ -21,7 +21,7 @@ O servidor IPC do openLCA utiliza a base de dados para executar os cálculos de 
 </p>
 
 :::note
-O subdiretório `openlca-docker/` é um projeto **Maven/Java** independente que constrói a imagem do contentor do servidor IPC do openLCA. Não tem relação com o código Python do serviço ponte.
+O subdiretório `openlca-docker/` é um projeto Maven/Java independente que constrói a imagem do contentor do servidor IPC do openLCA. Não tem relação com o código Python do LCA Bridge.
 :::
 
 ## Variáveis de Ambiente
@@ -62,7 +62,7 @@ O `docker-compose.yml` do repositório do LCA Bridge serve para levantar o servi
 docker compose up -d
 ```
 
-O serviço ponte fica na porta **3000** e o servidor IPC na **3333**. Os resultados são enviados para `http://host.docker.internal:8000` (o backend do LCA-Compare em desenvolvimento), salvo se for definida `LCA_COMPARE_BASE_URL`.
+O LCA Bridge fica na porta 3000 e o servidor IPC na 3333. Os resultados são enviados para `http://host.docker.internal:8000` (o backend do LCA-Compare em desenvolvimento), salvo se for definida `LCA_COMPARE_BASE_URL`.
 
 ## Verificação
 

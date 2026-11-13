@@ -5,7 +5,7 @@ sidebar_position: 5
 
 # Definição de Processos no LCA Bridge
 
-Os **processos** são o núcleo do cálculo de ACV no LCA Bridge. Cada tipo de cultura suportado tem associado um processo que calcula, a partir dos dados do LCA Capture, as quantidades dos fluxos de entrada e saída dos seus subprocessos em openLCA, sempre **por tonelada de produto**.
+No LCA Bridge, cada tipo de cultura suportado tem associado um **processo** que calcula, a partir dos dados do LCA Capture, as quantidades dos fluxos de entrada e saída dos seus subprocessos em openLCA, sempre **por tonelada de produto**.
 
 Atualmente existem três processos implementados:
 
@@ -60,13 +60,13 @@ class Process:
 | Atributo | Descrição |
 |---|---|
 | `name` | Nome da cultura; coincide com a chave de `PROCESS_MAP`. |
-| `uuid` | UUID do sistema de produto na base de dados do openLCA. É o objeto que é calculado. |
+| `uuid` | UUID do sistema de produto na base de dados do openLCA. É o objeto calculado. |
 | `fertilizantes_flow_name` | Nome do subprocesso (e do seu fluxo de referência) de fertilizantes em openLCA. |
 | `manejo_cultivo_flow_name` | Nome do subprocesso de maneio da cultura. |
 | `pesticidas_flow_name` | Nome do subprocesso de pesticidas. |
 | `sistema_riego_flow_name` | Nome do subprocesso de sistema de rega. |
 
-`OlivoProcess` e `VinedoProcess` têm ainda `estructuras_flow_name` (`"Estructuras permanentes O"` e `"Estructuras permanentes V"`), um quinto subprocesso com o aço da espaldeira e os materiais da casa de rega. O seu impacto não tem lista própria na resposta: só é somado em `impacto_total`.
+`OlivoProcess` e `VinedoProcess` têm ainda `estructuras_flow_name` (`"Estructuras permanentes O"` e `"Estructuras permanentes V"`), um quinto subprocesso com o aço da espaldeira e os materiais da casa de rega. O seu impacto é somado em `impacto_total`, sem lista própria na resposta.
 
 ### Métodos Estáticos
 
@@ -93,7 +93,7 @@ class FlowDict:
 
 - As **chaves** são os nomes dos fluxos em openLCA. Um fluxo elementar que aparece em vários compartimentos distingue-se com a forma `"nombre [compartimento]"` (p. ex. `"Metribuzin [Emission to soil/agricultural]"`); procura-se primeiro essa chave e depois só o nome.
 - Os **valores** são quantidades por tonelada de produto.
-- Ao escrever o subprocesso, as trocas sem valor (exceto a de referência) são postas a **0**, para que não fique nenhum valor de um cálculo anterior, e é registado um aviso. As chaves que não correspondem a nenhuma troca são ignoradas, também com um aviso.
+- Ao escrever o subprocesso, as trocas sem valor (exceto a de referência) são postas a 0 em vez de manterem o valor de um cálculo anterior, e é registado um aviso. As chaves que não correspondem a nenhuma troca são ignoradas, também com um aviso.
 
 ### Exemplo: Fluxo de Fertilizantes em `TomateProcess`
 
@@ -213,8 +213,8 @@ PROCESS_MAP = {
 
 ### 5. Adicionar Testes
 
-Os testes não usam o openLCA: o cliente é substituído pelos mocks de `test/mocks.py`. Para a nova cultura:
+Os testes não se ligam ao openLCA; o cliente é substituído pelos mocks de `test/mocks.py`. Para a nova cultura:
 
 - Adicione uma ficha de teste em `test/` (por exemplo, `almendro_input.json`).
 - Verifique que `get_all_flows` devolve os fluxos esperados para essa ficha.
-- Verifique que `POST /capture-acv` responde **HTTP 200** com o cliente do openLCA simulado.
+- Verifique que `POST /capture-acv` responde HTTP 200 com o cliente do openLCA simulado.

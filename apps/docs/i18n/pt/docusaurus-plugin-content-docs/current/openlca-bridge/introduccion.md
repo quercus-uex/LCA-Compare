@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introdução
 
-**LCA Bridge** é um microsserviço **Python 3.12** com **FastAPI** que atua como ponte entre a plataforma **LCA Capture** e o motor de cálculo de Avaliação do Ciclo de Vida **openLCA**. Recebe os dados de uma cultura exportados pelo LCA Capture, calcula o seu impacto ambiental em openLCA através do [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) e envia o resultado para o [LCA-Compare](https://github.com/quercus-uex/LCA-Compare) para visualização e comparação.
+**LCA Bridge** é um microsserviço Python 3.12 com FastAPI que liga a plataforma LCA Capture ao openLCA, o motor de cálculo de Avaliação do Ciclo de Vida. Recebe os dados de uma cultura exportados pelo LCA Capture, calcula o seu impacto ambiental em openLCA através do [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) e envia o resultado para o [LCA-Compare](https://github.com/quercus-uex/LCA-Compare) para visualização e comparação.
 
 O LCA Bridge, o servidor IPC do openLCA e o LCA-Compare são implantados no mesmo Docker Compose (`deploy/compose.yaml`) e comunicam através da sua rede interna. O fluxo de dados é: LCA Capture → LCA Bridge (cálculo) → LCA-Compare (persistência e visualização).
 
@@ -28,7 +28,7 @@ A configuração (variáveis de ambiente) é detalhada em [Implantação](./desp
 
 ## Stack Tecnológico
 
-- **Python 3.12** com **FastAPI**; dependências geridas com **uv** (`pyproject.toml` + `uv.lock`)
+- **Python 3.12** com FastAPI; dependências geridas com uv (`pyproject.toml` + `uv.lock`)
 - **openLCA** como motor de cálculo de ACV (servidor IPC Java) com a base de dados de processos montada como volume
 - **Docker** para implantação
 - **pytest** (com cobertura) para testes

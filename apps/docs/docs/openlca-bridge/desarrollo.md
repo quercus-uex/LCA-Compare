@@ -27,7 +27,7 @@ El servicio necesita un servidor IPC de openLCA en ejecución. La base de datos 
 docker compose up openlca-ipc
 ```
 
-Este compose publica el servidor IPC en el puerto **3333** del host, mientras que el servicio lo busca por defecto en
+Este compose publica el servidor IPC en el puerto 3333 del host, mientras que el servicio lo busca por defecto en
 `localhost:8080`. Para ejecutar el servicio fuera de Docker contra este contenedor, define `OLCA_PORT=3333` en el
 `.env` de la raíz del repositorio.
 
@@ -43,9 +43,9 @@ La documentación Swagger estará disponible en `http://localhost:3000/docs`.
 
 ## Testing
 
-Los tests usan **pytest** con el `TestClient` de **Starlette** y no necesitan un servidor de openLCA: el cliente de
-openLCA y el envío a LCA-Compare se sustituyen por mocks (`test/mocks.py`), por lo que el test de entrada válida
-espera **HTTP 200**. Las fichas de prueba están en `test/`.
+Los tests usan pytest con el `TestClient` de Starlette y no necesitan un servidor de openLCA, porque el cliente de
+openLCA y el envío a LCA-Compare se sustituyen por mocks (`test/mocks.py`). Por eso el test de entrada válida espera
+HTTP 200. Las fichas de prueba están en `test/`.
 
 ```bash
 # Ejecutar todos los tests con cobertura (equivalente a CI)

@@ -7,8 +7,8 @@ sidebar_position: 5
 
 ## GET `/plot/:plotId/tractor/:devEUI`
 
-Gets the **tractor** activity measurements associated with a plot identified by `plotId`.  
-It allows querying the total operation minutes, as well as the usage breakdown per detected implement.
+Gets the tractor activity measurements associated with a plot identified by `plotId`.  
+It returns the total operation minutes and the usage breakdown per detected implement.
 
 ### Parameters
 

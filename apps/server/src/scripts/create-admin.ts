@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import * as path from 'node:path';
-import * as argon2 from 'argon2';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hashPassword } from '../auth/auth.helpers';
 
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
@@ -73,7 +73,7 @@ async function createAdmin() {
       process.exit(1);
     }
 
-    const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+    const passwordHash = await hashPassword(password);
 
     const user = await prisma.usuario.create({
       data: {

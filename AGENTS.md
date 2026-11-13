@@ -9,7 +9,7 @@
 - Docs is a Docusaurus 3 app in `apps/docs`; locales are `es` (default), `en`, and `pt`, and Lunr search covers all three. Translations mirror `apps/docs/docs/` under `apps/docs/i18n/<locale>/docusaurus-plugin-content-docs/current/`; keep the three locales in sync when editing docs.
 - `packages/common` is a real TypeScript package; backend/frontend import shared DTOs/constants from subpath exports such as `common/impact`, `common/compare`, and `common/api`.
 - `docker/backup/` holds the DB backup sidecar image (Postgres 17 client + aws-cli + busybox cron); it lives outside `apps/*` and `packages/*` on purpose, so pnpm/Turborepo never touch it.
-- `.opencode/`, `opencode.json`, and `.agents/` are OpenCode config, not app code; load the `customize-opencode` skill before editing them. `openspec/` holds the OpenSpec change/spec workflow artifacts (skills under `.opencode/skills/openspec-*`).
+- `.opencode/`, `opencode.json`, and `.agents/` are OpenCode config, not app code; load the `customize-opencode` skill before editing them.
 
 ## Commands
 
@@ -59,12 +59,15 @@ pnpm docs:typecheck
 - Swagger is served by `src/main.ts` at `/docs`; `apps/server/nest-cli.json` enables the `@nestjs/swagger` plugin.
 - Nest build copies `src/templates/*.hbs` and `src/ai/prompts/*.hbs` into `dist/src`; keep report/prompt assets under those paths.
 - Server TypeScript uses `module`/`moduleResolution: "nodenext"`; common package also uses NodeNext and explicit `.js` extensions in source re-exports.
-- Backend Jest only matches `apps/server/src/**/*.spec.ts`; it maps `common/*` to `packages/common/src/*.ts`, but `common/impact` and `@openrouter/sdk` use CJS mocks in `apps/server/test/mocks`.
+- Backend Jest only matches `apps/server/src/**/*.spec.ts`; it maps `common/*` to `packages/common/src/*.ts`, which `apps/server/test/transform-common.cjs` transpiles to CommonJS (ts-jest would emit ESM there). Only `@openrouter/sdk` uses a CJS mock, in `apps/server/test/mocks`.
 
 ## Frontend Notes
 
 - TailwindCSS 4 is wired through `@tailwindcss/vite`; there is no `tailwind.config.js`.
 - DaisyUI 5 is configured in CSS via `@plugin "daisyui"` and the custom `acv` theme in `apps/web/src/index.css`.
+- Shared UI components live in `apps/web/src/components/ui` (catalog route `/dev/ui`, dev builds only). ESLint `no-restricted-syntax` rejects DaisyUI component classes covered by the library outside that folder.
+- `pnpm screenshots` (`utils/responsive-screenshots.mjs`) captures every view at mobile/tablet/desktop sizes into `utils/screenshots/` (gitignored); it needs web and backend running plus `SHOTS_EMAIL`/`SHOTS_PASSWORD`.
+- `pnpm docs:screenshots` (`utils/docs-screenshots.mjs`) regenerates the LCA Compare images in `apps/docs/static/img/acv-compare/` (same requirements, plus `pdftoppm`); the ER diagram is hand-maintained in `utils/docs-er.html` from the Prisma schema. Review the images before committing: they show the account's data.
 - `apps/web/tsconfig.app.json` is strict and enables `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noUncheckedSideEffectImports`, `noImplicitOverride`, and `noUncheckedIndexedAccess` (the last makes `arr[i]`/`obj[k]` return `T | undefined`, so index reads need null guards).
 - Production Nginx (`apps/web/nginx.conf`, rendered as an envsubst template) proxies `/api/` to `lca-compare-backend:3000/` (except `/api/capture`, blocked with 403 because only LCA-Bridge ingests data, via the internal network) and `/calc` to `lca-bridge:3000/capture-acv`; `/calc` rejects requests without header `x-api-key: $CALC_API_KEY` (401). A second `server` block serves `quercusstatus.duckdns.org` from `uptime-kuma:3001`.
 - Upstreams use `server <name> resolve` with Docker's DNS (`resolver 127.0.0.11`), so nginx starts even if a target container is missing (502) and follows IP changes when a service is recreated; this needs nginx >= 1.27.3 (`nginx:alpine`).

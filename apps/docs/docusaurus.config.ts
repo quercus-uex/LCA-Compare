@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'LCA Capture / LCA Bridge / LCA Compare',
+  title: 'LCA Capture / LCA Bridge / LCA-Compare',
   tagline: '',
   favicon: '/img/icon.svg',
 
@@ -15,7 +15,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://acv-compare-docs.netlify.app',
+  url: 'https://lca-stack-docs.netlify.app',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -74,10 +74,20 @@ const config: Config = {
     colorMode: {
       respectPrefersColorScheme: true,
     },
+    docs: {
+      sidebar: {
+        hideable: true,
+        autoCollapseCategories: true,
+      },
+    },
+    tableOfContents: {
+      minHeadingLevel: 2,
+      maxHeadingLevel: 3,
+    },
     navbar: {
-      title: 'Documentación de LCA Capture, LCA Bridge y LCA Compare',
+      title: 'Documentación LCA',
       logo: {
-        alt: 'LCA Compare',
+        alt: '',
         src: '/img/icon.svg',
       },
       items: [
@@ -88,14 +98,13 @@ const config: Config = {
           label: 'Documentación',
         },
         {
-          href: 'https://github.com/quercus-uex/LCA-Bridge',
-          label: 'LCA Bridge',
+          type: 'dropdown',
+          label: 'GitHub',
           position: 'right',
-        },
-        {
-          href: 'https://github.com/quercus-uex/LCA-Compare',
-          label: 'LCA Compare',
-          position: 'right',
+          items: [
+            {href: 'https://github.com/quercus-uex/LCA-Bridge', label: 'LCA Bridge'},
+            {href: 'https://github.com/quercus-uex/LCA-Compare', label: 'LCA-Compare'},
+          ],
         },
         {
           type: 'localeDropdown',
@@ -104,17 +113,18 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       links: [],
       logo: {
-        alt: 'TID4Agro',
+        alt: 'Interreg España–Portugal, cofinanciado por la Unión Europea. TID4AGRO',
         src: '/img/tid4agro-banner.png',
       },
-      copyright: `Documentación de LCA Capture, LCA Bridge y LCA Compare.`,
+      copyright: `Documentación de LCA Capture, LCA Bridge y LCA-Compare.`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      theme: prismThemes.vsLight,
+      darkTheme: prismThemes.vsDark,
+      additionalLanguages: ['bash', 'http'],
     },
   } satisfies Preset.ThemeConfig,
 };

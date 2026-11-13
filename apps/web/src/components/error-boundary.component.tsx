@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { Button } from './ui/index.ts';
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -39,28 +40,24 @@ const DefaultFallback = ({ error, reset }: { error: Error; reset: () => void }) 
       role="alert"
       className="flex flex-col items-center justify-center gap-4 py-16 text-center"
     >
-      <h2 className="text-2xl font-semibold text-error">
+      <h2 className="text-2xl font-semibold text-danger">
         {t('common.errors.boundaryTitle')}
       </h2>
-      <p className="text-base-content/70 max-w-md">
+      <p className="text-muted max-w-md">
         {t('common.errors.boundaryDescription')}
       </p>
       {import.meta.env.DEV && (
-        <pre className="text-xs text-base-content/60 max-w-xl overflow-auto bg-base-200 p-3 rounded-box">
+        <pre className="text-xs text-muted max-w-xl overflow-auto bg-base-200 p-3 rounded-box">
           {error.message}
         </pre>
       )}
       <div className="flex gap-2">
-        <button type="button" className="btn btn-primary" onClick={reset}>
+        <Button variant="primary" onClick={reset}>
           {t('common.errors.retry')}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => void navigate('/', { replace: true })}
-        >
+        </Button>
+        <Button variant="ghost" onClick={() => void navigate('/', { replace: true })}>
           {t('common.errors.goHome')}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,14 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
-import { ParcelaService } from '../parcela/parcela.service';
+
+/** Cultivo, parcela y ubicación de cada resultado, que usa el informe */
+const RESULTADO_IMPACTO_LOCATION_INCLUDE = {
+  cultivo: {
+    include: {
+      parcela: {
+        include: { poblacion: { include: { provincia: true } } },
+      },
+    },
+  },
+} satisfies Prisma.ResultadoImpactoInclude;
+
+export type ResultadoImpactoWithRelations = Prisma.ResultadoImpactoGetPayload<{
+  include: typeof RESULTADO_IMPACTO_LOCATION_INCLUDE;
+}>;
 
 @Injectable()
 export class ResultadoImpactoService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly parcelaService: ParcelaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(
     where: Prisma.ResultadoImpactoWhereUniqueInput,
@@ -32,19 +43,7 @@ export class ResultadoImpactoService {
     cursor?: Prisma.ResultadoImpactoWhereUniqueInput;
     where?: Prisma.ResultadoImpactoWhereInput;
     orderBy?: Prisma.ResultadoImpactoOrderByWithRelationInput;
-  }): Promise<
-    Prisma.ResultadoImpactoGetPayload<{
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } };
-            };
-          };
-        };
-      };
-    }>[]
-  > {
+  }): Promise<ResultadoImpactoWithRelations[]> {
     const { skip, take, cursor, where, orderBy } = params;
 
     return this.prisma.resultadoImpacto.findMany({
@@ -53,36 +52,17 @@ export class ResultadoImpactoService {
       cursor,
       where,
       orderBy,
-      include: {
-        cultivo: {
-          include: {
-            parcela: {
-              include: { poblacion: { include: { provincia: true } } },
-            },
-          },
-        },
-      },
+      include: RESULTADO_IMPACTO_LOCATION_INCLUDE,
     });
   }
 
-  /**
-   * Resultados de todas las campañas de las parcelas dentro del radio. El tipo
-   * de cultivo y los años se filtran después, igual que con el resto de
-   * filtros de ubicación.
-   */
-  async findManyAroundPoint(
-    lat: number,
-    long: number,
-    range: number,
-  ): Promise<Pick<ResultadoImpacto, 'id'>[]> {
-    const parcelas = await this.parcelaService.findManyByPointRange(
-      lat,
-      long,
-      range,
-    );
+  /** Solo los datos de impacto, para calcular medias sin cargar las relaciones */
+  async findManyDatos(
+    where: Prisma.ResultadoImpactoWhereInput,
+  ): Promise<Pick<ResultadoImpacto, 'datos'>[]> {
     return this.prisma.resultadoImpacto.findMany({
-      where: { cultivo: { idParcela: { in: parcelas.map((p) => p.id) } } },
-      select: { id: true },
+      where,
+      select: { datos: true },
     });
   }
 

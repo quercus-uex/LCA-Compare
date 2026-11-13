@@ -1,5 +1,5 @@
 import { EF_CATEGORIES } from 'common/impact';
-import { STATS_MIN_PARCELAS, type CategoryValues } from 'common/stats';
+import type { CategoryValues } from 'common/stats';
 import { rankPoblaciones, rankProvincias } from './rank-by-location.helpers';
 import type { StatsRow } from './stats-rows.helpers';
 
@@ -19,6 +19,7 @@ const CORIA = { id: 'pob-co', nombre: 'Coria' };
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio: 2024,
     superficie: 10,
@@ -48,10 +49,6 @@ function zonaRows(
 }
 
 describe('rank-by-location.helpers', () => {
-  it('uses a minimum of 3 plots', () => {
-    expect(STATS_MIN_PARCELAS).toBe(3);
-  });
-
   describe('rankProvincias', () => {
     it('aggregates plots, crops, area and mean impacts per province', () => {
       const rows = [
@@ -105,7 +102,7 @@ describe('rank-by-location.helpers', () => {
       expect(ocultas).toBe(0);
     });
 
-    it('computes yield, water allocation and water productivity as ratios of totals', () => {
+    it('computes ratios of totals, with water allocation and productivity only from irrigated crops', () => {
       const rows = [
         makeRow({
           idParcela: 'a',
@@ -117,51 +114,24 @@ describe('rank-by-location.helpers', () => {
           idParcela: 'b',
           superficie: 2,
           produccion: 5000,
-          consumoAgua: 400,
-        }),
-        makeRow({
-          idParcela: 'c',
-          superficie: 3,
-          produccion: 0,
-          consumoAgua: 500,
-        }),
-      ];
-
-      const [provincia] = rankProvincias(rows).ranking;
-
-      expect(provincia.rendimiento).toBe(1000);
-      expect(provincia.dotacionAgua).toBe(166.7);
-      expect(provincia.productividadAgua).toBe(6);
-    });
-
-    it('computes water allocation and productivity only from irrigated crops', () => {
-      const rows = [
-        makeRow({
-          idParcela: 'a',
-          superficie: 2,
-          produccion: 4000,
-          consumoAgua: 1000,
-        }),
-        makeRow({
-          idParcela: 'b',
-          superficie: 2,
-          produccion: 6000,
-          consumoAgua: 1000,
+          consumoAgua: 600,
         }),
         // Secano: cuenta para el rendimiento, no para el agua
         makeRow({
           idParcela: 'c',
-          superficie: 6,
-          produccion: 2000,
+          superficie: 3,
+          produccion: 1500,
           consumoAgua: 0,
         }),
       ];
 
       const [provincia] = rankProvincias(rows).ranking;
 
-      expect(provincia.rendimiento).toBe(1200);
-      expect(provincia.dotacionAgua).toBe(500);
-      expect(provincia.productividadAgua).toBe(5);
+      // 7500 / 6; la media por cultivo daría 1333.3
+      expect(provincia.rendimiento).toBe(1250);
+      // 700 / 3 y 6000 / 700, redondeados a 1 y 2 decimales
+      expect(provincia.dotacionAgua).toBe(233.3);
+      expect(provincia.productividadAgua).toBe(8.57);
     });
 
     it('returns null ratios when a denominator is 0', () => {

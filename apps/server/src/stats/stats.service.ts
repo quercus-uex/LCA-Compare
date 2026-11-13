@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { GlobalStatsDto, GlobalStatsQuery } from 'common/stats';
 import { PrismaService } from '../prisma/prisma.service';
+import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 import { aggregateEvolucionByYear } from './helpers/evolucion-temporal.helpers';
 import { computeKpis } from './helpers/kpi.helpers';
 import {
@@ -27,11 +28,14 @@ export class StatsService {
   private dataset: { rows: StatsRow[]; loadedAt: number } | null = null;
   private loading: Promise<StatsRow[]> | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accesoService: OrganizacionAccesoService,
+  ) {}
 
   async getGlobalStats(query: GlobalStatsQuery = {}): Promise<GlobalStatsDto> {
-    const { anio, tipoCultivo } = query;
-    const rows = await this.getDataset();
+    const { anio, tipoCultivo, idOrganizacion } = query;
+    const rows = await this.getRows(idOrganizacion);
 
     const filtered = filterRows(rows, { anio, tipoCultivo });
     const previous =
@@ -58,6 +62,24 @@ export class StatsService {
       aniosDisponibles: uniqueSorted(rows.map((r) => r.anio)),
       tiposCultivoDisponibles: uniqueSorted(rows.map((r) => r.tipo)),
     };
+  }
+
+  /**
+   * Cultivos del dataset; con organización, solo los de las campañas que le
+   * han consentido (quién puede pedirlo lo comprueba el controlador). Los
+   * consentimientos se leen en cada petición: la caché es común a todos.
+   */
+  private async getRows(idOrganizacion?: string): Promise<StatsRow[]> {
+    if (!idOrganizacion) return this.getDataset();
+
+    const [rows, consentimientos] = await Promise.all([
+      this.getDataset(),
+      this.accesoService.getConsentimientosAceptados(idOrganizacion),
+    ]);
+    const consentidos = new Set(
+      consentimientos.map(({ idUsuario, anio }) => `${idUsuario}:${anio}`),
+    );
+    return rows.filter((r) => consentidos.has(`${r.idPropietario}:${r.anio}`));
   }
 
   invalidateCache(): void {

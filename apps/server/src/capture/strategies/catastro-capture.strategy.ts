@@ -26,22 +26,23 @@ export class CatastroCaptureStrategy implements CaptureStrategy {
 
   async resolveParcela(mParcela: ParcelaMetadata): Promise<ParcelaResolution> {
     const refCat = mParcela.es_referencia_catastral!;
-    const polygon = await resolvePolygonSafely(
-      this.logger,
-      `refCat ${refCat}`,
-      () => this.catastroService.getPolygon(refCat),
-    );
-
     const provinciaCatastro = Number.parseInt(refCat.slice(0, 2));
     const poblacionCatastro = Number.parseInt(refCat.slice(2, 5));
-    const poblacion = await findPoblacionSafely(
-      this.logger,
-      `refCat ${refCat}`,
-      this.poblacionService,
-      provinciaCatastro,
-      poblacionCatastro,
-      'ES',
-    );
+
+    // Ninguna de las dos búsquedas lanza: un fallo se registra y devuelve null
+    const [polygon, poblacion] = await Promise.all([
+      resolvePolygonSafely(this.logger, `refCat ${refCat}`, () =>
+        this.catastroService.getPolygon(refCat),
+      ),
+      findPoblacionSafely(
+        this.logger,
+        `refCat ${refCat}`,
+        this.poblacionService,
+        provinciaCatastro,
+        poblacionCatastro,
+        'ES',
+      ),
+    ]);
 
     return {
       polygon,

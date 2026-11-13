@@ -5,43 +5,32 @@ sidebar_position: 1
 
 # Introdução
 
-O sistema é composto por três serviços independentes que trabalham de forma coordenada para oferecer uma solução completa de cálculo, visualização e comparação da **Avaliação do Ciclo de Vida (ACV)** de culturas agrícolas.
+A plataforma calcula, visualiza e compara a **Avaliação do Ciclo de Vida (ACV)** de culturas agrícolas através de três serviços independentes.
 
 ## Serviços
 
 ### LCA Capture
 
-**LCA Capture** expõe uma API para obter os dados registados por diferentes sensores associados ao cálculo de ACV, incluindo **caudalímetro**, **fertilizante** e **trator**. Estes dados são consultados através de endpoints autenticados com JWT e podem ser filtrados por intervalos de datas.
+**LCA Capture** é a plataforma que regista os dados agronómicos das culturas. A sua API disponibiliza os dados dos sensores associados ao cálculo de ACV (**caudalímetro**, **fertilizante** e **trator**), com autenticação JWT e filtros por intervalo de datas.
 
 ### LCA Bridge
 
-**LCA Bridge** é um microsserviço desenvolvido em **Python** com **FastAPI** que atua como ponte entre a plataforma **LCA Capture** e o motor de cálculo de ACV **openLCA**, com base de dados em formato **.zolca**. A sua responsabilidade é receber os dados agronómicos de uma cultura (parcela, tipo de cultura, insumos, rega, maquinaria, etc.), executar o cálculo de impacto ambiental delegando no [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) e enviar o resultado estruturado para o LCA Compare.
+**LCA Bridge** é um microsserviço em **Python** com **FastAPI** que recebe os dados de uma cultura (parcela, insumos, rega, maquinaria…), calcula o seu impacto ambiental com o [servidor IPC do openLCA](https://github.com/GreenDelta/olca-ipc-container) segundo o processo do seu tipo de cultura (tomate, oliveira ou vinha) e envia o resultado para o LCA-Compare.
 
-O serviço expõe um único endpoint, `POST /capture-acv`, e seleciona automaticamente o processo de cálculo adequado de acordo com o tipo de cultura (`TomateProcess`, `OlivoProcess` ou `VinedoProcess`).
+### LCA-Compare
 
-### LCA Compare
-
-**LCA Compare** é uma aplicação web formada por um **backend NestJS** e um **frontend React** responsável pela persistência, visualização e comparação dos resultados de ACV gerados pelo LCA Bridge. Entre as suas funcionalidades destacam-se:
-
-- Gestão de parcelas com integração de **SIGPAC**, **Catastro** e identificador predial português para representação geoespacial.
-- Visualização de resultados de ACV discriminados por categoria de impacto (fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total).
-- Comparador entre dois conjuntos de culturas com filtros por localização, tipo de cultura, campanha e outros critérios.
-- Dashboard de estatísticas globais com KPIs, evolução temporal, rankings territoriais e distribuição por culturas.
-- Geração de relatórios em PDF com resumo e recomendações assistidas por **IA** (OpenRouter).
-- Painel de administração para utilizadores, parcelas, culturas, métodos de impacto e dados territoriais, com autenticação JWT.
+**LCA-Compare** é uma aplicação web (backend NestJS e frontend React) que guarda os resultados de ACV e permite consultá-los por parcela e campanha, compará-los entre conjuntos de culturas, gerar relatórios em PDF e analisá-los em estatísticas globais ou dentro de uma organização. Ver [Introdução ao LCA-Compare](../acv-compare/introduccion.md).
 
 ## Como Interagem
 
-**LCA Capture** é um serviço independente que inicia o fluxo enviando os dados da cultura para o **LCA Bridge**. A
-comunicação interna entre **LCA Bridge**, **LCA Compare** e **openLCA** é realizada através da **rede Docker da
-plataforma**, já que os três são implantados com o mesmo Docker Compose, o que permite um fluxo de dados desacoplado:
+O LCA Bridge, o servidor IPC do openLCA e o LCA-Compare são implantados com o mesmo Docker Compose e comunicam através da sua rede interna:
 
-1. **LCA Capture** envia os dados de uma cultura para o endpoint `POST /capture-acv` do **LCA Bridge**.
-2. **LCA Bridge** executa o cálculo de impacto ambiental em **openLCA** e constrói o resultado estruturado.
-3. O resultado é enviado através de um `POST /capture` para o backend do **LCA Compare**, que o persiste na base de dados PostgreSQL associando-o ao utilizador, parcela e cultura correspondentes.
-4. O utilizador pode consultar os resultados, compará-los com outras culturas e gerar relatórios a partir da interface web do **LCA Compare**.
+1. Os dados de uma cultura chegam ao **LCA Bridge** através de `POST /calc`, a única rota do LCA Bridge exposta ao exterior (protegida com chave de API).
+2. O **LCA Bridge** calcula o impacto ambiental no **openLCA** e constrói o resultado estruturado.
+3. O LCA Bridge envia o resultado para o endpoint `POST /capture` do **LCA-Compare**, que o guarda em PostgreSQL associado ao utilizador, à parcela e à cultura, e cria o utilizador e a parcela se não existirem.
+4. O utilizador consulta os resultados, compara-os e gera relatórios a partir da interface web do **LCA-Compare**.
 
-O envio de resultados do LCA Bridge para o LCA Compare é realizado em modo *best-effort*: se o LCA Compare não estiver disponível, o erro é registado no log sem interromper a resposta ao cliente.
+O envio para o LCA-Compare é *best-effort*: se o LCA-Compare não estiver disponível, o LCA Bridge regista o erro no seu log e responde na mesma ao cliente com o resultado.
 
 ## Diagrama da Arquitetura de Software
 

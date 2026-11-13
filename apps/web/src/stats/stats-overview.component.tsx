@@ -5,11 +5,8 @@ import {
   getEfCategory,
   type EfCategoryId,
 } from '../common/constants.ts';
-import {
-  formatImpactValue,
-  formatInteger,
-  formatPercent,
-} from './stats-formatters.ts';
+import { formatImpactValue, formatNumber, formatPercent } from '../common/format.ts';
+import { Badge, type BadgeTone, Card } from '../components/ui/index.ts';
 import type { KpiDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -23,15 +20,13 @@ type Props = {
 };
 
 // En todas las categorías EF un valor menor es mejor
-const yoyClass = (value: number) =>
-  value < 0 ? 'text-success-content bg-success' : value > 0 ? 'text-error-content bg-error' : 'bg-base-200';
+const yoyTone = (value: number): BadgeTone =>
+  value < 0 ? 'success' : value > 0 ? 'error' : 'neutral';
 
 const YoyBadge = ({ value, small = false }: { value: number; small?: boolean }) => (
-  <span
-    className={`badge ${small ? 'badge-xs' : 'badge-sm'} border-0 font-mono ${yoyClass(value)}`}
-  >
+  <Badge tone={yoyTone(value)} size={small ? 'xs' : 'sm'} className="font-mono">
     {value < 0 ? '↓' : value > 0 ? '↑' : '='} {formatPercent(Math.abs(value))}
-  </span>
+  </Badge>
 );
 
 export const StatsOverview = ({
@@ -51,19 +46,19 @@ export const StatsOverview = ({
     {
       icon: <FiGrid />,
       label: t('stats.kpis.plots'),
-      value: formatInteger(kpis.totalParcelas),
+      value: formatNumber(kpis.totalParcelas),
       desc: t('stats.kpis.inProvinces', { count: numProvincias }),
     },
     {
       icon: <FiBox />,
       label: t('stats.kpis.crops'),
-      value: formatInteger(kpis.totalCultivos),
+      value: formatNumber(kpis.totalCultivos),
       desc: t('stats.kpis.cropsWithImpact', { count: kpis.cultivosConImpacto }),
     },
     {
       icon: <FiActivity />,
       label: t('stats.kpis.area'),
-      value: formatInteger(kpis.superficieTotal),
+      value: formatNumber(kpis.superficieTotal),
       unit: t('stats.kpis.areaUnit'),
       // Sin año, la misma parcela suma su superficie en cada campaña
       desc:
@@ -76,24 +71,20 @@ export const StatsOverview = ({
   return (
     <section className="space-y-3">
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
-        <div
-          className="card bg-base-100 shadow-sm border-l-8"
-          style={{ borderLeftColor: selected?.color }}
-        >
-          <div className="card-body gap-1 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-base-content/60">
-              {t('stats.kpis.meanPerCrop')}
-            </p>
-            <p className="font-semibold" style={{ color: selected?.color }}>
+        {/* El borde lleva el color de la categoría */}
+        <Card density="compact" className="border-l-8" style={{ borderLeftColor: selected?.color }}>
+          <div className="flex flex-col gap-1">
+            <p className="eyebrow">{t('stats.kpis.meanPerCrop')}</p>
+            <p className="font-semibold">
               {getCategoryLabel(selectedCategory)}
             </p>
             <p className="flex flex-wrap items-baseline gap-x-2">
               <span className="text-3xl font-bold tabular-nums">
                 {formatImpactValue(selectedValue, '0')}
               </span>
-              <span className="text-sm text-base-content/60">{selected?.unit}</span>
+              <span className="text-sm text-muted">{selected?.unit}</span>
             </p>
-            <div className="mt-1 text-xs text-base-content/60">
+            <div className="mt-1 text-xs text-muted">
               {anio === undefined ? (
                 t('stats.kpis.yoyHint')
               ) : selectedYoy === null ? (
@@ -109,7 +100,7 @@ export const StatsOverview = ({
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         <div className="stats stats-vertical bg-base-100 shadow-sm sm:stats-horizontal">
           {contextStats.map((stat) => (
@@ -121,7 +112,7 @@ export const StatsOverview = ({
               <div className="stat-value text-2xl tabular-nums">
                 {stat.value}
                 {stat.unit && (
-                  <span className="ml-1 text-sm font-normal text-base-content/60">
+                  <span className="ml-1 text-sm font-normal text-muted">
                     {stat.unit}
                   </span>
                 )}
@@ -150,7 +141,7 @@ export const StatsOverview = ({
                 }`}
                 style={{ borderLeftColor: cat.color }}
               >
-                <span className="truncate text-xs font-semibold" style={{ color: cat.color }}>
+                <span className="truncate text-xs font-semibold">
                   {getCategoryLabel(cat.id)}
                 </span>
                 <span className="flex items-baseline justify-between gap-1">
@@ -159,7 +150,7 @@ export const StatsOverview = ({
                   </span>
                   {yoy !== null && <YoyBadge value={yoy} small />}
                 </span>
-                <span className="truncate text-[10px] text-base-content/50">{cat.unit}</span>
+                <span className="truncate text-xs text-muted">{cat.unit}</span>
               </button>
             );
           })}

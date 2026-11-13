@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResultadoImpactoService } from './resultado-impacto.service';
 import { ResultadoImpactoController } from './resultado-impacto.controller';
-import { ParcelaModule } from '../parcela/parcela.module';
+import { OrganizacionAccesoModule } from '../organizacion/organizacion-acceso.module';
 
 @Module({
-  imports: [ParcelaModule],
+  imports: [OrganizacionAccesoModule],
   controllers: [ResultadoImpactoController],
   providers: [PrismaService, ResultadoImpactoService],
   exports: [ResultadoImpactoService],

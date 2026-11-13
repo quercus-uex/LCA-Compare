@@ -1,0 +1,155 @@
+<!doctype html>
+<!-- Esquema ER de la documentación (apps/docs/static/img/acv-compare/esquema-er.png). Se mantiene a mano a partir de apps/server/prisma/schema/ y lo renderiza utils/docs-screenshots.mjs -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --petrol: #00586f; --teal: #57b6b2; --head: #e3f1f0; --border: #b9cfcd; --text: #131616; --muted: #4c5858; }
+  body { margin: 0; background: #fff; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
+  #canvas { position: relative; width: max-content; display: grid; grid-template-columns: repeat(5, 230px); grid-template-rows: auto auto auto; column-gap: 70px; row-gap: 56px; padding: 32px; align-items: center; justify-items: center; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .t { position: relative; z-index: 1; width: 230px; background: #fff; border: 1.5px solid var(--petrol); border-radius: 10px; overflow: hidden; font-size: 13px; box-shadow: 0 1px 2px rgb(0 40 50 / .08); }
+  .t h3 { margin: 0; padding: 7px 10px; background: var(--petrol); color: #fff; font-size: 14px; font-weight: 650; letter-spacing: .01em; }
+  .t.new h3 { background: var(--petrol); }
+  .t ul { list-style: none; margin: 0; padding: 4px 0; }
+  .t li { display: flex; justify-content: space-between; gap: 8px; padding: 2.5px 10px; }
+  .t li:nth-child(even) { background: #f3f9f9; }
+  .t li span:last-child { color: var(--muted); font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: 11.5px; }
+  .k { font-weight: 650; }
+  .k::after { content: ' PK'; font-size: 10px; color: var(--petrol); }
+  .f::after { content: ' FK'; font-size: 10px; color: var(--muted); }
+  .u::after { content: ' UK'; font-size: 10px; color: var(--muted); }
+  .card { font: 600 12px system-ui, sans-serif; fill: var(--petrol); }
+  .rel { font: italic 11.5px system-ui, sans-serif; fill: var(--muted); }
+</style>
+</head>
+<body>
+<div id="canvas">
+  <svg id="lines"></svg>
+
+  <div class="t" id="Organizacion" style="grid-column:1;grid-row:1"><h3>Organizacion</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>nombre</span><span>text</span></li>
+    <li><span>descripcion</span><span>text?</span></li>
+    <li><span class="f">idAdministrador</span><span>uuid</span></li>
+    <li><span>fechaCreacion</span><span>timestamp</span></li></ul></div>
+
+  <div class="t" id="Consentimiento" style="grid-column:2;grid-row:1"><h3>Consentimiento</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span class="f">idOrganizacion</span><span>uuid</span></li>
+    <li><span class="f">idUsuario</span><span>uuid</span></li>
+    <li><span>anioCampania</span><span>int</span></li>
+    <li><span>estado</span><span>text</span></li>
+    <li><span>fechaSolicitud</span><span>timestamp</span></li>
+    <li><span>fechaRespuesta</span><span>timestamp?</span></li>
+    <li><span>fechaRevocacion</span><span>timestamp?</span></li></ul></div>
+
+  <div class="t" id="Poblacion" style="grid-column:3;grid-row:1"><h3>Poblacion</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>nombre</span><span>text</span></li>
+    <li><span>idCatastro</span><span>int</span></li>
+    <li><span class="f">idProvincia</span><span>uuid</span></li></ul></div>
+
+  <div class="t" id="Provincia" style="grid-column:4;grid-row:1"><h3>Provincia</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>nombre</span><span>text</span></li>
+    <li><span>idCatastro</span><span>int</span></li>
+    <li><span class="f">idPais</span><span>uuid</span></li></ul></div>
+
+  <div class="t" id="Pais" style="grid-column:5;grid-row:1"><h3>Pais</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span class="u">nombre</span><span>text</span></li>
+    <li><span class="u">codigo</span><span>text</span></li></ul></div>
+
+  <div class="t" id="Usuario" style="grid-column:1;grid-row:2"><h3>Usuario</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>nombre</span><span>text</span></li>
+    <li><span>apellidos</span><span>text</span></li>
+    <li><span class="u">email</span><span>text</span></li>
+    <li><span>passwordHash</span><span>text</span></li>
+    <li><span>rol</span><span>text</span></li>
+    <li><span>fechaRegistro</span><span>timestamp</span></li>
+    <li><span>fechaActualizacion</span><span>timestamp</span></li></ul></div>
+
+  <div class="t" id="Parcela" style="grid-column:2;grid-row:2"><h3>Parcela</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>nombre</span><span>text</span></li>
+    <li><span class="u">sigpac</span><span>text?</span></li>
+    <li><span class="u">refCat</span><span>text?</span></li>
+    <li><span class="u">ptIdParcela</span><span>text?</span></li>
+    <li><span>geom</span><span>Polygon 4326?</span></li>
+    <li><span>esParcelaReferencia</span><span>bool</span></li>
+    <li><span class="f">idPropietario</span><span>uuid</span></li>
+    <li><span class="f">idPoblacion</span><span>uuid?</span></li></ul></div>
+
+  <div class="t" id="Cultivo" style="grid-column:3;grid-row:2"><h3>Cultivo</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>fechaInicioCampania</span><span>timestamp</span></li>
+    <li><span>tipo</span><span>text</span></li>
+    <li><span>superficieCultivada</span><span>float</span></li>
+    <li><span>produccion</span><span>float</span></li>
+    <li><span>consumoAgua</span><span>float</span></li>
+    <li><span>ciclo</span><span>int</span></li>
+    <li><span class="f">idParcela</span><span>uuid</span></li>
+    <li><span class="f">idResultadoImpacto</span><span>uuid?</span></li></ul></div>
+
+  <div class="t" id="ResultadoImpacto" style="grid-column:4;grid-row:2"><h3>ResultadoImpacto</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span>datos</span><span>json</span></li>
+    <li><span class="f">idImpacto</span><span>text</span></li></ul></div>
+
+  <div class="t" id="MetodoImpacto" style="grid-column:5;grid-row:2"><h3>MetodoImpacto</h3><ul>
+    <li><span class="k">id</span><span>UUID openLCA</span></li>
+    <li><span>nombre</span><span>text</span></li></ul></div>
+
+  <div class="t" id="Notificacion" style="grid-column:1;grid-row:3"><h3>Notificacion</h3><ul>
+    <li><span class="k">id</span><span>uuid</span></li>
+    <li><span class="f">idUsuario</span><span>uuid</span></li>
+    <li><span>tipo</span><span>text</span></li>
+    <li><span>datos</span><span>json</span></li>
+    <li><span>leida</span><span>bool</span></li>
+    <li><span>fechaCreacion</span><span>timestamp</span></li></ul></div>
+</div>
+<script>
+  // [origen (lado 1), destino (lado N), cardinalidad origen, cardinalidad destino, etiqueta]
+  const rels = [
+    ['Usuario', 'Organizacion', '1', 'N', 'administra'],
+    ['Usuario', 'Notificacion', '1', 'N', ''],
+    ['Organizacion', 'Consentimiento', '1', 'N', ''],
+    ['Usuario', 'Consentimiento', '1', 'N', ''],
+    ['Usuario', 'Parcela', '1', 'N', 'propietario'],
+    ['Poblacion', 'Parcela', '0..1', 'N', ''],
+    ['Parcela', 'Cultivo', '1', 'N', 'campañas'],
+    ['Cultivo', 'ResultadoImpacto', '1', '0..1', ''],
+    ['MetodoImpacto', 'ResultadoImpacto', '1', 'N', ''],
+    ['Provincia', 'Poblacion', '1', 'N', ''],
+    ['Pais', 'Provincia', '1', 'N', ''],
+  ];
+  const svg = document.getElementById('lines');
+  const base = document.getElementById('canvas').getBoundingClientRect();
+  const box = (id) => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left - base.left, r: r.right - base.left, t: r.top - base.top, b: r.bottom - base.top, cx: (r.left + r.right) / 2 - base.left, cy: (r.top + r.bottom) / 2 - base.top }; };
+  // Punto del borde de la caja en la dirección del otro centro
+  const edge = (a, b) => {
+    const dx = b.cx - a.cx, dy = b.cy - a.cy;
+    const hw = (a.r - a.l) / 2, hh = (a.b - a.t) / 2;
+    const s = Math.min(hw / Math.abs(dx || 1e-9), hh / Math.abs(dy || 1e-9));
+    return { x: a.cx + dx * s, y: a.cy + dy * s };
+  };
+  const ns = 'http://www.w3.org/2000/svg';
+  const add = (tag, attrs, text) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text) e.textContent = text; svg.appendChild(e); return e; };
+  for (const [from, to, c1, c2, label] of rels) {
+    const a = box(from), b = box(to);
+    const p = edge(a, b), q = edge(b, a);
+    add('line', { x1: p.x, y1: p.y, x2: q.x, y2: q.y, stroke: '#00586f', 'stroke-width': 1.5 });
+    const len = Math.hypot(q.x - p.x, q.y - p.y), ux = (q.x - p.x) / len, uy = (q.y - p.y) / len;
+    // Cardinalidad junto a cada extremo, desplazada a un lado de la línea
+    const off = (pt, u, d) => ({ x: pt.x + u.x * d - uy * 11, y: pt.y + u.y * d + ux * 11 + 4 });
+    const s1 = off(p, { x: ux, y: uy }, 18), s2 = off(q, { x: -ux, y: -uy }, 18);
+    add('text', { x: s1.x, y: s1.y, class: 'card', 'text-anchor': 'middle' }, c1);
+    add('text', { x: s2.x, y: s2.y, class: 'card', 'text-anchor': 'middle' }, c2);
+    if (label) add('text', { x: (p.x + q.x) / 2 + uy * 14, y: (p.y + q.y) / 2 - ux * 14 + 4, class: 'rel', 'text-anchor': 'middle', 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': 4 }, label);
+    for (const pt of [p, q]) add('circle', { cx: pt.x, cy: pt.y, r: 3, fill: '#00586f' });
+  }
+</script>
+</body>
+</html>

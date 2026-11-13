@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toggleInArray } from '../../common/utils.ts';
+import { matchesSearch, toggleInArray } from '../../common/utils.ts';
+import { Input } from '../../components/ui/index.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
@@ -42,8 +43,8 @@ export const ParcelaFilterCollapse = (
       disabled={!usuario}
     >
       <div className="flex flex-col gap-5 w-full">
-        <input
-          className="input w-full"
+        <Input
+          aria-label={t('compare.filters.plots')}
           placeholder={t('compare.filters.placeholders.plot')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -52,7 +53,7 @@ export const ParcelaFilterCollapse = (
         <ul className="list rounded-box shadow-sm h-40 overflow-auto bg-base-100">
           {parcelas
             .filter((p) =>
-              p.nombre.toUpperCase().includes(query.toUpperCase()),
+              matchesSearch(p.nombre, query),
             )
             .map((p) => (
               <li
@@ -62,6 +63,7 @@ export const ParcelaFilterCollapse = (
                 <button
                   type="button"
                   className="w-full text-left"
+                  aria-pressed={!!filters.parcelas?.find((i) => i.id === p.id)}
                   onClick={() => toggleParcela(p)}
                 >
                   {p.nombre}

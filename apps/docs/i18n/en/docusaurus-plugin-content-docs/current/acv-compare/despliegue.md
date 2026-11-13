@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Service Deployment
 
-The whole platform (LCA Compare, LCA Bridge, the openLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
+The whole platform (LCA-Compare, LCA Bridge, the openLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ chmod 600 .env
 Then adjust the values in `.env`:
 
 ```sh
-TAG=main                                 # Image tag: main, or sha-<hash> to pin a version
+TAG=main                                 # Tag for all images (see "Updating" before changing it)
 
 DB_USER=                                 # Database user
 DB_PASSWORD=                             # Database password
@@ -59,9 +59,9 @@ BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key of the backup IAM user
 
 `DATABASE_URL` is not set: the compose file builds it as `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. If a required variable is missing, `docker compose` stops and says which one.
 
-`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`, and `OLCA_DATA_DIR` are required. E-mail (SMTP) and OpenRouter are optional and can be left empty:
+`DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`, and `OLCA_DATA_DIR` are required. Email (SMTP) and OpenRouter are optional and can be left empty:
 
-- Without `MAILER_EMAIL` and `MAILER_PASSWORD`, no e-mail with the password is sent to users created when their first data arrive; the ingestion is still stored and the warning is written to the backend logs.
+- Without `MAILER_EMAIL` and `MAILER_PASSWORD`, no email with the password is sent to users created when their first data arrive; the ingestion is still stored and the warning is written to the backend logs.
 - Without `OPENROUTER_API_KEY`, the PDF report is generated without the AI-written summary and recommendations.
 
 ## Deployment
@@ -78,27 +78,14 @@ On startup, the `migrate` service waits for the database and runs `prisma migrat
 
 ## Create an Administrator User
 
-The backend includes a script to create a user with the `admin` role. The script requires `DATABASE_URL` to be available and the backend to be built.
-
-### Local Development
-
-Build the backend and run the script from the repository root. The `admin:create` script only exists in the `server` package, so it must be invoked with `--filter`:
-
-```bash
-pnpm server:build
-pnpm --filter server admin:create -- --email="admin@example.com" --password="secret" --nombre="Admin" --apellidos="Platform"
-```
-
-### Production with Docker
-
-After the first startup, run it in a one-off container with the backend image:
+After the first startup, create the first administrator with the backend script, in a one-off container:
 
 ```bash
 docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/create-admin.js \
   --email="admin@example.com" --password="secret" --nombre="Admin" --apellidos="Platform"
 ```
 
-The script validates the email, requires a password of at least 8 characters, and checks that no user with the same email already exists.
+The script validates the email, requires a password of at least 8 characters, and checks that no user with the same email already exists. To do it locally, see [Development Environment](./desarrollo.md#create-an-administrator).
 
 ## Docker Compose Structure
 
@@ -147,7 +134,7 @@ To update it, run `docker pull louislam/uptime-kuma:1` and `docker rm -f uptime-
 
 ## CI/CD
 
-The `.github/workflows/build.yml` workflow runs on every push to `main` (and manually from GitHub). It builds and publishes the `lca-compare-backend`, `lca-compare-frontend`, and `lca-compare-backup` images to GHCR, each tagged `main` and `sha-<hash>`. The LCA Bridge repository has an equivalent workflow that publishes `lca-bridge` and `openlca-ipc`.
+The `.github/workflows/build.yml` workflow builds and publishes the `lca-compare-backend`, `lca-compare-frontend`, and `lca-compare-backup` images to GHCR. It runs on every push to `main`, with the `main` and `sha-<hash>` tags; on every `vX.Y.Z` git tag, with `X.Y.Z`, `X.Y`, and `sha-<hash>`; and manually from GitHub. The LCA Bridge repository has an equivalent workflow that publishes `lca-bridge` and `openlca-ipc`, only with `main` and `sha-<hash>`.
 
 GitHub Actions does not connect to the server: deployment is manual.
 
@@ -173,7 +160,7 @@ docker compose pull lca-bridge openlca-ipc
 docker compose up -d lca-bridge openlca-ipc
 ```
 
-To roll back to a previous version, set `TAG=sha-<hash>` in `.env` and run `docker compose up -d`. Database migrations that were already applied are not undone.
+`TAG` applies to every image in the compose file, including `lca-bridge` and `openlca-ipc`. To pin an LCA-Compare version (`TAG=X.Y.Z` or `TAG=sha-<hash>`), that tag must also exist in the LCA Bridge images; otherwise, `docker compose pull` fails. Database migrations that were already applied are not undone when rolling back to a previous version.
 
 ## Backups
 
@@ -292,6 +279,20 @@ docker compose up -d
 ```
 
 The backup includes the Prisma migrations table, so when the services start again `migrate` only applies the migrations created after the backup.
+
+## Demo Instance
+
+`deploy/demo/` contains a temporary LCA-Compare instance for presentations: database, backend, and frontend (without LCA Bridge, openLCA, or backups), with synthetic data. It uses the same GHCR images as production (by default, the version pinned in `deploy/demo/compose.yaml`) and is a separate Compose project, `lca-compare-demo`, so it can run alongside the platform.
+
+```bash
+cd deploy/demo
+./demo.sh up     # starts the demo and, if the database is empty, loads the data
+./demo.sh down   # removes containers, volume, and .env
+```
+
+The script asks for `DEMO_ADMIN_EMAIL` and `DEMO_PASSWORD` (password of the administrator and of all sample users) if they are not in the environment. It optionally accepts `DEMO_PORT` (default `8080`), `TAG`, `OPENROUTER_API_KEY`, and `OPENROUTER_MODEL`. It generates the remaining secrets at random in `deploy/demo/.env`.
+
+The data is deterministic: one administrator, 8 sample farmers, and about 40 plots in towns in Spain and Portugal, with several campaigns between 2021 and 2025 and their LCA results. The polygons are generated around each town, do not correspond to real plots, and no external service is called. The seed script does not run if the database already has users, so `./demo.sh up` restarts the demo without reloading it.
 
 ## Verification
 

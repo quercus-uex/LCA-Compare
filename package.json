@@ -21,7 +21,9 @@
     "web:lint": "pnpm --filter web lint",
     "docs:dev": "pnpm --filter docs start",
     "docs:build": "pnpm --filter docs build",
-    "docs:typecheck": "pnpm --filter docs typecheck"
+    "docs:typecheck": "pnpm --filter docs typecheck",
+    "screenshots": "node utils/responsive-screenshots.mjs",
+    "docs:screenshots": "node utils/docs-screenshots.mjs"
   },
   "devDependencies": {
     "turbo": "^2.6.3"

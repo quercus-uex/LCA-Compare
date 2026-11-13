@@ -12,6 +12,8 @@ export type StatsFilters = {
   categoria: EfCategoryId;
   /** Provincia del ranking de poblaciones; solo filtra en el cliente */
   provincia?: string;
+  /** Solo las campañas consentidas a esta organización (requiere administrarla) */
+  organizacion?: string;
 };
 
 // Nombres de los parámetros en la URL, para que una vista filtrada se pueda
@@ -21,6 +23,7 @@ const PARAMS = {
   tipoCultivo: 'cultivo',
   categoria: 'categoria',
   provincia: 'provincia',
+  organizacion: 'org',
 } as const satisfies Record<keyof StatsFilters, string>;
 
 const isEfCategoryId = (value: string | null): value is EfCategoryId =>
@@ -41,6 +44,7 @@ export function useStatsFilters() {
       tipoCultivo: searchParams.get(PARAMS.tipoCultivo) || undefined,
       categoria: isEfCategoryId(categoria) ? categoria : DEFAULT_EF_CATEGORY,
       provincia: searchParams.get(PARAMS.provincia) || undefined,
+      organizacion: searchParams.get(PARAMS.organizacion) || undefined,
     };
   }, [searchParams]);
 
@@ -76,7 +80,8 @@ export function useStatsFilters() {
     filters.anio !== undefined ||
     filters.tipoCultivo !== undefined ||
     filters.categoria !== DEFAULT_EF_CATEGORY ||
-    filters.provincia !== undefined;
+    filters.provincia !== undefined ||
+    filters.organizacion !== undefined;
 
   return { filters, setFilters, resetFilters, hasActiveFilters };
 }

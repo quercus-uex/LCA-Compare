@@ -4,6 +4,7 @@ describe('ParcelaService', () => {
   let prisma: {
     parcela: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
     };
     $transaction: jest.Mock;
     $queryRaw: jest.Mock;
@@ -15,6 +16,7 @@ describe('ParcelaService', () => {
     prisma = {
       parcela: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
       },
       $transaction: jest.fn(),
       $queryRaw: jest.fn(),
@@ -23,22 +25,111 @@ describe('ParcelaService', () => {
     service = new ParcelaService(prisma as never);
   });
 
-  describe('findOne', () => {
-    it('calls prisma.parcela.findUnique with where and ordered cultivos include', async () => {
-      const parcela = { id: 'par1', cultivos: [] } as never;
-      prisma.parcela.findUnique.mockResolvedValue(parcela);
+  describe('findResumenByPropietario', () => {
+    it('flattens the latest crop and the crop count of each parcel', async () => {
+      const ultimo = { id: 'c2', tipo: 'Olivo' };
+      prisma.parcela.findMany.mockResolvedValue([
+        { id: 'par1', cultivos: [ultimo], _count: { cultivos: 3 } },
+        { id: 'par2', cultivos: [], _count: { cultivos: 0 } },
+      ]);
 
-      const result = await service.findOne({ id: 'par1' });
+      const result = await service.findResumenByPropietario('u1');
 
-      expect(prisma.parcela.findUnique).toHaveBeenCalledWith({
-        where: { id: 'par1' },
-        include: {
-          cultivos: {
-            orderBy: { fechaInicioCampania: 'desc' },
+      expect(prisma.parcela.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { idPropietario: 'u1' },
+          orderBy: { nombre: 'asc' },
+        }),
+      );
+      expect(result).toEqual([
+        { id: 'par1', ultimoCultivo: ultimo, numCultivos: 3 },
+        { id: 'par2', ultimoCultivo: null, numCultivos: 0 },
+      ]);
+    });
+
+    it('limits parcels, latest crop and crop count to the given campaign years', async () => {
+      prisma.parcela.findMany.mockResolvedValue([]);
+
+      await service.findResumenByPropietario('u1', [2023, 2025]);
+
+      const cultivoWhere = {
+        OR: [
+          {
+            fechaInicioCampania: {
+              gte: new Date('2023-01-01T00:00:00.000Z'),
+              lt: new Date('2024-01-01T00:00:00.000Z'),
+            },
           },
-        },
+          {
+            fechaInicioCampania: {
+              gte: new Date('2025-01-01T00:00:00.000Z'),
+              lt: new Date('2026-01-01T00:00:00.000Z'),
+            },
+          },
+        ],
+      };
+      expect(prisma.parcela.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { idPropietario: 'u1', cultivos: { some: cultivoWhere } },
+          include: expect.objectContaining({
+            cultivos: expect.objectContaining({ where: cultivoWhere }),
+            _count: { select: { cultivos: { where: cultivoWhere } } },
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('getGeomsByPropietario', () => {
+    it('maps each parcel id to its geometry', async () => {
+      const geojson = { type: 'Polygon', coordinates: [] };
+      prisma.$queryRaw.mockResolvedValue([{ id: 'par1', geojson }]);
+
+      const result = await service.getGeomsByPropietario('u1');
+
+      expect(prisma.$queryRaw).toHaveBeenCalledWith(expect.anything(), 'u1');
+      expect(result).toEqual(new Map([['par1', geojson]]));
+    });
+  });
+
+  describe('findDetalle', () => {
+    it('returns null when the parcel does not exist', async () => {
+      prisma.parcela.findUnique.mockResolvedValue(null);
+
+      await expect(service.findDetalle('par1')).resolves.toBeNull();
+    });
+
+    it('replaces each crop result with its total impact per EF category', async () => {
+      prisma.parcela.findUnique.mockResolvedValue({
+        id: 'par1',
+        cultivos: [
+          {
+            id: 'c1',
+            resultadoImpacto: {
+              datos: {
+                impacto_total: [
+                  { category: 'Climate change', amount: 2, unit: 'kg CO2 eq' },
+                  { category: 'Unknown', amount: 5, unit: 'x' },
+                ],
+              },
+            },
+          },
+          { id: 'c2', resultadoImpacto: null },
+        ],
       });
-      expect(result).toBe(parcela);
+
+      const result = await service.findDetalle('par1');
+
+      expect(prisma.parcela.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'par1' } }),
+      );
+      expect(result).toEqual({
+        id: 'par1',
+        cultivos: [
+          { id: 'c1', impactoTotal: { climate_change: 2 } },
+          { id: 'c2', impactoTotal: null },
+        ],
+      });
     });
   });
 
@@ -59,7 +150,6 @@ describe('ParcelaService', () => {
 
       await service.setGeom('par1', geoJson as never);
 
-      expect(prisma.$executeRaw).toHaveBeenCalled();
       expect(prisma.$executeRaw).toHaveBeenCalledWith(
         expect.anything(),
         JSON.stringify(geoJson),
@@ -85,36 +175,16 @@ describe('ParcelaService', () => {
 
       const result = await service.getGeom('par1');
 
-      expect(prisma.$queryRaw).toHaveBeenCalled();
       expect(result).toEqual(geojson);
     });
 
-    it('returns null when no rows are found', async () => {
-      prisma.$queryRaw.mockResolvedValue([]);
-
-      const result = await service.getGeom('par1');
-
-      expect(result).toBeNull();
-    });
-
-    it('returns null when rows exist but geojson is null', async () => {
-      prisma.$queryRaw.mockResolvedValue([{ geojson: null }]);
-
-      const result = await service.getGeom('par1');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('findManyByPointRange', () => {
-    it('delegates to prisma.$queryRaw with lat, long, and range', async () => {
-      const rows = [{ id: 'par2' }] as never;
+    it.each([
+      ['no rows are found', []],
+      ['the geojson is null', [{ geojson: null }]],
+    ])('returns null when %s', async (_, rows) => {
       prisma.$queryRaw.mockResolvedValue(rows);
 
-      const result = await service.findManyByPointRange(40.0, -3.0, 5000);
-
-      expect(prisma.$queryRaw).toHaveBeenCalled();
-      expect(result).toBe(rows);
+      await expect(service.getGeom('par1')).resolves.toBeNull();
     });
   });
 

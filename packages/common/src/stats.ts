@@ -12,6 +12,8 @@ export const STATS_MIN_PARCELAS = 3;
 export type GlobalStatsQuery = {
   anio?: number;
   tipoCultivo?: string;
+  /** Solo cultivos de las campañas consentidas a esta organización (requiere ser su administrador) */
+  idOrganizacion?: string;
 };
 
 export type KpiDto = {

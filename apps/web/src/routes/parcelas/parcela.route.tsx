@@ -1,85 +1,107 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
+import { ApiError } from '../../common/api.ts';
 import { CopyToClipboardBtn } from '../../components/copy-to-clipboard.btn.component.tsx';
-import { MapPreview } from '../../components/map-preview.component.tsx';
-import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
-import { CultivoCard } from './cultivo.card.component.tsx';
+import { EmptyState, ErrorAlert, Page } from '../../components/ui/index.ts';
+import { type ParcelaDetalle, useParcela } from '../../hooks/parcela.hook.tsx';
+import { CampaniasTable } from './campanias-table.component.tsx';
+import { CompararParcelaDropdown } from './comparar-parcela.component.tsx';
+import { CultivoActual } from './cultivo-actual.component.tsx';
+import { ParcelaEvolucion } from './parcela-evolucion.component.tsx';
+import {
+  AccesoNote,
+  ParcelaBreadcrumbs,
+  ParcelaHeroCard,
+  useAccesoCrumbs,
+  useAccesoEyebrow,
+} from './parcela-hero.component.tsx';
+import { ParcelaDetailSkeleton } from './parcelas-states.component.tsx';
+import { getIdentificadores } from './parcelas.utils.ts';
+
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'ready'; parcela: ParcelaDetalle };
 
 export const ParcelaRoute = () => {
-  const [parcela, setParcela] = useState<Parcela | undefined>(undefined);
+  const [state, setState] = useState<LoadState>({ status: 'loading' });
   const p = useParcela();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const { t } = useTranslation();
+  const acceso = state.status === 'ready' ? state.parcela.acceso : undefined;
+  const accesoCrumbs = useAccesoCrumbs(acceso);
+  const accesoEyebrow = useAccesoEyebrow(acceso);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return;
-
+    setState({ status: 'loading' });
     p.getById(id)
-      .then(p => setParcela(p))
-      .catch(() => { void navigate('/404') });
-  }, [id, navigate, p])
+      .then((parcela) => setState({ status: 'ready', parcela }))
+      .catch((e: unknown) => {
+        // Una parcela ajena se trata igual que una inexistente
+        if (e instanceof ApiError && (e.status === 404 || e.status === 401)) {
+          void navigate('/404', { replace: true });
+        } else {
+          setState({ status: 'error' });
+        }
+      });
+  }, [id, navigate, p]);
 
-  if (!parcela || !parcela.cultivos) return <div className="skeleton w-full h-full" />
+  useEffect(load, [load]);
+
+  if (state.status === 'loading') return <ParcelaDetailSkeleton />;
+
+  if (state.status === 'error') {
+    return (
+      <Page>
+        <ParcelaBreadcrumbs />
+        <ErrorAlert message={t('parcelas.detail.loadError')} onRetry={load} />
+      </Page>
+    );
+  }
+
+  const { parcela } = state;
+  const [cultivoActual] = parcela.cultivos;
+  const identificadores = getIdentificadores(parcela, t);
 
   return (
-    <div className="flex flex-col gap-5 max-w-6xl">
-      <div className="card w-full md:w-auto lg:card-side bg-base-100 shadow-sm">
-        <figure>
-          <MapPreview
-            polygon={parcela.geom ?? undefined}
-            className="w-full md:w-96 aspect-square rounded-tl-md rounded-tb-md"
-          />
-        </figure>
-        <div className="card-body flex flex-col">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{parcela.nombre}</h1>
-              {parcela.esParcelaReferencia && (
-                <span className="badge badge-success">
-                  {t('parcelas.referenceBadge')}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2 items-center">
-              <p>
-                <span className="font-bold">SIGPAC: </span>
-                {parcela.sigpac ?? '-'}
-              </p>
-              <CopyToClipboardBtn text={parcela.sigpac} />
-            </div>
-            <div className="flex gap-2 items-center">
-              <p>
-                <span className="font-bold">{t('common.fields.cadastralReference')}: </span>
-                {parcela.refCat ?? '-'}
-              </p>
-              <CopyToClipboardBtn text={parcela.refCat} />
-            </div>
-            <div className="flex gap-2 items-center">
-              <p>
-                <span className="font-bold">{t('common.fields.portugalId')}: </span>
-                {parcela.ptIdParcela ?? '-'}
-              </p>
-              <CopyToClipboardBtn text={parcela.ptIdParcela} />
-            </div>
-          </div>
+    <Page>
+      <ParcelaBreadcrumbs root={accesoCrumbs} items={[{ label: parcela.nombre }]} />
 
-          <div className="flex flex-col gap-2">
-            <h2 className="text-xl ">{t('parcelas.currentCrop')}</h2>
-            {parcela.cultivos[0] && <CultivoCard cultivo={parcela.cultivos[0]} />}
-          </div>
-        </div>
-      </div>
+      <ParcelaHeroCard
+        parcela={parcela}
+        eyebrow={accesoEyebrow}
+        // Comparar por parcela usaría todas sus campañas, también las no consentidas
+        actions={cultivoActual && !acceso && <CompararParcelaDropdown parcela={parcela} />}
+      >
+        {acceso && <AccesoNote acceso={acceso} />}
 
-      <div className="flex flex-col gap-5">
-        <h2 className="text-2xl font-bold">{t('parcelas.previousCrops')}</h2>
-        <div className="flex gap-5 flex-wrap ">
-          {parcela.cultivos.slice(1).map((c) => (
-            <CultivoCard key={c.id} cultivo={c} />
-          ))}
-        </div>
-      </div>
-    </div>
+        {identificadores.length > 0 && (
+          <dl className="flex flex-col gap-1">
+            {identificadores.map((i) => (
+              <div key={i.key} className="flex flex-wrap items-center gap-2">
+                <dt className="font-semibold">{i.label}:</dt>
+                {/* El botón va dentro de <dd>: en una lista de definiciones solo caben <dt> y <dd> */}
+                <dd className="flex items-center gap-2">
+                  <span className="font-mono break-all">{i.value}</span>
+                  <CopyToClipboardBtn text={i.value} label={i.label} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {cultivoActual
+          ? <CultivoActual cultivo={cultivoActual} />
+          : <EmptyState variant="inset" icon={false} description={t('parcelas.detail.noCrops')} />}
+      </ParcelaHeroCard>
+
+      {parcela.cultivos.length > 1 && <ParcelaEvolucion cultivos={parcela.cultivos} />}
+
+      {parcela.cultivos.length > 0 && <CampaniasTable cultivos={parcela.cultivos} linkState={location.state as unknown} />}
+    </Page>
   );
-}
+};

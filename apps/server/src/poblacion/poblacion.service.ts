@@ -14,12 +14,6 @@ export class PoblacionService {
     });
   }
 
-  async findAll(): Promise<Poblacion[]> {
-    return this.prisma.poblacion.findMany({
-      include: { provincia: { include: { pais: true } } },
-    });
-  }
-
   async findMany(params: {
     skip?: number;
     take?: number;

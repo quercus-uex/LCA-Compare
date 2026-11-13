@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Badge, Button, Toggle } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
+import type { OrganizacionResumen } from '../../hooks/organizacion.hook.tsx';
 import { AniocampaniaFilterCollapse } from './aniocampania-filter-collapse.component.tsx';
+import { OrganizacionFilterCollapse } from './organizacion-filter-collapse.component.tsx';
 import { PaisFilterCollapse } from './pais-filter-collapse.component.tsx';
 import { ParcelaFilterCollapse } from './parcela-filter-collapse.component.tsx';
 import { PoblacionFilterCollapse } from './poblacion-filter-collapse.component.tsx';
@@ -12,24 +15,33 @@ import { UbicacionFilterCollapse } from './ubicacion-filter-collapse.component.t
 
 type ChipItem = { id: string; nombre: string };
 
+/** Filtro aplicado que se quita al pulsarlo */
+const Chip = ({ nombre, onRemove }: { nombre: string; onRemove: () => void }) => (
+  <button
+    type="button"
+    className="inline-flex cursor-pointer rounded-selector focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+    onClick={onRemove}
+  >
+    <Badge tone="primary">{nombre}</Badge>
+  </button>
+);
+
 const SelectedChips = ({ items, onRemove }: { items: ChipItem[]; onRemove: (id: string) => void }) => (
   <>
-    {items.map((p) => (
-      <button
-        key={p.id}
-        type="button"
-        className="badge badge-primary cursor-pointer"
-        onClick={() => onRemove(p.id)}
-      >
-        {p.nombre}
-      </button>
-    ))}
+    {items.map((p) => <Chip key={p.id} nombre={p.nombre} onRemove={() => onRemove(p.id)} />)}
   </>
 );
 
-export const CompareFilterCard = (
-  { name, required = false, initialFilters, onSubmit }: { name: string, required?: boolean, initialFilters?: CompareFilterType, onSubmit: (data?: CompareFilterType) => void | Promise<void> }
-) => {
+type Props = {
+  name: string;
+  required?: boolean;
+  initialFilters?: CompareFilterType;
+  /** Organizaciones que administra el usuario; sin ninguna no se ofrece el filtro */
+  organizaciones?: OrganizacionResumen[];
+  onSubmit: (data?: CompareFilterType) => void | Promise<void>;
+};
+
+export const CompareFilterCard = ({ name, required = false, initialFilters, organizaciones = [], onSubmit }: Props) => {
   const [enabled, setEnabled] = useState<boolean>(required || !!initialFilters);
   const [filters, setFilters] = useState<CompareFilterType>(initialFilters ?? {
     parcelas: [],
@@ -39,18 +51,20 @@ export const CompareFilterCard = (
   const { t } = useTranslation();
 
   return (
+    // eslint-disable-next-line no-restricted-syntax -- plegable en móvil y tarjeta desde xl: `Card` no cubre esta mezcla
     <div className="collapse max-xl:collapse-close xl:collapse-open xl:card bg-base-100 xl:min-w-72 xl:w-1/5 h-fit xl:flex-1">
-      <input type="checkbox" name="compare-filters" className="xl:hidden" />
+      <input type="checkbox" name="compare-filters" aria-label={name} className="xl:hidden" />
 
       <div className="collapse-title font-semibold xl:hidden">{name}</div>
 
+      {/* eslint-disable-next-line no-restricted-syntax -- cuerpo de la tarjeta solo desde xl (ver arriba) */}
       <div className="collapse-content xl:card-body">
         <div className="flex xl:justify-between max-xl:justify-end">
-          <h2 className="card-title text-xl max-xl:hidden">{name}</h2>
+          <h2 className="text-xl font-semibold max-xl:hidden">{name}</h2>
           {!required && (
-            <input
-              type="checkbox"
-              className="toggle toggle-lg"
+            <Toggle
+              size="lg"
+              aria-label={name}
               checked={enabled}
               onChange={(e) => {
                 setEnabled(e.target.checked);
@@ -83,13 +97,7 @@ export const CompareFilterCard = (
               })}
             />
             {filters.pais && (
-              <button
-                type="button"
-                className="badge badge-primary cursor-pointer"
-                onClick={() => setFilters({ ...filters, pais: undefined })}
-              >
-                {filters.pais.nombre}
-              </button>
+              <Chip nombre={filters.pais.nombre} onRemove={() => setFilters({ ...filters, pais: undefined })} />
             )}
           </div>
 
@@ -114,13 +122,13 @@ export const CompareFilterCard = (
             setFilters={setFilters}
           />
           <ReferenciaFilterCollapse filters={filters} setFilters={setFilters} />
+          {organizaciones.length > 0 && (
+            <OrganizacionFilterCollapse filters={filters} setFilters={setFilters} organizaciones={organizaciones} />
+          )}
 
-          <button
-            className={`btn btn-primary ${!enabled ? 'btn-disabled' : ''}`}
-            onClick={() => void onSubmit(filters)}
-          >
+          <Button variant="primary" disabled={!enabled} onClick={() => void onSubmit(filters)}>
             {t('common.actions.applyFilters')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

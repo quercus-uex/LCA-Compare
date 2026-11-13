@@ -1,15 +1,25 @@
+import { lazy } from 'react';
 import { Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
 import { NavbarContainer } from './components/navbar-container.component.tsx';
-import { AdminRoute } from './routes/admin/admin.route.tsx';
 import { LoginRoute } from './routes/auth/login.route.tsx';
-import { CompareRoute } from './routes/compare/compare.route.tsx';
 import { LandingRoute } from './routes/landing/landing.route.tsx';
 import { NotFoundRoute } from './routes/not-found.route.tsx';
-import { ParcelaRoute } from './routes/parcelas/parcela.route.tsx';
-import { ParcelasRoute } from './routes/parcelas/parcelas.route.tsx';
-import { ResultadoRoute } from './routes/resultados/resultado.route.tsx';
-import { StatsRoute } from './routes/stats/stats.route.tsx';
+
+// Las rutas con mapas, gráficas o el panel de administración se cargan al visitarlas
+const AdminRoute = lazy(() => import('./routes/admin/admin.route.tsx').then((m) => ({ default: m.AdminRoute })));
+const CompareRoute = lazy(() => import('./routes/compare/compare.route.tsx').then((m) => ({ default: m.CompareRoute })));
+const MiembroParcelasRoute = lazy(() => import('./routes/organizaciones/miembro-parcelas.route.tsx').then((m) => ({ default: m.MiembroParcelasRoute })));
+const OrganizacionRoute = lazy(() => import('./routes/organizaciones/organizacion.route.tsx').then((m) => ({ default: m.OrganizacionRoute })));
+const OrganizacionesRoute = lazy(() => import('./routes/organizaciones/organizaciones.route.tsx').then((m) => ({ default: m.OrganizacionesRoute })));
+const ParcelaRoute = lazy(() => import('./routes/parcelas/parcela.route.tsx').then((m) => ({ default: m.ParcelaRoute })));
+const ParcelasRoute = lazy(() => import('./routes/parcelas/parcelas.route.tsx').then((m) => ({ default: m.ParcelasRoute })));
+const ResultadoRoute = lazy(() => import('./routes/resultados/resultado.route.tsx').then((m) => ({ default: m.ResultadoRoute })));
+const StatsRoute = lazy(() => import('./routes/stats/stats.route.tsx').then((m) => ({ default: m.StatsRoute })));
+// Catálogo de la librería de componentes: en producción la condición es falsa y no se incluye
+const UiShowcaseRoute = import.meta.env.DEV
+  ? lazy(() => import('./routes/dev/ui-showcase.route.tsx').then((m) => ({ default: m.UiShowcaseRoute })))
+  : null;
 
 function App() {
   return (
@@ -22,6 +32,11 @@ function App() {
           <Route path="/auth/login" element={<LoginRoute />} />
           <Route path="/admin" element={<AdminRoute />} />
           <Route path="/estadisticas" element={<StatsRoute />} />
+          <Route path="/organizaciones">
+            <Route index element={<OrganizacionesRoute />} />
+            <Route path=":id" element={<OrganizacionRoute />} />
+            <Route path=":id/miembros/:idUsuario" element={<MiembroParcelasRoute />} />
+          </Route>
           <Route path="/parcelas">
             <Route index element={<ParcelasRoute />} />
             <Route path=":id" element={<ParcelaRoute />} />
@@ -29,6 +44,7 @@ function App() {
           <Route path="/resultados">
             <Route path=":id" element={<ResultadoRoute />} />
           </Route>
+          {UiShowcaseRoute && <Route path="/dev/ui" element={<UiShowcaseRoute />} />}
           <Route path="*" element={<NotFoundRoute />} />
         </Route>
       </Routes>

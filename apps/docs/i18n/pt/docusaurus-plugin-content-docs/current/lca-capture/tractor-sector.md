@@ -16,12 +16,11 @@ Permite consultar os minutos totais de operação, bem como o detalhe de utiliza
 | ------- | ----------- | ----------- | ---------------------------------------------------------------- |
 | `path`  | `sectorId`  | SIM         | Identificador único do setor (formato UUID)                      |
 | `path`  | `devEUI`    | SIM         | Identificador único DevEUI do sensor do trator                   |
-| `query` | `startDate` | NÃO         | Data de início do intervalo. Por omissão: `1970-01-01T00:00:00.000Z` |
-| `query` | `endDate`   | NÃO         | Data de fim do intervalo. Por omissão: data e hora atual         |
 
-> **Nota:** Para filtrar os dados por datas, utiliza-se o **formato padrão ISO 8601** (`AAAA-MM-DDTHH:mm:ssZ`).
+> **Nota:** O identificador do setor é apresentado ao selecioná-lo em
+> [monitoriza.dtagro.es](https://monitoriza.dtagro.es).
 
-> **Nota:** O identificador do setor pode ser observado clicando num setor em: monitoriza.dtagro.es
+Admite ainda os parâmetros de consulta `startDate` e `endDate` (ver [Filtro por datas](./introduccion.md#filtro-por-datas)).
 
 ### Exemplos de pedido
 
@@ -41,8 +40,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### Resposta bem-sucedida
-
-> **Nota:** O formato de resposta não é definitivo e está sujeito a alterações
 
 ```json
 {
@@ -64,16 +61,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Possíveis erros
 
+Além dos [erros comuns](./introduccion.md#erros-comuns):
+
 | Código                      | Causa                            | Mensagem                                      |
 | --------------------------- | -------------------------------- | --------------------------------------------- |
 | `400 Bad Request`           | Falta o parâmetro `sectorId`     | `Sector ID is required`                       |
 | `400 Bad Request`           | Falta o parâmetro `devEUI`       | `Sensor DevEUI is required`                   |
 | `400 Bad Request`           | O `sectorId` não é válido        | `Invalid Sector ID (must be UUID)`            |
 | `400 Bad Request`           | O `devEUI` não é válido          | `Invalid DevEUI (must be 16 hex characters)`  |
-| `401 Unauthorized`          | O token JWT não é válido         | `Invalid authentication token`                |
-| `401 Unauthorized`          | O token JWT expirou              | `Authentication token expired`                |
-| `401 Unauthorized`          | Falta o token JWT                | `Missing authentication token`                |
-| `403 Forbidden`             | Sem permissão para aceder        | `Insufficient scope`                          |
 | `404 Not Found`             | O `sectorId` não está registado  | `Sector not found with the provided SectorId` |
 | `404 Not Found`             | O `devEUI` não está registado    | `Sensor not found with the provided DevEUI`   |
-| `500 Internal Server Error` | Erro interno do servidor         | `Unable to retrieve sensor telemetry`         |

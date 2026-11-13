@@ -7,23 +7,26 @@ import App from './App.tsx'
 import { AuthProvider } from './hooks/auth.hook.tsx';
 import { CompareProvider } from './hooks/compare.hook.tsx';
 import { LocationProvider } from './hooks/location.hook.tsx';
+import { NotificacionesProvider } from './hooks/notificaciones.hook.tsx';
 import { ParcelaProvider } from './hooks/parcela.hook.tsx';
 import { ResultadoImpactoProvider } from './hooks/resultado-impacto.hook.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <ParcelaProvider>
-        <ResultadoImpactoProvider>
-          <LocationProvider>
-            <CompareProvider>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
-            </CompareProvider>
-          </LocationProvider>
-        </ResultadoImpactoProvider>
-      </ParcelaProvider>
+      <NotificacionesProvider>
+        <ParcelaProvider>
+          <ResultadoImpactoProvider>
+            <LocationProvider>
+              <CompareProvider>
+                <BrowserRouter>
+                  <App />
+                </BrowserRouter>
+              </CompareProvider>
+            </LocationProvider>
+          </ResultadoImpactoProvider>
+        </ParcelaProvider>
+      </NotificacionesProvider>
     </AuthProvider>
   </StrictMode>,
 );

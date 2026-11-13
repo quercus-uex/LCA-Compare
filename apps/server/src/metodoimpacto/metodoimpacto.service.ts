@@ -12,10 +12,6 @@ export class MetodoImpactoService {
     return this.prisma.metodoImpacto.findUnique({ where });
   }
 
-  async findAll(): Promise<MetodoImpacto[]> {
-    return this.prisma.metodoImpacto.findMany();
-  }
-
   async findMany(params: {
     skip?: number;
     take?: number;

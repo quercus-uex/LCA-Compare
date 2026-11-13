@@ -94,6 +94,33 @@ export const poblacionAdminSearch = (
     (term) => [{ provincia: { nombre: contains(term) } }],
   );
 
+export const organizacionAdminSearch = (
+  search?: string,
+): Prisma.OrganizacionWhereInput | undefined =>
+  searchWhere<Prisma.OrganizacionWhereInput>(
+    ['nombre', 'idAdministrador'],
+    search,
+    (term) => [
+      { administrador: { nombre: contains(term) } },
+      { administrador: { apellidos: contains(term) } },
+      { administrador: { email: contains(term) } },
+    ],
+  );
+
+export const consentimientoAdminSearch = (
+  search?: string,
+): Prisma.ConsentimientoWhereInput | undefined =>
+  searchWhere<Prisma.ConsentimientoWhereInput>(
+    ['estado', 'idOrganizacion', 'idUsuario'],
+    search,
+    (term) => [
+      { organizacion: { nombre: contains(term) } },
+      { usuario: { nombre: contains(term) } },
+      { usuario: { apellidos: contains(term) } },
+      { usuario: { email: contains(term) } },
+    ],
+  );
+
 /** Combina la búsqueda con filtros adicionales sin perder ninguno */
 export function andWhere<TWhere extends Record<string, unknown>>(
   ...conditions: (TWhere | undefined)[]

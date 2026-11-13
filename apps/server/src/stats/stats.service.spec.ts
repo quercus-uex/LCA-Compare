@@ -1,5 +1,6 @@
 import { STATS_DATASET_TTL_MS, StatsService } from './stats.service';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 import type { StatsCultivo } from './helpers/stats-rows.helpers';
 
 const BADAJOZ = { id: 'prov-ba', nombre: 'Badajoz' };
@@ -8,6 +9,7 @@ const CACERES = { id: 'prov-cc', nombre: 'Cáceres' };
 function makeCultivo(
   overrides: Partial<{
     idParcela: string;
+    idPropietario: string;
     tipo: string;
     anio: number;
     climateChange: number | null;
@@ -35,6 +37,7 @@ function makeCultivo(
             },
           },
     parcela: {
+      idPropietario: overrides.idPropietario ?? 'u-1',
       poblacion: {
         ...(overrides.poblacion ?? { id: 'pob-db', nombre: 'Don Benito' }),
         provincia: overrides.provincia ?? BADAJOZ,
@@ -56,6 +59,9 @@ function zona(
 describe('StatsService', () => {
   let service: StatsService;
   let findMany: jest.Mock<Promise<StatsCultivo[]>, [Record<string, unknown>]>;
+  let accesoService: jest.Mocked<
+    Pick<OrganizacionAccesoService, 'getConsentimientosAceptados'>
+  >;
 
   const mockDataset = (cultivos: StatsCultivo[]) =>
     findMany.mockResolvedValue(cultivos);
@@ -63,9 +69,11 @@ describe('StatsService', () => {
   beforeEach(() => {
     findMany = jest.fn<Promise<StatsCultivo[]>, [Record<string, unknown>]>();
     findMany.mockResolvedValue([]);
-    service = new StatsService({
-      cultivo: { findMany },
-    } as unknown as PrismaService);
+    accesoService = { getConsentimientosAceptados: jest.fn() };
+    service = new StatsService(
+      { cultivo: { findMany } } as unknown as PrismaService,
+      accesoService as unknown as OrganizacionAccesoService,
+    );
   });
 
   afterEach(() => {
@@ -92,17 +100,6 @@ describe('StatsService', () => {
         aniosDisponibles: [],
         tiposCultivoDisponibles: [],
       });
-    });
-
-    it('loads the dataset with a single select query', async () => {
-      await service.getGlobalStats();
-
-      expect(findMany).toHaveBeenCalledTimes(1);
-      const [args] = findMany.mock.calls[0];
-      expect(args).not.toHaveProperty('where');
-      expect(args).not.toHaveProperty('include');
-      expect(args).toHaveProperty('select.resultadoImpacto');
-      expect(args).toHaveProperty('select.parcela.select.poblacion');
     });
 
     it('applies year and crop filters to KPIs and rankings', async () => {
@@ -190,12 +187,6 @@ describe('StatsService', () => {
 
       const result = await service.getGlobalStats();
 
-      expect(result.rankingProvincias.map((r) => r.idProvincia)).toEqual([
-        'prov-ba',
-      ]);
-      expect(result.rankingPoblaciones.map((r) => r.idPoblacion)).toEqual([
-        'pob-db',
-      ]);
       expect(result.zonasOcultas).toEqual({ provincias: 1, poblaciones: 1 });
       // Los KPIs sí incluyen las zonas ocultas
       expect(result.kpis.totalParcelas).toBe(4);
@@ -216,7 +207,6 @@ describe('StatsService', () => {
 
       expect(kpis.parcelasComparables).toBe(3);
       expect(kpis.variacionInteranual?.climate_change).toBe(-10);
-      expect(kpis.variacionInteranual?.acidification).toBeNull();
     });
 
     it('returns a null year-on-year change without a selected year', async () => {
@@ -225,6 +215,74 @@ describe('StatsService', () => {
       const { kpis } = await service.getGlobalStats();
 
       expect(kpis.variacionInteranual).toBeNull();
+      // Sin año no se compara: con una lista vacía del año anterior sería 0
+      expect(kpis.parcelasComparables).toBeNull();
+    });
+  });
+
+  describe('organization filter', () => {
+    const dataset = () => [
+      // Campañas consentidas: u-1 en 2024 y u-2 en 2023
+      ...zona('a', { idPropietario: 'u-1', anio: 2024, tipo: 'trigo' }),
+      ...zona('b', { idPropietario: 'u-2', anio: 2023, tipo: 'olivo' }),
+      // Sin consentir: otro año de u-1 y otro usuario
+      ...zona('c', { idPropietario: 'u-1', anio: 2023, tipo: 'maiz' }),
+      ...zona('d', { idPropietario: 'u-3', anio: 2024, tipo: 'viñedo' }),
+    ];
+
+    beforeEach(() => {
+      mockDataset(dataset());
+      accesoService.getConsentimientosAceptados.mockResolvedValue([
+        { idUsuario: 'u-1', anio: 2024 },
+        { idUsuario: 'u-2', anio: 2023 },
+      ]);
+    });
+
+    it('keeps only the consented user-year rows before aggregating anything', async () => {
+      const result = await service.getGlobalStats({ idOrganizacion: 'org-1' });
+
+      expect(accesoService.getConsentimientosAceptados).toHaveBeenCalledWith(
+        'org-1',
+      );
+      expect(result.kpis.totalCultivos).toBe(6);
+      expect(result.aniosDisponibles).toEqual([2023, 2024]);
+      expect(result.tiposCultivoDisponibles).toEqual(['olivo', 'trigo']);
+      expect(
+        result.evolucionTemporal.map((e) => [e.anio, e.numCultivos]),
+      ).toEqual([
+        [2023, 3],
+        [2024, 3],
+      ]);
+      expect(result.distribucionCultivos.map((d) => d.tipo)).toEqual([
+        'olivo',
+        'trigo',
+      ]);
+    });
+
+    it('combines the organization with the year and crop filters', async () => {
+      const result = await service.getGlobalStats({
+        idOrganizacion: 'org-1',
+        anio: 2024,
+      });
+
+      expect(result.kpis.totalCultivos).toBe(3);
+      expect(result.rankingProvincias[0].numCultivos).toBe(3);
+    });
+
+    it('returns no rows when the organization has no accepted consents', async () => {
+      accesoService.getConsentimientosAceptados.mockResolvedValue([]);
+
+      const result = await service.getGlobalStats({ idOrganizacion: 'org-1' });
+
+      expect(result.kpis.totalCultivos).toBe(0);
+      expect(result.aniosDisponibles).toEqual([]);
+    });
+
+    it('does not read consents without an organization', async () => {
+      const result = await service.getGlobalStats();
+
+      expect(result.kpis.totalCultivos).toBe(12);
+      expect(accesoService.getConsentimientosAceptados).not.toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,7 @@
+import type { LoginDto, LoginSuccessDto } from 'common/auth';
 import type { Usuario } from 'common/usuario';
 import { useMemo, createContext, useEffect, useState, useContext, useCallback } from 'react';
-import { ApiError, apiFetch, apiRequest } from '../common/api.ts';
+import { ApiError, apiFetch } from '../common/api.ts';
 import { clearToken, getToken, setToken } from '../common/auth.ts';
 
 type AuthContextType = {
@@ -29,22 +30,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsuario(u);
         setLoading(false);
       })
-      .catch(() => { void setLoading(false) });
+      .catch((e: unknown) => {
+        // Un token caducado no sirve: se descarta para no enviarlo en cada petición
+        if (e instanceof ApiError && e.status === 401) clearToken();
+        setLoading(false);
+      });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await apiRequest('/auth/login', {
+    const { accessToken } = await apiFetch<LoginSuccessDto>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password } satisfies LoginDto),
     });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
-    }
-
-    const json = (await response.json()) as { data: { accessToken: string } };
-    const token = json.data.accessToken;
-    setToken(token);
+    setToken(accessToken);
 
     try {
       const u = await apiFetch<Usuario>('/usuario');

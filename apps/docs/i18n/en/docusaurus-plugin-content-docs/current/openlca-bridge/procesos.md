@@ -5,46 +5,45 @@ sidebar_position: 5
 
 # Process Definition in LCA Bridge
 
-**Processes** are the core of LCA calculation in LCA Bridge. Each supported crop type has an associated process that defines how LCA Capture agronomic data maps to openLCA input and output flows.
+**Processes** are the core of LCA calculation in LCA Bridge. Each supported crop type has an associated process that calculates, from the LCA Capture data, the amounts of the input and output flows of its openLCA subprocesses, always **per tonne of product**.
 
 There are currently three implemented processes:
 
-| Process | Crop type |
-|---|---|
-| `TomateProcess` | `"Tomate"` |
-| `OlivoProcess` | `"Olivo"` |
-| `VinedoProcess` | `"Vinedo"` |
+| Process | Crop type | Product system in openLCA |
+|---|---|---|
+| `TomateProcess` | `"Tomate"` | Tomate ESCENARIO MEDIO - ES |
+| `OlivoProcess` | `"Olivo"` | Olivo ESCENARIO MEDIO - ES |
+| `VinedoProcess` | `"Viñedo"` | Vina ESCENARIO MEDIO - ES |
+
+The formulas, assumptions, and calculation decisions for each crop are documented in [Process calculation](https://github.com/quercus-uex/LCA-Bridge/blob/main/docs/calculo_procesos.md), in the LCA Bridge repository.
 
 ## Architecture
 
-Processes live in `src/processes/` and follow a simple inheritance hierarchy:
+Processes live in `src/processes/`:
 
-```
-Process (abstract base class)
-├── TomateProcess
-├── OlivoProcess
-└── VinedoProcess
-```
+| File | Contents |
+|---|---|
+| `process.py` | `Process` base class. |
+| `tomate.py`, `olivo.py`, `vinedo.py` | One subclass per crop. |
+| `calculos.py` | Calculations shared by all crops (operations, plant protection products, irrigation, pumping, shed, and trellis). |
+| `datos_referencia.py` | Data from the reference Excel file (implements, plant protection products, weights, service lives, default values). |
 
-The `ACVService` service selects the appropriate class through `get_process_class()` based on the value of `metadatos.cultivo.tipo` in the input JSON:
+`ACVService` selects the class according to `metadatos.cultivo.tipo` through the `PROCESS_MAP` dictionary in `src/services/acv_service.py`; a type that is not in it returns HTTP 400:
 
 ```python
-def get_process_class(tipo: str) -> type[Process]:
-    match tipo:
-        case "Tomate":
-            return TomateProcess
-        case "Olivo":
-            return OlivoProcess
-        case "Vinedo":
-            return VinedoProcess
+PROCESS_MAP = {
+    "Tomate": TomateProcess,
+    "Olivo": OlivoProcess,
+    "Viñedo": VinedoProcess
+}
 ```
 
 ## Base Class: `Process`
 
-The `Process` class (`src/processes/process.py`) defines the interface that every process must implement:
+The `Process` class (`src/processes/process.py`) defines the interface that each process implements:
 
 ```python
-from ..models.dtagro_acv_output import GeneratedSchema as CaptureACVOutput
+from ..models.lca_capture_output import GeneratedSchema as CaptureACVOutput
 
 class Process:
     name: str = "NONE"
@@ -60,28 +59,31 @@ class Process:
 
 | Attribute | Description |
 |---|---|
-| `name` | Process name. It must match the `metadatos.cultivo.tipo` value sent by LCA Capture in the JSON. |
-| `uuid` | Product system UUID in the openLCA .zolca database. It is the entry point for the impact calculation. |
-| `fertilizantes_flow_name` | Name of the intermediate fertilizer flow in openLCA. |
-| `manejo_cultivo_flow_name` | Name of the intermediate crop management flow in openLCA. |
-| `pesticidas_flow_name` | Name of the intermediate pesticide flow in openLCA. |
-| `sistema_riego_flow_name` | Name of the intermediate irrigation system flow in openLCA. |
+| `name` | Crop name; it matches the `PROCESS_MAP` key. |
+| `uuid` | UUID of the product system in the openLCA database. It is the object that is calculated. |
+| `fertilizantes_flow_name` | Name of the fertilizer subprocess (and of its reference flow) in openLCA. |
+| `manejo_cultivo_flow_name` | Name of the crop management subprocess. |
+| `pesticidas_flow_name` | Name of the pesticide subprocess. |
+| `sistema_riego_flow_name` | Name of the irrigation system subprocess. |
+
+`OlivoProcess` and `VinedoProcess` also have `estructuras_flow_name` (`"Estructuras permanentes O"` and `"Estructuras permanentes V"`), a fifth subprocess with the trellis steel and the irrigation shed materials. Its impact has no list of its own in the response: it is only added to `impacto_total`.
 
 ### Static Methods
 
-Each process must implement five static methods that receive the `CaptureACVOutput` object (the parsed input JSON) and return a `FlowDict`:
+Each method receives the `CaptureACVOutput` object (the validated input JSON) and returns a `FlowDict`:
 
 | Method | Description |
 |---|---|
-| `get_fertilizantes_flow(output)` | Maps fertilization data to openLCA flows. |
-| `get_manejo_cultivo_flow(output)` | Maps agricultural operations and land use to openLCA flows. |
-| `get_pesticidas_flow(output)` | Maps plant protection products to openLCA flows. |
-| `get_sistema_riego_flow(output)` | Maps irrigation system components to openLCA flows. |
-| `get_all_flows(output)` | Returns a dictionary with the four previous flows, keyed by their names. |
+| `get_fertilizantes_flow(output)` | Applied nutrients, transport, and fertilization emissions. |
+| `get_manejo_cultivo_flow(output)` | Operations, harvesting, land occupation, and water use. |
+| `get_pesticidas_flow(output)` | Active ingredients by pesticide category and their emissions. |
+| `get_sistema_riego_flow(output)` | Irrigation plastics and steel, and pumping energy. |
+| `get_estructuras_flow(output)` | Olivo and Viñedo only: trellis and shed. |
+| `get_all_flows(output)` | Dictionary with the `FlowDict` of every subprocess, keyed by its name. |
 
 ## `FlowDict` Model
 
-`FlowDict` is the structure that represents a set of openLCA flows. It contains two dictionaries:
+`FlowDict` (`src/models/flow_dict.py`) represents the flows of a subprocess with two dictionaries:
 
 ```python
 class FlowDict:
@@ -89,69 +91,69 @@ class FlowDict:
     outputs: dict[str, float]   # Output flows (name → amount)
 ```
 
-- **Keys** are the exact flow names as defined in the openLCA .zolca database.
-- **Values** are the amounts extracted from the LCA Capture input JSON.
+- **Keys** are the flow names in openLCA. An elementary flow that appears in several compartments is distinguished with the form `"name [compartment]"` (e.g. `"Metribuzin [Emission to soil/agricultural]"`); that key is looked up first, then the name alone.
+- **Values** are amounts per tonne of product.
+- When the subprocess is written, exchanges without a value (except the reference one) are set to **0**, so that no value from a previous calculation remains, and a warning is logged. Keys that do not match any exchange are ignored, also with a warning.
 
 ### Example: Fertilizer Flow in `TomateProcess`
 
 ```python
 @staticmethod
 def get_fertilizantes_flow(output: CaptureACVOutput) -> FlowDict:
-    fertilizantes = FlowDict()
-    fertilizantes.inputs = {
-        "diesel, burned in agricultural machinery": output.fertilizantes.transporte_fert_UF_1,
-        "inorganic nitrogen fertiliser, as N": output.fertilizantes.kg_N,
-        "inorganic phosphorus fertiliser, as P2O5": output.fertilizantes.kg_P2O5,
-        "inorganic potassium fertiliser, as K2O": output.fertilizantes.kg_K2O
+    # Fertilizer transport arrives in t·km per tonne of tomato; it is converted to diesel.
+    diesel = output.fertilizantes.transporte_fert_UF_1 * datos.DIESEL_CAMION_KG_POR_TKM
+
+    flujos = FlowDict()
+    flujos.inputs = {
+        **calculos.nutrientes_fertilizantes(output),
+        "diesel": diesel,
     }
-    fertilizantes.outputs = {
+    flujos.outputs = {
         TomateProcess.fertilizantes_flow_name: 1,
-        "Ammonia": output.fertilizantes.kg_NH3,
-        "Dinitrogen monoxide": output.fertilizantes.kg_N2O,
-        "Nitrate": output.fertilizantes.kg_NO3,
-        "Nitrogen oxides": output.fertilizantes.kg_NOX
+        **calculos.emisiones_fertilizantes(output),
     }
-    return fertilizantes
+    return flujos
 ```
 
-The `inputs` represent consumed resources (fertilizers, fuel), and the `outputs` represent generated emissions (NH₃, N₂O, NO₃, NOₓ). The output flow with the process name (`fertilizantes_flow_name`) and value `1` acts as the connector to the main product system in openLCA.
+The `inputs` are the consumed resources (fertilizers and diesel) and the `outputs` are the emissions (NH₃, N₂O, NO₃, NOₓ). The output named after the subprocess (`fertilizantes_flow_name`) with value `1` is its reference flow, which connects it to the product system.
 
 ## Calculation Flow
 
-When `ACVService.execute()` receives a request, the process is used as follows:
+The complete flow of a request is described in [Usage](./uso.md#processing-flow). For the process:
 
-```
-1. get_process_class(tipo)           → Selects TomateProcess / OlivoProcess / VinedoProcess
-2. process.get_all_flows(output)     → Gets the 4 FlowDict objects (fertilizers, crop management, pesticides, irrigation)
-3. update_processes(flows, process)  → Updates each subprocess in openLCA through OLCAClient (IPC)
-4. calculate_impacts(process.uuid)   → Runs the impact calculation on the product system
-5. build_final_result()              → Builds the structured result by category
-```
-
-Each subprocess (fertilizers, crop management, pesticides, irrigation system) is updated independently in openLCA before running the global calculation. This lets flow values reflect the real crop data sent by LCA Capture.
+1. `get_all_flows(output)` calculates the `FlowDict` of every subprocess.
+2. `update_processes(flows, process.uuid)` looks up each subprocess by name among the providers of the product system (process names are not unique in openLCA) and writes its amounts through `OLCAClient`.
+3. `calculate_impacts(process.uuid)` calculates the product system with the configured impact method.
+4. `build_final_result()` extracts the impact of each subprocess and the total.
 
 ## How to Add a New Process
 
-To add support for a new crop type (for example, `"Almendro"`), follow these steps:
+To add a new crop type (for example, `"Almendro"`):
 
 ### 1. Create the Product System in openLCA
 
-Before changing code, define the following in the .zolca database:
+The openLCA database needs:
 
-- A **product system** for the new crop with its corresponding UUID.
-- Four **subprocesses** for the categories: fertilizers, crop management, pesticides, and irrigation system.
-- The **input and output flows** that connect the subprocesses with the main product system.
+- A **product system** for the new crop.
+- One **subprocess** per category (fertilizers, crop management, pesticides, and irrigation system), each a provider of the product system and with a unique name among its providers.
+- The input and output **flows** of each subprocess.
 
-Flow names must exactly match the names you will use in code.
+The following screenshot shows an example of the system defined in openLCA:
+
+<p align="center">
+    <img src="/img/openlca-bridge/captura-openlca.png" alt="Product system defined in openLCA" width="700"/>
+</p>
 
 ### 2. Create the Process Class
 
-Create a new file under `src/processes/`, for example `almendro_process.py`:
+Create `src/processes/almendro.py`, reusing the functions in `calculos.py` and the data in `datos_referencia.py` whenever possible:
 
 ```python
 from ..models.flow_dict import FlowDict
+from ..models.lca_capture_output import GeneratedSchema as CaptureACVOutput
+from . import calculos
 from .process import Process
-from ..models.dtagro_acv_output import GeneratedSchema as CaptureACVOutput
+
 
 class AlmendroProcess(Process):
     name: str = "Almendro"
@@ -164,55 +166,19 @@ class AlmendroProcess(Process):
 
     @staticmethod
     def get_fertilizantes_flow(output: CaptureACVOutput) -> FlowDict:
-        fertilizantes = FlowDict()
-        fertilizantes.inputs = {
-            # Map output.fertilizantes fields to openLCA flows
-            "diesel, burned in agricultural machinery": output.fertilizantes.transporte_fert_UF_1,
-            "inorganic nitrogen fertiliser, as N": output.fertilizantes.kg_N,
-            # ... add according to the flows defined in openLCA
+        flujos = FlowDict()
+        flujos.inputs = {
+            **calculos.nutrientes_fertilizantes(output),
+            # ... remaining inputs of the subprocess in openLCA
         }
-        fertilizantes.outputs = {
+        flujos.outputs = {
             AlmendroProcess.fertilizantes_flow_name: 1,
-            "Ammonia": output.fertilizantes.kg_NH3,
-            # ... add according to the flows defined in openLCA
+            **calculos.emisiones_fertilizantes(output),
         }
-        return fertilizantes
+        return flujos
 
-    @staticmethod
-    def get_manejo_cultivo_flow(output: CaptureACVOutput) -> FlowDict:
-        manejo_cultivo = FlowDict()
-        manejo_cultivo.inputs = {
-            # Map output.manejo_cultivo and output.maquinaria fields
-            # ...
-        }
-        manejo_cultivo.outputs = {
-            AlmendroProcess.manejo_cultivo_flow_name: 1
-        }
-        return manejo_cultivo
-
-    @staticmethod
-    def get_pesticidas_flow(output: CaptureACVOutput) -> FlowDict:
-        pesticidas = FlowDict()
-        pesticidas.inputs = {
-            # Map output.fitosanitarios.detalle fields by SimaPro classification
-            # ...
-        }
-        pesticidas.outputs = {
-            AlmendroProcess.pesticidas_flow_name: 1,
-        }
-        return pesticidas
-
-    @staticmethod
-    def get_sistema_riego_flow(output: CaptureACVOutput) -> FlowDict:
-        sistema_riego = FlowDict()
-        sistema_riego.inputs = {
-            # Map output.riegos and output.bombeo fields
-            # ...
-        }
-        sistema_riego.outputs = {
-            AlmendroProcess.sistema_riego_flow_name: 1,
-        }
-        return sistema_riego
+    # get_manejo_cultivo_flow, get_pesticidas_flow and get_sistema_riego_flow follow the same pattern:
+    # inputs per tonne and a reference output with its *_flow_name and value 1.
 
     @staticmethod
     def get_all_flows(output: CaptureACVOutput):
@@ -220,49 +186,35 @@ class AlmendroProcess(Process):
             AlmendroProcess.fertilizantes_flow_name: AlmendroProcess.get_fertilizantes_flow(output),
             AlmendroProcess.manejo_cultivo_flow_name: AlmendroProcess.get_manejo_cultivo_flow(output),
             AlmendroProcess.pesticidas_flow_name: AlmendroProcess.get_pesticidas_flow(output),
-            AlmendroProcess.sistema_riego_flow_name: AlmendroProcess.get_sistema_riego_flow(output)
+            AlmendroProcess.sistema_riego_flow_name: AlmendroProcess.get_sistema_riego_flow(output),
         }
 ```
 
-### 3. Register the Process in `get_process_class()`
+### 3. Register the Process in `PROCESS_MAP`
 
-Add the new case to the process selection function:
+Add the class to the `PROCESS_MAP` dictionary in `src/services/acv_service.py`, with the key that LCA Capture sends in `metadatos.cultivo.tipo`:
 
 ```python
-def get_process_class(tipo: str) -> type[Process]:
-    match tipo:
-        case "Tomate":
-            return TomateProcess
-        case "Olivo":
-            return OlivoProcess
-        case "Vinedo":
-            return VinedoProcess
-        case "Almendro":
-            return AlmendroProcess
+PROCESS_MAP = {
+    "Tomate": TomateProcess,
+    "Olivo": OlivoProcess,
+    "Viñedo": VinedoProcess,
+    "Almendro": AlmendroProcess,
+}
 ```
 
 ### 4. Flow Mapping Considerations
 
-When implementing the `get_*_flow` methods, keep the following in mind:
-
-- **Flow names**: they must match **exactly** those defined in the openLCA .zolca database. A name mismatch will prevent openLCA from finding the flow and will make the calculation fail.
-- **Default values**: when a field in the input JSON may be missing (for example, when there are no operations or machinery), use a default value of `1` to avoid access errors on nonexistent indexes. See how `TomateProcess` protects array access with length checks:
-
-  ```python
-  output.manejo_cultivo.labores[0].fabricacion if len(output.manejo_cultivo.labores) > 0 else 1
-  ```
-
-- **Process output flows**: each subprocess must have an output with its `*_flow_name` and value `1`. This flow acts as the connector to the main product system in openLCA.
-- **Optional fields**: some JSON blocks such as `bombeo` may be `null`. Protect access with checks:
-
-  ```python
-  output.bombeo.potencia if output.bombeo else 1
-  ```
+- **Flow names**: a key that does not match any exchange does not raise an error, but it is ignored (with a warning in the log) and that exchange is left at 0. Review the warnings when testing the process.
+- **Subprocess names**: they must match the `*_flow_name` values and be unique among the providers of the product system; otherwise, the calculation fails with an openLCA error (HTTP 500).
+- **Missing data**: a flow without data is 0. Optional blocks (`bombeo`, `caseta`, `espalderas`) are handled in the `calculos.py` functions, which return 0 when the block does not exist.
+- **Fifth subprocess**: if the product system has permanent structures, add `estructuras_flow_name` and `get_estructuras_flow`, and include it in `get_all_flows`, as in `OlivoProcess`.
+- **Coefficients**: `POST /capture-acv-coeficientes` uses the same `FlowDict` objects, so it requires no changes.
 
 ### 5. Add Tests
 
-Create a test fixture under `test/` with an example JSON for the new crop type and verify that:
+Tests do not use openLCA: the client is replaced by the mocks in `test/mocks.py`. For the new crop:
 
-- `get_process_class("Almendro")` returns `AlmendroProcess`.
-- Each `get_*_flow` method returns a `FlowDict` with the expected flows.
-- The `POST /capture-acv` endpoint processes the new type correctly (it will return HTTP 500 if openLCA is not available, but schema validation must pass).
+- Add a test input file in `test/` (for example, `almendro_input.json`).
+- Verify that `get_all_flows` returns the expected flows for that input.
+- Verify that `POST /capture-acv` returns **HTTP 200** with the mocked openLCA client.

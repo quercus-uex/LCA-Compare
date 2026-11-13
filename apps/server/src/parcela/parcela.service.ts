@@ -1,7 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Parcela } from '../generated/prisma/client';
+import { Prisma, Parcela, Cultivo } from '../generated/prisma/client';
 import { Polygon } from 'geojson';
+import type { ParcelaPoblacion } from 'common/parcela';
+import { buildCampaignYearRangeFilter } from '../common/helpers/campaign-year.helper';
+import { parseImpactoDatos } from '../stats/helpers/impacto-datos.helpers';
+import {
+  getCategoryAmounts,
+  type PartialCategoryAmounts,
+} from '../stats/helpers/stats-aggregation.helpers';
+
+const POBLACION_SELECT = {
+  select: {
+    id: true,
+    nombre: true,
+    provincia: { select: { id: true, nombre: true } },
+  },
+} satisfies Prisma.Parcela$poblacionArgs;
+
+export type ParcelaResumenRow = Parcela & {
+  poblacion: ParcelaPoblacion | null;
+  ultimoCultivo: Pick<
+    Cultivo,
+    'id' | 'tipo' | 'fechaInicioCampania' | 'superficieCultivada'
+  > | null;
+  numCultivos: number;
+};
+
+export type ParcelaDetalleRow = Parcela & {
+  poblacion: ParcelaPoblacion | null;
+  cultivos: Array<Cultivo & { impactoTotal: PartialCategoryAmounts | null }>;
+};
 
 @Injectable()
 export class ParcelaService {
@@ -18,6 +47,94 @@ export class ParcelaService {
         },
       },
     });
+  }
+
+  /**
+   * Parcelas de un propietario con su ubicación, su último cultivo y su número
+   * de campañas. Con `anios` solo cuentan los cultivos de esos años de campaña
+   * (UTC) y se omiten las parcelas que no tienen ninguno; un array vacío no
+   * devuelve nada.
+   */
+  async findResumenByPropietario(
+    idPropietario: string,
+    anios?: number[],
+  ): Promise<ParcelaResumenRow[]> {
+    const cultivoWhere: Prisma.CultivoWhereInput | undefined = anios && {
+      OR: anios.map((anio) => buildCampaignYearRangeFilter(anio, anio)),
+    };
+
+    const parcelas = await this.prisma.parcela.findMany({
+      where: {
+        idPropietario,
+        ...(cultivoWhere && { cultivos: { some: cultivoWhere } }),
+      },
+      orderBy: { nombre: 'asc' },
+      include: {
+        poblacion: POBLACION_SELECT,
+        cultivos: {
+          where: cultivoWhere,
+          orderBy: { fechaInicioCampania: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            tipo: true,
+            fechaInicioCampania: true,
+            superficieCultivada: true,
+          },
+        },
+        _count: {
+          select: {
+            cultivos: cultivoWhere ? { where: cultivoWhere } : true,
+          },
+        },
+      },
+    });
+
+    return parcelas.map(({ cultivos, _count, ...parcela }) => ({
+      ...parcela,
+      ultimoCultivo: cultivos[0] ?? null,
+      numCultivos: _count.cultivos,
+    }));
+  }
+
+  /** Geometrías de las parcelas de un propietario que tienen polígono */
+  async getGeomsByPropietario(
+    idPropietario: string,
+  ): Promise<Map<string, Polygon>> {
+    const rows = await this.prisma.$queryRaw<
+      Array<{ id: string; geojson: unknown }>
+    >`
+      SELECT "id", ST_AsGeoJSON("geom")::json AS geojson
+      FROM "Parcela"
+      WHERE "idPropietario" = ${idPropietario} AND "geom" IS NOT NULL
+    `;
+
+    return new Map(rows.map((r) => [r.id, r.geojson as Polygon]));
+  }
+
+  /** Parcela con su ubicación y sus cultivos (del más reciente al más antiguo) con el impacto total por categoría */
+  async findDetalle(id: string): Promise<ParcelaDetalleRow | null> {
+    const parcela = await this.prisma.parcela.findUnique({
+      where: { id },
+      include: {
+        poblacion: POBLACION_SELECT,
+        cultivos: {
+          orderBy: { fechaInicioCampania: 'desc' },
+          include: { resultadoImpacto: { select: { datos: true } } },
+        },
+      },
+    });
+    if (!parcela) return null;
+
+    return {
+      ...parcela,
+      cultivos: parcela.cultivos.map(({ resultadoImpacto, ...cultivo }) => ({
+        ...cultivo,
+        impactoTotal: resultadoImpacto
+          ? getCategoryAmounts(parseImpactoDatos(resultadoImpacto.datos))
+          : null,
+      })),
+    };
   }
 
   async findMany(params: {
@@ -69,14 +186,15 @@ export class ParcelaService {
     return (rows?.[0]?.geojson as Polygon) ?? null;
   }
 
+  /** Ids de las parcelas cuyo polígono está a `range` metros o menos del punto */
   async findManyByPointRange(
     lat: number,
     long: number,
     range: number,
-  ): Promise<Parcela[]> {
-    return this.prisma.$queryRaw<Array<Parcela>>`
+  ): Promise<Pick<Parcela, 'id'>[]> {
+    return this.prisma.$queryRaw<Array<Pick<Parcela, 'id'>>>`
       WITH target AS (SELECT ST_SetSRID(ST_MakePoint(${long}, ${lat}), 4326)::geography AS geo)
-      SELECT p.*
+      SELECT p.id
       FROM "Parcela" p
       JOIN target t ON TRUE
       WHERE ST_DWithin(p.geom::geography, t.geo, ${range})
@@ -95,10 +213,6 @@ export class ParcelaService {
       data,
       where,
     });
-  }
-
-  async delete(where: Prisma.ParcelaWhereUniqueInput): Promise<Parcela> {
-    return this.prisma.parcela.delete({ where });
   }
 
   /** Elimina la parcela junto con sus cultivos y los resultados de estos */

@@ -11,17 +11,17 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts';
-import { useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
+import { formatNumber } from '../common/format.ts';
+import { Button, EmptyState } from '../components/ui/index.ts';
+import { getCropTypeStyle, useCropTypeLabel } from '../hooks/use-crop-type-label.ts';
+import { ChartTooltip } from './chart-tooltip.component.tsx';
 import {
   CHART_AXIS_LABEL_STYLE,
   CHART_GRID_STROKE,
   CHART_POINT_LABEL_STYLE,
   CHART_REFERENCE_STROKE,
   CHART_TICK,
-  colorAt,
 } from './stats-chart-theme.ts';
-import { formatInteger, formatNumber } from './stats-formatters.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 
 type Props = {
@@ -56,19 +56,18 @@ const WaterTooltip = ({
   const d = payload?.[0]?.payload;
   if (!active || !d) return null;
   return (
-    <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
-      <p className="font-bold">{d.nombreProvincia}</p>
-      <p>{t('stats.chart.yield')}: {formatInteger(d.rendimiento)} kg/ha</p>
-      <p>{t('stats.chart.waterUse')}: {formatInteger(d.dotacionAgua)} m³/ha</p>
+    <ChartTooltip title={d.nombreProvincia}>
+      <p>{t('stats.chart.yield')}: {formatNumber(d.rendimiento)} kg/ha</p>
+      <p>{t('stats.chart.waterUse')}: {formatNumber(d.dotacionAgua)} m³/ha</p>
       {d.productividadAgua !== null && (
         <p className="font-semibold">
           {t('stats.chart.waterProductivity')}: {formatNumber(d.productividadAgua, 2)} kg/m³
         </p>
       )}
-      <p className="text-base-content/60">
+      <p className="text-muted">
         {t('stats.chart.area')}: {formatNumber(d.superficieTotal, 1)} ha
       </p>
-    </div>
+    </ChartTooltip>
   );
 };
 
@@ -84,21 +83,21 @@ export const StatsWaterChart = ({
   // El rendimiento de cultivos distintos no es comparable entre sí
   if (!tipoCultivo) {
     return (
-      <StatsPlaceholder>
-        <span>{t('stats.chart.selectCropForWater')}</span>
-        <div className="flex flex-wrap justify-center gap-2">
-          {tiposCultivo.map((tipo) => (
-            <button
-              key={tipo}
-              type="button"
-              className="btn btn-sm btn-outline"
-              onClick={() => onSelectCrop(tipo)}
-            >
-              {getCropTypeLabel(tipo)}
-            </button>
-          ))}
-        </div>
-      </StatsPlaceholder>
+      <EmptyState
+        variant="inset"
+        icon={false}
+        description={t('stats.chart.selectCropForWater')}
+        className="h-72"
+        action={
+          <div className="flex flex-wrap justify-center gap-2">
+            {tiposCultivo.map((tipo) => (
+              <Button key={tipo} variant="outline" size="sm" onClick={() => onSelectCrop(tipo)}>
+                {getCropTypeLabel(tipo)}
+              </Button>
+            ))}
+          </div>
+        }
+      />
     );
   }
 
@@ -109,10 +108,10 @@ export const StatsWaterChart = ({
   );
 
   if (points.length === 0) {
-    return <StatsPlaceholder>{t('stats.chart.noWaterData')}</StatsPlaceholder>;
+    return <EmptyState variant="inset" icon={false} description={t('stats.chart.noWaterData')} className="h-72" />;
   }
 
-  const color = colorAt(Math.max(tiposCultivo.indexOf(tipoCultivo), 0));
+  const color = getCropTypeStyle(tipoCultivo).color;
 
   return (
     <div className="space-y-2">
@@ -124,7 +123,7 @@ export const StatsWaterChart = ({
             dataKey="dotacionAgua"
             name={t('stats.chart.waterUse')}
             tick={CHART_TICK}
-            tickFormatter={(v: number) => formatInteger(v)}
+            tickFormatter={(v: number) => formatNumber(v)}
             domain={['auto', 'auto']}
             padding={{ left: 24, right: 24 }}
             label={{
@@ -139,7 +138,7 @@ export const StatsWaterChart = ({
             dataKey="rendimiento"
             name={t('stats.chart.yield')}
             tick={CHART_TICK}
-            tickFormatter={(v: number) => formatInteger(v)}
+            tickFormatter={(v: number) => formatNumber(v)}
             domain={['auto', 'auto']}
             padding={{ top: 24, bottom: 24 }}
             width={80}
@@ -167,7 +166,7 @@ export const StatsWaterChart = ({
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>
-      <p className="text-xs text-base-content/60">{t('stats.chart.quadrantHint')}</p>
+      <p className="text-sm text-muted">{t('stats.chart.quadrantHint')}</p>
     </div>
   );
 };

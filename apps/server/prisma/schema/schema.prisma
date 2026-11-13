@@ -18,6 +18,10 @@ model Usuario {
   fechaRegistro      DateTime  @default(now())
   fechaActualizacion DateTime  @updatedAt
   parcelas           Parcela[]
+
+  organizacionesAdministradas Organizacion[]   @relation("OrganizacionAdministrador")
+  consentimientos             Consentimiento[]
+  notificaciones              Notificacion[]
 }
 
 model Parcela {

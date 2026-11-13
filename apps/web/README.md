@@ -23,3 +23,5 @@ pnpm --filter common build
 - API calls use `API_BASE_URL = '/api'` in `src/common/constants.ts`.
 - Vite proxies `/api` to `http://localhost:8000` and strips the `/api` prefix.
 - TailwindCSS 4 is configured through `@tailwindcss/vite`; DaisyUI 5 and the custom `acv` theme are configured in `src/index.css`.
+- Shared UI components live in `src/components/ui` (catalog at `/dev/ui`, dev server only). ESLint rejects DaisyUI
+  component classes the library already covers when they're used outside that folder: use the component instead.

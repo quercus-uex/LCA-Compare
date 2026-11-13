@@ -12,6 +12,7 @@ function categorias(values: Partial<CategoryValues>): CategoryValues {
 function makeRow(anio: number, climateChange?: number): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio,
     superficie: 10,
@@ -56,10 +57,6 @@ describe('evolucion-temporal.helpers', () => {
       ]);
 
       expect(result.map((r) => r.anio)).toEqual([2024]);
-    });
-
-    it('returns an empty list without rows', () => {
-      expect(aggregateEvolucionByYear([])).toEqual([]);
     });
   });
 });

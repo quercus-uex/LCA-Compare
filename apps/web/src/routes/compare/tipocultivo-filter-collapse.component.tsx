@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select } from '../../components/ui/index.ts';
 import type { CompareFilterType } from '../../hooks/compare.hook.tsx';
 import { CROP_TYPE_OPTIONS } from '../../hooks/use-crop-type-label.ts';
 import { FilterCollapse } from './filter-collapse.component';
@@ -25,8 +26,8 @@ export const TipocultivoFilterCollapse = (
         if (!isEnabled) setFilters({ ...filters, tipoCultivo: undefined });
       }}
     >
-      <select
-        className="select w-full"
+      <Select
+        aria-label={t('compare.filters.cropType')}
         value={filters.tipoCultivo}
         defaultValue={t('compare.filters.selectType')}
         onChange={(e) => {
@@ -37,7 +38,7 @@ export const TipocultivoFilterCollapse = (
         {CROP_TYPE_OPTIONS.map(({ value, labelKey }) => (
           <option key={value} value={value}>{t(labelKey)}</option>
         ))}
-      </select>
+      </Select>
     </FilterCollapse>
   );
 }

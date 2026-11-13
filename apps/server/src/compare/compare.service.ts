@@ -1,11 +1,7 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
-import { ResultadoImpacto } from '../generated/prisma/client';
+import { ParcelaService } from '../parcela/parcela.service';
+import { Prisma, ResultadoImpacto } from '../generated/prisma/client';
 import { CompareResultDto } from './dto/compare-result.dto';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { chromium, Browser } from 'playwright';
@@ -32,11 +28,21 @@ import {
 } from './compare-report.i18n';
 import type { CompareReportLanguage } from 'common/compare';
 import { getEfCategoryId, normalizeEfName } from 'common/impact';
+import { errorMessage } from '../common/helpers/error.helper';
+import { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 // openLCA no siempre escribe igual el nombre de una categoría; se comparan por
-// su categoría EF o, si no es una conocida, por el nombre normalizado
-const getCategoryKey = (name: string): string =>
-  getEfCategoryId(name) ?? normalizeEfName(name);
+// su categoría EF o, si no es una conocida, por el nombre normalizado. Los
+// nombres distintos son pocos, así que la clave de cada uno se calcula una vez
+const categoryKeys = new Map<string, string>();
+const getCategoryKey = (name: string): string => {
+  let key = categoryKeys.get(name);
+  if (key === undefined) {
+    key = getEfCategoryId(name) ?? normalizeEfName(name);
+    categoryKeys.set(name, key);
+  }
+  return key;
+};
 
 /**
  * Formats an impact amount with `significant` significant digits. Values
@@ -93,17 +99,20 @@ Handlebars.registerHelper('concat', (...args: unknown[]) =>
 );
 
 @Injectable()
-export class CompareService implements OnModuleInit, OnModuleDestroy {
+export class CompareService implements OnModuleDestroy {
   private readonly logger = new Logger(CompareService.name);
   private readonly reportTemplate: HandlebarsTemplateDelegate;
-  private browser: Browser;
+  // Chromium solo se lanza al generar el primer informe
+  private browser?: Promise<Browser>;
 
   constructor(
     private readonly resultadoImpactoService: ResultadoImpactoService,
+    private readonly parcelaService: ParcelaService,
     private readonly provinciaService: ProvinciaService,
     private readonly poblacionService: PoblacionService,
     private readonly paisService: PaisService,
     private readonly aiService: AiService,
+    private readonly accesoService: OrganizacionAccesoService,
   ) {
     const reportTemplateFile = fs.readFileSync(
       path.resolve(__dirname, '../templates/compare-report.template.hbs'),
@@ -112,39 +121,67 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     this.reportTemplate = Handlebars.compile(reportTemplateFile);
   }
 
-  async onModuleInit() {
-    this.browser = await chromium.launch();
+  private getBrowser(): Promise<Browser> {
+    // Si el lanzamiento falla, el siguiente informe lo vuelve a intentar
+    this.browser ??= chromium.launch().catch((error: unknown) => {
+      this.browser = undefined;
+      throw error;
+    });
+    return this.browser;
   }
 
   async onModuleDestroy() {
-    await this.browser?.close();
+    const browser = await this.browser?.catch(() => undefined);
+    await browser?.close();
   }
 
-  async findResults(
+  /**
+   * `where` de los resultados que cumplen los filtros, o null si no hay
+   * filtros. El filtro por radio se resuelve antes a los ids de las parcelas
+   * que caen dentro, y el de organización a sus campañas consentidas (quién
+   * puede usarlo lo comprueba el controlador). El filtro por parcelas solo
+   * alcanza las de `viewerId` y las campañas ajenas que ve como administrador
+   * de una organización; sin `viewerId` no coincide con nada.
+   */
+  private async buildWhere(
     filters: CompareQueryItemDto,
-  ): Promise<ResultadoImpactoWithRelations[]> {
-    let locationIds: string[] | undefined;
-
-    const { lat, long, range } = filters;
+    viewerId?: string,
+  ): Promise<Prisma.ResultadoImpactoWhereInput | null> {
+    const { lat, long, range, idOrganizacion, idsParcela } = filters;
     const hasLocationFilter = lat != null && long != null && range != null;
 
-    if (hasLocationFilter) {
-      const locationResults =
-        await this.resultadoImpactoService.findManyAroundPoint(
-          lat,
-          long,
-          range,
-        );
-      locationIds = locationResults.map((i) => i.id);
-    }
+    const [nearbyParcelaIds, consentimientos, accesoParcelas] =
+      await Promise.all([
+        hasLocationFilter
+          ? this.parcelaService
+              .findManyByPointRange(lat, long, range)
+              .then((parcelas) => parcelas.map((p) => p.id))
+          : undefined,
+        idOrganizacion
+          ? this.accesoService.getConsentimientosAceptados(idOrganizacion)
+          : undefined,
+        viewerId && idsParcela?.length
+          ? this.accesoService
+              .getConsentimientosDeParcelas(viewerId, idsParcela)
+              .then((c) => ({ idUsuario: viewerId, consentimientos: c }))
+          : undefined,
+      ]);
 
-    const where = CompareQueryBuilder.build(filters, locationIds);
+    return CompareQueryBuilder.build(
+      filters,
+      nearbyParcelaIds,
+      consentimientos,
+      accesoParcelas,
+    );
+  }
 
-    if (!where) {
-      return [];
-    }
-
-    return this.resultadoImpactoService.findMany({ where });
+  /** Resultados con su cultivo y ubicación, que necesita el informe */
+  async findResults(
+    filters: CompareQueryItemDto,
+    viewerId?: string,
+  ): Promise<ResultadoImpactoWithRelations[]> {
+    const where = await this.buildWhere(filters, viewerId);
+    return where ? this.resultadoImpactoService.findMany({ where }) : [];
   }
 
   /**
@@ -153,7 +190,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
    * media.
    */
   getMeanOfResults(
-    results: ResultadoImpacto[],
+    results: Pick<ResultadoImpacto, 'datos'>[],
   ): ResultadoImpactoDto | undefined {
     if (!results.length) return undefined;
 
@@ -186,9 +223,13 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     return mean;
   }
 
-  async getMeanByFilters(filters: CompareQueryItemDto) {
-    const results = await this.findResults(filters);
-    return this.getMeanOfResults(results);
+  // La media solo lee `datos`, así que no se cargan cultivo ni ubicación
+  async getMeanByFilters(filters: CompareQueryItemDto, viewerId?: string) {
+    const where = await this.buildWhere(filters, viewerId);
+    if (!where) return undefined;
+    return this.getMeanOfResults(
+      await this.resultadoImpactoService.findManyDatos(where),
+    );
   }
 
   // Relative change of the target set with respect to the reference (baseline):
@@ -206,14 +247,26 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     refResults: ResultadoImpactoDto,
     tarResults?: ResultadoImpactoDto,
   ): CompareResultDto {
+    // Con categorías repetidas en el objetivo vale la primera, como con `find`
+    const tarByCategory: Partial<
+      Record<(typeof IMPACT_KEYS)[number], Map<string, ResultadoImpactoItemDto>>
+    > = {};
+    for (const key of IMPACT_KEYS) {
+      const items = tarResults?.[key];
+      if (!items) continue;
+      const byCategory = new Map<string, ResultadoImpactoItemDto>();
+      for (const item of items) {
+        const categoryKey = getCategoryKey(item.category);
+        if (!byCategory.has(categoryKey)) byCategory.set(categoryKey, item);
+      }
+      tarByCategory[key] = byCategory;
+    }
+
     return Object.fromEntries(
       IMPACT_KEYS.map((key) => [
         key,
         refResults[key].map((r) => {
-          const categoryKey = getCategoryKey(r.category);
-          const tarItem = tarResults?.[key]?.find(
-            (i) => getCategoryKey(i.category) === categoryKey,
-          );
+          const tarItem = tarByCategory[key]?.get(getCategoryKey(r.category));
           return {
             category: r.category,
             unit: r.unit,
@@ -239,10 +292,13 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
     const { idsPais, idsProvincia, idsPoblacion, minYear, maxYear } =
       extractLocationData(results);
 
-    const [paises, provincias, poblaciones] = await Promise.all([
+    const [paises, provincias, poblaciones, organizacion] = await Promise.all([
       this.paisService.findMany({ where: { id: { in: idsPais } } }),
       this.provinciaService.findMany({ where: { id: { in: idsProvincia } } }),
       this.poblacionService.findMany({ where: { id: { in: idsPoblacion } } }),
+      filters.idOrganizacion
+        ? this.accesoService.getOrganizacionRef(filters.idOrganizacion)
+        : null,
     ]);
 
     const provinciaSet = new Set(filters.idsProvincia ?? []);
@@ -276,6 +332,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
           chosen: t === filters.tipoCultivo,
         }),
       ),
+      // Organización cuyas campañas consentidas limitan el conjunto
+      organizacion,
       filters,
       results,
     };
@@ -319,7 +377,7 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       return text?.trim() ? text : undefined;
     } catch (error) {
       this.logger.warn(
-        `AI generation failed for ${templateName}: ${error instanceof Error ? error.message : String(error)}`,
+        `AI generation failed for ${templateName}: ${errorMessage(error)}`,
       );
       return undefined;
     }
@@ -327,6 +385,24 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
 
   private promptName(base: string, language: CompareReportLanguage): string {
     return language === 'es' ? base : `${base}-${language}`;
+  }
+
+  private async generateAiSections(
+    comparison: CompareResultDto,
+    language: CompareReportLanguage,
+  ): Promise<{ overview?: string; recommendations?: string }> {
+    const overview = await this.tryGenerateAiText(
+      this.promptName('compare-overview', language),
+      { data: JSON.stringify(comparison) },
+    );
+    // Recommendations are generated from the overview, so skip them without it
+    const recommendations = overview
+      ? await this.tryGenerateAiText(
+          this.promptName('compare-recommendations', language),
+          { data: overview },
+        )
+      : undefined;
+    return { overview, recommendations };
   }
 
   async generateReport(
@@ -348,27 +424,14 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       reportLanguage,
     );
 
-    const overview = await this.tryGenerateAiText(
-      this.promptName('compare-overview', reportLanguage),
-      { data: JSON.stringify(localizedComparison) },
-    );
-    // Recommendations are generated from the overview, so skip them without it
-    const recommendations = overview
-      ? await this.tryGenerateAiText(
-          this.promptName('compare-recommendations', reportLanguage),
-          { data: overview },
-        )
-      : undefined;
-    const refContext = await this.buildReportContext(
-      refResults,
-      refFilters,
-      reportLanguage,
-    );
-    const tarContext = await this.buildReportContext(
-      tarResults,
-      tarFilters,
-      reportLanguage,
-    );
+    // The AI texts and the location contexts are independent, so they run
+    // concurrently; the AI calls never throw (a failure omits the section)
+    const [{ overview, recommendations }, refContext, tarContext] =
+      await Promise.all([
+        this.generateAiSections(localizedComparison, reportLanguage),
+        this.buildReportContext(refResults, refFilters, reportLanguage),
+        this.buildReportContext(tarResults, tarFilters, reportLanguage),
+      ]);
 
     const topImpacts = localizedComparison.impacto_total
       .toSorted((a, b) => Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0))
@@ -386,7 +449,8 @@ export class CompareService implements OnModuleInit, OnModuleDestroy {
       target: tarContext,
     });
 
-    const page = await this.browser.newPage();
+    const browser = await this.getBrowser();
+    const page = await browser.newPage();
     try {
       // Tailwind and the font load from a CDN; wait for them before printing
       await page.setContent(html, { waitUntil: 'networkidle' });

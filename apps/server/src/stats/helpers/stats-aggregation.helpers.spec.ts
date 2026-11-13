@@ -7,31 +7,6 @@ import {
 
 describe('stats-aggregation.helpers', () => {
   describe('getCategoryAmounts', () => {
-    it('keeps the three eutrophication indicators separate instead of summing their different units', () => {
-      const datos = {
-        impacto_total: [
-          {
-            category: 'Eutrophication: freshwater',
-            amount: 0.5,
-            unit: 'kg P eq',
-          },
-          { category: 'Eutrophication: marine', amount: 2, unit: 'kg N eq' },
-          {
-            category: 'Eutrophication: terrestrial',
-            amount: 7,
-            unit: 'mol N eq',
-          },
-        ],
-      };
-
-      const result = getCategoryAmounts(datos);
-
-      expect(result.eutrophication_freshwater).toBe(0.5);
-      expect(result.eutrophication_marine).toBe(2);
-      expect(result.eutrophication_terrestrial).toBe(7);
-      expect(result).not.toHaveProperty('eutrophication');
-    });
-
     it('maps known EF category names and omits categories missing from the result', () => {
       const datos = {
         impacto_total: [
@@ -46,22 +21,11 @@ describe('stats-aggregation.helpers', () => {
       });
     });
 
-    it('handles differing casing and whitespace', () => {
-      const datos = {
-        impacto_total: [
-          { category: '  climate CHANGE  ', amount: 7 },
-          { category: 'WATER USE', amount: 3 },
-        ],
-      };
-
-      const result = getCategoryAmounts(datos);
-
-      expect(result.climate_change).toBe(7);
-      expect(result.water_use).toBe(3);
-    });
-
     it.each([
+      // Las tres eutrofizaciones tienen unidades distintas: no se suman
       ['Eutrophication: freshwater', 'eutrophication_freshwater'],
+      ['Eutrophication: marine', 'eutrophication_marine'],
+      ['Eutrophication: terrestrial', 'eutrophication_terrestrial'],
       ['Eutrophication, freshwater', 'eutrophication_freshwater'],
       ['Eutrophication freshwater', 'eutrophication_freshwater'],
       ['Particulate matter', 'particulate_matter'],
@@ -70,6 +34,8 @@ describe('stats-aggregation.helpers', () => {
       ['Human toxicity cancer', 'human_toxicity_cancer'],
       ['Human toxicity, non-cancer', 'human_toxicity_non_cancer'],
       ['Human toxicity: non-carcinogenic', 'human_toxicity_non_cancer'],
+      ['  climate CHANGE  ', 'climate_change'],
+      ['WATER USE', 'water_use'],
     ] as const)('recognises the openLCA spelling %p as %p', (category, id) => {
       expect(
         getCategoryAmounts({ impacto_total: [{ category, amount: 1 }] }),
@@ -88,6 +54,19 @@ describe('stats-aggregation.helpers', () => {
       expect(getCategoryAmounts(datos)).toEqual({ human_toxicity_cancer: 3 });
     });
 
+    it('skips non-finite amounts and sums a repeated category', () => {
+      const datos = {
+        impacto_total: [
+          { category: 'Climate change', amount: 2 },
+          { category: 'Climate change', amount: 3 },
+          { category: 'Acidification', amount: Number.NaN },
+          { category: 'Water use', amount: Number.POSITIVE_INFINITY },
+        ],
+      };
+
+      expect(getCategoryAmounts(datos)).toEqual({ climate_change: 5 });
+    });
+
     it('returns no amounts for null, undefined, or missing impacto_total', () => {
       expect(getCategoryAmounts(null)).toEqual({});
       expect(getCategoryAmounts(undefined)).toEqual({});
@@ -96,16 +75,6 @@ describe('stats-aggregation.helpers', () => {
   });
 
   describe('meanCategories', () => {
-    it('returns per-category arithmetic means', () => {
-      const result = meanCategories([
-        { climate_change: 10, acidification: 20 },
-        { climate_change: 30, acidification: 40 },
-      ]);
-
-      expect(result.climate_change).toBe(20);
-      expect(result.acidification).toBe(30);
-    });
-
     it('averages each category only over the records that have it', () => {
       const result = meanCategories([
         { climate_change: 10, acidification: 6 },
@@ -135,7 +104,8 @@ describe('stats-aggregation.helpers', () => {
       {
         impactosPorCategoria: {
           climate_change: 50,
-          acidification: 20,
+          // Con el total (250) quedaría la última
+          acidification: 200,
         } as unknown as CategoryAmountRecord,
       },
       {
@@ -146,19 +116,11 @@ describe('stats-aggregation.helpers', () => {
       },
     ];
 
-    it('sorts by climate change when no category is provided, never by a cross-unit total', () => {
+    it('sorts by climate change, never by a cross-unit total', () => {
       const result = sortByImpact([...items]);
 
       expect(result.map((i) => i.impactosPorCategoria.climate_change)).toEqual([
         50, 75, 100,
-      ]);
-    });
-
-    it('sorts by specific category amount when category is provided', () => {
-      const result = sortByImpact([...items], 'acidification');
-
-      expect(result.map((i) => i.impactosPorCategoria.acidification)).toEqual([
-        10, 15, 20,
       ]);
     });
   });

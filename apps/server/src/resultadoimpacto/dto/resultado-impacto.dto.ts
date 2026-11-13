@@ -1,7 +1,10 @@
-import type { ResultadoImpactoItemDto } from 'common/api';
+import type {
+  ResultadoImpactoDto as ResultadoImpacto,
+  ResultadoImpactoItemDto,
+} from 'common/api';
 export type { ResultadoImpactoItemDto } from 'common/api';
 
-export class ResultadoImpactoDtoClass {
+export class ResultadoImpactoDtoClass implements ResultadoImpacto {
   impacto_fertilizantes: ResultadoImpactoItemDto[];
   impacto_manejo_cultivo: ResultadoImpactoItemDto[];
   impacto_pesticidas: ResultadoImpactoItemDto[];

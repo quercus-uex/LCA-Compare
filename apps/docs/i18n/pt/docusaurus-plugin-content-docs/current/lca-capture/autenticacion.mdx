@@ -7,26 +7,24 @@ import RedactedSecret from '@site/src/components/RedactedSecret';
 
 # Autenticação requerida
 
-Todos os endpoints requerem um **token JWT válido** no cabeçalho `Authorization`.
-Tenha em conta que o token JWT emitido é temporário e tem uma **validade de 30 minutos**.
+Todos os endpoints requerem um **token JWT válido** no cabeçalho `Authorization`:
 
 ```
 Authorization: Bearer <token>
 ```
 
-Para obter este token, utilize o seguinte endpoint de autenticação:  
+Para obter este token, utiliza-se o seguinte endpoint de autenticação:
 
 ## POST `/auth`
 
-Este endpoint permite a autenticação de aplicações/clientes externos em: monitoriza.dtagro.es.  
-Ao enviar as credenciais corretas do cliente, o serviço devolve um **token JWT de acesso assinado**.
+Este endpoint permite a autenticação de aplicações ou clientes externos em monitoriza.dtagro.es. Com as credenciais corretas do cliente, o serviço devolve um **token JWT de acesso assinado**.
 
 ### Parâmetros
 
-| Tipo   | Nome           | Obrigatório | Descrição                                    |
-| ------ | -------------- | ----------- | -------------------------------------------- |
-| `body` | `clientId `    | SIM         | Identificador único da aplicação ou cliente  |
-| `body` | `clientSecret` | SIM         | Chave privada de autenticação do cliente     |
+| Tipo   | Nome           | Obrigatório | Descrição                                   |
+| ------ | -------------- | ----------- | ------------------------------------------- |
+| `body` | `clientId`     | SIM         | Identificador único da aplicação ou cliente |
+| `body` | `clientSecret` | SIM         | Chave privada de autenticação do cliente    |
 
 Para obter o token JWT, devem ser enviadas sempre as seguintes **credenciais estáticas**:
 
@@ -64,14 +62,12 @@ Se as credenciais forem válidas, devolve um objeto JSON com o token JWT de aces
 }
 ```
 
-Este token deve ser incluído em todos os pedidos aos endpoints protegidos sob o prefixo `/acv`.  
-Cada token tem uma validade de 30 minutos. Uma vez expirado, os pedidos falharão com um erro 401.  
-Uma vez expirado, solicite um novo token reautenticando-se em `/auth` com o `clientId` e `clientSecret`.
+Este token deve ser incluído em todos os pedidos aos endpoints sob o prefixo `/api/acv`. Tem uma **validade de 30 minutos**: depois de expirar, os pedidos falham com um erro 401 e é necessário solicitar um novo token em `/auth` com o `clientId` e o `clientSecret`.
 
 ### Possíveis erros
 
-| Código                      | Causa                                  | Mensagem                               |
-| --------------------------- | -------------------------------------- | -------------------------------------- |
-| `400 Bad Request`           | Falta `clientId` e/ou `clientSecret`   | `Missing clientId and/or clientSecret` |
+| Código                      | Causa                                   | Mensagem                               |
+| --------------------------- | --------------------------------------- | -------------------------------------- |
+| `400 Bad Request`           | Falta `clientId` e/ou `clientSecret`    | `Missing clientId and/or clientSecret` |
 | `401 Unauthorized`          | As credenciais do cliente são inválidas | `Invalid client credentials`           |
-| `500 Internal Server Error` | Erro interno do servidor               | `Unable to authenticate client`        |
+| `500 Internal Server Error` | Erro interno do servidor                | `Unable to authenticate client`        |

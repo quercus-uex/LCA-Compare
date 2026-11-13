@@ -5,22 +5,21 @@ sidebar_position: 1
 
 # Introdução
 
-**LCA Compare** é uma aplicação web que permite a visualização, comparação e geração de relatórios da Avaliação do Ciclo de Vida (ACV) de culturas agrícolas. Os resultados de ACV são calculados por [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge), um serviço ponte entre a plataforma LCA Capture e o motor de cálculo openLCA com base de dados em formato .zolca. Ambos os serviços são implantados com o mesmo Docker Compose e comunicam através da sua rede interna.
+**LCA-Compare** é uma aplicação web para visualizar, comparar e gerar relatórios da Avaliação do Ciclo de Vida (ACV) de culturas agrícolas. Os resultados são calculados pelo [LCA Bridge](../openlca-bridge/introduccion.md) com o openLCA; ambos os serviços são implantados com o mesmo Docker Compose e comunicam através da sua rede interna.
 
 ## Funcionalidades
 
 - **Gestão de parcelas** com integração de SIGPAC, Catastro e identificador predial português para localização e representação geoespacial de polígonos.
-- **Visualização de resultados de ACV** por parcela e campanha, discriminados em categorias de impacto (fertilizantes, maneio da cultura, pesticidas, sistema de rega e impacto total).
-- **Comparador de ACV** entre dois conjuntos de culturas filtrando por país, província, localidade, localização geográfica (raio em metros), tipo de cultura e ano de campanha.
-- **Geração de relatórios em PDF** com resumo e recomendações geradas por IA através do OpenRouter.
-- **Exportação de resultados para JSON** tanto do conjunto de referência como do alvo.
+- **Resultados de ACV** por parcela e campanha: impacto de cada categoria EF 3.1 e a sua repartição entre fertilizantes, maneio da cultura, pesticidas e sistema de rega.
+- **Comparador de ACV** entre um conjunto de referência e outro alvo, filtrando por localização administrativa ou geográfica, parcelas próprias, tipo de cultura, ano de campanha, parcelas de referência ou organização.
+- **Exportação para JSON e CSV** dos resultados e das comparações.
+- **Relatórios em PDF** com resumo e recomendações geradas por IA através do OpenRouter.
+- **Organizações** para analisar em conjunto as campanhas que outros utilizadores consentem partilhar.
 - **Dashboard de estatísticas** com KPIs globais, evolução temporal, rankings por província e localidade, mapas de calor, perfis de impacto e distribuição de culturas.
-- **Painel de administração** para gestão de utilizadores, parcelas, culturas, métodos de impacto, países, províncias e localidades.
-- **Autenticação JWT** com envio automático de credenciais por correio eletrónico no primeiro cálculo de ACV.
+- **Painel de administração** para utilizadores, parcelas, culturas, métodos de impacto e dados territoriais, e consulta de organizações e consentimentos.
+- **Criação automática de utilizadores**: ao receber o primeiro cálculo de ACV de um utilizador é criada a sua conta e, se o email estiver configurado, é-lhe enviada a sua palavra-passe.
 
 ## Arquitetura
-
-A aplicação segue uma arquitetura cliente-servidor com dois componentes diferenciados:
 
 | Componente | Tecnologia | Porta |
 |---|---|---|
@@ -55,4 +54,5 @@ O backend expõe uma API REST documentada com Swagger/OpenAPI na rota `/docs`. O
 - **React Hook Form** para formulários
 - **i18next / react-i18next** para internacionalização da interface
 - **Recharts** para gráficos do dashboard de estatísticas
+- **Luxon** para datas
 - **Sonner** para notificações toast

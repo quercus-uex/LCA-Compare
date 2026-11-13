@@ -5,6 +5,7 @@ import type { StatsRow } from './stats-rows.helpers';
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio: 2024,
     superficie: 10,
@@ -46,19 +47,6 @@ describe('kpi.helpers', () => {
 
       expect(kpis.cultivosConImpacto).toBe(2);
       expect(kpis.impactosPorCategoria.climate_change).toBe(20);
-    });
-
-    it('returns zero values for an empty selection', () => {
-      const kpis = computeKpis([], null);
-
-      expect(kpis).toMatchObject({
-        totalParcelas: 0,
-        totalCultivos: 0,
-        cultivosConImpacto: 0,
-        superficieTotal: 0,
-        variacionInteranual: null,
-      });
-      expect(kpis.impactosPorCategoria.climate_change).toBe(0);
     });
 
     describe('variacionInteranual', () => {

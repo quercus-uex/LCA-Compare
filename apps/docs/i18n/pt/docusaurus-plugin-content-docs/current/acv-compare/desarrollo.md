@@ -7,13 +7,23 @@ sidebar_position: 4
 
 ## Instalação de Dependências
 
-LCA Compare faz parte de um monorepo **pnpm 10** com **Turborepo**. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
+LCA-Compare faz parte de um monorepo **pnpm 10** com **Turborepo**. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
 
 ```bash
 pnpm install
 ```
 
 O workspace inclui as aplicações em `apps/*` e os pacotes partilhados em `packages/*`.
+
+## Variáveis de Ambiente
+
+O backend lê o `.env` da raiz do repositório. Crie-o a partir do modelo e ajuste os seus valores:
+
+```bash
+cp .env.example .env
+```
+
+`DATABASE_URL`, `JWT_SECRET` e `DEFAULT_IMPACT_METHOD_UUID` são necessárias. O OpenRouter e o email são opcionais: sem eles, os relatórios não incluem texto gerado por IA e não é enviado o email de criação de conta. Mantenha `PORT=8000`, que é o destino do proxy do Vite.
 
 ## Base de Dados
 
@@ -23,7 +33,7 @@ Inicie a base de dados PostgreSQL com PostGIS:
 docker compose up -d db
 ```
 
-Em desenvolvimento local, certifique-se de que `DATABASE_URL` aponta para essa base de dados. Com o Compose incluído, a base é criada como `acv`, por exemplo `postgres://user:password@localhost:5432/acv` se usar as credenciais do `.env.example`.
+O Compose cria a base de dados `acv` com as credenciais `DB_USER` e `DB_PASSWORD` do `.env`; com os valores do modelo, `DATABASE_URL` é `postgres://user:password@localhost:5432/acv`.
 
 Depois de uma instalação limpa, compile o pacote partilhado e gere o cliente de [Prisma](https://www.prisma.io/docs/orm) antes de compilar ou arrancar o backend:
 
@@ -58,9 +68,7 @@ Não use `prisma db push`: aplica o esquema sem registar migrações e deixa a b
 pnpm server:dev
 ```
 
-O servidor NestJS arranca em `http://localhost:8000` com hot reload ativado. A documentação Swagger estará disponível em `http://localhost:8000/docs`.
-
-A porta `8000` depende da variável `PORT` do `.env`. Se não estiver definida, NestJS usa o valor por defeito `3000`.
+O servidor NestJS arranca na porta `PORT` do `.env` (`http://localhost:8000`; sem a variável, `3000`) com recarregamento automático. A documentação Swagger está em `http://localhost:8000/docs`.
 
 ### Frontend (SPA)
 
@@ -68,7 +76,9 @@ A porta `8000` depende da variável `PORT` do `.env`. Se não estiver definida, 
 pnpm web:dev
 ```
 
-O servidor de desenvolvimento do Vite arranca em `http://localhost:5173`. Os pedidos para `/api` são redirecionados automaticamente para o backend em `http://localhost:8000` através do proxy configurado em `apps/web/vite.config.ts`.
+O servidor de desenvolvimento do Vite arranca em `http://localhost:5173`. Os pedidos para `/api` são redirecionados para o backend em `http://localhost:8000` (proxy de `apps/web/vite.config.ts`, que elimina o prefixo `/api`).
+
+Em desenvolvimento, `/dev/ui` mostra o catálogo da biblioteca de componentes (`src/components/ui`); a rota não é incluída na compilação de produção.
 
 ### Todo o Monorepo
 
@@ -76,7 +86,7 @@ O servidor de desenvolvimento do Vite arranca em `http://localhost:5173`. Os ped
 pnpm dev
 ```
 
-Este comando executa `turbo dev --ui=tui` para arrancar os processos de desenvolvimento definidos nos pacotes do workspace.
+Executa `turbo dev --ui=tui`, que arranca em simultâneo os processos de desenvolvimento de todos os pacotes.
 
 ### Documentação
 
@@ -85,6 +95,15 @@ pnpm docs:dev
 ```
 
 A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus start --host 0.0.0.0`.
+
+## Criar um Administrador
+
+Não existe registo público, pelo que numa base de dados vazia é necessário um administrador para entrar. Compile o backend e execute o script a partir da raiz do repositório:
+
+```bash
+pnpm server:build
+pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
+```
 
 ## Scripts Disponíveis
 
@@ -96,6 +115,8 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 | `pnpm dev` | Executa Turbo em modo desenvolvimento para o monorepo |
 | `pnpm build` | Compila os pacotes e aplicações através de Turbo |
 | `pnpm lint` | Executa os linters configurados através de Turbo |
+| `pnpm screenshots` | Captura as vistas da web em tamanhos de telemóvel, tablet e computador (`utils/responsive-screenshots.mjs`; requer a web, o backend e `SHOTS_EMAIL`/`SHOTS_PASSWORD`) |
+| `pnpm docs:screenshots` | Refaz as capturas desta documentação e o esquema ER (`utils/docs-screenshots.mjs`; mesmos requisitos, mais `pdftoppm` para o relatório) |
 
 ### Backend (`apps/server`)
 
@@ -109,7 +130,7 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 | `pnpm server:prisma:generate` | Gera o cliente Prisma usando `apps/server/prisma.config.ts` |
 | `pnpm server:prisma:migrate:dev` | Cria uma nova migração a partir das alterações do esquema e aplica-a localmente |
 | `pnpm server:prisma:migrate:deploy` | Aplica as migrações pendentes (esquema e dados iniciais numa base vazia) |
-| `pnpm --filter server admin:create` | Cria um utilizador com o papel `admin` (requer `--email`, `--password`, `--nombre`, `--apellidos`) |
+| `pnpm --filter server admin:create` | Cria um utilizador com o papel `admin` (ver [Criar um administrador](#criar-um-administrador)) |
 
 ### Frontend (`apps/web`)
 
@@ -143,8 +164,8 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   ├── src/
 │   │   │   ├── main.ts            # Bootstrap da aplicação
 │   │   │   ├── app.module.ts      # Módulo raiz
-│   │   │   ├── auth/              # Autenticação JWT (login, registo, guards)
-│   │   │   ├── usuario/           # CRUD de utilizadores
+│   │   │   ├── auth/              # Autenticação JWT (login e guards)
+│   │   │   ├── usuario/           # Perfil do utilizador autenticado
 │   │   │   ├── parcela/           # Gestão de parcelas com dados geoespaciais
 │   │   │   ├── cultivo/           # Registo e consulta de culturas
 │   │   │   ├── resultadoimpacto/  # Armazenamento e consulta de resultados ACV
@@ -158,26 +179,29 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   │   │   ├── poblacion/         # Consulta de localidades
 │   │   │   ├── metodoimpacto/     # Métodos de impacto
 │   │   │   ├── stats/             # Estatísticas globais e agregações para o dashboard
+│   │   │   ├── organizacion/      # Organizações, consentimentos por campanha e notificações
 │   │   │   ├── admin/             # CRUD administrativo protegido por papel admin
 │   │   │   ├── ai/                # Integração com OpenRouter para IA
 │   │   │   ├── mailer/            # Envio de correios eletrónicos
 │   │   │   ├── prisma/            # PrismaService de acesso à base de dados
 │   │   │   ├── common/            # DTOs e helpers internos do backend
-│   │   │   ├── scripts/           # Scripts utilitários (p. ex. criar utilizador admin)
+│   │   │   ├── scripts/           # Criar administrador e dados da demo
 │   │   │   ├── templates/         # Templates Handlebars para relatórios
 │   │   │   └── generated/         # Cliente Prisma autogerado
 │   │   ├── prisma.config.ts       # Configuração Prisma para o pacote server
 │   │   ├── prisma/
 │   │   │   ├── schema/            # Esquema Prisma dividido em vários ficheiros
 │   │   │   │   ├── schema.prisma
-│   │   │   │   └── poblacion.prisma
-│   │   │   └── migrations/        # Migrações versionadas (0_init e 1_seed_datos_iniciales com os dados iniciais)
+│   │   │   │   ├── poblacion.prisma
+│   │   │   │   └── organizacion.prisma
+│   │   │   └── migrations/        # Migrações versionadas (0_init, 1_seed_datos_iniciales com os dados iniciais e 2_organizaciones)
 │   │   └── Dockerfile             # Imagem do backend
 │   ├── web/                       # Frontend React
 │   │   ├── src/
 │   │   │   ├── main.tsx           # Ponto de entrada React
 │   │   │   ├── App.tsx            # Componente raiz com rotas
-│   │   │   ├── components/        # Componentes reutilizáveis
+│   │   │   ├── components/        # Componentes da aplicação
+│   │   │   │   └── ui/            # Biblioteca de componentes (catálogo em /dev/ui)
 │   │   │   ├── hooks/             # Hooks personalizados
 │   │   │   ├── stats/             # Componentes de visualização estatística
 │   │   │   ├── routes/            # Vistas da aplicação
@@ -190,19 +214,21 @@ A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus sta
 │   └── common/                    # DTOs, tipos e constantes partilhados
 ├── deploy/
 │   ├── compose.yaml               # Compose de produção (imagens do GHCR)
-│   └── .env.example               # Variáveis de ambiente de produção
+│   ├── .env.example               # Variáveis de ambiente de produção
+│   └── demo/                      # Instância de demonstração
 ├── docker/
 │   └── backup/                    # Imagem de cópias de segurança
+├── utils/                         # Ferramentas de desenvolvimento (capturas responsive)
 ├── docker-compose.yaml            # Base de dados para desenvolvimento
 ├── pnpm-workspace.yaml            # Definição de apps/* e packages/*
 └── turbo.json                     # Pipeline de Turborepo
 ```
 
-O backend e o frontend consomem contratos partilhados a partir do pacote workspace `common`, por exemplo através de subrotas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/auth` ou `common/api`.
+O backend e o frontend consomem contratos partilhados a partir do pacote workspace `common`, por exemplo através de subrotas como `common/impact`, `common/stats`, `common/compare`, `common/location`, `common/parcela`, `common/usuario`, `common/organizacion`, `common/auth` ou `common/api`.
 
 ## Esquema da Base de Dados
 
-![Diagrama ER da base de dados do LCA Compare](/img/acv-compare/esquema-er.png)
+![Diagrama ER da base de dados do LCA-Compare](/img/acv-compare/esquema-er.png)
 
 O esquema Prisma define os seguintes modelos principais:
 
@@ -216,9 +242,14 @@ O esquema Prisma define os seguintes modelos principais:
 | `Pais` | Países de referência para localizar parcelas |
 | `Provincia` | Províncias associadas a um país e ao seu código cadastral |
 | `Poblacion` | Localidades associadas a uma província e ao seu código cadastral |
+| `Organizacion` | Organizações criadas por um utilizador, que é o seu único administrador |
+| `Consentimiento` | Acesso de uma organização aos dados de um utilizador numa campanha (ano), com o seu estado: pendente, aceite, rejeitado ou revogado |
+| `Notificacion` | Avisos informativos para um utilizador (revogações, remoções, transferências…); os pedidos pendentes leem-se de `Consentimiento` |
 
 As relações principais são: `Usuario` → `Parcela` → `Cultivo` → `ResultadoImpacto` → `MetodoImpacto`.
 
 A localização geográfica é modelada com a hierarquia `Pais` → `Provincia` → `Poblacion`, onde cada parcela é atribuída a uma localidade e armazena o seu polígono numa coluna PostGIS `geometry(Polygon, 4326)`. Ambos os campos são opcionais: se durante a ingestão não for possível obter o polígono (identificador SIGPAC, Catastro ou predial incorreto, serviço indisponível ou geometria inválida) ou a localidade não for encontrada, a parcela é guardada na mesma sem eles e a falha fica registada como aviso nos logs do backend.
 
 A marca `esParcelaReferencia` (por omissão `false`) só pode ser atribuída por um administrador e permite que o comparador restrinja um conjunto a estas parcelas através do filtro `soloParcelasReferencia`.
+
+O administrador de uma organização acede aos dados de um membro apenas nas campanhas que este aceitou: a regra vive em `OrganizacionAccesoService` e é usada pelo detalhe de parcelas e resultados, pelo comparador e pelas estatísticas. A campanha é o ano UTC de `Cultivo.fechaInicioCampania`. As parcelas do próprio administrador contam apenas nas campanhas com que ele próprio contribui (`PUT /organizaciones/:id/campanias-administrador`), guardadas como consentimentos aceites. `/compare` e `/stats` continuam públicos: o `OptionalAuthGuard` identifica o utilizador se enviar um token válido, e filtrar por uma organização que não administra responde 403. O filtro `idsParcela` do comparador também responde 403 sem sessão; com sessão só alcança as parcelas do utilizador e, das alheias, as campanhas consentidas às organizações que administra; as restantes parcelas são ignoradas.

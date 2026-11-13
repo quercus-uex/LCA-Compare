@@ -1,8 +1,8 @@
 {
-  "label": "LCA Compare",
-  "position": 3,
+  "label": "LCA-Compare",
+  "position": 4,
   "link": {
     "type": "generated-index",
-    "description": "Documentation for the ACV comparison visualizer."
+    "description": "Documentation for the LCA comparison visualizer."
   }
 }

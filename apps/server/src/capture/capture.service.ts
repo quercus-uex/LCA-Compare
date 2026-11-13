@@ -2,9 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CaptureInputDto } from './dto/capture-input.dto';
 import { ParcelaService } from '../parcela/parcela.service';
 import { Parcela, Cultivo } from '../generated/prisma/client';
-import { PoblacionService } from '../poblacion/poblacion.service';
 import { UsuarioPublico, UsuarioService } from '../usuario/usuario.service';
-import * as argon2 from 'argon2';
 import { MailerService } from '../mailer/mailer.service';
 import generator from 'generate-password';
 import { DateTime } from 'luxon';
@@ -17,6 +15,9 @@ import type {
 import { SigpacCaptureStrategy } from './strategies/sigpac-capture.strategy';
 import { CatastroCaptureStrategy } from './strategies/catastro-capture.strategy';
 import { PredialCaptureStrategy } from './strategies/predial-capture.strategy';
+import { errorMessage } from '../common/helpers/error.helper';
+import { hashPassword } from '../auth/auth.helpers';
+import { toSigpacKey } from '../sigpac/sigpac.helpers';
 
 @Injectable()
 export class CaptureService {
@@ -25,7 +26,6 @@ export class CaptureService {
 
   constructor(
     private readonly parcelaService: ParcelaService,
-    private readonly poblacionService: PoblacionService,
     private readonly usuarioService: UsuarioService,
     private readonly mailerService: MailerService,
     private readonly cultivoService: CultivoService,
@@ -70,7 +70,7 @@ export class CaptureService {
         await this.parcelaService.setGeom(parcela.id, polygon.geometry);
       } catch (error) {
         this.logger.warn(
-          `Geometry could not be stored for parcela ${parcela.id}: ${error instanceof Error ? error.message : String(error)}`,
+          `Geometry could not be stored for parcela ${parcela.id}: ${errorMessage(error)}`,
         );
       }
     }
@@ -85,19 +85,11 @@ export class CaptureService {
     const sigpac = mParcela.es_sigpac?.provincia
       ? mParcela.es_sigpac
       : undefined;
-    const refCat = mParcela.es_referencia_catastral
-      ? mParcela.es_referencia_catastral
-      : undefined;
-    const ptIdParcela = mParcela.pt_id_parcela_predial
-      ? mParcela.pt_id_parcela_predial
-      : undefined;
+    const refCat = mParcela.es_referencia_catastral || undefined;
+    const ptIdParcela = mParcela.pt_id_parcela_predial || undefined;
 
     const conditions = [
-      sigpac
-        ? {
-            sigpac: `${sigpac?.provincia}:${sigpac?.municipio}:0:0:${sigpac?.poligono}:${sigpac?.parcela}:1`,
-          }
-        : null,
+      sigpac ? { sigpac: toSigpacKey(sigpac) } : null,
       refCat ? { refCat } : null,
       ptIdParcela ? { ptIdParcela } : null,
     ].filter((i) => i !== null);
@@ -124,9 +116,7 @@ export class CaptureService {
 
     if (!usuario) {
       const password = generator.generate({ length: 10, uppercase: false });
-      const passwordHash = await argon2.hash(password, {
-        type: argon2.argon2id,
-      });
+      const passwordHash = await hashPassword(password);
       usuario = await this.usuarioService.create({
         nombre: mUsuario.nombre,
         apellidos: `${mUsuario.apellidos}`,
@@ -140,7 +130,7 @@ export class CaptureService {
         await this.mailerService.sendNewUserMail(mUsuario.email, password);
       } catch (error) {
         this.logger.error(
-          `New-user mail failed for user ${usuario.id}: ${error instanceof Error ? error.message : String(error)}`,
+          `New-user mail failed for user ${usuario.id}: ${errorMessage(error)}`,
         );
       }
     }

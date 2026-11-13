@@ -6,6 +6,7 @@ import { MetodoImpactoModule } from '../metodoimpacto/metodoimpacto.module';
 import { PaisModule } from '../pais/pais.module';
 import { ProvinciaModule } from '../provincia/provincia.module';
 import { PoblacionModule } from '../poblacion/poblacion.module';
+import { OrganizacionModule } from '../organizacion/organizacion.module';
 import { AdminController } from './admin.controller';
 
 @Module({
@@ -17,6 +18,7 @@ import { AdminController } from './admin.controller';
     PaisModule,
     ProvinciaModule,
     PoblacionModule,
+    OrganizacionModule,
   ],
   controllers: [AdminController],
 })

@@ -10,6 +10,7 @@ import { PaisModule } from './pais/pais.module';
 import { AiModule } from './ai/ai.module';
 import { AdminModule } from './admin/admin.module';
 import { StatsModule } from './stats/stats.module';
+import { OrganizacionModule } from './organizacion/organizacion.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { StatsModule } from './stats/stats.module';
     AiModule,
     AdminModule,
     StatsModule,
+    OrganizacionModule,
   ],
 })
 export class AppModule {}

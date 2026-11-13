@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 import * as path from 'node:path';
-import * as argon2 from 'argon2';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hashPassword } from '../auth/auth.helpers';
 import { generateDemoData } from './demo-data';
 
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
@@ -75,7 +75,7 @@ async function seedDemo() {
       process.exit(1);
     }
 
-    const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
+    const passwordHash = await hashPassword(password);
     const data = generateDemoData();
 
     let numParcelas = 0;

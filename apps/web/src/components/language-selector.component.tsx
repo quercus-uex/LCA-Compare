@@ -1,46 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { FiGlobe } from 'react-icons/fi';
-import {
-  isSupportedLanguage,
-  supportedLanguages,
-} from '../i18n/index.ts';
+import { supportedLanguages, toSupportedLanguage } from '../i18n/index.ts';
+import { Dropdown, Menu, MenuItem } from './ui/index.ts';
 
 export const LanguageSelector = () => {
   const { i18n, t } = useTranslation();
-  const currentLanguage = isSupportedLanguage(i18n.language)
-    ? i18n.language
-    : 'es';
+  const currentLanguage = toSupportedLanguage(i18n.language);
 
   return (
-    <div className="dropdown dropdown-end">
-      <button
-        type="button"
-        className="btn btn-ghost"
-        aria-label={t('language.label')}
-        title={t('language.label')}
-        tabIndex={0}
-      >
-        <FiGlobe />
-        <span className="uppercase">{currentLanguage}</span>
-      </button>
-      <ul
-        className="dropdown-content menu bg-base-100 rounded-box z-50 mt-2 w-32 p-2 shadow-sm"
-        tabIndex={-1}
-      >
+    <Dropdown
+      variant="ghost"
+      width="w-32"
+      label={t('language.label')}
+      trigger={
+        <>
+          <FiGlobe aria-hidden />
+          <span className="uppercase">{currentLanguage}</span>
+        </>
+      }
+    >
+      <Menu>
         {supportedLanguages.map(({ code }) => (
-          <li key={code}>
-            <button
-              type="button"
-              className={code === currentLanguage ? 'active' : ''}
-              onClick={() => {
-                void i18n.changeLanguage(code);
-              }}
-            >
-              {code.toUpperCase()}
-            </button>
-          </li>
+          <MenuItem key={code} onClick={() => void i18n.changeLanguage(code)}>
+            {code.toUpperCase()}
+          </MenuItem>
         ))}
-      </ul>
-    </div>
+      </Menu>
+    </Dropdown>
   );
 };

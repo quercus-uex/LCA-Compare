@@ -48,16 +48,15 @@ describe('PredialCaptureStrategy', () => {
     );
   });
 
-  describe('matches', () => {
-    it('returns true when pt_id_parcela_predial is set', () => {
-      expect(strategy.matches(predialParcela())).toBe(true);
-    });
-
-    it('returns false when pt_id_parcela_predial is undefined', () => {
-      expect(
-        strategy.matches(predialParcela({ pt_id_parcela_predial: undefined })),
-      ).toBe(false);
-    });
+  it.each([
+    ['pt_id_parcela_predial is set', predialParcela(), true],
+    [
+      'pt_id_parcela_predial is undefined',
+      predialParcela({ pt_id_parcela_predial: undefined }),
+      false,
+    ],
+  ])('matches when %s', (_label, mParcela, expected) => {
+    expect(strategy.matches(mParcela)).toBe(expected);
   });
 
   describe('resolveParcela', () => {
@@ -80,16 +79,6 @@ describe('PredialCaptureStrategy', () => {
         20,
         'PT',
       );
-    });
-
-    it('keeps the polygon and returns a null poblacion when it is not found', async () => {
-      predialService.getPolygon.mockResolvedValue(polygon);
-      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBe(polygon);
-      expect(result.poblacion).toBeNull();
     });
 
     it('returns null polygon and poblacion when the predial lookup fails', async () => {

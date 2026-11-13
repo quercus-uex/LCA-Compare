@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Despliegue del servicio
 
-La plataforma completa (LCA Compare, LCA Bridge, servidor IPC de openLCA y copias de seguridad) se despliega con un
+La plataforma completa (LCA-Compare, LCA Bridge, servidor IPC de openLCA y copias de seguridad) se despliega con un
 único archivo de Docker Compose, `deploy/compose.yaml`, del repositorio
 ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). El compose usa imágenes ya
 publicadas en GitHub Container Registry (GHCR), por lo que no hace falta clonar el repositorio en el servidor.
@@ -35,7 +35,7 @@ chmod 600 .env
 A continuación, ajusta los valores del `.env`:
 
 ```sh
-TAG=main                                 # Etiqueta de las imágenes: main o sha-<hash> para fijar una versión
+TAG=main                                 # Etiqueta de todas las imágenes (ver «Actualización» antes de cambiarla)
 
 DB_USER=                                 # Usuario de la base de datos
 DB_PASSWORD=                             # Contraseña de la base de datos
@@ -89,22 +89,7 @@ backend no arranca hasta que `migrate` termina correctamente; si falla, revisa `
 
 ## Crear un usuario administrador
 
-El backend incluye un script para dar de alta un usuario con rol `admin`. El script necesita que esté disponible
-`DATABASE_URL` y que el backend esté compilado.
-
-### En desarrollo local
-
-Compila el backend y ejecuta el script desde la raíz del repositorio. El script `admin:create` solo existe en el paquete
-`server`, por lo que hay que invocarlo con `--filter`:
-
-```bash
-pnpm server:build
-pnpm --filter server admin:create -- --email="admin@example.com" --password="secreto" --nombre="Admin" --apellidos="Plataforma"
-```
-
-### En producción con Docker
-
-Tras el primer arranque, ejecútalo en un contenedor puntual con la imagen del backend:
+Tras el primer arranque, da de alta el primer administrador con el script del backend, en un contenedor puntual:
 
 ```bash
 docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/create-admin.js \
@@ -112,7 +97,7 @@ docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/cr
 ```
 
 El script valida el email, exige una contraseña de al menos 8 caracteres y comprueba que no exista ya un usuario con
-el mismo correo.
+el mismo correo. Para hacerlo en local, consulta [Entorno de desarrollo](./desarrollo.md#crear-un-administrador).
 
 ## Estructura del Docker Compose
 
@@ -169,10 +154,11 @@ Para actualizarlo, ejecuta `docker pull louislam/uptime-kuma:1` y `docker rm -f 
 
 ## CI/CD
 
-El workflow `.github/workflows/build.yml` se ejecuta en cada push a `main` (y manualmente desde GitHub). Construye y
-publica en GHCR las imágenes `lca-compare-backend`, `lca-compare-frontend` y `lca-compare-backup`, cada una con las
-etiquetas `main` y `sha-<hash>`. El repositorio de LCA Bridge tiene un workflow equivalente que publica `lca-bridge` y
-`openlca-ipc`.
+El workflow `.github/workflows/build.yml` construye y publica en GHCR las imágenes `lca-compare-backend`,
+`lca-compare-frontend` y `lca-compare-backup`. Se ejecuta en cada push a `main`, con las etiquetas `main` y
+`sha-<hash>`; en cada etiqueta git `vX.Y.Z`, con `X.Y.Z`, `X.Y` y `sha-<hash>`; y manualmente desde GitHub. El
+repositorio de LCA Bridge tiene un workflow equivalente que publica `lca-bridge` y `openlca-ipc`, solo con `main` y
+`sha-<hash>`.
 
 GitHub Actions no se conecta al servidor: el despliegue es manual.
 
@@ -198,8 +184,10 @@ docker compose pull lca-bridge openlca-ipc
 docker compose up -d lca-bridge openlca-ipc
 ```
 
-Para volver a una versión anterior, pon `TAG=sha-<hash>` en el `.env` y ejecuta `docker compose up -d`. Las migraciones
-de base de datos ya aplicadas no se deshacen.
+`TAG` se aplica a todas las imágenes del compose, también a `lca-bridge` y `openlca-ipc`. Para fijar una versión de LCA
+Compare (`TAG=X.Y.Z` o `TAG=sha-<hash>`) esa etiqueta tiene que existir también en las imágenes de LCA Bridge; si no,
+`docker compose pull` falla. Las migraciones de base de datos ya aplicadas no se deshacen al volver a una versión
+anterior.
 
 ## Copias de seguridad
 
@@ -336,6 +324,28 @@ docker compose up -d
 
 La copia incluye la tabla de migraciones de Prisma, por lo que al volver a levantar los servicios `migrate` solo aplica
 las migraciones posteriores a la copia.
+
+## Instancia de demostración
+
+`deploy/demo/` contiene una instancia temporal de LCA-Compare para presentaciones: base de datos, backend y frontend
+(sin LCA Bridge, openLCA ni copias de seguridad), con datos sintéticos. Usa las mismas imágenes de GHCR que producción
+(por defecto la versión fijada en `deploy/demo/compose.yaml`) y es un proyecto Compose aparte, `lca-compare-demo`, por
+lo que puede convivir con la plataforma.
+
+```bash
+cd deploy/demo
+./demo.sh up     # arranca la demo y, si la base de datos está vacía, carga los datos
+./demo.sh down   # elimina contenedores, volumen y .env
+```
+
+El script pide `DEMO_ADMIN_EMAIL` y `DEMO_PASSWORD` (contraseña del administrador y de todos los usuarios de ejemplo) si
+no están en el entorno. Opcionalmente acepta `DEMO_PORT` (por defecto `8080`), `TAG`, `OPENROUTER_API_KEY` y
+`OPENROUTER_MODEL`. El resto de secretos los genera al azar en `deploy/demo/.env`.
+
+Los datos son deterministas: un administrador, 8 agricultores de ejemplo y unas 40 parcelas en municipios de España y
+Portugal con varias campañas entre 2021 y 2025 y sus resultados de ACV. Los polígonos se generan alrededor de cada
+municipio, no corresponden a parcelas reales y no se llama a ningún servicio externo. El script de carga no se ejecuta
+si la base de datos ya tiene usuarios, así que `./demo.sh up` reinicia la demo sin volver a cargarla.
 
 ## Verificación
 

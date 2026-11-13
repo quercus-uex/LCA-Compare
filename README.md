@@ -1,10 +1,12 @@
-# LCA Compare
+# LCA-Compare
 
 ## Introduction
-LCA Compare is a web app for visualizing and comparing the Life Cycle Assessment (LCA) of crops, based on the results provided by [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge).
+LCA-Compare is a web app for visualizing and comparing the Life Cycle Assessment (LCA) of crops, based on the results provided by [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge).
 
-## Goal
-The ultimate goal of this app is to provide a simple, intuitive interface for comparing LCAs across crops in order to identify areas for improvement. To that end, the app lets you...
+▶️ Watch the explanatory video: [LCA-Compare on YouTube](https://youtu.be/zB5d2SOHeCM)
+
+## Functionality
+LCA-Compare provides a simple, intuitive interface to explore and compare the LCA results of crops and identify areas for improvement. The app lets you...
 - Analyze the impact results of your own crop.
 - Compare different groups of crops using the available filters.
 - Export comparison results to **JSON** and **CSV**.
@@ -15,75 +17,10 @@ The ultimate goal of this app is to provide a simple, intuitive interface for co
 
 ## Architecture
 
-LCA Compare follows a three-tier architecture (presentation, application and data) whose tiers communicate only
+LCA-Compare follows a three-tier architecture (presentation, application and data) whose tiers communicate only
 through a documented REST API; everything outside the blue boundary is an external service.
 
-```mermaid
-flowchart LR
-    browser(["🌐 Web browser"])
-
-    subgraph lca["LCA-Compare"]
-        direction TB
-        subgraph pres["Presentation tier"]
-            direction LR
-            spa["<b>React 19 SPA</b><br/>Leaflet · Recharts · i18n"]
-            nginx["<b>Nginx</b><br/>static + /api proxy"]
-        end
-        subgraph app["Application tier · NestJS"]
-            direction LR
-            ingest["② Ingestion<br/>API"] ~~~ auth["Auth<br/>(JWT)"] ~~~ parcels["Parcels /<br/>crops"] ~~~ results["Impact<br/>results"]
-            methods["Method<br/>registry"] ~~~ compare["⑤ Comparison<br/>engine"] ~~~ stats["Statistics"] ~~~ report["⑥ PDF reports<br/>(Playwright)"]
-            ai["⑥ LLM<br/>connector"] ~~~ geo["③ Geospatial<br/>connectors"] ~~~ mailer["Mailer"]
-        end
-        subgraph data["Data tier"]
-            db[("<b>PostgreSQL 17 + PostGIS</b><br/>Prisma ORM 7 · parcels as SRID 4326 polygons")]
-        end
-        pres -- "⑤ REST / JSON" --> app
-        app -- "④ SQL / PostGIS" --> data
-    end
-
-    subgraph ext["External services"]
-        direction TB
-        subgraph lcatools["LCA tooling"]
-            direction TB
-            capture["<b>LCA Capture</b><br/>farm inputs"]
-            engines["<b>LCA engines</b><br/>openLCA · SimaPro · Brightway…"]
-            capture -- "① JSON" --> engines
-        end
-        subgraph apis["Third-party APIs"]
-            direction LR
-            cadastre["SIGPAC / Cadastre (ES)<br/>SNIC cadastre (PT)"]
-            openrouter["OpenRouter<br/>(LLM API)"]
-            smtp["SMTP<br/>(mailer)"]
-        end
-    end
-
-    browser --> pres
-    lcatools -- "② JSON results<br/>POST /capture" --> app
-    app -. "③ ⑥ HTTPS / SMTP" .-> apis
-
-    classDef module fill:#ffffff,stroke:#94a3b8,color:#0f172a
-    classDef step fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:2px
-    classDef lcatool fill:#dcfce7,stroke:#16a34a,color:#14532d
-    classDef extsvc fill:#f8fafc,stroke:#64748b,color:#334155,stroke-dasharray:4 3
-    classDef store fill:#fef3c7,stroke:#d97706,color:#78350f
-    classDef actor fill:#f1f5f9,stroke:#475569,color:#0f172a
-
-    class spa,nginx,auth,parcels,results,methods,stats,mailer module
-    class ingest,compare,report,ai,geo step
-    class capture,engines lcatool
-    class cadastre,openrouter,smtp extsvc
-    class db store
-    class browser actor
-
-    style lca fill:transparent,stroke:#2563eb,stroke-width:2px,color:#2563eb
-    style pres fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
-    style app fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
-    style data fill:#94a3b81a,stroke:#cbd5e1,color:#64748b
-    style ext fill:transparent,stroke:#94a3b8,stroke-dasharray:5 4,color:#64748b
-    style lcatools fill:transparent,stroke:#cbd5e1,color:#64748b
-    style apis fill:transparent,stroke:#cbd5e1,color:#64748b
-```
+![LCA-Compare architecture](architecture.jpeg)
 
 The numbered markers trace the life of a result:
 
@@ -103,7 +40,8 @@ NestJS REST API. The current public controllers cover:
 - **Impact results** (`/resultado`) - Querying LCA results
 - **Comparator** (`/compare`) - Crop comparison and PDF report generation
 - **Statistics** (`/stats`) - KPIs and aggregations for the statistics dashboard
-- **Administration** (`/admin`) - CRUD for users, plots, crops, impact methods and locations
+- **Organizations** (`/organizaciones`, `/consentimientos`, `/notificaciones`) - Organizations, per-campaign consent requests and in-app notifications
+- **Administration** (`/admin`) - CRUD for users, plots, crops, impact methods and locations, plus viewing organizations and consents
 - **Locations** (`/pais`, `/provincia`, `/poblacion`) - Territorial data lookup
 - **LCA Bridge** (`/capture`) - Receives LCA results from LCA Bridge and creates the related user, plot and crop
 
@@ -162,6 +100,7 @@ The local backend reads its variables from `.env` (see `.env.example`):
 | `DB_PASSWORD` | Database password (used by `docker-compose.yaml`) |
 | `JWT_SECRET` | Secret used to sign JWT tokens |
 | `OPENROUTER_API_KEY` | OpenRouter API key (optional: without it, reports omit the AI-generated text) |
+| `OPENROUTER_MODEL` | OpenRouter model (optional; defaults to `openai/gpt-oss-120b:nitro`) |
 | `MAILER_EMAIL` | Email account used to send notifications (optional: without `MAILER_*`, new users get no welcome email) |
 | `MAILER_PASSWORD` | Email service password |
 | `MAILER_HOST` / `MAILER_PORT` | SMTP server and port (default `587`); leave `MAILER_HOST` empty to use Gmail |
@@ -175,10 +114,11 @@ built from `DB_USER` and `DB_PASSWORD`.
 
 | Variable | Description |
 |----------|-------------|
-| `TAG` | Image tag: `main`, or `sha-<hash>` to pin a specific version |
+| `TAG` | Image tag for every service, LCA Bridge included (default `main`); see the note below before pinning a version |
 | `DB_USER` / `DB_PASSWORD` | Database credentials |
 | `JWT_SECRET` | Secret used to sign JWT tokens |
 | `OPENROUTER_API_KEY` | OpenRouter API key (optional) |
+| `OPENROUTER_MODEL` | OpenRouter model (optional; defaults to `openai/gpt-oss-120b:nitro`) |
 | `MAILER_EMAIL` / `MAILER_PASSWORD` | Account used to send notifications (optional) |
 | `MAILER_HOST` / `MAILER_PORT` | SMTP server and port (default `587`); leave `MAILER_HOST` empty to use Gmail |
 | `CALC_API_KEY` | Key nginx requires in the `x-api-key` header for `/calc` |
@@ -192,6 +132,7 @@ built from `DB_USER` and `DB_PASSWORD`.
 
 ## Development
 ```bash
+cp .env.example .env   # then adjust the values
 pnpm install
 pnpm --filter common build
 pnpm server:prisma:generate
@@ -207,7 +148,7 @@ pnpm docs:dev
 Schema changes are made through migrations (`pnpm server:prisma:migrate:dev`), never with `prisma db push`.
 
 ## Deployment
-The full platform (LCA Compare, LCA Bridge, openLCA IPC server and backups) is deployed with
+The full platform (LCA-Compare, LCA Bridge, openLCA IPC server and backups) is deployed with
 `deploy/compose.yaml`, using the images published on GHCR (`ghcr.io/quercus-uex/...`). There is no need to clone the
 repository on the server.
 
@@ -245,8 +186,10 @@ docker compose run --rm lca-compare-backend node apps/server/dist/src/scripts/cr
 ```
 
 ### Updating
-The `Build images` workflow publishes the images on every push to `main` (tags `main` and `sha-<hash>`). Deployment
-on the server is manual:
+The `Build images` workflow publishes the images on every push to `main` (tags `main` and `sha-<hash>`) and on every
+`vX.Y.Z` git tag (tags `X.Y.Z`, `X.Y` and `sha-<hash>`). LCA Bridge publishes `lca-bridge` and `openlca-ipc` only with
+`main` and its own `sha-<hash>`, so setting `TAG` to a release or to an LCA-Compare commit breaks the pull of those two
+images. Deployment on the server is manual:
 
 ```bash
 # from your local machine, only if deploy/compose.yaml has changed
@@ -260,7 +203,7 @@ docker image prune -f
 ```
 
 ## Demo instance
-`deploy/demo/` contains a self-contained, temporary LCA Compare instance for showcasing the app: database, backend and
+`deploy/demo/` contains a self-contained, temporary LCA-Compare instance for showcasing the app: database, backend and
 frontend only (no LCA Bridge, openLCA or backups), populated with synthetic data. It uses the same GHCR images as
 production and runs as a separate Compose project (`lca-compare-demo`), so it can live next to the production stack.
 
@@ -279,8 +222,9 @@ The script only asks for what the demo needs, either from the environment or int
 | `DEMO_ADMIN_EMAIL` | Email of the demo administrator |
 | `DEMO_PASSWORD` | Password (min. 8 characters) for the administrator and all sample users |
 | `DEMO_PORT` | Optional. Host port for the web app (default `8080`) |
-| `TAG` | Optional. Image tag (default `main`) |
+| `TAG` | Optional. Image tag (default `1.3.0`, set in `deploy/demo/compose.yaml`) |
 | `OPENROUTER_API_KEY` | Optional. Without it, comparison reports omit the AI-generated text |
+| `OPENROUTER_MODEL` | Optional. OpenRouter model for that text |
 
 The internal secrets (`DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`) are generated at random into `deploy/demo/.env` on
 the first run.
@@ -315,6 +259,8 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 - `POST /compare` - Compare crops
 - `POST /compare/report` - Generate the comparison report
 - `GET /stats/global` - Global statistics
+- `GET /organizaciones` - Organizations the user manages or belongs to
+- `GET /notificaciones` - Pending consent requests and notices
 - `POST /capture` - Ingest results from LCA Bridge
 - `GET /api/docs` - Swagger documentation through the frontend proxy
 
@@ -332,8 +278,16 @@ By default the web app is mapped to port 80. The API is available under the `/ap
 ├── deploy/                 # Production compose.yaml and .env.example
 │   └── demo/               # Temporary demo instance (compose.yaml and demo.sh)
 ├── docker/backup/          # Backup image
-├── openspec/               # OpenSpec changes and specs
+├── utils/                  # Development tools (`pnpm screenshots`, `pnpm docs:screenshots`)
 ├── pnpm-workspace.yaml     # pnpm workspace
 ├── turbo.json              # Turborepo pipeline
 └── docker-compose.yaml     # Development database
 ```
+
+## Authors
+
+- **Iván Ruiz** - [ivanr@unex.es](mailto:ivanr@unex.es)
+- **Arturo Barriga** - [arturobc@unex.es](mailto:arturobc@unex.es)
+- **María Paniagua** - [maria.paniaguac@juntaex.es](mailto:maria.paniaguac@juntaex.es)
+- **Carlos Campillo** - [carlos.campillo@juntaex.es](mailto:carlos.campillo@juntaex.es)
+- **Pedro J. Clemente** - [pjclemente@unex.es](mailto:pjclemente@unex.es)

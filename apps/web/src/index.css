@@ -44,3 +44,33 @@
 body {
   scrollbar-gutter: stable;
 }
+
+/* Colores semánticos del texto, ya comprobados contra WCAG AA sobre base-100 y
+   base-200: `text-muted` para lo secundario, `text-danger` para lo destructivo o
+   desfavorable y `text-favorable` para lo favorable (los `error` y `success` del
+   tema son fondos pastel y como texto no llegan a 2:1) */
+@theme inline {
+  --color-muted: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  --color-danger: var(--color-red-700);
+  --color-favorable: var(--color-green-700);
+}
+
+/* Etiqueta pequeña en mayúsculas que encabeza un grupo de datos */
+@utility eyebrow {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* DaisyUI deja las pestañas inactivas y los títulos de menú al 50 % y al 40 % del
+   color del texto, por debajo del contraste AA; con :where las utilidades de
+   color de cada uso siguen pudiendo cambiarlo */
+@layer utilities {
+  :where(.tab:not(.tab-active, [aria-selected="true"])),
+  :where(.menu-title) {
+    color: var(--color-muted);
+  }
+}

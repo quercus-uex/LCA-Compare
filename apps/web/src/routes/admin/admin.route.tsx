@@ -1,25 +1,47 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { IconType } from 'react-icons';
 import { FiAlertTriangle, FiFilter, FiPlus, FiRefreshCw, FiSearch, FiX } from 'react-icons/fi';
 import { useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { ADMIN_PAGE_SIZE } from '../../common/constants.ts';
+import { formatQuantity } from '../../common/format.ts';
+import {
+  Badge,
+  Button,
+  Card,
+  Field,
+  IconButton,
+  Input,
+  Menu,
+  MenuItem,
+  MenuTitle,
+  Page,
+  PageHeader,
+  PageHeaderSkeleton,
+  Select,
+  Skeleton,
+  Toggle,
+} from '../../components/ui/index.ts';
 import { useAuth } from '../../hooks/auth.hook.tsx';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { fetchPage, fetchSummary, type FormMode, type Summary } from './admin-api.ts';
 import { AdminFormModal } from './admin-form-modal.component.tsx';
 import { AdminTable } from './admin-table.component.tsx';
-import { CONFIG, ENTITIES, ENTITY_GROUPS, isEntity, type Entity, type Item } from './admin.config.ts';
+import { canDo, CONFIG, ENTITIES, ENTITY_GROUPS, isEntity, type Entity, type Item } from './admin.config.ts';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.component.tsx';
 import { SmartPagination } from './smart-pagination.component.tsx';
 
 type FormTarget = { entity: Entity; mode: FormMode; item: Item | null };
 type DeleteTarget = { entity: Entity; item: Item };
 
+// Icono de recargar girando mientras se cargan los datos
+const RefreshSpinning: IconType = (props) => <FiRefreshCw {...props} className={`${props.className ?? ''} animate-spin`} />;
+
 export const AdminRoute = () => {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
 
   // La vista vive en la URL: recargar o compartir el enlace conserva la pestaña y los filtros
@@ -45,7 +67,6 @@ export const AdminRoute = () => {
 
   const isAdmin = auth.usuario?.rol === 'admin';
   const config = CONFIG[entity];
-  const numberFormat = new Intl.NumberFormat(i18n.language);
 
   useEffect(() => {
     if (!auth.loading && !isAdmin) void navigate('/parcelas');
@@ -153,10 +174,10 @@ export const AdminRoute = () => {
 
   if (auth.loading || !isAdmin) {
     return (
-      <div className="w-full flex flex-col gap-4">
-        <div className="skeleton w-64 h-9" />
-        <div className="skeleton w-full h-96" />
-      </div>
+      <Page busy>
+        <PageHeaderSkeleton />
+        <Skeleton className="w-full h-96" />
+      </Page>
     );
   }
 
@@ -165,63 +186,54 @@ export const AdminRoute = () => {
   const sinPoblacionCount = summary.parcelasSinPoblacion ?? 0;
 
   return (
-    <div className="w-full flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold">{t('admin.title')}</h1>
-        <p className="text-base-content/70">{t('admin.subtitle')}</p>
-      </div>
+    <Page>
+      <PageHeader title={t('admin.title')} subtitle={t('admin.subtitle')} />
 
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* Navegación: menú lateral en escritorio, selector en móvil */}
         <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-5">
-          <label className="lg:hidden select w-full">
-            <span className="label">{t('admin.section')}</span>
-            <select value={entity} onChange={(e) => selectEntity(e.target.value as Entity)}>
+          <Field label={t('admin.section')} className="lg:hidden">
+            <Select value={entity} onChange={(e) => selectEntity(e.target.value as Entity)}>
               {ENTITIES.map((e) => (
                 <option key={e} value={e}>
                   {t(CONFIG[e].labelKey)}
-                  {summary[e] !== undefined ? ` (${numberFormat.format(summary[e])})` : ''}
+                  {summary[e] !== undefined ? ` (${formatQuantity(summary[e])})` : ''}
                 </option>
               ))}
-            </select>
-          </label>
+            </Select>
+          </Field>
 
-          <nav className="hidden lg:block card bg-base-100 shadow-sm" aria-label={t('admin.title')}>
-            <div className="card-body p-3 gap-3">
+          <nav className="hidden lg:block" aria-label={t('admin.title')}>
+            <Card density="compact">
               {ENTITY_GROUPS.map((group) => (
-                <ul key={group.labelKey} className="menu w-full p-0 gap-0.5">
-                  <li className="menu-title px-3 pt-1 pb-1 text-xs uppercase tracking-wide">{t(group.labelKey)}</li>
+                <Menu key={group.labelKey}>
+                  <MenuTitle>
+                    <span className="eyebrow">{t(group.labelKey)}</span>
+                  </MenuTitle>
                   {group.entities.map((e) => {
                     const EntityIcon = CONFIG[e].icon;
                     const active = e === entity;
                     return (
-                      <li key={e}>
-                        <button
-                          type="button"
-                          className={`flex items-center gap-3 ${active ? 'menu-active' : ''}`}
-                          aria-current={active ? 'page' : undefined}
-                          onClick={() => selectEntity(e)}
-                        >
-                          <EntityIcon aria-hidden className="size-4" />
-                          <span className="flex-1">{t(CONFIG[e].labelKey)}</span>
-                          {summary[e] !== undefined && (
-                            <span className={`text-xs tabular-nums ${active ? '' : 'text-base-content/50'}`}>
-                              {numberFormat.format(summary[e])}
-                            </span>
-                          )}
-                        </button>
-                      </li>
+                      <MenuItem key={e} active={active} onClick={() => selectEntity(e)}>
+                        <EntityIcon aria-hidden className="size-4" />
+                        <span className="flex-1">{t(CONFIG[e].labelKey)}</span>
+                        {summary[e] !== undefined && (
+                          <span className={`text-xs tabular-nums ${active ? '' : 'text-muted'}`}>
+                            {formatQuantity(summary[e])}
+                          </span>
+                        )}
+                      </MenuItem>
                     );
                   })}
-                </ul>
+                </Menu>
               ))}
-            </div>
+            </Card>
           </nav>
 
           {sinPoblacionCount > 0 && (
             <button
               type="button"
-              className="hidden lg:flex mt-3 w-full text-left card bg-warning text-warning-content p-3 flex-row gap-3 items-start hover:brightness-95"
+              className="hidden lg:flex mt-3 w-full items-start gap-3 rounded-box bg-warning p-3 text-left text-warning-content hover:brightness-95"
               onClick={() => setParams({ tab: 'parcelas', sinPoblacion: '1' })}
             >
               <FiAlertTriangle aria-hidden className="mt-0.5 shrink-0" />
@@ -230,122 +242,126 @@ export const AdminRoute = () => {
           )}
         </aside>
 
-        <section className="card bg-base-100 shadow-sm w-full min-w-0">
-          <div className="card-body gap-4 p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="size-10 rounded-box bg-primary/15 text-secondary flex items-center justify-center shrink-0">
-                  <Icon aria-hidden className="size-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    {t(config.labelKey)}
-                    {loadedKey !== null && (
-                      <span className="badge badge-sm badge-ghost tabular-nums">{numberFormat.format(total)}</span>
-                    )}
-                  </h2>
-                  <p className="text-sm text-base-content/60">{t(config.descriptionKey)}</p>
-                </div>
+        <Card as="section" className="w-full">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-box bg-primary/15 text-secondary flex items-center justify-center shrink-0">
+                <Icon aria-hidden className="size-5" />
               </div>
-              <button
-                type="button"
-                className="btn btn-primary shrink-0"
+              <div>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  {t(config.labelKey)}
+                  {loadedKey !== null && (
+                    <Badge size="sm" className="tabular-nums">
+                      {formatQuantity(total)}
+                    </Badge>
+                  )}
+                </h2>
+                <p className="text-sm text-muted">{t(config.descriptionKey)}</p>
+              </div>
+            </div>
+            {canDo(entity, 'create') && (
+              <Button
+                variant="primary"
+                icon={FiPlus}
+                className="shrink-0"
                 onClick={() => setFormTarget({ entity, mode: 'create', item: null })}
               >
-                <FiPlus aria-hidden /> {t(`admin.createTitles.${config.titleKey}`)}
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              <label className="input w-full md:max-w-md">
-                <FiSearch aria-hidden className="opacity-50" />
-                <input
-                  type="search"
-                  className="grow"
-                  placeholder={t(`admin.searchPlaceholders.${entity}`)}
-                  aria-label={t('common.actions.search')}
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                {searchInput && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-xs btn-circle"
-                    onClick={() => setSearchInput('')}
-                    aria-label={t('admin.clearSearch')}
-                  >
-                    <FiX aria-hidden />
-                  </button>
-                )}
-              </label>
-
-              {entity === 'parcelas' && (
-                <label className="label cursor-pointer gap-2 text-sm text-base-content px-2">
-                  <input
-                    type="checkbox"
-                    className="toggle toggle-sm toggle-warning"
-                    checked={sinPoblacion}
-                    onChange={(e) => updateParams({ sinPoblacion: e.target.checked ? '1' : null, page: null })}
-                  />
-                  {t('admin.parcelas.onlyNoPoblacion')}
-                  {sinPoblacionCount > 0 && <span className="badge badge-sm badge-warning">{sinPoblacionCount}</span>}
-                </label>
-              )}
-
-              {idFilter && (
-                <span className="badge badge-lg badge-secondary gap-2 max-w-full">
-                  <FiFilter aria-hidden className="shrink-0" />
-                  <span className="truncate">{idLabel ?? idFilter}</span>
-                  <button
-                    type="button"
-                    className="shrink-0"
-                    onClick={() => updateParams({ id: null, idLabel: null, page: null })}
-                    aria-label={t('admin.removeFilter')}
-                    title={t('admin.removeFilter')}
-                  >
-                    <FiX aria-hidden />
-                  </button>
-                </span>
-              )}
-
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm btn-square ml-auto tooltip tooltip-left"
-                data-tip={t('admin.refresh')}
-                aria-label={t('admin.refresh')}
-                onClick={refresh}
-              >
-                <FiRefreshCw aria-hidden className={loading ? 'animate-spin' : ''} />
-              </button>
-            </div>
-
-            <div className="rounded-box border border-base-200 overflow-hidden">
-              <AdminTable
-                entity={entity}
-                data={loadedKey?.startsWith(`${entity}|`) ? data : []}
-                loading={loading}
-                loaded={loadedKey?.startsWith(`${entity}|`) ?? false}
-                filtered={filtered}
-                expanded={expanded}
-                currentUserId={auth.usuario?.id}
-                toggleExpand={toggleExpand}
-                onEdit={(item, target) => setFormTarget({ entity: target ?? entity, mode: 'edit', item })}
-                onDelete={(item, target) => setDeleteTarget({ entity: target ?? entity, item })}
-                onCreate={() => setFormTarget({ entity, mode: 'create', item: null })}
-                onNavigate={navigateToRelated}
-              />
-            </div>
-
-            {loadedKey !== null && total > 0 && (
-              <SmartPagination
-                page={page}
-                pageSize={ADMIN_PAGE_SIZE}
-                total={total}
-                onPageChange={(p) => updateParams({ page: p === 0 ? null : String(p + 1) })}
-              />
+                {t(`admin.createTitles.${config.titleKey}`)}
+              </Button>
             )}
           </div>
-        </section>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative w-full md:max-w-md">
+              <Input
+                icon={FiSearch}
+                type="search"
+                className="pr-10"
+                placeholder={t(`admin.searchPlaceholders.${entity}`)}
+                aria-label={t('common.actions.search')}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              {searchInput && (
+                <IconButton
+                  icon={FiX}
+                  size="xs"
+                  label={t('admin.clearSearch')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={() => setSearchInput('')}
+                />
+              )}
+            </div>
+
+            {entity === 'parcelas' && (
+              <Toggle
+                size="sm"
+                className="px-2"
+                label={
+                  <>
+                    {t('admin.parcelas.onlyNoPoblacion')}
+                    {sinPoblacionCount > 0 && (
+                      <Badge tone="warning" size="sm" className="ml-2">
+                        {sinPoblacionCount}
+                      </Badge>
+                    )}
+                  </>
+                }
+                checked={sinPoblacion}
+                onChange={(e) => updateParams({ sinPoblacion: e.target.checked ? '1' : null, page: null })}
+              />
+            )}
+
+            {idFilter && (
+              <Badge tone="secondary" icon={FiFilter} className="max-w-full">
+                <span className="truncate">{idLabel ?? idFilter}</span>
+                <button
+                  type="button"
+                  className="shrink-0 cursor-pointer"
+                  onClick={() => updateParams({ id: null, idLabel: null, page: null })}
+                  aria-label={t('admin.removeFilter')}
+                  title={t('admin.removeFilter')}
+                >
+                  <FiX aria-hidden />
+                </button>
+              </Badge>
+            )}
+
+            <IconButton
+              icon={loading ? RefreshSpinning : FiRefreshCw}
+              label={t('admin.refresh')}
+              className="ml-auto"
+              onClick={refresh}
+            />
+          </div>
+
+          <div className="rounded-box border border-base-200 overflow-hidden">
+            <AdminTable
+              entity={entity}
+              data={loadedKey?.startsWith(`${entity}|`) ? data : []}
+              loading={loading}
+              loaded={loadedKey?.startsWith(`${entity}|`) ?? false}
+              filtered={filtered}
+              expanded={expanded}
+              currentUserId={auth.usuario?.id}
+              toggleExpand={toggleExpand}
+              onEdit={(item, target) => setFormTarget({ entity: target ?? entity, mode: 'edit', item })}
+              onDelete={(item, target) => setDeleteTarget({ entity: target ?? entity, item })}
+              onCreate={() => setFormTarget({ entity, mode: 'create', item: null })}
+              onNavigate={navigateToRelated}
+            />
+          </div>
+
+          {loadedKey !== null && total > 0 && (
+            <SmartPagination
+              page={page}
+              pageSize={ADMIN_PAGE_SIZE}
+              total={total}
+              onPageChange={(p) => updateParams({ page: p === 0 ? null : String(p + 1) })}
+            />
+          )}
+        </Card>
       </div>
 
       {formTarget && (
@@ -376,6 +392,6 @@ export const AdminRoute = () => {
           }}
         />
       )}
-    </div>
+    </Page>
   );
 };

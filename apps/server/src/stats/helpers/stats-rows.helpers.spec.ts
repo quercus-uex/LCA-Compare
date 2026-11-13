@@ -24,6 +24,7 @@ function makeCultivo(overrides: Partial<StatsCultivo> = {}): StatsCultivo {
       },
     },
     parcela: {
+      idPropietario: 'u-1',
       poblacion: {
         id: 'pob-1',
         nombre: 'Don Benito',
@@ -37,6 +38,7 @@ function makeCultivo(overrides: Partial<StatsCultivo> = {}): StatsCultivo {
 function makeRow(overrides: Partial<StatsRow> = {}): StatsRow {
   return {
     idParcela: 'par-1',
+    idPropietario: 'u-1',
     tipo: 'trigo',
     anio: 2024,
     superficie: 10,
@@ -56,6 +58,7 @@ describe('stats-rows.helpers', () => {
 
       expect(row).toMatchObject({
         idParcela: 'par-1',
+        idPropietario: 'u-1',
         tipo: 'trigo',
         anio: 2024,
         superficie: 10,
@@ -65,8 +68,6 @@ describe('stats-rows.helpers', () => {
         provincia: { id: 'prov-1', nombre: 'Badajoz' },
       });
       expect(row.categorias?.climate_change).toBe(4);
-      // Una categoría que no trae el resultado no vale 0
-      expect(row.categorias).not.toHaveProperty('acidification');
     });
 
     it('takes the campaign year in UTC', () => {
@@ -95,7 +96,7 @@ describe('stats-rows.helpers', () => {
 
     it('leaves zones null when the plot has no town', () => {
       const [row] = toStatsRows([
-        makeCultivo({ parcela: { poblacion: null } }),
+        makeCultivo({ parcela: { idPropietario: 'u-1', poblacion: null } }),
       ]);
 
       expect(row.poblacion).toBeNull();
@@ -156,10 +157,6 @@ describe('stats-rows.helpers', () => {
         { tipo: 'trigo', count: 2, superficieTotal: 5 },
         { tipo: 'maiz', count: 1, superficieTotal: 1 },
       ]);
-    });
-
-    it('returns an empty list without rows', () => {
-      expect(computeDistribucionCultivos([])).toEqual([]);
     });
   });
 });

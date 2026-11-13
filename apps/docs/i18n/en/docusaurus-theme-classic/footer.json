@@ -1,10 +1,10 @@
 {
   "copyright": {
-    "message": "LCA Capture, LCA Bridge and LCA Compare documentation.",
+    "message": "LCA Capture, LCA Bridge and LCA-Compare documentation.",
     "description": "The footer copyright"
   },
   "logo.alt": {
-    "message": "TID4Agro",
+    "message": "Interreg Spain–Portugal, co-funded by the European Union. TID4AGRO",
     "description": "The alt text of footer logo"
   }
 }

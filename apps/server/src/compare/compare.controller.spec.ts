@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   StreamableFile,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -10,9 +11,10 @@ jest.mock('./compare.service', () => ({
 
 import { CompareController } from './compare.controller';
 import type { CompareService } from './compare.service';
-import { CompareQueryItemDto } from './dto/compare-query.dto';
+import { CompareQueryDto, CompareQueryItemDto } from './dto/compare-query.dto';
 import { IMPACT_KEYS } from './compare.types';
 import type { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
+import type { OrganizacionAccesoService } from '../organizacion/organizacion-acceso.service';
 
 function makeImpactDto(
   overrides?: Record<
@@ -39,9 +41,13 @@ describe('CompareController', () => {
       'getMeanByFilters' | 'compareResults' | 'findResults' | 'generateReport'
     >
   >;
+  let accesoService: jest.Mocked<
+    Pick<OrganizacionAccesoService, 'getOrganizacionAdministrada'>
+  >;
   let controller: CompareController;
 
   beforeEach(() => {
+    accesoService = { getOrganizacionAdministrada: jest.fn() };
     compareService = {
       getMeanByFilters: jest.fn(),
       compareResults: jest.fn(),
@@ -50,7 +56,119 @@ describe('CompareController', () => {
     };
     controller = new CompareController(
       compareService as unknown as CompareService,
+      accesoService as unknown as OrganizacionAccesoService,
     );
+  });
+
+  describe('organization filter', () => {
+    const forbidden = new ForbiddenException(
+      'No eres el administrador de esta organización',
+    );
+    const user = { sub: 'u1', email: 'u1@example.com' };
+
+    it('does not check organizations when no side uses one', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+
+      await controller.compare({ reference: { idPais: 'p1' } }, user);
+
+      expect(accesoService.getOrganizacionAdministrada).not.toHaveBeenCalled();
+    });
+
+    it('checks each distinct organization once against the requester', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+
+      await controller.compare(
+        {
+          reference: { idOrganizacion: 'org-1' },
+          target: { idOrganizacion: 'org-1', tipoCultivo: 'Olivo' },
+        },
+        user,
+      );
+
+      expect(accesoService.getOrganizacionAdministrada.mock.calls).toEqual([
+        ['org-1', 'u1'],
+      ]);
+    });
+
+    it.each([
+      ['an anonymous requester', undefined],
+      ['a user who does not administer it', user],
+    ])('rejects the comparison for %s with 403', async (_name, requester) => {
+      accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
+
+      await expect(
+        controller.compare(
+          {
+            reference: { idPais: 'p1' },
+            target: { idOrganizacion: 'org-1' },
+          },
+          requester,
+        ),
+      ).rejects.toStrictEqual(forbidden);
+      expect(accesoService.getOrganizacionAdministrada).toHaveBeenCalledWith(
+        'org-1',
+        requester?.sub,
+      );
+      expect(compareService.getMeanByFilters).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['reference', { reference: { idsParcela: ['par-1'] } }],
+      [
+        'target',
+        { reference: { idPais: 'p1' }, target: { idsParcela: ['par-1'] } },
+      ],
+    ])(
+      'rejects an anonymous plot filter in the %s with 403',
+      async (_name, body) => {
+        const expected = new ForbiddenException(
+          'Debes iniciar sesión para filtrar por parcelas',
+        );
+
+        await expect(controller.compare(body)).rejects.toStrictEqual(expected);
+        await expect(
+          controller.compareToReport({ target: { idPais: 'p2' }, ...body }),
+        ).rejects.toStrictEqual(expected);
+        expect(compareService.getMeanByFilters).not.toHaveBeenCalled();
+        expect(compareService.findResults).not.toHaveBeenCalled();
+      },
+    );
+
+    it('passes the viewer so the service can limit a plot filter', async () => {
+      compareService.getMeanByFilters.mockResolvedValue(makeImpactDto());
+      compareService.findResults.mockResolvedValue([{} as never]);
+      compareService.generateReport.mockResolvedValue(Buffer.from('pdf'));
+      const filters = { idsParcela: ['par-1'] };
+
+      await controller.compare({ reference: filters }, user);
+      await controller.compareToReport(
+        { reference: filters, target: filters },
+        user,
+      );
+
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [filters, 'u1'],
+      ]);
+      expect(compareService.findResults.mock.calls).toEqual([
+        [filters, 'u1'],
+        [filters, 'u1'],
+      ]);
+    });
+
+    it('rejects the report for a user who does not administer the organization', async () => {
+      accesoService.getOrganizacionAdministrada.mockRejectedValue(forbidden);
+
+      await expect(
+        controller.compareToReport(
+          {
+            reference: { idOrganizacion: 'org-1' },
+            target: { idPais: 'p2' },
+          },
+          user,
+        ),
+      ).rejects.toStrictEqual(forbidden);
+      expect(compareService.findResults).not.toHaveBeenCalled();
+    });
   });
 
   describe('compare', () => {
@@ -65,8 +183,10 @@ describe('CompareController', () => {
 
       const result = await controller.compare({ reference: refFilters });
 
-      expect(compareService.getMeanByFilters).toHaveBeenCalledTimes(1);
-      expect(compareService.getMeanByFilters).toHaveBeenCalledWith(refFilters);
+      // Only the reference mean is requested when there is no target
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [refFilters],
+      ]);
       expect(compareService.compareResults).toHaveBeenCalledWith(
         refMean,
         undefined,
@@ -88,15 +208,10 @@ describe('CompareController', () => {
         target: tarFilters,
       });
 
-      expect(compareService.getMeanByFilters).toHaveBeenCalledTimes(2);
-      expect(compareService.getMeanByFilters).toHaveBeenNthCalledWith(
-        1,
-        refFilters,
-      );
-      expect(compareService.getMeanByFilters).toHaveBeenNthCalledWith(
-        2,
-        tarFilters,
-      );
+      expect(compareService.getMeanByFilters.mock.calls).toEqual([
+        [refFilters],
+        [tarFilters],
+      ]);
       expect(compareService.compareResults).toHaveBeenCalledWith(
         refMean,
         tarMean,
@@ -132,28 +247,22 @@ describe('CompareController', () => {
     const refFilters: CompareQueryItemDto = { idPais: 'p1' };
     const tarFilters: CompareQueryItemDto = { idPais: 'p2' };
 
-    it('rejects missing reference filters with BadRequestException', async () => {
-      await expect(
-        controller.compareToReport({
-          reference: undefined as any,
-          target: tarFilters,
-        }),
-      ).rejects.toThrow(BadRequestException);
+    it.each<[string, Partial<CompareQueryDto>]>([
+      ['reference', { target: tarFilters }],
+      ['target', { reference: refFilters }],
+    ])(
+      'rejects missing %s filters with BadRequestException',
+      async (_set, body) => {
+        await expect(
+          controller.compareToReport(body as CompareQueryDto),
+        ).rejects.toThrow(BadRequestException);
 
-      expect(compareService.findResults).not.toHaveBeenCalled();
-      expect(compareService.generateReport).not.toHaveBeenCalled();
-    });
+        expect(compareService.findResults).not.toHaveBeenCalled();
+        expect(compareService.generateReport).not.toHaveBeenCalled();
+      },
+    );
 
-    it('rejects missing target filters with BadRequestException', async () => {
-      await expect(
-        controller.compareToReport({ reference: refFilters }),
-      ).rejects.toThrow(BadRequestException);
-
-      expect(compareService.findResults).not.toHaveBeenCalled();
-      expect(compareService.generateReport).not.toHaveBeenCalled();
-    });
-
-    it('delegates result lookup and report generation, returns StreamableFile', async () => {
+    it('delegates result lookup and report generation with the requested language, returns StreamableFile', async () => {
       const refResults = [{ id: 'r1' }] as any;
       const tarResults = [{ id: 'r2' }] as any;
       const pdfBuffer = Buffer.from('pdf-content');
@@ -165,35 +274,13 @@ describe('CompareController', () => {
       const result = await controller.compareToReport({
         reference: refFilters,
         target: tarFilters,
-      });
-
-      expect(compareService.findResults).toHaveBeenCalledTimes(2);
-      expect(compareService.findResults).toHaveBeenNthCalledWith(1, refFilters);
-      expect(compareService.findResults).toHaveBeenNthCalledWith(2, tarFilters);
-      expect(compareService.generateReport).toHaveBeenCalledWith(
-        refFilters,
-        refResults,
-        tarFilters,
-        tarResults,
-        undefined,
-      );
-      expect(result).toBeInstanceOf(StreamableFile);
-    });
-
-    it('forwards the requested language to the report generator', async () => {
-      const refResults = [{ id: 'r1' }] as any;
-      const tarResults = [{ id: 'r2' }] as any;
-      compareService.findResults
-        .mockResolvedValueOnce(refResults)
-        .mockResolvedValueOnce(tarResults);
-      compareService.generateReport.mockResolvedValue(Buffer.from('pdf'));
-
-      await controller.compareToReport({
-        reference: refFilters,
-        target: tarFilters,
         language: 'en',
       });
 
+      expect(compareService.findResults.mock.calls).toEqual([
+        [refFilters],
+        [tarFilters],
+      ]);
       expect(compareService.generateReport).toHaveBeenCalledWith(
         refFilters,
         refResults,
@@ -201,6 +288,7 @@ describe('CompareController', () => {
         tarResults,
         'en',
       );
+      expect(result).toBeInstanceOf(StreamableFile);
     });
 
     it.each([

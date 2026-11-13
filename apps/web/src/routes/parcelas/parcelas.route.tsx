@@ -1,41 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type Parcela, useParcela } from '../../hooks/parcela.hook.tsx';
-import { ParcelasItem } from './parcelas-item.component.tsx';
+import { GiFarmTractor } from 'react-icons/gi';
+import { useLocation, useNavigate } from 'react-router';
+import { ApiError } from '../../common/api.ts';
+import { EmptyState, ErrorAlert, Page, PageHeader } from '../../components/ui/index.ts';
+import { type ParcelaResumen, useParcela } from '../../hooks/parcela.hook.tsx';
+import { ParcelasBrowser, useParcelasBrowser } from './parcelas-browser.component.tsx';
+import { ParcelasListSkeleton } from './parcelas-states.component.tsx';
+import type { ParcelaLinkState } from './parcelas.utils.ts';
+
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'ready'; parcelas: ParcelaResumen[] };
 
 export const ParcelasRoute = () => {
-  const [parcelas, setParcelas] = useState<Parcela[] | undefined>(undefined);
-  const [query, setQuery] = useState<string>('');
+  const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const location = useLocation();
+  const navigate = useNavigate();
   const parcela = useParcela();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    void parcela.getFromToken()
-      .then(p => setParcelas(p));
-  }, [parcela]);
+  const load = useCallback(() => {
+    setState({ status: 'loading' });
+    parcela.getFromToken()
+      .then((parcelas) => setState({ status: 'ready', parcelas }))
+      .catch((e: unknown) => {
+        // Sin sesión: al iniciarla, el login vuelve a «Mis parcelas»
+        if (e instanceof ApiError && e.status === 401) void navigate('/auth/login', { replace: true });
+        else setState({ status: 'error' });
+      });
+  }, [navigate, parcela]);
 
-  const parcelasFiltered = parcelas?.filter(p => p.nombre.toLowerCase().includes(query.toLowerCase())) ?? []
+  useEffect(load, [load]);
+
+  const parcelas = state.status === 'ready' ? state.parcelas : undefined;
+  const browser = useParcelasBrowser(parcelas);
+  const { filtered } = browser;
+  const linkState: ParcelaLinkState = { listSearch: location.search };
 
   return (
-    <div className="flex flex-col gap-5 items-center">
-      <h1 className="text-3xl font-bold">{t('parcelas.title')}</h1>
+    <Page>
+      <PageHeader
+        title={t('parcelas.title')}
+        aside={parcelas && parcelas.length > 0 && (
+          <span aria-live="polite">
+            {filtered.length === parcelas.length
+              ? t('parcelas.count', { count: parcelas.length })
+              : t('parcelas.countFiltered', { shown: filtered.length, total: parcelas.length })}
+          </span>
+        )}
+      />
 
-      {!parcelas &&
-        <div className="skeleton w-full h-full" />}
-      {parcelas &&
-        <>
-          <input
-              type="text"
-              className="input"
-               placeholder={t('parcelas.searchPlaceholder')}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-          />
-          <div className="flex gap-2 flex-wrap justify-center">
-            {parcelasFiltered.map(p => <ParcelasItem key={p.id} parcela={p} />)}
-          </div>
-        </>
-      }
-    </div>
+      {state.status === 'loading' && <ParcelasListSkeleton />}
+
+      {state.status === 'error' && <ErrorAlert message={t('parcelas.loadError')} onRetry={load} />}
+
+      {parcelas && parcelas.length === 0 && (
+        <EmptyState icon={GiFarmTractor} title={t('parcelas.empty.title')} description={t('parcelas.empty.description')} />
+      )}
+
+      {parcelas && parcelas.length > 0 && <ParcelasBrowser browser={browser} linkState={linkState} />}
+    </Page>
   );
-}
+};

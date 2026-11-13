@@ -12,6 +12,9 @@ import {
   YAxis,
 } from 'recharts';
 import { getEfCategory, type EfCategoryId } from '../common/constants.ts';
+import { formatAxisValue, formatImpactValue } from '../common/format.ts';
+import { ColorDot, EmptyState } from '../components/ui/index.ts';
+import { ChartTooltip } from './chart-tooltip.component.tsx';
 import {
   CHART_GRID_STROKE,
   CHART_MUTED_FILL,
@@ -19,8 +22,6 @@ import {
   CHART_SELECTED_FILL,
   CHART_TICK,
 } from './stats-chart-theme.ts';
-import { formatAxisValue, formatImpactValue } from './stats-formatters.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { EvolucionTemporalItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -44,19 +45,21 @@ const TimelineTooltip = ({ active, payload, selectedCategory }: TooltipProps) =>
   const category = getEfCategory(selectedCategory);
 
   return (
-    <div className="rounded-box border border-base-300 bg-base-100 p-3 text-sm shadow-lg">
-      <p className="font-bold">{item.anio}</p>
-      <p style={{ color: category?.color }}>
-        {getCategoryLabel(selectedCategory)}:{' '}
-        <span className="font-mono font-semibold">
-          {formatImpactValue(item.categorias[selectedCategory] ?? 0, '0')}
-        </span>{' '}
-        {category?.unit}
+    <ChartTooltip title={item.anio}>
+      <p className="flex items-center gap-1.5">
+        {category && <ColorDot color={category.color} />}
+        <span>
+          {getCategoryLabel(selectedCategory)}:{' '}
+          <span className="font-mono font-semibold">
+            {formatImpactValue(item.categorias[selectedCategory] ?? 0, '0')}
+          </span>{' '}
+          {category?.unit}
+        </span>
       </p>
-      <p className="text-base-content/70">
+      <p className="text-muted">
         {t('stats.chart.cropsCount', { count: item.numCultivos })}
       </p>
-    </div>
+    </ChartTooltip>
   );
 };
 
@@ -67,12 +70,12 @@ export const StatsTimeline = ({ data, selectedCategory, anio }: Props) => {
   const category = getEfCategory(selectedCategory);
 
   if (data.length === 0) {
-    return <StatsPlaceholder>{t('stats.chart.noTimelineData')}</StatsPlaceholder>;
+    return <EmptyState variant="inset" icon={false} description={t('stats.chart.noTimelineData')} className="h-72" />;
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-4 text-xs text-base-content/70">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 rounded" style={{ backgroundColor: category?.color }} />
           {getCategoryLabel(selectedCategory)} ({category?.unit})

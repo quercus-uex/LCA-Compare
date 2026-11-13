@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EF_CATEGORIES, type EfCategoryId } from '../common/constants.ts';
+import { formatImpactValue } from '../common/format.ts';
+import { ColorDot, EmptyState } from '../components/ui/index.ts';
 import { PROFILE_COLORS } from './stats-chart-theme.ts';
-import { formatImpactValue } from './stats-formatters.ts';
-import { StatsPlaceholder } from './stats-section.component.tsx';
 import type { ProvinciaRankingItemDto } from './stats.hook.tsx';
 import { useTranslatedEfCategories } from './use-translated-ef-categories.ts';
 
@@ -38,7 +38,7 @@ export const StatsHeatmap = ({
   const [sortCategory, setSortCategory] = useState<EfCategoryId | null>(null);
 
   if (ranking.length === 0) {
-    return <StatsPlaceholder>{t('stats.chart.noImpactData')}</StatsPlaceholder>;
+    return <EmptyState variant="inset" icon={false} description={t('stats.chart.noImpactData')} className="h-72" />;
   }
 
   const byCategory = (categoria: EfCategoryId) =>
@@ -59,7 +59,7 @@ export const StatsHeatmap = ({
 
   return (
     <div className="w-full min-w-0 overflow-x-auto">
-      <table lang={i18n.language} className="w-full min-w-[40rem] table-fixed border-separate border-spacing-0 text-xs">
+      <table lang={i18n.language} className="w-full min-w-[56rem] table-fixed border-separate border-spacing-0 text-xs">
         <thead>
           <tr>
             <th className="sticky left-0 z-10 w-28 bg-base-200 px-2 py-2 text-left font-semibold rounded-tl-field">
@@ -79,8 +79,8 @@ export const StatsHeatmap = ({
                   <button
                     type="button"
                     title={`${getCategoryLabel(cat.id)} (${cat.unit})`}
-                    className="flex h-full w-full items-end justify-center px-1 py-2 text-[10px] font-semibold leading-tight hover:underline xl:text-xs"
-                    style={{ color: cat.color }}
+                    className="flex h-full w-full items-end justify-center border-b-4 px-1 py-2 font-semibold leading-tight hover:underline"
+                    style={{ borderBottomColor: cat.color }}
                     onClick={() => setSortCategory(isSorted ? null : cat.id)}
                   >
                     <span className="line-clamp-3 hyphens-auto break-words">
@@ -104,13 +104,8 @@ export const StatsHeatmap = ({
                     className="flex w-full items-center gap-1.5 truncate px-2 py-2 text-left group-hover:underline"
                     onClick={() => onProvinceClick(prov.idProvincia)}
                   >
-                    <span
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor:
-                          highlight >= 0 ? PROFILE_COLORS[highlight] : 'transparent',
-                      }}
-                    />
+                    {/* Sin resaltar, el hueco se mantiene para que los nombres queden alineados */}
+                    <ColorDot size="sm" color={PROFILE_COLORS[highlight] ?? 'transparent'} />
                     <span className="truncate">{prov.nombreProvincia}</span>
                   </button>
                 </th>
@@ -119,7 +114,7 @@ export const StatsHeatmap = ({
                   return (
                     <td
                       key={cat.id}
-                      className="truncate border-t border-base-200 px-1 py-2 text-center font-mono text-[10px] xl:text-xs"
+                      className="truncate border-t border-base-200 px-1 py-2 text-center font-mono"
                       style={{ backgroundColor: cellColor(value, colRange[cat.id], cat.color) }}
                       title={`${prov.nombreProvincia} · ${getCategoryLabel(cat.id)}: ${formatImpactValue(value)} ${cat.unit}`}
                     >

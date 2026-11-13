@@ -3,19 +3,21 @@ import { useTranslation } from 'react-i18next';
 import { FiChevronDown, FiSearch, FiX } from 'react-icons/fi';
 import { ADMIN_LOOKUP_TAKE } from '../../common/constants.ts';
 import { safeString } from '../../common/utils.ts';
+import { useFieldControl } from '../../components/ui/form.component.tsx';
+import { Button, IconButton, Skeleton } from '../../components/ui/index.ts';
 import { useClickOutside } from '../../hooks/use-click-outside.ts';
 import { useDebouncedValue } from '../../hooks/use-debounced-value.ts';
 import { fetchOne, fetchPage } from './admin-api.ts';
 import { ENTITY_DISPLAY, type Entity, type Item } from './admin.config.ts';
 
 type Props = {
-  id: string;
+  /** Sin él, toma el del `Field` que lo envuelve */
+  id?: string;
   entity: Entity;
   value: string;
   initialLabel?: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  invalid?: boolean;
   clearable?: boolean;
 };
 
@@ -28,8 +30,10 @@ const toOption = (entity: Entity, item: Item): Option => ({
 });
 
 /** Selector de un registro relacionado con búsqueda en el servidor */
-export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disabled, invalid, clearable }: Props) => {
+export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disabled, clearable }: Props) => {
   const { t } = useTranslation();
+  const control = useFieldControl(id);
+  const invalid = control['aria-invalid'];
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -49,9 +53,7 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
     if (!value || labels[value]) return;
     const controller = new AbortController();
     void fetchOne(entity, value, controller.signal)
-      .then((item) => {
-        if (item) setLabels((prev) => ({ ...prev, [value]: ENTITY_DISPLAY[entity].label(item) }));
-      })
+      .then((item) => setLabels((prev) => ({ ...prev, [value]: ENTITY_DISPLAY[entity].label(item) })))
       .catch(() => undefined);
     return () => controller.abort();
   }, [entity, value, labels]);
@@ -115,10 +117,14 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
 
   return (
     <div ref={containerRef} className="relative">
-      <label className={`input w-full ${invalid ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}>
-        {open && <FiSearch className="opacity-50 shrink-0" aria-hidden />}
+      {/* eslint-disable-next-line no-restricted-syntax -- mismo marco que `Input`, pero con la acción de borrar y el indicador al final */}
+      <label className={`input w-full ${invalid ? 'border-danger' : ''}`}>
+        {open && <FiSearch className="shrink-0 text-muted" aria-hidden />}
         <input
-          id={id}
+          id={control.id}
+          aria-describedby={control['aria-describedby']}
+          aria-invalid={invalid}
+          aria-required={control.required}
           type="text"
           role="combobox"
           aria-expanded={open}
@@ -138,17 +144,9 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
           onKeyDown={onKeyDown}
         />
         {value && clearable && !disabled && !open && (
-          <button
-            type="button"
-            className="btn btn-ghost btn-xs btn-circle"
-            onClick={() => onChange('')}
-            aria-label={t('common.actions.clearSelection')}
-            title={t('common.actions.clearSelection')}
-          >
-            <FiX aria-hidden />
-          </button>
+          <IconButton icon={FiX} size="xs" label={t('common.actions.clearSelection')} onClick={() => onChange('')} />
         )}
-        <FiChevronDown className="opacity-50 shrink-0" aria-hidden />
+        <FiChevronDown className="shrink-0 text-muted" aria-hidden />
       </label>
 
       {open && (
@@ -159,20 +157,20 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
         >
           {loading && options.length === 0 && (
             <div className="p-3 flex flex-col gap-2">
-              <div className="skeleton h-6 w-full" />
-              <div className="skeleton h-6 w-3/4" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-3/4" />
             </div>
           )}
           {error && (
             <div className="p-3 text-center text-sm">
               <p>{t('admin.messages.optionsError')}</p>
-              <button type="button" className="btn btn-ghost btn-xs mt-1" onClick={() => setReloadKey((k) => k + 1)}>
+              <Button variant="ghost" size="xs" className="mt-1" onClick={() => setReloadKey((k) => k + 1)}>
                 {t('common.actions.retry')}
-              </button>
+              </Button>
             </div>
           )}
           {!loading && !error && options.length === 0 && (
-            <p className="p-3 text-center text-sm text-base-content/60">
+            <p className="p-3 text-center text-sm text-muted">
               {query ? t('common.empty.noResults') : t('common.empty.noOptions')}
             </p>
           )}
@@ -190,11 +188,11 @@ export const IdLookupField = ({ id, entity, value, initialLabel, onChange, disab
                 onClick={() => select(option)}
               >
                 <span>{option.label}</span>
-                {option.detail && <span className="text-xs text-base-content/60">{option.detail}</span>}
+                {option.detail && <span className="text-xs text-muted">{option.detail}</span>}
               </button>
             ))}
           {!loading && !error && options.length === ADMIN_LOOKUP_TAKE && (
-            <p className="px-3 py-2 text-xs text-base-content/60 border-t border-base-200">
+            <p className="px-3 py-2 text-sm text-muted border-t border-base-200">
               {t('admin.lookup.refine')}
             </p>
           )}

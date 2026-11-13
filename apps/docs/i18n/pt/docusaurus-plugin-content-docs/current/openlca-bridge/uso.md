@@ -5,171 +5,109 @@ sidebar_position: 3
 
 # Utilização do Serviço
 
-## Endpoint
+## Endpoints
 
-O serviço expõe um único endpoint, `POST /capture-acv`, que recebe como corpo o JSON de saída de uma cultura do serviço LCA Capture, executa o cálculo de ACV em openLCA e envia o resultado para o LCA Compare para persistência.
+O serviço expõe dois endpoints. Ambos recebem como corpo o JSON de uma cultura exportado pelo LCA Capture (ver [JSON de entrada](./json-entrada.md)), devolvem o mesmo resultado e enviam-no para o LCA-Compare:
 
-O processamento interno segue o seguinte fluxo:
+| Endpoint | Descrição |
+|---|---|
+| `POST /capture-acv` | Escreve os fluxos da cultura nos processos do openLCA e calcula o sistema de produto (cerca de 6-7 s por cultura). |
+| `POST /capture-acv-coeficientes` | Calcula como combinação linear das quantidades dos fluxos com coeficientes de impacto obtidos do openLCA, sem escrever em openLCA. O primeiro pedido de cada cultura extrai os coeficientes (até um minuto) e guarda-os em memória; os seguintes demoram milissegundos. Se a base de dados do openLCA mudar, é necessário reiniciar o serviço. |
 
-1. **`validate_parcela()`** — Valida os metadados da parcela (SIGPAC, referência cadastral ou predial).
-2. **`get_process_class()`** — Seleciona a classe de processo de acordo com o tipo de cultura: `TomateProcess`, `OlivoProcess` ou `VinedoProcess`.
-3. **`update_processes()`** — Atualiza os processos em openLCA através do cliente IPC (`OLCAClient`).
-4. **`calculate_impacts()`** — Executa o cálculo de impacto usando o UUID do sistema de produto como referência.
-5. **`build_final_result()`** — Constrói o resultado estruturado a partir da saída do openLCA.
-6. **`send_result_to_app()`** — Envia o resultado para o LCA Compare através de um POST (best-effort; os erros são registados no log sem interromper a resposta).
+Ambos os endpoints dão o mesmo resultado, salvo pelo arredondamento, porque os sistemas de produto são lineares nas quantidades escritas.
 
-## Parâmetros de Cálculo
+## Fluxo de Processamento
 
-Ambos os parâmetros são configuráveis através de variáveis de ambiente no `.env` do serviço.
+```
+POST /capture-acv    →    ACVService.execute()
+                         ├── validate_parcela()
+                         ├── get_process_class()  →  TomateProcess | OlivoProcess | VinedoProcess
+                         ├── validate_cultivo()
+                         ├── calculate()          →  sob olca_lock
+                         │   ├── update_processes()   →  OLCAClient (olca-ipc)
+                         │   ├── calculate_impacts()  →  sistema de produto (process.uuid)
+                         │   └── build_final_result()
+                         └── send_result_to_lca_compare()  →  POST {LCA_COMPARE_BASE_URL}/capture
+```
 
-| Parâmetro | Valor por defeito | Descrição |
-|---|---|---|
-| `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | UUID do método de impacto selecionado para o cálculo. Por defeito é utilizado **EF 3.1** (Environmental Footprint 3.1), o método recomendado pela Comissão Europeia. |
-| `CALCULATION_AMOUNT` | `0.001` | Quantidade do processo usada como referência. Os processos na base de dados estão definidos para 1 tonelada (1000 kg), pelo que um valor de `0.001` calcula o impacto correspondente a 1 kg de produção. |
+1. **`validate_parcela()`**: exige pelo menos um identificador de parcela (SIGPAC com província, referência cadastral ou código predial).
+2. **`get_process_class()`**: seleciona a classe de processo de acordo com `metadatos.cultivo.tipo` (`"Tomate"`, `"Olivo"` ou `"Viñedo"`).
+3. **`validate_cultivo()`**: verifica que `metadatos.cultivo.produccion`, `metadatos.cultivo.superficie_cultivada`, `riegos.entre_calles` e, com gotejadores de inserção, `riegos.entre_arboles` são maiores que 0.
+4. **`calculate()`**: escreve os fluxos nos subprocessos do openLCA, calcula o sistema de produto e constrói o resultado. Os processos do openLCA são partilhados, pelo que estes passos são serializados com um bloqueio (`olca_lock`): os pedidos concorrentes são atendidos um de cada vez.
+5. **`send_result_to_lca_compare()`**: envia o resultado para o LCA-Compare (best-effort: os erros são registados no log sem interromper a resposta).
 
-## Integração com LCA Compare
+`POST /capture-acv-coeficientes` segue o mesmo fluxo, mas substitui `calculate()` por `calculate_con_coeficientes()`, que só usa o bloqueio na primeira vez, para extrair os coeficientes.
 
-Quando **LCA Compare** está implantado na mesma rede Docker (o compose da plataforma), o resultado do cálculo é transmitido automaticamente para o endpoint `POST /capture` do LCA Compare através da variável de ambiente `LCA_COMPARE_BASE_URL`.
+## Resposta do Serviço
 
-Por sua vez, o frontend do LCA Compare encaminha os pedidos de cálculo através do proxy inverso Nginx:
+A resposta contém cinco listas de impactos. Cada elemento indica a categoria de impacto do EF 3.1 (`category`), a quantidade por kg de produto (`amount`) e a sua unidade (`unit`). Cada lista inclui todas as categorias do método (25 no exemplo). O seguinte excerto de `examples/example_out.json` do repositório do LCA Bridge está **truncado** a três categorias e com os valores arredondados:
+
+```json
+{
+    "impacto_fertilizantes": [
+        { "category": "Acidification", "amount": 0.004324, "unit": "mol H+ eq" },
+        { "category": "Water use", "amount": -0.01905, "unit": "m3 world eq" },
+        { "category": "Climate change", "amount": 0.9131, "unit": "kg CO2 eq" }
+    ],
+    "impacto_manejo_cultivo": [
+        { "category": "Acidification", "amount": 0.002339, "unit": "mol H+ eq" },
+        { "category": "Water use", "amount": 0.2733, "unit": "m3 world eq" },
+        { "category": "Climate change", "amount": 0.4017, "unit": "kg CO2 eq" }
+    ],
+    "impacto_pesticidas": [
+        { "category": "Acidification", "amount": 0.000004240, "unit": "mol H+ eq" },
+        { "category": "Water use", "amount": -0.00002757, "unit": "m3 world eq" },
+        { "category": "Climate change", "amount": 0.0003020, "unit": "kg CO2 eq" }
+    ],
+    "impacto_sistema_riego": [
+        { "category": "Acidification", "amount": 0.00001233, "unit": "mol H+ eq" },
+        { "category": "Water use", "amount": 0.1141, "unit": "m3 world eq" },
+        { "category": "Climate change", "amount": 0.004235, "unit": "kg CO2 eq" }
+    ],
+    "impacto_total": [
+        { "category": "Acidification", "amount": 0.006679, "unit": "mol H+ eq" },
+        { "category": "Water use", "amount": 0.3683, "unit": "m3 world eq" },
+        { "category": "Climate change", "amount": 1.319, "unit": "kg CO2 eq" }
+    ]
+}
+```
+
+| Lista | Descrição |
+|---|---|
+| `impacto_fertilizantes` | Fertilizantes aplicados e emissões da fertilização (NH₃, N₂O, NO₃, NOₓ). |
+| `impacto_manejo_cultivo` | Operações agrícolas, colheita, ocupação do solo e uso de água. |
+| `impacto_pesticidas` | Produção dos fitofármacos e emissões das suas substâncias ativas. |
+| `impacto_sistema_riego` | Materiais do sistema de rega e energia de bombagem. |
+| `impacto_total` | Impacto total do sistema de produto. Em Olivo e Viñedo inclui ainda o subprocesso "Estructuras permanentes" (espaldeira e casa de rega), que não tem lista própria. |
+
+Para o LCA-Compare é enviado `{ "metadatos": <metadados da entrada>, "resultado": <resposta> }`.
+
+## Códigos de Resposta
+
+| Código | Causa |
+|---|---|
+| `200` | Cálculo correto. |
+| `400` | Dados inválidos: sem identificador de parcela, tipo de cultura ou de rega desconhecido, fitofármaco sem classificação reconhecida ou um divisor (`produccion`, `superficie_cultivada`, `entre_calles`, `entre_arboles`) menor ou igual a 0. |
+| `422` | O JSON não cumpre o esquema (campos obrigatórios ausentes, tipos incorretos ou campos não definidos). |
+| `500` | Erro do openLCA (`"Error de OpenLCA: ..."`) ou servidor IPC indisponível (`"Error al conectar a OpenLCA"`). |
+
+## Integração com LCA-Compare
+
+No compose da plataforma, o resultado é enviado para `POST /capture` do LCA-Compare, cujo URL base é configurado com `LCA_COMPARE_BASE_URL`. A partir do exterior, o cálculo é exposto através do proxy inverso Nginx do frontend do LCA-Compare:
 
 | Rota | Destino |
 |---|---|
 | `/calc` | `lca-bridge:3000/capture-acv` (exige o cabeçalho `x-api-key` com o valor de `CALC_API_KEY`) |
 
-## Resposta do Serviço
-
-Após executar o cálculo de ACV em openLCA, o serviço devolve um JSON com os metadados originais da cultura e o resultado discriminado em cinco categorias de impacto. Cada categoria contém um array de objetos com a categoria ambiental (`category`), a magnitude (`amount`) e a unidade de medida (`unit`).
-
-```json
-{
-    "metadatos": {
-        "parcela": {
-            "id": 3,
-            "es_sigpac": { "provincia": 6, "municipio": 5, "poligono": 1, "parcela": 1 },
-            "es_referencia_catastral": null,
-            "pt_id_parcela_predial": null,
-            "nombre": "Prueba"
-        },
-        "cultivo": {
-            "id": 1,
-            "tipo": "Tomate",
-            "superficie_cultivada": 100,
-            "produccion": 100,
-            "consumo_agua": 500,
-            "fecha_inicio_campania": 20240401,
-            "fecha_fin_campania": 20241120,
-            "ciclo": 200
-        },
-        "usuario": {
-            "id": 3,
-            "nombre": "Prueba",
-            "email": "prueba@example.com"
-        }
-    },
-    "resultado": {
-        "impacto_fertilizantes": [
-            { "category": "Climate change", "amount": 0.312, "unit": "kg CO2 eq" },
-            { "category": "Acidification", "amount": 0.004, "unit": "mol H+ eq" },
-            { "category": "Eutrophication, freshwater", "amount": 0.001, "unit": "kg P eq" }
-        ],
-        "impacto_manejo_cultivo": [
-            { "category": "Climate change", "amount": 0.185, "unit": "kg CO2 eq" },
-            { "category": "Ozone depletion", "amount": 0.000002, "unit": "kg CFC-11 eq" },
-            { "category": "Land use", "amount": 12.45, "unit": "No dimension" }
-        ],
-        "impacto_pesticidas": [
-            { "category": "Ecotoxicity, freshwater", "amount": 45.2, "unit": "CTUe" },
-            { "category": "Human toxicity, cancer", "amount": 0.0003, "unit": "CTUh" }
-        ],
-        "impacto_sistema_riego": [
-            { "category": "Climate change", "amount": 0.078, "unit": "kg CO2 eq" },
-            { "category": "Resource use, minerals and metals", "amount": 0.005, "unit": "kg Sb eq" },
-            { "category": "Water use", "amount": 0.52, "unit": "m3 world eq" }
-        ],
-        "impacto_total": [
-            { "category": "Climate change", "amount": 0.575, "unit": "kg CO2 eq" },
-            { "category": "Acidification", "amount": 0.004, "unit": "mol H+ eq" },
-            { "category": "Eutrophication, freshwater", "amount": 0.001, "unit": "kg P eq" },
-            { "category": "Ecotoxicity, freshwater", "amount": 45.2, "unit": "CTUe" },
-            { "category": "Water use", "amount": 0.52, "unit": "m3 world eq" }
-        ]
-    }
-}
-```
-
-As cinco categorias de impacto são:
-
-| Categoria | Descrição |
-|---|---|
-| `impacto_fertilizantes` | Impacto derivado do fabrico e aplicação de fertilizantes, incluindo emissões de NH₃, N₂O, NO₃ e NOₓ. |
-| `impacto_manejo_cultivo` | Impacto das operações agrícolas (lavoura, sementeira, colheita), ocupação do solo e uso de água. |
-| `impacto_pesticidas` | Impacto dos produtos fitossanitários aplicados, classificados segundo SimaPro. |
-| `impacto_sistema_riego` | Impacto dos materiais do sistema de rega (tubagens, gotejadores, bomba) e do consumo de água e energia. |
-| `impacto_total` | Soma agregada de todas as categorias anteriores. |
-
-Este mesmo JSON é enviado para o endpoint `POST /capture` do **LCA Compare** para persistência e visualização.
+`POST /capture-acv-coeficientes` não é exposto através do Nginx.
 
 ## Documentação Interativa (Swagger)
 
-LCA Bridge expõe uma interface **Swagger/OpenAPI** que permite explorar e testar o endpoint `POST /capture-acv` diretamente a partir do navegador. A documentação inclui o esquema do JSON de entrada, os códigos de resposta e a possibilidade de executar pedidos de teste.
+O LCA Bridge expõe uma interface **Swagger/OpenAPI** com o esquema de entrada de ambos os endpoints e a possibilidade de executar pedidos de teste. A especificação em JSON está em `/openapi.json`.
 
 | Ambiente | URL |
 |---|---|
 | Desenvolvimento local | `http://localhost:3000/docs` |
 | Produção (Docker) | Não acessível a partir do exterior: a porta 3000 não é publicada e o cálculo só é exposto em `/calc` |
 
-:::tip
-A especificação OpenAPI em formato JSON também está disponível em `/openapi.json`, útil para gerar clientes automaticamente ou importar em ferramentas como Postman ou Insomnia.
-:::
-
-## Testar o Serviço
-
-Pode testar o correto funcionamento do serviço através da interface Swagger descrita acima.
-
-Para ver a estrutura completa do JSON de entrada com todos os seus campos documentados, consulte a página [JSON de entrada](./json-entrada.md). Abaixo é apresentado um exemplo mínimo com os campos essenciais:
-
-```json
-{
-    "metadatos": {
-        "parcela": {
-            "id": 3,
-            "es_sigpac": { "provincia": 6, "municipio": 5, "poligono": 1, "parcela": 1 },
-            "es_referencia_catastral": null,
-            "pt_id_parcela_predial": null,
-            "nombre": "Prueba"
-        },
-        "cultivo": {
-            "id": 1,
-            "tipo": "Tomate",
-            "superficie_cultivada": 100,
-            "produccion": 100,
-            "consumo_agua": 500,
-            "fecha_inicio_campania": 20240401,
-            "fecha_fin_campania": 20241120,
-            "ciclo": 200
-        },
-        "usuario": {
-            "id": 3,
-            "nombre": "Prueba",
-            "email": "prueba@example.com"
-        }
-    },
-    "riegos": { "tipo": "Sistema de riego horticola" },
-    "bombeo": { "cabeas": 9, "potencia": 3, "consumo_l_h": 2 },
-    "fitosanitarios": {
-        "detalle": [{ "nombre": "Amectoctradin", "clasificacion_simapro": 1, "cantidad_total_produccion": 0.0048 }],
-        "agrupado_por_clasificacion": []
-    },
-    "fertilizantes": { "kg_N": 0.1, "kg_K2O": 0.252, "kg_P2O5": 0.9389 },
-    "manejo_cultivo": {
-        "labores": [{ "labor_simapro": "Tillage, cultivating, chiselling [CH]", "UF_1_ha_produccion": 0.018 }],
-        "ocupacion_suelo": 0.005,
-        "uso_de_agua": 5
-    },
-    "maquinaria": {
-        "cosecha_mecanizada": [],
-        "maquinas": [{ "id": 6, "nombre": "John Deere 6M 180", "peso": 8500, "vida_h": 14000 }]
-    }
-}
-```
+Para testar o serviço, pode usar-se como corpo o ficheiro `examples/example_in.json` do [repositório do LCA Bridge](https://github.com/quercus-uex/LCA-Bridge/blob/main/examples/example_in.json).

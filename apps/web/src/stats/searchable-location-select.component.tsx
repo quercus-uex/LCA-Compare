@@ -1,5 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions -- autocomplete listbox uses mouse events for highlight/selection */
 import { useState, useRef, useCallback, type KeyboardEvent } from 'react';
+import { matchesSearch } from '../common/utils.ts';
+import { Input } from '../components/ui/index.ts';
 import { useClickOutside } from '../hooks/use-click-outside.ts';
 
 type Props<T> = {
@@ -8,8 +10,8 @@ type Props<T> = {
   onChange: (item: T | null) => void;
   getLabel: (item: T) => string;
   getId: (item: T) => string;
-  placeholder?: string;
-  emptyMessage?: string;
+  placeholder: string;
+  emptyMessage: string;
 };
 
 export function SearchableLocationSelect<T>({
@@ -18,8 +20,8 @@ export function SearchableLocationSelect<T>({
   onChange,
   getLabel,
   getId,
-  placeholder = 'Buscar...',
-  emptyMessage = 'Sin resultados',
+  placeholder,
+  emptyMessage,
 }: Props<T>) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -27,12 +29,7 @@ export function SearchableLocationSelect<T>({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = items
-    .filter((item) => {
-      if (!query) return true;
-      return getLabel(item).toLowerCase().includes(query.toLowerCase());
-    })
-    .slice(0, 10);
+  const filtered = items.filter((item) => matchesSearch(getLabel(item), query)).slice(0, 10);
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -103,11 +100,14 @@ export function SearchableLocationSelect<T>({
   return (
     <div ref={containerRef} className="relative flex-1">
       <div className="relative">
-        <input
+        <Input
           ref={inputRef}
           type="text"
-          className="input input-bordered input-sm w-full pr-8"
+          size="sm"
+          className="pr-8"
           placeholder={value ? '' : placeholder}
+          // Con un valor elegido el placeholder desaparece: el nombre accesible no puede depender de él
+          aria-label={placeholder}
           value={displayValue || query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -121,7 +121,7 @@ export function SearchableLocationSelect<T>({
         {value && (
           <button
             type="button"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-base-content"
             onClick={clearSelection}
             tabIndex={-1}
           >
@@ -133,7 +133,7 @@ export function SearchableLocationSelect<T>({
       {isOpen && (
         <ul className="absolute z-50 mt-1 w-full bg-base-200 border border-base-300 rounded-box shadow-lg max-h-48 overflow-auto">
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-base-content/50">
+            <li className="px-3 py-2 text-sm text-muted">
               {emptyMessage}
             </li>
           ) : (

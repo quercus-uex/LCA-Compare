@@ -1,11 +1,13 @@
 import type { IconType } from 'react-icons';
-import { FiBox, FiFlag, FiHome, FiLayers, FiMap, FiUsers, FiZap } from 'react-icons/fi';
+import { FiBox, FiBriefcase, FiCheckSquare, FiFlag, FiHome, FiLayers, FiMap, FiUsers, FiZap } from 'react-icons/fi';
 import { CROP_TYPE_OPTIONS } from '../../hooks/use-crop-type-label.ts';
 
 export const ENTITIES = [
   'usuarios',
   'parcelas',
   'cultivos',
+  'organizaciones',
+  'consentimientos',
   'metodos-impacto',
   'paises',
   'provincias',
@@ -23,7 +25,10 @@ export const ROLES = ['admin', 'usuario'] as const;
 
 /** Grupos del menú lateral: datos de la plataforma y catálogos de referencia */
 export const ENTITY_GROUPS: { labelKey: string; entities: Entity[] }[] = [
-  { labelKey: 'admin.groups.data', entities: ['usuarios', 'parcelas', 'cultivos'] },
+  {
+    labelKey: 'admin.groups.data',
+    entities: ['usuarios', 'parcelas', 'cultivos', 'organizaciones', 'consentimientos'],
+  },
   {
     labelKey: 'admin.groups.catalogs',
     entities: ['metodos-impacto', 'paises', 'provincias', 'poblaciones'],
@@ -50,6 +55,14 @@ export const ENTITY_DISPLAY: Record<Entity, { label: (item: Item) => string; det
   },
   parcelas: { label: (item) => text(item, 'nombre') },
   cultivos: { label: (item) => text(item, 'tipo') },
+  organizaciones: {
+    label: (item) => text(item, 'nombre'),
+    detail: (item) => text(related(item, 'administrador') ?? {}, 'email'),
+  },
+  consentimientos: {
+    label: (item) => joinText(text(related(item, 'organizacion') ?? {}, 'nombre'), text(item, 'anioCampania')),
+    detail: (item) => text(related(item, 'usuario') ?? {}, 'email'),
+  },
   'metodos-impacto': { label: (item) => text(item, 'nombre') },
   paises: { label: (item) => text(item, 'nombre'), detail: (item) => text(item, 'codigo') },
   provincias: {
@@ -70,6 +83,7 @@ export type ColumnConfig =
   | { kind: 'number'; key: string; labelKey: string; unitKey?: string }
   | { kind: 'crop'; key: string; labelKey: string }
   | { kind: 'parcelId'; key: string; labelKey: string }
+  | { kind: 'consentState'; key: string; labelKey: string }
   | {
       kind: 'link';
       key: string;
@@ -103,7 +117,13 @@ export type EntityConfig = {
   descriptionKey: string;
   columns: ColumnConfig[];
   formFields: FieldConfig[];
+  /** Acciones que no admite la entidad; por defecto se puede crear, editar y eliminar */
+  readOnly?: { create?: boolean; edit?: boolean; delete?: boolean };
 };
+
+/** `true` si la entidad admite la acción en el panel */
+export const canDo = (entity: Entity, action: 'create' | 'edit' | 'delete') =>
+  CONFIG[entity].readOnly?.[action] !== true;
 
 export const CONFIG: Record<Entity, EntityConfig> = {
   usuarios: {
@@ -201,7 +221,7 @@ export const CONFIG: Record<Entity, EntityConfig> = {
       { kind: 'link', key: 'idParcela', labelKey: 'admin.fields.parcela', entity: 'parcelas', relation: 'parcela' },
       { kind: 'date', key: 'fechaInicioCampania', labelKey: 'admin.fields.fechaInicioCampania' },
       { kind: 'number', key: 'superficieCultivada', labelKey: 'admin.fields.superficieCultivada', unitKey: 'common.units.hectares' },
-      { kind: 'number', key: 'produccion', labelKey: 'admin.fields.produccion', unitKey: 'common.units.tonsPerHectare' },
+      { kind: 'number', key: 'produccion', labelKey: 'admin.fields.produccion', unitKey: 'common.units.kilograms' },
       { kind: 'number', key: 'ciclo', labelKey: 'admin.fields.ciclo', unitKey: 'common.units.days' },
     ],
     formFields: [
@@ -226,6 +246,56 @@ export const CONFIG: Record<Entity, EntityConfig> = {
       { name: 'produccion', labelKey: 'admin.fields.produccionTHa', type: 'number', required: true, step: 'any' },
       { name: 'consumoAgua', labelKey: 'admin.fields.consumoAguaLHa', type: 'number', required: true, step: 'any' },
     ],
+  },
+  organizaciones: {
+    icon: FiBriefcase,
+    labelKey: 'admin.entities.organizaciones',
+    titleKey: 'organizaciones',
+    descriptionKey: 'admin.descriptions.organizaciones',
+    // Las crean y editan sus administradores desde la aplicación
+    readOnly: { create: true, edit: true },
+    columns: [
+      { kind: 'text', key: 'nombre', labelKey: 'admin.fields.nombre', value: (item) => text(item, 'nombre'), primary: true },
+      {
+        kind: 'link',
+        key: 'idAdministrador',
+        labelKey: 'admin.fields.administrador',
+        entity: 'usuarios',
+        relation: 'administrador',
+      },
+      {
+        kind: 'text',
+        key: 'consentimientos',
+        labelKey: 'admin.fields.numConsentimientos',
+        value: (item) => text(related(item, '_count') ?? {}, 'consentimientos'),
+      },
+      { kind: 'date', key: 'fechaCreacion', labelKey: 'admin.fields.fechaCreacion' },
+    ],
+    formFields: [],
+  },
+  consentimientos: {
+    icon: FiCheckSquare,
+    labelKey: 'admin.entities.consentimientos',
+    titleKey: 'consentimientos',
+    descriptionKey: 'admin.descriptions.consentimientos',
+    // Solo los gestionan la organización y el usuario implicados
+    readOnly: { create: true, edit: true, delete: true },
+    columns: [
+      {
+        kind: 'link',
+        key: 'idOrganizacion',
+        labelKey: 'admin.fields.organizacion',
+        entity: 'organizaciones',
+        relation: 'organizacion',
+      },
+      { kind: 'link', key: 'idUsuario', labelKey: 'admin.fields.usuario', entity: 'usuarios', relation: 'usuario' },
+      { kind: 'text', key: 'anioCampania', labelKey: 'admin.fields.anioCampania', value: (item) => text(item, 'anioCampania') },
+      { kind: 'consentState', key: 'estado', labelKey: 'admin.fields.estado' },
+      { kind: 'date', key: 'fechaSolicitud', labelKey: 'admin.fields.fechaSolicitud' },
+      { kind: 'date', key: 'fechaRespuesta', labelKey: 'admin.fields.fechaRespuesta' },
+      { kind: 'date', key: 'fechaRevocacion', labelKey: 'admin.fields.fechaRevocacion' },
+    ],
+    formFields: [],
   },
   'metodos-impacto': {
     icon: FiZap,

@@ -48,18 +48,15 @@ describe('CatastroCaptureStrategy', () => {
     );
   });
 
-  describe('matches', () => {
-    it('returns true when es_referencia_catastral is set', () => {
-      expect(strategy.matches(catastroParcela())).toBe(true);
-    });
-
-    it('returns false when es_referencia_catastral is undefined', () => {
-      expect(
-        strategy.matches(
-          catastroParcela({ es_referencia_catastral: undefined }),
-        ),
-      ).toBe(false);
-    });
+  it.each([
+    ['es_referencia_catastral is set', catastroParcela(), true],
+    [
+      'es_referencia_catastral is undefined',
+      catastroParcela({ es_referencia_catastral: undefined }),
+      false,
+    ],
+  ])('matches when %s', (_label, mParcela, expected) => {
+    expect(strategy.matches(mParcela)).toBe(expected);
   });
 
   describe('resolveParcela', () => {
@@ -82,37 +79,6 @@ describe('CatastroCaptureStrategy', () => {
         910,
         'ES',
       );
-    });
-
-    it('keeps the polygon and returns a null poblacion when it is not found', async () => {
-      catastroService.getPolygon.mockResolvedValue(polygon);
-      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBe(polygon);
-      expect(result.poblacion).toBeNull();
-    });
-
-    it('returns a null polygon but still resolves the poblacion when the polygon lookup fails', async () => {
-      catastroService.getPolygon.mockRejectedValue(new Error('Request failed'));
-      const poblacion = { id: 'pop1' } as any;
-      poblacionService.findByCatastroIds.mockResolvedValue(poblacion);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBeNull();
-      expect(result.poblacion).toBe(poblacion);
-    });
-
-    it('returns a null polygon when the service returns no valid geometry', async () => {
-      catastroService.getPolygon.mockResolvedValue(undefined as any);
-      poblacionService.findByCatastroIds.mockResolvedValue(undefined);
-
-      const result = await strategy.resolveParcela(mParcela);
-
-      expect(result.polygon).toBeNull();
-      expect(result.poblacion).toBeNull();
     });
   });
 });

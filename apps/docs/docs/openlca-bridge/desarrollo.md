@@ -5,67 +5,65 @@ sidebar_position: 6
 
 # Entorno de desarrollo
 
-## DevContainer
-
-Para el desarrollo del servicio he usado [DevContainers](https://containers.dev), una solución basada en Docker que
-permite tener entornos aislados para cada desarrollo. Para hacer uso del mismo solo es necesario abrir el repositorio
-del servicio en uno de los IDEs con soporte habilitado para DevContainers (Visual Studio Code, PyCharm, ...).
-
 ## Instalación de dependencias
 
-Una vez dentro del DevContainer, crea un entorno virtual de Python 3.12+ e instala las dependencias:
+Las dependencias se gestionan con [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`; Python 3.12, la
+misma versión que la imagen Docker). Desde la raíz del repositorio de LCA Bridge:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
+
+`uv sync` crea `.venv` con las dependencias exactas de `uv.lock`, incluidas las de desarrollo. Las dependencias se
+añaden con `uv add <paquete>` (o `uv add --dev <paquete>` si solo se usan en desarrollo) y se actualizan con
+`uv lock --upgrade`; `pyproject.toml` y `uv.lock` se suben siempre juntos.
 
 ## [Servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container)
 
 El servicio necesita un servidor IPC de openLCA en ejecución. La base de datos de openLCA debe estar disponible en
-`openlca-docker/data/databases/ecoinvent`. Para iniciar el servidor IPC, despliega dicho servicio del Docker Compose:
+`openlca-docker/data/databases/ecoinvent`. Para iniciar solo el servidor IPC del `docker-compose.yml` local:
 
 ```bash
 docker compose up openlca-ipc
 ```
 
+Este compose publica el servidor IPC en el puerto **3333** del host, mientras que el servicio lo busca por defecto en
+`localhost:8080`. Para ejecutar el servicio fuera de Docker contra este contenedor, define `OLCA_PORT=3333` en el
+`.env` de la raíz del repositorio.
+
 ## Iniciar el servidor de desarrollo
 
-Para iniciar el servidor en modo desarrollo con hot-reload, ejecuta el siguiente comando dentro de la carpeta `src/`:
+Para iniciar el servidor con recarga automática, desde la raíz del repositorio:
 
 ```bash
-fastapi dev
+uv run uvicorn src.main:app --reload --port 3000
 ```
 
 La documentación Swagger estará disponible en `http://localhost:3000/docs`.
 
 ## Testing
 
-Los tests usan **pytest** con el cliente de test de **Starlette**. Los fixtures se encuentran en el directorio `test/`:
+Los tests usan **pytest** con el `TestClient` de **Starlette** y no necesitan un servidor de openLCA: el cliente de
+openLCA y el envío a LCA-Compare se sustituyen por mocks (`test/mocks.py`), por lo que el test de entrada válida
+espera **HTTP 200**. Las fichas de prueba están en `test/`.
 
 ```bash
-# Ejecutar todos los tests con cobertura (recomendado — equivalente a CI)
-tox -e py
+# Ejecutar todos los tests con cobertura (equivalente a CI)
+uv run pytest
 
 # Ejecutar un archivo de test concreto
-pytest test_main.py
+uv run pytest test/test_main.py
 
 # Ejecutar un test individual
-pytest test_main.py::test_dtagro_acv_valid
+uv run pytest test/test_main.py::test_lca_capture_success
 ```
-
-:::note
-El test de entrada válida (`test_dtagro_acv_valid`) espera un código **HTTP 500** en lugar de 200, porque el servidor
-de openLCA no está disponible en el entorno de CI.
-:::
 
 No hay linter, formateador ni typechecker configurados.
 
 ## Generación de modelos
 
-El archivo `src/models/dtagro_acv_output.py` se genera automáticamente a partir del esquema JSON
-`schema/dtagro_schema_v1.json`. No debe editarse manualmente. Para regenerarlo tras modificar el esquema:
+El archivo `src/models/lca_capture_output.py` se genera automáticamente a partir del esquema JSON
+`schema/lca_capture_schema_v1.json` y no debe editarse manualmente. Para regenerarlo tras modificar el esquema:
 
 ```bash
 bash utils/generate_output_model.sh
@@ -75,28 +73,34 @@ bash utils/generate_output_model.sh
 
 ```
 .
-├── src/                              # Código fuente del servicio (Python)
-│   ├── main.py                       # Punto de entrada de la aplicación FastAPI
-│   ├── acv_service.py                # ACVService: lógica principal de cálculo
-│   ├── routers/                      # Definición de endpoints
-│   ├── services/                     # OLCAClient y gestión de procesos
-│   ├── models/                       # Modelos Pydantic
-│   │   └── dtagro_acv_output.py      # Autogenerado desde schema/
-│   ├── processes/                    # Procesos por tipo de cultivo
-│   │   ├── tomate_process.py         # TomateProcess
-│   │   ├── olivo_process.py          # OlivoProcess
-│   │   └── vinedo_process.py         # VinedoProcess
-│   └── templates/                    # Plantillas para cálculos de ACV
+├── src/
+│   ├── client/
+│   │   └── olca_client.py          # Cliente IPC de openLCA (OLCAClient)
+│   ├── models/
+│   │   ├── flow_dict.py            # FlowDict: flujos de cada subproceso
+│   │   └── lca_capture_output.py   # Modelo de entrada, generado desde schema/ (no editar)
+│   ├── processes/
+│   │   ├── process.py              # Clase base Process
+│   │   ├── tomate.py               # TomateProcess
+│   │   ├── olivo.py                # OlivoProcess
+│   │   ├── vinedo.py               # VinedoProcess
+│   │   ├── calculos.py             # Cálculos comunes (labores, fitosanitarios, riego, estructuras)
+│   │   └── datos_referencia.py     # Datos del Excel de referencia (aperos, fitosanitarios, pesos, vidas útiles)
+│   ├── services/
+│   │   ├── acv_service.py          # ACVService: validación, escritura en openLCA y cálculo
+│   │   └── coeficientes.py         # Cálculo con coeficientes, sin escribir en openLCA
+│   └── main.py                     # Punto de entrada FastAPI (endpoints)
+├── test/                           # Tests (pytest) y fichas de entrada de prueba
+├── examples/                       # Ejemplos de entrada y salida
 ├── schema/
-│   └── dtagro_schema_v1.json         # Esquema JSON para generación de modelos
-├── utils/
-│   └── generate_output_model.sh      # Script de regeneración de modelos
-├── test/                             # Tests y fixtures
-├── openlca-docker/                   # Proyecto Maven/Java del servidor IPC (independiente)
-│   └── data/databases/ecoinvent/     # Ruta de la base de datos .zolca
-├── requirements.txt                  # Dependencias de Python
-├── Dockerfile                        # Imagen del servicio
-├── docker-compose.yml                # Orquestación (openlca-ipc + bridge)
-├── tox.ini                           # Configuración de tox para testing
-└── .devcontainer/                    # Configuración de DevContainer
+│   └── lca_capture_schema_v1.json  # Esquema JSON de la entrada
+├── utils/                          # Utilidades (regeneración del modelo, envío y cálculo de fichas)
+├── docs/
+│   └── calculo_procesos.md         # Cálculo de los procesos: fórmulas, supuestos y decisiones
+├── openlca-docker/                 # Proyecto Maven/Java del servidor IPC (independiente)
+│   └── data/databases/ecoinvent/   # Base de datos de openLCA (uso local, no versionada)
+├── docker-compose.yml              # Uso local (openlca-ipc + lca-bridge)
+├── Dockerfile                      # Imagen del servicio
+├── pyproject.toml                  # Dependencias y configuración de pytest
+└── uv.lock                         # Versiones exactas de las dependencias
 ```

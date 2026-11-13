@@ -3,256 +3,285 @@ sidebar_label: 'JSON de entrada'
 sidebar_position: 4
 ---
 
-# JSON de entrada del endpoint `POST /capture-acv`
+# JSON de entrada
 
-El endpoint `POST /capture-acv` recibe como cuerpo de la petición el JSON de salida de un cultivo generado por el
-servicio **LCA Capture**. A continuación se describe la estructura completa del documento.
+Los endpoints `POST /capture-acv` y `POST /capture-acv-coeficientes` reciben como cuerpo de la petición el JSON de un
+cultivo exportado por **LCA Capture**. El modelo se genera a partir del esquema `schema/lca_capture_schema_v1.json`
+del repositorio de LCA Bridge y no admite campos no definidos: un campo desconocido, un campo obligatorio ausente o un
+tipo incorrecto devuelven **HTTP 422**.
+
+Salvo que se indique otra unidad, las cantidades "por producción" (`*_produccion`, fertilizantes) se expresan **por
+tonelada de producto**, ya que `metadatos.cultivo.produccion` está en t/ha.
 
 ## Estructura general
 
-El JSON se compone de siete bloques principales:
+| Bloque | Obligatorio | Descripción |
+|---|---|---|
+| `metadatos` | Sí | Información de la parcela, el cultivo y el usuario. |
+| `riegos` | Sí | Parámetros del sistema de riego instalado. |
+| `bombeo` | No | Datos del equipo de bombeo. Sin este bloque no se contabilizan la energía ni el acero de la bomba. |
+| `caseta` | No | Caseta de riego. |
+| `espalderas` | No | Espaldera (olivo y viñedo). |
+| `fitosanitarios` | Sí | Productos fitosanitarios aplicados, con detalle y agrupación por clasificación SimaPro. |
+| `fertilizantes` | Sí | Nutrientes aplicados y emisiones de la fertilización. |
+| `manejo_cultivo` | Sí | Labores agrícolas, ocupación del suelo y uso de agua. |
+| `maquinaria` | Sí | Maquinaria empleada, incluida la cosecha mecanizada. |
 
-| Bloque | Descripción |
-|---|---|
-| `metadatos` | Información de la parcela, el cultivo y el usuario. |
-| `riegos` | Parámetros del sistema de riego instalado. |
-| `bombeo` | Datos del equipo de bombeo hidráulico. |
-| `fitosanitarios` | Productos fitosanitarios aplicados, con detalle y agrupación por clasificación SimaPro. |
-| `fertilizantes` | Cantidades de nutrientes y emisiones asociadas a la fertilización. |
-| `manejo_cultivo` | Labores agrícolas realizadas, ocupación del suelo y uso de agua. |
-| `maquinaria` | Maquinaria empleada, incluyendo cosecha mecanizada. |
+Los criterios de cálculo de cada campo están en
+[Cálculo de los procesos](https://github.com/quercus-uex/LCA-Bridge/blob/main/docs/calculo_procesos.md).
 
 ---
 
 ## `metadatos`
 
-Contiene los datos identificativos de la parcela, el cultivo y el usuario que realiza la solicitud.
-
 ### `metadatos.parcela`
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno de la parcela en LCA Capture. |
-| `es_sigpac` | `object` \| `null` | Condicional | Datos SIGPAC de la parcela. Obligatorio si la parcela está registrada en SIGPAC. |
-| `es_sigpac.provincia` | `integer` | Condicional | Código de provincia INE. |
-| `es_sigpac.municipio` | `integer` | Condicional | Código de municipio INE. |
-| `es_sigpac.poligono` | `integer` | Condicional | Número de polígono catastral. |
-| `es_sigpac.parcela` | `integer` | Condicional | Número de parcela catastral. |
-| `es_referencia_catastral` | `string` \| `null` | Condicional | Referencia catastral de la parcela. Alternativa a SIGPAC. |
-| `pt_id_parcela_predial` | `string` \| `null` | Condicional | Identificador de parcela predial (Portugal). Alternativa a SIGPAC y catastro. |
-| `nombre` | `string` | Sí | Nombre descriptivo de la parcela. |
+| `id` | `integer` | Sí | Identificador de la parcela en LCA Capture. |
+| `es_sigpac` | `object` \| `null` | No | Código SIGPAC: `provincia`, `municipio`, `poligono` y `parcela` (`integer` \| `null`). |
+| `es_referencia_catastral` | `string` \| `null` | No | Referencia catastral. |
+| `pt_id_parcela_predial` | `string` \| `null` | No | Código de parcela predial (Portugal). |
+| `nombre` | `string` | Sí | Nombre de la parcela. |
 
 :::note
-Al menos uno de los tres identificadores geográficos (`es_sigpac`, `es_referencia_catastral` o `pt_id_parcela_predial`)
-debe estar presente. El servicio valida la parcela usando el primero que encuentre.
+Debe informarse al menos uno de los tres identificadores (`es_sigpac` con `provincia`, `es_referencia_catastral` o
+`pt_id_parcela_predial`); en caso contrario, el servicio responde **HTTP 400**.
 :::
 
 ### `metadatos.cultivo`
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno del cultivo en LCA Capture. |
-| `tipo` | `string` | Sí | Tipo de cultivo. Valores soportados: `"Tomate"`, `"Olivo"`, `"Vinedo"`. Determina el proceso de cálculo seleccionado (`TomateProcess`, `OlivoProcess`, `VinedoProcess`). |
-| `superficie_cultivada` | `number` | Sí | Superficie cultivada en hectáreas (ha). |
-| `produccion` | `number` | Sí | Producción total en kilogramos (kg). |
-| `consumo_agua` | `number` | Sí | Consumo de agua en metros cúbicos (m³). |
-| `fecha_inicio_campania` | `integer` | Sí | Fecha de inicio de campaña en formato `YYYYMMDD`. |
-| `fecha_fin_campania` | `integer` | Sí | Fecha de fin de campaña en formato `YYYYMMDD`. |
-| `ciclo` | `integer` | Sí | Duración del ciclo de cultivo en días. |
+| `id` | `integer` | Sí | Identificador del cultivo en LCA Capture. |
+| `tipo` | `string` | Sí | Tipo de cultivo: `"Tomate"`, `"Olivo"` o `"Viñedo"`. Determina el proceso de cálculo; otro valor devuelve HTTP 400. |
+| `superficie_cultivada` | `number` | Sí | Superficie cultivada (ha). Debe ser mayor que 0. |
+| `produccion` | `number` | Sí | Producción (t/ha). Debe ser mayor que 0. |
+| `consumo_agua` | `number` \| `null` | Sí | Consumo de agua (m³/ha). Con `null` no se contabiliza energía de bombeo. |
+| `fecha_inicio_campania` | `integer` | Sí | Fecha de inicio de campaña (`AAAAMMDD`). |
+| `fecha_fin_campania` | `integer` | Sí | Fecha de fin de campaña (`AAAAMMDD`). |
+| `ciclo` | `integer` \| `null` | Sí | Duración del ciclo de cultivo en días. |
 
 ### `metadatos.usuario`
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `id` | `integer` | Sí | Identificador interno del usuario en LCA Capture. |
+| `id` | `integer` | Sí | Identificador del usuario en LCA Capture. |
 | `nombre` | `string` | Sí | Nombre del usuario. |
-| `email` | `string` | Sí | Correo electrónico del usuario. |
+| `email` | `string` | Sí | Correo electrónico (debe ser una dirección válida). |
 
 ---
 
 ## `riegos`
 
-Parámetros técnicos del sistema de riego. Los campos varían según el tipo de riego instalado.
+`tipo` determina el cálculo de los plásticos del riego: debe contener `"hortícola"` (cinta de goteo), `"integrados"`
+(árboles con goteros integrados) o `"pinchados"` (árboles con goteros pinchados); otro valor devuelve HTTP 400.
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `tipo` | `string` | Tipo de sistema de riego (ej. `"Sistema de riego horticola"`). |
-| `entre_arboles` | `number` | Distancia entre árboles en metros. |
-| `entre_calles` | `number` | Distancia entre calles en metros. |
-| `n_goteros_arbol` | `number` | Número de goteros por árbol. |
-| `n_arboles` | `number` | Número total de árboles. |
-| `n_calles` | `number` | Número de calles. |
-| `m_portagotero` | `number` | Metros totales de tubería portagoteros. |
-| `peso_portagoteros_16mm` | `number` | Peso de los portagoteros de 16 mm en kg. |
-| `n_enganches` | `number` | Número de enganches. |
-| `peso_enganches` | `number` | Peso total de enganches en kg. |
-| `metros_principal` | `number` | Metros de tubería principal. |
-| `peso_principal_32mm` | `number` | Peso de la tubería principal de 32 mm en kg. |
-| `peso_llaves` | `number` | Peso de las llaves en kg. |
-| `kg_PP` | `number` | Kilogramos totales de polipropileno (PP). |
-| `peso_tira_pollo` | `number` | Peso de la tira de pollo en kg. |
-| `peso_principal_17mm` | `number` | Peso de la tubería principal de 17 mm en kg. |
-| `deposito_abono` | `number` | Capacidad del depósito de abono en litros. |
-| `kg_PP_ha_anio` | `number` | kg de PP por hectárea y año. |
-| `kg_PE_1_ha_anio` | `number` | kg de polietileno (tipo 1) por hectárea y año. |
-| `kg_PE_2_ha_anio` | `number` | kg de polietileno (tipo 2) por hectárea y año. |
-| `kg_PE_deposito_ha_anio` | `number` | kg de PE del depósito por hectárea y año. |
-| `kg_PE_ha_anio` | `number` | kg totales de PE por hectárea y año. |
-| `kg_PVC_ha_anio` | `number` | kg de PVC por hectárea y año. |
-| `kg_PVC_produccion` | `number` | kg de PVC por kg de producción. |
-| `kg_PP_produccion` | `number` | kg de PP por kg de producción. |
-| `kg_PE_produccion` | `number` | kg de PE por kg de producción. |
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `tipo` | `string` | Sí | Tipo de sistema de riego (p. ej. `"Sistema de riego hortícola"`). |
+| `entre_arboles` | `number` | Sí | Distancia entre árboles o plantas (m). Con goteros pinchados debe ser mayor que 0. |
+| `entre_calles` | `number` | Sí | Distancia entre calles o líneas (m). Debe ser mayor que 0. |
+| `n_goteros_arbol` | `integer` \| `null` | No | Número de goteros por árbol. |
+| `n_arboles` | `number` | Sí | Número de árboles. |
+| `n_calles` | `number` | Sí | Número de calles. |
+| `m_portagotero` | `number` | Sí | Metros de tubería portagoteros. |
+| `peso_portagoteros_16mm` | `number` | Sí | Peso de los portagoteros de 16 mm (kg). |
+| `n_enganches` | `number` | Sí | Número de enganches. |
+| `peso_enganches` | `number` | Sí | Peso de los enganches (kg). |
+| `metros_principal` | `integer` | Sí | Metros de tubería principal. |
+| `peso_principal_32mm` | `number` | Sí | Peso de la tubería principal de 32 mm (kg). |
+| `peso_llaves` | `number` | Sí | Peso de las llaves (kg). |
+| `kg_PP` | `number` | Sí | kg de polipropileno (PP). |
+| `kg_PE` | `number` \| `null` | No | kg de polietileno (PE). |
+| `peso_tira_pollo` | `integer` \| `null` | No | Peso de la cinta de goteo (kg). |
+| `peso_principal_17mm` | `number` \| `null` | No | Peso de la tubería principal de 17 mm (kg). |
+| `deposito_abono` | `number` \| `null` | No | Peso del depósito de abono (kg). |
+| `kg_PP_ha_anio` | `number` | Sí | kg de PP por hectárea y año. |
+| `kg_PE_1_ha_anio` | `number` \| `null` | No | kg de PE (tipo 1) por hectárea y año. |
+| `kg_PE_2_ha_anio` | `integer` \| `null` | No | kg de PE (tipo 2) por hectárea y año. |
+| `kg_PE_deposito_ha_anio` | `number` \| `null` | No | kg de PE del depósito por hectárea y año. |
+| `kg_PE_ha_anio` | `number` \| `null` | No | kg de PE por hectárea y año. |
+| `kg_PVC_ha_anio` | `number` \| `null` | No | kg de PVC por hectárea y año. |
+| `kg_PVC_produccion` | `number` \| `null` | No | kg de PVC por tonelada. |
+| `kg_PP_produccion` | `number` | Sí | kg de PP por tonelada. |
+| `kg_PE_produccion` | `number` | Sí | kg de PE por tonelada. |
 
 ---
 
 ## `bombeo`
 
-Datos del equipo de bombeo hidráulico asociado al sistema de riego.
+Bloque opcional. Si se incluye, todos sus campos son obligatorios.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `cabeas` | `number` | Número de cabezas de bombeo. |
-| `potencia` | `number` | Potencia del equipo en kW. |
-| `consumo_l_h` | `number` | Consumo en litros por hora. |
-| `kg_acero_ha_produccion` | `number` | kg de acero por hectárea y kg de producción. |
+| `potencia` | `number` | Potencia de la bomba; determina el consumo eléctrico según la tabla de grupos de bombeo. |
+| `consumo_l_h` | `number` | Consumo de gasóleo (l/h) de una bomba diésel. |
+| `kg_acero_ha_produccion` | `number` | kg de acero de la bomba por tonelada. |
+
+---
+
+## `caseta`
+
+Bloque opcional. El cálculo usa `largo` y `ancho` (m); sin ellos, la caseta no se contabiliza.
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `largo`, `ancho` | `string` \| `null` | No | Dimensiones de la caseta (m). |
+| `alto`, `largo_tejado`, `ancho_tejado` | `string` \| `null` | No | Dimensiones de la caseta y del tejado (m). |
+| `superficie_tejado`, `kg_hormigon_m2`, `kg_hormigon`, `peso_m2_chapas_acero`, `kg_poliuretano`, `kg_acero` | `number` \| `null` | No | Datos intermedios de LCA Capture. |
+| `kg_hor` | `number` | Sí | kg de hormigón por tonelada. |
+| `kg_PU` | `number` | Sí | kg de poliuretano por tonelada. |
+| `kg_acero_ha_anio` | `number` | Sí | kg de acero por tonelada. |
+
+---
+
+## `espalderas`
+
+Bloque opcional, calculado por LCA Capture con la hoja ESPALDERAS del Excel de referencia (pesos en kg por ha). Con
+`kg_acero_ha` igual a 0, la espaldera no se contabiliza.
+
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `kg_acero_ha` | `number` | Sí | kg de acero de la espaldera por ha. |
+| `kg_acero_ha_anio_produccion` | `number` | Sí | kg de acero por tonelada. |
+| `peso_alambre_ha` | `number` \| `null` | No | kg de alambre por ha (espaldera de olivo). |
+| `peso_alambre_formacion_ha`, `peso_alambre_vegetacion_ha` | `number` \| `null` | No | kg de alambre de formación y de vegetación por ha (espaldera de viña). |
+| `tipo` | `integer` \| `null` | No | Tipo de espaldera. |
+
+El resto de campos (`entre_arboles`, `entre_calles`, `distancia_postes`, `postes_linea`, `peso_poste`, `lineas_ha`,
+`postes_ha`, `m_alambre_*`, `*gripple*`, `peso_postes_ha`, `kg_acero_ha_anio`) son datos intermedios opcionales.
 
 ---
 
 ## `fitosanitarios`
 
-Productos fitosanitarios aplicados al cultivo, con detalle individual y agrupación por clasificación SimaPro.
-
 ### `fitosanitarios.detalle[]`
 
-Array con cada producto fitosanitario aplicado.
+Cada producto fitosanitario aplicado. Todos los campos son obligatorios salvo `porcentaje_ma_personalizado`.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `id` | `integer` | Identificador del producto. |
-| `nombre` | `string` | Nombre comercial del producto. |
-| `clasificacion_simapro` | `integer` | Código de clasificación SimaPro (determina el proceso de impacto en openLCA). |
-| `n_aplicaciones` | `integer` | Número de aplicaciones realizadas. |
-| `densidad` | `number` | Densidad del producto en kg/L. |
-| `porcentaje_ma` | `number` | Porcentaje de materia activa declarada. |
-| `porcentaje_ma_usado` | `number` | Porcentaje de materia activa realmente utilizada. |
-| `porcentaje_ma_personalizado` | `number` \| `null` | Porcentaje personalizado por el usuario, si aplica. |
-| `max_l_ha` | `number` | Dosis máxima en litros por hectárea. |
-| `cantidad_total_ha` | `number` | Cantidad total aplicada por hectárea en litros. |
-| `cantidad_total_produccion` | `number` | Cantidad total aplicada por kg de producción en litros. |
+| `nombre` | `string` | Nombre comercial; se busca en la tabla de fitosanitarios de referencia. |
+| `clasificacion_simapro` | `integer` | Código de clasificación SimaPro. Se usa si el producto no está en la tabla de referencia; si tampoco se reconoce, el servicio responde HTTP 400. |
+| `n_aplicaciones` | `integer` | Número de aplicaciones. |
+| `densidad` | `number` | Densidad del producto (kg/l). |
+| `porcentaje_ma` | `number` | Porcentaje de materia activa declarado. |
+| `porcentaje_ma_usado` | `number` | Porcentaje de materia activa usado en el cálculo. |
+| `porcentaje_ma_personalizado` | `number` \| `null` | Porcentaje personalizado por el usuario, si lo hay. |
+| `max_l_ha` | `number` | Dosis por aplicación (l/ha). |
+| `cantidad_total_ha` | `number` | Cantidad total aplicada por hectárea. |
+| `cantidad_total_produccion` | `number` | Cantidad total aplicada por tonelada. |
 
 ### `fitosanitarios.agrupado_por_clasificacion[]`
 
-Array con los fitosanitarios agrupados por su clasificación SimaPro.
+Fitosanitarios agrupados por clasificación SimaPro. Todos los campos son obligatorios.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `clasificacion_simapro` | `integer` | Código de clasificación SimaPro del grupo. |
-| `cantidad_total_produccion` | `number` | Cantidad total del grupo por kg de producción. |
-| `fitosanitarios[]` | `array` | Lista de productos dentro del grupo. |
-| `fitosanitarios[].id` | `integer` | Identificador del producto. |
-| `fitosanitarios[].nombre` | `string` | Nombre del producto. |
-| `fitosanitarios[].n_aplicaciones` | `integer` | Número de aplicaciones. |
-| `fitosanitarios[].cantidad_total_ha` | `number` | Cantidad por hectárea en litros. |
-| `fitosanitarios[].cantidad_total_produccion` | `number` | Cantidad por kg de producción en litros. |
+| `cantidad_total_produccion` | `number` | Cantidad total del grupo por tonelada. |
+| `fitosanitarios[]` | `array` | Productos del grupo, con `id`, `nombre`, `n_aplicaciones`, `cantidad_total_ha` y `cantidad_total_produccion`. |
 
 ---
 
 ## `fertilizantes`
 
-Cantidades de nutrientes aplicados y emisiones asociadas a la fertilización.
+Todos los campos son obligatorios.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `kg_N` | `number` | kg de nitrógeno (N) por kg de producción. |
-| `kg_K2O` | `number` | kg de óxido de potasio (K₂O) por kg de producción. |
-| `kg_P2O5` | `number` | kg de pentóxido de fósforo (P₂O₅) por kg de producción. |
-| `kg_NH3` | `number` | kg de amoníaco (NH₃) emitidos por kg de producción. |
-| `kg_N2O` | `number` | kg de óxido nitroso (N₂O) emitidos por kg de producción. |
-| `kg_NOX` | `number` | kg de óxidos de nitrógeno (NOₓ) emitidos por kg de producción. |
-| `kg_NO3` | `number` | kg de nitrato (NO₃) lixiviados por kg de producción. |
-| `transporte_fert_UF_1` | `number` | Factor de unidad de transporte de fertilizantes (UF₁). |
+| `kg_N` | `number` | kg de nitrógeno (N) por tonelada. |
+| `kg_K2O` | `number` | kg de óxido de potasio (K₂O) por tonelada. |
+| `kg_P2O5` | `number` | kg de pentóxido de fósforo (P₂O₅) por tonelada. |
+| `kg_NH3` | `number` | kg de amoníaco (NH₃) emitidos por tonelada. |
+| `kg_N2O` | `number` | kg de óxido nitroso (N₂O) emitidos por tonelada. |
+| `kg_NOX` | `number` | kg de óxidos de nitrógeno (NOₓ) emitidos por tonelada. |
+| `kg_NO3` | `number` | kg de nitrato (NO₃) lixiviados por tonelada. |
+| `transporte_fert_UF_1` | `number` | Transporte de los fertilizantes (t·km por tonelada). |
 
 ---
 
 ## `manejo_cultivo`
 
-Labores agrícolas realizadas sobre el cultivo, junto con datos de ocupación del suelo y uso de agua.
-
 ### `manejo_cultivo.labores[]`
 
-Array con cada labor agrícola realizada.
+Cada labor agrícola realizada. Todos los campos son obligatorios.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `labor_simapro` | `string` | Nombre del proceso SimaPro asociado a la labor. |
-| `rendimiento_h_ha` | `number` | Rendimiento en horas por hectárea. |
-| `UF_1_ha` | `number` | Factor de unidad 1 por hectárea. |
-| `UF_1_ha_produccion` | `number` | Factor de unidad 1 por hectárea y kg de producción. |
-| `fabricacion` | `number` | Impacto de fabricación de la maquinaria. |
-| `reparacion` | `number` | Impacto de reparación de la maquinaria. |
-| `UF_1_kg` | `number` | Factor de unidad 1 por kg de maquinaria. |
-| `UF_1_kg_produccion` | `number` | Factor de unidad 1 por kg de maquinaria y kg de producción. |
+| `rendimiento_h_ha` | `number` | Rendimiento (h/ha). |
+| `UF_1_ha` | `number` | Unidad funcional por hectárea. |
+| `UF_1_ha_produccion` | `number` | Unidad funcional por hectárea y tonelada. |
+| `fabricacion` | `number` | Fabricación de la maquinaria. |
+| `reparacion` | `number` | Reparación de la maquinaria. |
+| `UF_1_kg` | `number` | Unidad funcional por kg de maquinaria. |
+| `UF_1_kg_produccion` | `number` | Unidad funcional por kg de maquinaria y tonelada. |
+| `pases[]` | `array` | Pases de la labor (ver abajo). |
 
 #### `manejo_cultivo.labores[].pases[]`
 
-Array con cada pase (pasada) de la labor.
+Cada pase de un apero. El cálculo usa `apero_nombre`, `tiempo_m_labor` y `pases`.
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `id_pase_apero` | `integer` \| `null` | Identificador del pase del apero. |
-| `apero_id` | `integer` | Identificador del apero. |
-| `apero_nombre` | `string` | Nombre del apero. |
-| `maquina_id` | `integer` | Identificador de la máquina tractora. |
-| `maquina_nombre` | `string` | Nombre de la máquina tractora. |
-| `pases` | `integer` | Número de pasadas realizadas. |
-| `tiempo_m_labor` | `number` | Tiempo en minutos de labor por pase. |
-| `rendimiento_h_ha` | `number` | Rendimiento en horas por hectárea. |
-| `UF_1_ha` | `number` | Factor de unidad 1 por hectárea. |
-| `UF_1_ha_produccion` | `number` | Factor de unidad 1 por hectárea y kg de producción. |
-| `fabricacion` | `number` | Impacto de fabricación. |
-| `reparacion` | `number` | Impacto de reparación. |
-| `UF_1_kg` | `number` | Factor de unidad 1 por kg. |
-| `UF_1_kg_produccion` | `number` | Factor de unidad 1 por kg y kg de producción. |
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `id_pase_apero` | `number` \| `null` | No | Identificador del pase del apero. |
+| `apero_id` | `integer` | Sí | Identificador del apero. |
+| `apero_nombre` | `string` | Sí | Nombre del apero; un apero desconocido no se contabiliza. |
+| `maquina_id` | `integer` \| `null` | No | Identificador de la máquina tractora. |
+| `maquina_nombre` | `string` \| `null` | No | Nombre de la máquina tractora. |
+| `pases` | `integer` | Sí | Número de pases. |
+| `tiempo_m_labor` | `number` | Sí | Tiempo de la labor (h/ha). |
+| `rendimiento_h_ha`, `UF_1_ha`, `UF_1_ha_produccion`, `fabricacion`, `reparacion`, `UF_1_kg`, `UF_1_kg_produccion` | `number` | Sí | Como en `labores[]`, para el pase. |
 
 ### Otros campos de `manejo_cultivo`
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `ocupacion_suelo` | `number` | Factor de ocupación del suelo (m²·año por kg de producción). |
-| `uso_de_agua` | `number` | Uso de agua en m³ por kg de producción. |
+| Campo | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `ocupacion_suelo` | `number` | Sí | Ocupación del suelo por tonelada. |
+| `uso_de_agua` | `number` | Sí | Uso de agua por tonelada. |
 
 ---
 
 ## `maquinaria`
 
-Maquinaria empleada en las labores del cultivo.
+### `maquinaria.cosecha_mecanizada[]`
 
-### `maquinaria.cosecha_mecanizada`
+Cosechadoras empleadas; vacío si la cosecha no es mecanizada. Todos los campos son obligatorios.
 
-Array con los datos de la cosecha mecanizada, si aplica. Puede estar vacío si la cosecha es manual.
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `tipo` | `string` | Tipo de cosechadora: `"cosechadora_tomate"`, `"cosechadora_olivo"` o `"cosechadora_vid"`. Solo cuenta la del cultivo calculado. |
+| `UF_kg` | `number` | Gasóleo de la cosechadora. |
+| `UF_kg_produccion` | `number` | Gasóleo de la cosechadora por tonelada (kg/t). |
+| `UF_kg_fabricacion` | `number` | Fabricación de la cosechadora. |
+| `UF_kg_fabricacion_produccion` | `number` | Fabricación de la cosechadora por tonelada (kg/t). |
 
 ### `maquinaria.maquinas[]`
 
-Array con cada máquina tractora utilizada.
+Cada máquina tractora utilizada. Todos los campos son obligatorios.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `id` | `integer` | Identificador de la máquina. |
-| `nombre` | `string` | Nombre o modelo de la máquina. |
-| `peso` | `number` | Peso de la máquina en kg. |
-| `vida_h` | `number` | Vida útil de la máquina en horas. |
-| `rendimiento_h_ha` | `number` | Rendimiento en horas por hectárea. |
+| `nombre` | `string` | Nombre o modelo. |
+| `peso` | `integer` | Peso (kg). |
+| `vida_h` | `integer` | Vida útil (h). |
+| `rendimiento_h_ha` | `number` | Rendimiento (h/ha). |
 | `fabricacion_kg_ha` | `number` | kg de acero de fabricación por hectárea. |
 | `reparacion_kg_ha` | `number` | kg de acero de reparación por hectárea. |
-| `UF_kg_reciclaje` | `number` | Factor de unidad de reciclaje en kg. |
-| `UF_kg_reciclaje_produccion` | `number` | Factor de unidad de reciclaje en kg por kg de producción. |
+| `UF_kg_reciclaje` | `number` | kg de reciclaje. |
+| `UF_kg_reciclaje_produccion` | `number` | kg de reciclaje por tonelada. |
 
 ---
 
 ## Ejemplo completo
 
-El siguiente JSON representa la información de un cultivo remitido desde LCA Capture hacia LCA Bridge para ejecutar el
-cálculo de ACV correspondiente.
+El siguiente JSON corresponde a un cultivo de tomate exportado por LCA Capture, basado en `examples/example_in.json`
+del [repositorio de LCA Bridge](https://github.com/quercus-uex/LCA-Bridge/blob/main/examples/example_in.json).
 
 ```json
 {
@@ -286,7 +315,7 @@ cálculo de ACV correspondiente.
         }
     },
     "riegos": {
-        "tipo": "Sistema de riego horticola",
+        "tipo": "Sistema de riego hortícola",
         "entre_arboles": 1.5,
         "entre_calles": 2.1,
         "n_goteros_arbol": 10,

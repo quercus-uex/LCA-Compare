@@ -11,21 +11,21 @@
     "message": "General aspects of the architecture",
     "description": "The generated-index page description for category 'Introducción' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Capture ACV": {
+  "sidebar.tutorialSidebar.category.LCA Bridge": {
     "message": "LCA Bridge",
-    "description": "The label for category 'Capture ACV' in sidebar 'tutorialSidebar'"
+    "description": "The label for category 'LCA Bridge' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Capture ACV.link.generated-index.description": {
-    "message": "Documentation for LCA Bridge, the bridge service between LCA Capture and OpenLCA.",
-    "description": "The generated-index page description for category 'Capture ACV' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.LCA Bridge.link.generated-index.description": {
+    "message": "Documentation for LCA Bridge, the bridge service between LCA Capture and openLCA.",
+    "description": "The generated-index page description for category 'LCA Bridge' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.ACV Compare": {
-    "message": "LCA Compare",
-    "description": "The label for category 'ACV Compare' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.LCA-Compare": {
+    "message": "LCA-Compare",
+    "description": "The label for category 'LCA-Compare' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.ACV Compare.link.generated-index.description": {
+  "sidebar.tutorialSidebar.category.LCA-Compare.link.generated-index.description": {
     "message": "Documentation for the LCA comparison visualizer.",
-    "description": "The generated-index page description for category 'ACV Compare' in sidebar 'tutorialSidebar'"
+    "description": "The generated-index page description for category 'LCA-Compare' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.LCA Capture": {
     "message": "LCA Capture",

@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   Min,
 } from 'class-validator';
@@ -29,4 +30,9 @@ export class GlobalStatsQueryDto implements GlobalStatsQuery {
   @IsString()
   @IsNotEmpty()
   tipoCultivo?: string;
+
+  /** Solo cultivos de las campañas consentidas a esta organización (requiere ser su administrador) */
+  @IsOptional()
+  @IsUUID()
+  idOrganizacion?: string;
 }

@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Implantação do Serviço
 
-A plataforma completa (LCA Compare, LCA Bridge, servidor IPC do openLCA e cópias de segurança) é implantada com um único ficheiro de Docker Compose, `deploy/compose.yaml`, do repositório ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). O compose usa imagens já publicadas no GitHub Container Registry (GHCR), pelo que não é necessário clonar o repositório no servidor.
+A plataforma completa (LCA-Compare, LCA Bridge, servidor IPC do openLCA e cópias de segurança) é implantada com um único ficheiro de Docker Compose, `deploy/compose.yaml`, do repositório ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). O compose usa imagens já publicadas no GitHub Container Registry (GHCR), pelo que não é necessário clonar o repositório no servidor.
 
 ## Requisitos prévios
 
@@ -160,7 +160,7 @@ docker compose pull lca-bridge openlca-ipc
 docker compose up -d lca-bridge openlca-ipc
 ```
 
-`TAG` aplica-se a todas as imagens do compose, incluindo `lca-bridge` e `openlca-ipc`. Para fixar uma versão do LCA Compare (`TAG=X.Y.Z` ou `TAG=sha-<hash>`), essa etiqueta tem de existir também nas imagens do LCA Bridge; caso contrário, `docker compose pull` falha. As migrações da base de dados já aplicadas não são revertidas ao voltar a uma versão anterior.
+`TAG` aplica-se a todas as imagens do compose, incluindo `lca-bridge` e `openlca-ipc`. Para fixar uma versão do LCA-Compare (`TAG=X.Y.Z` ou `TAG=sha-<hash>`), essa etiqueta tem de existir também nas imagens do LCA Bridge; caso contrário, `docker compose pull` falha. As migrações da base de dados já aplicadas não são revertidas ao voltar a uma versão anterior.
 
 ## Cópias de segurança
 
@@ -282,7 +282,7 @@ A cópia inclui a tabela de migrações do Prisma, pelo que, ao voltar a levanta
 
 ## Instância de demonstração
 
-`deploy/demo/` contém uma instância temporária do LCA Compare para apresentações: base de dados, backend e frontend (sem LCA Bridge, openLCA nem cópias de segurança), com dados sintéticos. Usa as mesmas imagens do GHCR que a produção (por omissão, a versão fixada em `deploy/demo/compose.yaml`) e é um projeto Compose à parte, `lca-compare-demo`, pelo que pode coexistir com a plataforma.
+`deploy/demo/` contém uma instância temporária do LCA-Compare para apresentações: base de dados, backend e frontend (sem LCA Bridge, openLCA nem cópias de segurança), com dados sintéticos. Usa as mesmas imagens do GHCR que a produção (por omissão, a versão fixada em `deploy/demo/compose.yaml`) e é um projeto Compose à parte, `lca-compare-demo`, pelo que pode coexistir com a plataforma.
 
 ```bash
 cd deploy/demo

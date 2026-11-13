@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Dependency Installation
 
-LCA Compare is part of a **pnpm 10** monorepo with **Turborepo**. Install dependencies from the repository root, not from each application separately:
+LCA-Compare is part of a **pnpm 10** monorepo with **Turborepo**. Install dependencies from the repository root, not from each application separately:
 
 ```bash
 pnpm install
@@ -228,7 +228,7 @@ The backend and frontend consume shared contracts from the `common` workspace pa
 
 ## Database Schema
 
-![ER diagram of the LCA Compare database](/img/acv-compare/esquema-er.png)
+![ER diagram of the LCA-Compare database](/img/acv-compare/esquema-er.png)
 
 The Prisma schema defines these main models:
 

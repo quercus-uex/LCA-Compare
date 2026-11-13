@@ -5,16 +5,16 @@ sidebar_position: 3
 
 # Uso
 
-LCA Compare recibe los resultados de ACV que calcula **LCA Bridge**. Cuando llega el primer cálculo de un usuario, se
+LCA-Compare recibe los resultados de ACV que calcula **LCA Bridge**. Cuando llega el primer cálculo de un usuario, se
 crea su cuenta y, si el envío de correo está configurado, recibe un correo con su contraseña de acceso. No hay registro
 público: el resto de cuentas las crea un administrador.
 
 El correo es este:
 
 ```text
-Asunto: Alta en LCA Compare
+Asunto: Alta en LCA-Compare
 
-Has sido dado de alta en LCA Compare. Tu contraseña es <contraseña>.
+Has sido dado de alta en LCA-Compare. Tu contraseña es <contraseña>.
 ```
 
 La interfaz está disponible en español, inglés y portugués. Puedes cambiar el idioma desde el selector de la barra de
@@ -172,7 +172,7 @@ la aplicación), y los **consentimientos**, de solo lectura, con su organizació
 
 ## Estadísticas globales
 
-La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en LCA Compare. Permite filtrar por
+La ruta **Estadísticas** muestra una visión agregada de los resultados registrados en LCA-Compare. Permite filtrar por
 categoría de impacto, tipo de cultivo y año (y por organización, si administras alguna), y visualiza:
 
 - KPIs globales: número de parcelas, cultivos y superficie total, impacto medio por categoría y variación interanual

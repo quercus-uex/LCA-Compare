@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'LCA Capture / LCA Bridge / LCA Compare',
+  title: 'LCA Capture / LCA Bridge / LCA-Compare',
   tagline: '',
   favicon: '/img/icon.svg',
 
@@ -15,7 +15,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://acv-compare-docs.netlify.app',
+  url: 'https://lca-stack-docs.netlify.app',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -103,7 +103,7 @@ const config: Config = {
           position: 'right',
           items: [
             {href: 'https://github.com/quercus-uex/LCA-Bridge', label: 'LCA Bridge'},
-            {href: 'https://github.com/quercus-uex/LCA-Compare', label: 'LCA Compare'},
+            {href: 'https://github.com/quercus-uex/LCA-Compare', label: 'LCA-Compare'},
           ],
         },
         {
@@ -119,7 +119,7 @@ const config: Config = {
         alt: 'Interreg España–Portugal, cofinanciado por la Unión Europea. TID4AGRO',
         src: '/img/tid4agro-banner.png',
       },
-      copyright: `Documentación de LCA Capture, LCA Bridge y LCA Compare.`,
+      copyright: `Documentación de LCA Capture, LCA Bridge y LCA-Compare.`,
     },
     prism: {
       theme: prismThemes.vsLight,

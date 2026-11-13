@@ -5,14 +5,14 @@ sidebar_position: 3
 
 # Usage
 
-LCA Compare receives the LCA results calculated by **LCA Bridge**. When a user's first calculation arrives, their account is created and, if email sending is configured, they receive an email with their access password. There is no public sign-up: all other accounts are created by an administrator.
+LCA-Compare receives the LCA results calculated by **LCA Bridge**. When a user's first calculation arrives, their account is created and, if email sending is configured, they receive an email with their access password. There is no public sign-up: all other accounts are created by an administrator.
 
 The email (in Spanish) reads:
 
 ```text
-Asunto: Alta en LCA Compare
+Asunto: Alta en LCA-Compare
 
-Has sido dado de alta en LCA Compare. Tu contraseña es <contraseña>.
+Has sido dado de alta en LCA-Compare. Tu contraseña es <contraseña>.
 ```
 
 The interface is available in Spanish, English, and Portuguese. You can change the language from the selector in the navigation bar, and your choice is kept between sessions.
@@ -130,7 +130,7 @@ The **Data** group also includes **organizations**, which can be viewed and dele
 
 ## Global Statistics
 
-The **Statistics** route shows an aggregated view of the results registered in LCA Compare. It allows filtering by impact category, crop type, and year (and by organization, if you manage one), and displays:
+The **Statistics** route shows an aggregated view of the results registered in LCA-Compare. It allows filtering by impact category, crop type, and year (and by organization, if you manage one), and displays:
 
 - Global KPIs: number of plots, crops and total area, average impact per category, and year-over-year variation of each category. The year-over-year variation compares only the plots with a result in both the selected year and the previous one (at least 3), so farms joining or leaving do not affect it.
 - Province and town ranking. Clicking an entry opens the comparator with that province or town preloaded as the Reference set. The town ranking can be limited to a province and includes a search box that shows each town's position.

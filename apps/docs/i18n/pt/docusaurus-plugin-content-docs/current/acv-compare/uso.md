@@ -5,14 +5,14 @@ sidebar_position: 3
 
 # Utilização
 
-O LCA Compare recebe os resultados de ACV calculados pelo **LCA Bridge**. Quando chega o primeiro cálculo de um utilizador, é criada a sua conta e, se o envio de email estiver configurado, o utilizador recebe um email com a sua palavra-passe de acesso. Não existe registo público: as restantes contas são criadas por um administrador.
+O LCA-Compare recebe os resultados de ACV calculados pelo **LCA Bridge**. Quando chega o primeiro cálculo de um utilizador, é criada a sua conta e, se o envio de email estiver configurado, o utilizador recebe um email com a sua palavra-passe de acesso. Não existe registo público: as restantes contas são criadas por um administrador.
 
 O email (em espanhol) é este:
 
 ```text
-Asunto: Alta en LCA Compare
+Asunto: Alta en LCA-Compare
 
-Has sido dado de alta en LCA Compare. Tu contraseña es <contraseña>.
+Has sido dado de alta en LCA-Compare. Tu contraseña es <contraseña>.
 ```
 
 A interface está disponível em espanhol, inglês e português. Pode mudar o idioma a partir do seletor na barra de navegação, e a escolha é mantida entre sessões.
@@ -130,7 +130,7 @@ No grupo **Dados** estão também as **organizações**, que podem ser consultad
 
 ## Estatísticas Globais
 
-A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no LCA Compare. Permite filtrar por categoria de impacto, tipo de cultura e ano (e por organização, se administrar alguma), e visualiza:
+A rota **Estatísticas** apresenta uma visão agregada dos resultados registados no LCA-Compare. Permite filtrar por categoria de impacto, tipo de cultura e ano (e por organização, se administrar alguma), e visualiza:
 
 - KPIs globais: número de parcelas, culturas e superfície total, impacto médio por categoria e variação interanual de cada categoria. A variação interanual compara só as parcelas com resultado no ano escolhido e no anterior (pelo menos 3), para que as entradas e saídas de explorações não a afetem.
 - Ranking de províncias e localidades. Ao clicar numa entrada, abre-se o comparador com essa província ou localidade pré-carregada como conjunto de Referência. O ranking de localidades pode ser limitado a uma província e inclui uma caixa de pesquisa que mostra a posição de cada localidade.

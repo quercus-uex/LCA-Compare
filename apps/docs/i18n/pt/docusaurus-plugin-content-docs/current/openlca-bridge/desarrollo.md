@@ -37,7 +37,7 @@ A documentação Swagger estará disponível em `http://localhost:3000/docs`.
 
 ## Testes
 
-Os testes usam **pytest** com o `TestClient` de **Starlette** e não necessitam de um servidor openLCA: o cliente do openLCA e o envio para o LCA Compare são substituídos por mocks (`test/mocks.py`), pelo que o teste de entrada válida espera **HTTP 200**. As fichas de teste encontram-se em `test/`.
+Os testes usam **pytest** com o `TestClient` de **Starlette** e não necessitam de um servidor openLCA: o cliente do openLCA e o envio para o LCA-Compare são substituídos por mocks (`test/mocks.py`), pelo que o teste de entrada válida espera **HTTP 200**. As fichas de teste encontram-se em `test/`.
 
 ```bash
 # Executar todos os testes com cobertura (equivalente a CI)

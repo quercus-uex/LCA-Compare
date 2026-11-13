@@ -1,6 +1,6 @@
 export const API_BASE_URL = '/api';
 
-export const DOCS_URL = 'https://acv-compare-docs.netlify.app';
+export const DOCS_URL = 'https://lca-stack-docs.netlify.app';
 export const AVATAR_URL = '/avatar-default.png';
 
 export const ADMIN_PAGE_SIZE = 15;

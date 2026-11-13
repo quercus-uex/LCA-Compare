@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Instalación de dependencias
 
-LCA Compare forma parte de un monorepo **pnpm 10** con **Turborepo**. Instala las dependencias desde la raíz del
+LCA-Compare forma parte de un monorepo **pnpm 10** con **Turborepo**. Instala las dependencias desde la raíz del
 repositorio, no desde cada aplicación por separado:
 
 ```bash
@@ -242,7 +242,7 @@ subrutas como `common/impact`, `common/stats`, `common/compare`, `common/locatio
 
 ## Esquema de base de datos
 
-![Diagrama ER de la base de datos de LCA Compare](/img/acv-compare/esquema-er.png)
+![Diagrama ER de la base de datos de LCA-Compare](/img/acv-compare/esquema-er.png)
 
 El esquema de Prisma define los siguientes modelos principales:
 

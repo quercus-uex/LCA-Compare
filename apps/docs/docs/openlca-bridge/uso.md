@@ -8,7 +8,7 @@ sidebar_position: 3
 ## Endpoints
 
 El servicio expone dos endpoints. Ambos reciben como cuerpo el JSON de un cultivo exportado por LCA Capture (ver
-[JSON de entrada](./json-entrada.md)), devuelven el mismo resultado y lo envían a LCA Compare:
+[JSON de entrada](./json-entrada.md)), devuelven el mismo resultado y lo envían a LCA-Compare:
 
 | Endpoint | Descripción |
 |---|---|
@@ -41,7 +41,7 @@ POST /capture-acv    →    ACVService.execute()
 4. **`calculate()`**: escribe los flujos en los subprocesos de openLCA, calcula el sistema de producto y construye el
    resultado. Los procesos de openLCA son compartidos, así que estos pasos se serializan con un bloqueo (`olca_lock`):
    las peticiones concurrentes se atienden de una en una.
-5. **`send_result_to_lca_compare()`**: envía el resultado a LCA Compare (best-effort: los errores se registran en el
+5. **`send_result_to_lca_compare()`**: envía el resultado a LCA-Compare (best-effort: los errores se registran en el
    log sin interrumpir la respuesta).
 
 `POST /capture-acv-coeficientes` sigue el mismo flujo, pero sustituye `calculate()` por
@@ -92,7 +92,7 @@ la cantidad por kg de producto (`amount`) y su unidad (`unit`). Cada lista inclu
 | `impacto_sistema_riego` | Materiales del sistema de riego y energía de bombeo. |
 | `impacto_total` | Impacto total del sistema de producto. En Olivo y Viñedo incluye además el subproceso "Estructuras permanentes" (espaldera y caseta de riego), que no tiene lista propia. |
 
-A LCA Compare se envía `{ "metadatos": <metadatos de la entrada>, "resultado": <respuesta> }`.
+A LCA-Compare se envía `{ "metadatos": <metadatos de la entrada>, "resultado": <respuesta> }`.
 
 ## Códigos de respuesta
 
@@ -103,9 +103,9 @@ A LCA Compare se envía `{ "metadatos": <metadatos de la entrada>, "resultado": 
 | `422` | El JSON no cumple el esquema (campos obligatorios ausentes, tipos incorrectos o campos no definidos). |
 | `500` | Error de openLCA (`"Error de OpenLCA: ..."`) o servidor IPC no disponible (`"Error al conectar a OpenLCA"`). |
 
-## Integración con LCA Compare
+## Integración con LCA-Compare
 
-En el compose de la plataforma, el resultado se envía a `POST /capture` de LCA Compare, cuya URL base se configura
+En el compose de la plataforma, el resultado se envía a `POST /capture` de LCA-Compare, cuya URL base se configura
 con `LCA_COMPARE_BASE_URL`. Desde fuera, el cálculo se expone a través del proxy inverso Nginx del frontend de LCA
 Compare:
 

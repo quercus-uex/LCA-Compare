@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Despliegue del servicio
 
-La plataforma completa (LCA Compare, LCA Bridge, servidor IPC de openLCA y copias de seguridad) se despliega con un
+La plataforma completa (LCA-Compare, LCA Bridge, servidor IPC de openLCA y copias de seguridad) se despliega con un
 único archivo de Docker Compose, `deploy/compose.yaml`, del repositorio
 ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). El compose usa imágenes ya
 publicadas en GitHub Container Registry (GHCR), por lo que no hace falta clonar el repositorio en el servidor.
@@ -327,7 +327,7 @@ las migraciones posteriores a la copia.
 
 ## Instancia de demostración
 
-`deploy/demo/` contiene una instancia temporal de LCA Compare para presentaciones: base de datos, backend y frontend
+`deploy/demo/` contiene una instancia temporal de LCA-Compare para presentaciones: base de datos, backend y frontend
 (sin LCA Bridge, openLCA ni copias de seguridad), con datos sintéticos. Usa las mismas imágenes de GHCR que producción
 (por defecto la versión fijada en `deploy/demo/compose.yaml`) y es un proyecto Compose aparte, `lca-compare-demo`, por
 lo que puede convivir con la plataforma.

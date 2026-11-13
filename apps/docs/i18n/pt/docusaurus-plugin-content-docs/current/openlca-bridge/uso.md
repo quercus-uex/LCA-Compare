@@ -7,7 +7,7 @@ sidebar_position: 3
 
 ## Endpoints
 
-O serviço expõe dois endpoints. Ambos recebem como corpo o JSON de uma cultura exportado pelo LCA Capture (ver [JSON de entrada](./json-entrada.md)), devolvem o mesmo resultado e enviam-no para o LCA Compare:
+O serviço expõe dois endpoints. Ambos recebem como corpo o JSON de uma cultura exportado pelo LCA Capture (ver [JSON de entrada](./json-entrada.md)), devolvem o mesmo resultado e enviam-no para o LCA-Compare:
 
 | Endpoint | Descrição |
 |---|---|
@@ -34,7 +34,7 @@ POST /capture-acv    →    ACVService.execute()
 2. **`get_process_class()`**: seleciona a classe de processo de acordo com `metadatos.cultivo.tipo` (`"Tomate"`, `"Olivo"` ou `"Viñedo"`).
 3. **`validate_cultivo()`**: verifica que `metadatos.cultivo.produccion`, `metadatos.cultivo.superficie_cultivada`, `riegos.entre_calles` e, com gotejadores de inserção, `riegos.entre_arboles` são maiores que 0.
 4. **`calculate()`**: escreve os fluxos nos subprocessos do openLCA, calcula o sistema de produto e constrói o resultado. Os processos do openLCA são partilhados, pelo que estes passos são serializados com um bloqueio (`olca_lock`): os pedidos concorrentes são atendidos um de cada vez.
-5. **`send_result_to_lca_compare()`**: envia o resultado para o LCA Compare (best-effort: os erros são registados no log sem interromper a resposta).
+5. **`send_result_to_lca_compare()`**: envia o resultado para o LCA-Compare (best-effort: os erros são registados no log sem interromper a resposta).
 
 `POST /capture-acv-coeficientes` segue o mesmo fluxo, mas substitui `calculate()` por `calculate_con_coeficientes()`, que só usa o bloqueio na primeira vez, para extrair os coeficientes.
 
@@ -80,7 +80,7 @@ A resposta contém cinco listas de impactos. Cada elemento indica a categoria de
 | `impacto_sistema_riego` | Materiais do sistema de rega e energia de bombagem. |
 | `impacto_total` | Impacto total do sistema de produto. Em Olivo e Viñedo inclui ainda o subprocesso "Estructuras permanentes" (espaldeira e casa de rega), que não tem lista própria. |
 
-Para o LCA Compare é enviado `{ "metadatos": <metadados da entrada>, "resultado": <resposta> }`.
+Para o LCA-Compare é enviado `{ "metadatos": <metadados da entrada>, "resultado": <resposta> }`.
 
 ## Códigos de Resposta
 
@@ -91,9 +91,9 @@ Para o LCA Compare é enviado `{ "metadatos": <metadados da entrada>, "resultado
 | `422` | O JSON não cumpre o esquema (campos obrigatórios ausentes, tipos incorretos ou campos não definidos). |
 | `500` | Erro do openLCA (`"Error de OpenLCA: ..."`) ou servidor IPC indisponível (`"Error al conectar a OpenLCA"`). |
 
-## Integração com LCA Compare
+## Integração com LCA-Compare
 
-No compose da plataforma, o resultado é enviado para `POST /capture` do LCA Compare, cujo URL base é configurado com `LCA_COMPARE_BASE_URL`. A partir do exterior, o cálculo é exposto através do proxy inverso Nginx do frontend do LCA Compare:
+No compose da plataforma, o resultado é enviado para `POST /capture` do LCA-Compare, cujo URL base é configurado com `LCA_COMPARE_BASE_URL`. A partir do exterior, o cálculo é exposto através do proxy inverso Nginx do frontend do LCA-Compare:
 
 | Rota | Destino |
 |---|---|

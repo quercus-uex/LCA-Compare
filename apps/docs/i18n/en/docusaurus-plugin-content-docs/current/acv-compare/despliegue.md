@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Service Deployment
 
-The whole platform (LCA Compare, LCA Bridge, the openLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
+The whole platform (LCA-Compare, LCA Bridge, the openLCA IPC server, and backups) is deployed with a single Docker Compose file, `deploy/compose.yaml`, from the repository ([https://github.com/quercus-uex/LCA-Compare](https://github.com/quercus-uex/LCA-Compare)). The compose file uses images already published to GitHub Container Registry (GHCR), so there is no need to clone the repository on the server.
 
 ## Prerequisites
 
@@ -160,7 +160,7 @@ docker compose pull lca-bridge openlca-ipc
 docker compose up -d lca-bridge openlca-ipc
 ```
 
-`TAG` applies to every image in the compose file, including `lca-bridge` and `openlca-ipc`. To pin an LCA Compare version (`TAG=X.Y.Z` or `TAG=sha-<hash>`), that tag must also exist in the LCA Bridge images; otherwise, `docker compose pull` fails. Database migrations that were already applied are not undone when rolling back to a previous version.
+`TAG` applies to every image in the compose file, including `lca-bridge` and `openlca-ipc`. To pin an LCA-Compare version (`TAG=X.Y.Z` or `TAG=sha-<hash>`), that tag must also exist in the LCA Bridge images; otherwise, `docker compose pull` fails. Database migrations that were already applied are not undone when rolling back to a previous version.
 
 ## Backups
 
@@ -282,7 +282,7 @@ The backup includes the Prisma migrations table, so when the services start agai
 
 ## Demo Instance
 
-`deploy/demo/` contains a temporary LCA Compare instance for presentations: database, backend, and frontend (without LCA Bridge, openLCA, or backups), with synthetic data. It uses the same GHCR images as production (by default, the version pinned in `deploy/demo/compose.yaml`) and is a separate Compose project, `lca-compare-demo`, so it can run alongside the platform.
+`deploy/demo/` contains a temporary LCA-Compare instance for presentations: database, backend, and frontend (without LCA Bridge, openLCA, or backups), with synthetic data. It uses the same GHCR images as production (by default, the version pinned in `deploy/demo/compose.yaml`) and is a separate Compose project, `lca-compare-demo`, so it can run alongside the platform.
 
 ```bash
 cd deploy/demo

@@ -37,7 +37,7 @@ Swagger documentation is available at `http://localhost:3000/docs`.
 
 ## Testing
 
-Tests use **pytest** with the **Starlette** `TestClient` and do not need an openLCA server: the openLCA client and the delivery to LCA Compare are replaced by mocks (`test/mocks.py`), so the valid input test expects **HTTP 200**. The test input files are located in `test/`.
+Tests use **pytest** with the **Starlette** `TestClient` and do not need an openLCA server: the openLCA client and the delivery to LCA-Compare are replaced by mocks (`test/mocks.py`), so the valid input test expects **HTTP 200**. The test input files are located in `test/`.
 
 ```bash
 # Run all tests with coverage (equivalent to CI)

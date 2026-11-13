@@ -1,15 +1,15 @@
 {
   "homepage.title": {
-    "message": "LCA Capture, LCA Bridge and LCA Compare Documentation"
+    "message": "LCA Capture, LCA Bridge and LCA-Compare Documentation"
   },
   "homepage.subtitle": {
-    "message": "Development, deployment, and usage guides for LCA Capture, LCA Bridge and LCA Compare."
+    "message": "Development, deployment, and usage guides for LCA Capture, LCA Bridge and LCA-Compare."
   },
   "homepage.startButton": {
     "message": "Get started"
   },
   "homepage.description": {
-    "message": "Technical and functional documentation for LCA Capture, LCA Bridge and LCA Compare."
+    "message": "Technical and functional documentation for LCA Capture, LCA Bridge and LCA-Compare."
   },
   "theme.ErrorPageContent.title": {
     "message": "This page crashed.",
@@ -348,7 +348,7 @@
     "message": "Authentication"
   },
   "homepage.bridge.description": {
-    "message": "Service that calculates the environmental impact of each crop with openLCA and sends the result to LCA Compare."
+    "message": "Service that calculates the environmental impact of each crop with openLCA and sends the result to LCA-Compare."
   },
   "homepage.link.input": {
     "message": "Input JSON"
@@ -369,6 +369,6 @@
     "message": "Life Cycle Assessment of crops"
   },
   "homepage.usageButton": {
-    "message": "LCA Compare user guide"
+    "message": "LCA-Compare user guide"
   }
 }

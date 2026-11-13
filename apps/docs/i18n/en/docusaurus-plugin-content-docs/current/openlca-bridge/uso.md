@@ -7,7 +7,7 @@ sidebar_position: 3
 
 ## Endpoints
 
-The service exposes two endpoints. Both take as their body the JSON of a crop exported by LCA Capture (see [Input JSON](./json-entrada.md)), return the same result, and send it to LCA Compare:
+The service exposes two endpoints. Both take as their body the JSON of a crop exported by LCA Capture (see [Input JSON](./json-entrada.md)), return the same result, and send it to LCA-Compare:
 
 | Endpoint | Description |
 |---|---|
@@ -34,7 +34,7 @@ POST /capture-acv    →    ACVService.execute()
 2. **`get_process_class()`**: selects the process class according to `metadatos.cultivo.tipo` (`"Tomate"`, `"Olivo"`, or `"Viñedo"`).
 3. **`validate_cultivo()`**: checks that `metadatos.cultivo.produccion`, `metadatos.cultivo.superficie_cultivada`, `riegos.entre_calles` and, with pierced drippers, `riegos.entre_arboles` are greater than 0.
 4. **`calculate()`**: writes the flows to the openLCA subprocesses, calculates the product system, and builds the result. The openLCA processes are shared, so these steps are serialized with a lock (`olca_lock`): concurrent requests are handled one at a time.
-5. **`send_result_to_lca_compare()`**: sends the result to LCA Compare (best-effort: errors are logged without interrupting the response).
+5. **`send_result_to_lca_compare()`**: sends the result to LCA-Compare (best-effort: errors are logged without interrupting the response).
 
 `POST /capture-acv-coeficientes` follows the same flow, but replaces `calculate()` with `calculate_con_coeficientes()`, which only uses the lock the first time, to extract the coefficients.
 
@@ -80,7 +80,7 @@ The response contains five impact lists. Each element gives the EF 3.1 impact ca
 | `impacto_sistema_riego` | Irrigation system materials and pumping energy. |
 | `impacto_total` | Total impact of the product system. For Olivo and Viñedo it also includes the "Estructuras permanentes" subprocess (trellis and irrigation shed), which has no list of its own. |
 
-LCA Compare receives `{ "metadatos": <input metadata>, "resultado": <response> }`.
+LCA-Compare receives `{ "metadatos": <input metadata>, "resultado": <response> }`.
 
 ## Response Codes
 
@@ -91,9 +91,9 @@ LCA Compare receives `{ "metadatos": <input metadata>, "resultado": <response> }
 | `422` | The JSON does not match the schema (missing required fields, wrong types, or undefined fields). |
 | `500` | openLCA error (`"Error de OpenLCA: ..."`) or IPC server unavailable (`"Error al conectar a OpenLCA"`). |
 
-## Integration with LCA Compare
+## Integration with LCA-Compare
 
-In the platform compose file, the result is sent to the `POST /capture` endpoint of LCA Compare, whose base URL is configured with `LCA_COMPARE_BASE_URL`. From outside, the calculation is exposed through the Nginx reverse proxy of the LCA Compare frontend:
+In the platform compose file, the result is sent to the `POST /capture` endpoint of LCA-Compare, whose base URL is configured with `LCA_COMPARE_BASE_URL`. From outside, the calculation is exposed through the Nginx reverse proxy of the LCA-Compare frontend:
 
 | Route | Destination |
 |---|---|

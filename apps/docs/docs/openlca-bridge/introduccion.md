@@ -9,11 +9,11 @@ sidebar_position: 1
 **LCA Capture** y el motor de cálculo de Análisis de Ciclo de Vida **openLCA**. Recibe los datos de un cultivo
 exportados por LCA Capture, calcula su impacto ambiental en openLCA a través del
 [servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container) y envía el resultado a
-[LCA Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y comparativa.
+[LCA-Compare](https://github.com/quercus-uex/LCA-Compare) para su visualización y comparativa.
 
-LCA Bridge, el servidor IPC de openLCA y LCA Compare se despliegan en el mismo Docker Compose
+LCA Bridge, el servidor IPC de openLCA y LCA-Compare se despliegan en el mismo Docker Compose
 (`deploy/compose.yaml`) y se comunican por su red interna. El flujo de datos es: LCA Capture → LCA Bridge (cálculo)
-→ LCA Compare (persistencia y visualización).
+→ LCA-Compare (persistencia y visualización).
 
 ## Funcionalidades
 
@@ -23,7 +23,7 @@ LCA Bridge, el servidor IPC de openLCA y LCA Compare se despliegan en el mismo D
 - **Procesos por tipo de cultivo**: `TomateProcess`, `OlivoProcess` y `VinedoProcess`, seleccionados según
   `metadatos.cultivo.tipo` (ver [Definición de procesos](./procesos.md)).
 - **Método de impacto EF 3.1** (Environmental Footprint 3.1); los resultados se expresan por kg de producto.
-- **Envío de resultados** a LCA Compare (best-effort: un fallo en el envío se registra en el log y no afecta a la
+- **Envío de resultados** a LCA-Compare (best-effort: un fallo en el envío se registra en el log y no afecta a la
   respuesta).
 - **Documentación Swagger** en la ruta `/docs`.
 

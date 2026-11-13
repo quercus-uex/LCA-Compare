@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introduction
 
-**LCA Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. The results are calculated by [LCA Bridge](../openlca-bridge/introduccion.md) with openLCA; both services are deployed with the same Docker Compose file and communicate through its internal network.
+**LCA-Compare** is a web application for visualizing, comparing, and generating reports for the Life Cycle Assessment (LCA) of agricultural crops. The results are calculated by [LCA Bridge](../openlca-bridge/introduccion.md) with openLCA; both services are deployed with the same Docker Compose file and communicate through its internal network.
 
 ## Features
 

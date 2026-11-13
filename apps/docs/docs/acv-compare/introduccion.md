@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Introducción
 
-**LCA Compare** es una aplicación web para visualizar, comparar y generar informes del Análisis de Ciclo de Vida (ACV)
+**LCA-Compare** es una aplicación web para visualizar, comparar y generar informes del Análisis de Ciclo de Vida (ACV)
 de cultivos agrícolas. Los resultados los calcula [LCA Bridge](../openlca-bridge/introduccion.md) con openLCA; ambos
 servicios se despliegan con el mismo Docker Compose y se comunican por su red interna.
 

@@ -11,9 +11,9 @@
     "message": "LCA Bridge",
     "description": "Navbar item with label LCA Bridge"
   },
-  "item.label.LCA Compare": {
-    "message": "LCA Compare",
-    "description": "Navbar item with label LCA Compare"
+  "item.label.LCA-Compare": {
+    "message": "LCA-Compare",
+    "description": "Navbar item with label LCA-Compare"
   },
   "item.label.GitHub": {
     "message": "GitHub",

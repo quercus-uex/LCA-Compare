@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Service Deployment
 
-In production, LCA Bridge and the [openLCA IPC server](https://github.com/GreenDelta/olca-ipc-container) are deployed together with LCA Compare using the platform compose file (`deploy/compose.yaml` in the [LCA-Compare](https://github.com/quercus-uex/LCA-Compare) repository), with the `ghcr.io/quercus-uex/lca-bridge` and `ghcr.io/quercus-uex/openlca-ipc` images. The general steps (server preparation, `.env`, startup, and updates) are described in [ACV Compare deployment](../acv-compare/despliegue.md).
+In production, LCA Bridge and the [openLCA IPC server](https://github.com/GreenDelta/olca-ipc-container) are deployed together with LCA-Compare using the platform compose file (`deploy/compose.yaml` in the [LCA-Compare](https://github.com/quercus-uex/LCA-Compare) repository), with the `ghcr.io/quercus-uex/lca-bridge` and `ghcr.io/quercus-uex/openlca-ipc` images. The general steps (server preparation, `.env`, startup, and updates) are described in [ACV Compare deployment](../acv-compare/despliegue.md).
 
 ## Prerequisites
 
@@ -32,13 +32,13 @@ The service reads its configuration from the following environment variables (al
 |---|---|---|---|
 | `OLCA_HOST` | `localhost` | `http://openlca-ipc` | openLCA IPC server host, with or without scheme (`localhost` or `http://localhost`) |
 | `OLCA_PORT` | `8080` | `8080` | openLCA IPC server port |
-| `LCA_COMPARE_BASE_URL` | `http://127.0.0.1:8000` | `http://lca-compare-backend:3000` | LCA Compare base URL for sending results |
+| `LCA_COMPARE_BASE_URL` | `http://127.0.0.1:8000` | `http://lca-compare-backend:3000` | LCA-Compare base URL for sending results |
 | `IMPACT_METHOD_UUID` | `20629e27-b863-4fbe-bbc2-082d3eefd1e5` | *(default)* | UUID of the impact method in openLCA (EF 3.1) |
 | `CALCULATION_AMOUNT` | `1` | *(default)* | Amount of product, in kg, for which impacts are calculated: with `1`, results are per kg |
 
 ## Network and Access
 
-LCA Bridge, the IPC server, and LCA Compare share the project network (`lca-platform_default`) and reach each other by service name. Neither LCA Bridge nor `openlca-ipc` publishes ports: from outside, the calculation is only reachable through the `/calc` route of the LCA Compare frontend, which requires the `x-api-key` header.
+LCA Bridge, the IPC server, and LCA-Compare share the project network (`lca-platform_default`) and reach each other by service name. Neither LCA Bridge nor `openlca-ipc` publishes ports: from outside, the calculation is only reachable through the `/calc` route of the LCA-Compare frontend, which requires the `x-api-key` header.
 
 ## Publishing and Updating
 
@@ -51,7 +51,7 @@ docker compose up -d lca-bridge openlca-ipc
 ```
 
 :::warning
-The `TAG` variable in `deploy/compose.yaml` applies to every image, including `lca-bridge` and `openlca-ipc`. LCA Bridge only publishes the `main` tag and the `sha-<hash>` tags of its own commits, so setting `TAG` to an LCA Compare version (`X.Y.Z`) or to an LCA Compare `sha-<hash>` makes the `pull` of the LCA Bridge images fail.
+The `TAG` variable in `deploy/compose.yaml` applies to every image, including `lca-bridge` and `openlca-ipc`. LCA Bridge only publishes the `main` tag and the `sha-<hash>` tags of its own commits, so setting `TAG` to an LCA-Compare version (`X.Y.Z`) or to an LCA-Compare `sha-<hash>` makes the `pull` of the LCA Bridge images fail.
 :::
 
 ## Running Locally with Docker Compose
@@ -62,7 +62,7 @@ The `docker-compose.yml` file in the LCA Bridge repository starts the service lo
 docker compose up -d
 ```
 
-The bridge service listens on port **3000** and the IPC server on **3333**. Results are sent to `http://host.docker.internal:8000` (the LCA Compare backend in development) unless `LCA_COMPARE_BASE_URL` is set.
+The bridge service listens on port **3000** and the IPC server on **3333**. Results are sent to `http://host.docker.internal:8000` (the LCA-Compare backend in development) unless `LCA_COMPARE_BASE_URL` is set.
 
 ## Verification
 

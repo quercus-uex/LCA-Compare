@@ -51,7 +51,7 @@ const services: Service[] = [
     name: 'LCA Bridge',
     description: (
       <Translate id="homepage.bridge.description">
-        Servicio que calcula el impacto ambiental de cada cultivo con openLCA y envía el resultado a LCA Compare.
+        Servicio que calcula el impacto ambiental de cada cultivo con openLCA y envía el resultado a LCA-Compare.
       </Translate>
     ),
     links: [
@@ -62,7 +62,7 @@ const services: Service[] = [
   },
   {
     key: 'compare',
-    name: 'LCA Compare',
+    name: 'LCA-Compare',
     description: (
       <Translate id="homepage.compare.description">
         Aplicación web para consultar, comparar y analizar los resultados de ACV de parcelas y campañas.
@@ -84,11 +84,11 @@ function Hero() {
           <Translate id="homepage.eyebrow">Análisis de Ciclo de Vida de cultivos</Translate>
         </p>
         <Heading as="h1" className={styles.title}>
-          <Translate id="homepage.title">Documentación de LCA Capture, LCA Bridge y LCA Compare</Translate>
+          <Translate id="homepage.title">Documentación de LCA Capture, LCA Bridge y LCA-Compare</Translate>
         </Heading>
         <p className={styles.subtitle}>
           <Translate id="homepage.subtitle">
-            Guías de desarrollo, despliegue y uso para LCA Capture, LCA Bridge y LCA Compare.
+            Guías de desarrollo, despliegue y uso para LCA Capture, LCA Bridge y LCA-Compare.
           </Translate>
         </p>
         <div className={styles.actions}>
@@ -96,7 +96,7 @@ function Hero() {
             <Translate id="homepage.startButton">Empezar</Translate>
           </Link>
           <Link className="button button--lg button--outline button--primary" to="/docs/acv-compare/uso">
-            <Translate id="homepage.usageButton">Guía de uso de LCA Compare</Translate>
+            <Translate id="homepage.usageButton">Guía de uso de LCA-Compare</Translate>
           </Link>
         </div>
       </div>
@@ -139,11 +139,11 @@ export default function Home(): ReactNode {
     <Layout
       title={translate({
         id: 'homepage.title',
-        message: 'Documentación de LCA Capture, LCA Bridge y LCA Compare',
+        message: 'Documentación de LCA Capture, LCA Bridge y LCA-Compare',
       })}
       description={translate({
         id: 'homepage.description',
-        message: 'Documentación técnica y funcional de LCA Capture, LCA Bridge y LCA Compare.',
+        message: 'Documentación técnica y funcional de LCA Capture, LCA Bridge y LCA-Compare.',
       })}>
       <main>
         <Hero />

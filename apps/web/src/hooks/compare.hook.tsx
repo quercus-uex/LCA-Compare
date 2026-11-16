@@ -1,10 +1,16 @@
-import type { CompareFilterDto, CompareResultDto } from 'common/compare';
+import type {
+  CompareExportFormat,
+  CompareExportScope,
+  CompareFilterDto,
+  CompareResultDto,
+} from 'common/compare';
 import type { Pais, Poblacion, Provincia } from 'common/location';
 import type { Parcela } from 'common/parcela';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ApiError, apiFetch, apiRequest } from '../common/api.ts';
+import { downloadBlob } from '../common/utils.ts';
 import { fallbackLanguage, isSupportedLanguage } from '../i18n/index.ts';
 
 export type { CompareResultDto } from 'common/compare';
@@ -30,6 +36,13 @@ type CompareContextType = {
   /** Sin `target` devuelve solo los valores medios de la referencia */
   compare: (reference: CompareFilterType, target?: CompareFilterType) => Promise<CompareResultDto>;
   generateReport: (reference: CompareFilterType, target: CompareFilterType) => Promise<void>;
+  /** Resultados individuales de los cultivos de conjuntos filtrados por organización */
+  exportTrace: (
+    reference: CompareFilterType,
+    target: CompareFilterType | undefined,
+    scope: CompareExportScope,
+    format: CompareExportFormat,
+  ) => Promise<void>;
 }
 
 const CompareContext = createContext<CompareContextType | undefined>(undefined);
@@ -82,21 +95,44 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
       throw new ApiError(response.status, await response.text().catch(() => response.statusText));
     }
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = t('compare.result.reportFilename');
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
+    downloadBlob(await response.blob(), t('compare.result.reportFilename'));
     toast.success(t('compare.result.reportGenerated'));
   }, [t, i18n.language]);
 
-  const value = useMemo(() => ({ compare, generateReport }), [compare, generateReport]);
+  const exportTrace = useCallback(async (
+    reference: CompareFilterType,
+    target: CompareFilterType | undefined,
+    scope: CompareExportScope,
+    format: CompareExportFormat,
+  ) => {
+    toast.info(t('compare.result.traceGenerating'));
+
+    const response = await apiRequest('/compare/export', {
+      method: 'POST',
+      body: JSON.stringify({
+        reference: transformFilters(reference),
+        target: target && transformFilters(target),
+        scope,
+        format,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, await response.text().catch(() => response.statusText));
+    }
+
+    const disposition = response.headers.get('Content-Disposition');
+    const filename = disposition?.match(/filename="?([^";]+)"?/i)?.[1]
+      ?? `trazabilidad-${scope}-${Date.now()}.${format}`;
+
+    downloadBlob(await response.blob(), filename);
+    toast.success(t('compare.result.traceGenerated'));
+  }, [t]);
+
+  const value = useMemo(
+    () => ({ compare, generateReport, exportTrace }),
+    [compare, generateReport, exportTrace],
+  );
 
   return <CompareContext.Provider value={value}>{children}</CompareContext.Provider>
 }

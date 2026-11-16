@@ -7,8 +7,8 @@ sidebar_position: 5
 
 ## GET `/plot/:plotId/tractor/:devEUI`
 
-Obtém as medições de atividade do **trator** associadas a uma parcela identificada por `plotId`.  
-Permite consultar os minutos totais de operação, bem como o detalhe de utilização por cada implemento detetado.
+Obtém as medições de atividade do trator associadas a uma parcela identificada por `plotId`.  
+Devolve os minutos totais de operação e o detalhe de utilização de cada implemento detetado.
 
 ### Parâmetros
 

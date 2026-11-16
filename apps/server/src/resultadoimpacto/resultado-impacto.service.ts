@@ -17,6 +17,32 @@ export type ResultadoImpactoWithRelations = Prisma.ResultadoImpactoGetPayload<{
   include: typeof RESULTADO_IMPACTO_LOCATION_INCLUDE;
 }>;
 
+/**
+ * Además, propietario, país y método de impacto: solo para la exportación de
+ * trazabilidad, que solo pueden pedir administradores de la organización
+ */
+const RESULTADO_IMPACTO_TRACE_INCLUDE = {
+  impacto: { select: { id: true, nombre: true } },
+  cultivo: {
+    include: {
+      parcela: {
+        include: {
+          propietario: {
+            select: { nombre: true, apellidos: true, email: true },
+          },
+          poblacion: {
+            include: { provincia: { include: { pais: true } } },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ResultadoImpactoInclude;
+
+export type ResultadoImpactoTrace = Prisma.ResultadoImpactoGetPayload<{
+  include: typeof RESULTADO_IMPACTO_TRACE_INCLUDE;
+}>;
+
 @Injectable()
 export class ResultadoImpactoService {
   constructor(private readonly prisma: PrismaService) {}
@@ -53,6 +79,16 @@ export class ResultadoImpactoService {
       where,
       orderBy,
       include: RESULTADO_IMPACTO_LOCATION_INCLUDE,
+    });
+  }
+
+  /** Resultados con los metadatos de la exportación de trazabilidad */
+  async findManyTrace(
+    where: Prisma.ResultadoImpactoWhereInput,
+  ): Promise<ResultadoImpactoTrace[]> {
+    return this.prisma.resultadoImpacto.findMany({
+      where,
+      include: RESULTADO_IMPACTO_TRACE_INCLUDE,
     });
   }
 

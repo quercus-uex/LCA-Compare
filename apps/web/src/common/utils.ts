@@ -45,16 +45,21 @@ export function toggleInArray<T extends { id: string }>(arr: T[], item: T): T[] 
     : [...arr, item];
 }
 
-export function exportJSON(input: object) {
-  const json = JSON.stringify(input, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+/** Descarga un blob como fichero; el enlace se añade al DOM porque Firefox lo necesita */
+export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'export.json';
+  link.download = filename;
+  document.body.appendChild(link);
   link.click();
+  link.remove();
   URL.revokeObjectURL(url);
+}
+
+export function exportJSON(input: object) {
+  const json = JSON.stringify(input, null, 2);
+  downloadBlob(new Blob([json], { type: 'application/json' }), 'export.json');
 }
 
 export function exportCSV(filename: string, rows: (string | number)[][]) {
@@ -66,11 +71,5 @@ export function exportCSV(filename: string, rows: (string | number)[][]) {
   const body = rows.map(r => r.map(escape).join(SEP)).join('\r\n');
   const csv = '\ufeff' + body;
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename);
 }

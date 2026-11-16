@@ -7,7 +7,7 @@ import RedactedSecret from '@site/src/components/RedactedSecret';
 
 # Authentication required
 
-All endpoints require a **valid JWT token** in the `Authorization` header:
+All endpoints require a valid JWT token in the `Authorization` header:
 
 ```
 Authorization: Bearer <token>
@@ -17,7 +17,7 @@ To obtain this token, use the following authentication endpoint:
 
 ## POST `/auth`
 
-This endpoint authenticates applications or clients external to monitoriza.dtagro.es. With the correct client credentials, the service returns a **signed access JWT token**.
+This endpoint authenticates applications or clients external to monitoriza.dtagro.es. With the correct client credentials, the service returns a signed access JWT token.
 
 ### Parameters
 
@@ -26,7 +26,7 @@ This endpoint authenticates applications or clients external to monitoriza.dtagr
 | `body` | `clientId`     | YES      | Unique identifier of the application or client |
 | `body` | `clientSecret` | YES      | Private authentication key for the client      |
 
-To obtain the JWT token, the following **static credentials** must always be sent:
+To obtain the JWT token, the following static credentials must always be sent:
 
 <RedactedSecret
   id="lca-capture-auth-credentials"

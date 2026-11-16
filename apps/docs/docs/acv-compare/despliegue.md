@@ -62,8 +62,8 @@ BACKUP_S3_ACCESS_KEY_ID=                 # Access key del usuario IAM de backups
 BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key del usuario IAM de backups
 ```
 
-`DATABASE_URL` no se define: el compose la construye como `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. Si
-falta alguna variable obligatoria, `docker compose` se detiene indicando cuál.
+El compose construye `DATABASE_URL` como `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`, por lo que no se
+define en el `.env`. Si falta alguna variable obligatoria, `docker compose` se detiene indicando cuál.
 
 Son obligatorias `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY` y `OLCA_DATA_DIR`. El correo (SMTP) y
 OpenRouter son opcionales y pueden dejarse vacíos:
@@ -160,7 +160,7 @@ El workflow `.github/workflows/build.yml` construye y publica en GHCR las imáge
 repositorio de LCA Bridge tiene un workflow equivalente que publica `lca-bridge` y `openlca-ipc`, solo con `main` y
 `sha-<hash>`.
 
-GitHub Actions no se conecta al servidor: el despliegue es manual.
+GitHub Actions no se conecta al servidor, por lo que el despliegue es manual.
 
 ## Actualización
 
@@ -196,9 +196,9 @@ defecto, cada día a las 03:00 UTC) lanza `pg_dump` y comprime el resultado con 
 controla con dos variables booleanas, y al menos una debe estar activada (si no, el comando `backup` termina con
 error). Si no se definen en el `.env`, el compose deja S3 desactivado y la copia local activada:
 
-- **`BACKUP_S3_ENABLED`**: sube la copia a `s3://<bucket>/lca-compare-db/daily/`. Los domingos copia además el
+- `BACKUP_S3_ENABLED`: sube la copia a `s3://<bucket>/lca-compare-db/daily/`. Los domingos copia además el
   backup al prefijo `lca-compare-db/weekly/`.
-- **`BACKUP_LOCAL_ENABLED`**: guarda la copia en un directorio local de la máquina. El directorio se define con
+- `BACKUP_LOCAL_ENABLED`: guarda la copia en un directorio local de la máquina. El directorio se define con
   `BACKUP_LOCAL_DIR` (por defecto `./backups`, relativo al `compose.yaml`) y se monta en el contenedor como
   `/backups`. Las copias se organizan igual que en S3: `daily/` y, los domingos, `weekly/`.
 
@@ -206,7 +206,7 @@ Si ambos destinos están activos, el volcado se genera una sola vez y se escribe
 copia se sube en streaming, sin ocupar disco en el servidor.
 
 La retención de las copias en S3 la aplican las lifecycle rules del bucket (7 diarias y 4 semanales). Las copias
-locales **no se rotan automáticamente**: hay que purgar `BACKUP_LOCAL_DIR` por otros medios (cron, logrotate...).
+locales no se rotan automáticamente; hay que purgar `BACKUP_LOCAL_DIR` por otros medios (cron, logrotate...).
 
 La imagen se construye desde `docker/backup/` (cliente de PostgreSQL 17 + AWS CLI + cron) y expone el comando
 `backup`, el mismo que ejecuta el cron.
@@ -246,8 +246,8 @@ Asigna la política a un usuario nuevo (p. ej. `acv-db-backup`) y genera una acc
 "Application running outside AWS". Esos dos valores son `BACKUP_S3_ACCESS_KEY_ID` y
 `BACKUP_S3_SECRET_ACCESS_KEY`.
 
-**3. Configurar las reglas de ciclo de vida (retención).** La rotación no la hace el contenedor: la aplican las
-lifecycle rules del bucket, conservando 7 copias diarias y 4 semanales:
+**3. Configurar las reglas de ciclo de vida (retención).** La rotación la aplican las lifecycle rules del
+bucket, que conservan 7 copias diarias y 4 semanales:
 
 ```json
 {
@@ -277,12 +277,11 @@ aws s3api put-bucket-lifecycle-configuration \
   --lifecycle-configuration file://lifecycle.json
 ```
 
-Los márgenes (8 y 29 días) garantizan conservar al menos 7 y 4 copias completas, porque AWS evalúa las reglas solo
-una vez al día.
+Con 8 y 29 días se conservan al menos 7 y 4 copias completas, porque AWS evalúa las reglas solo una vez al día.
 
 ### Ejecución manual y verificación
 
-El comando `backup` permite lanzar una copia bajo demanda y comprobar que todo funciona:
+El comando `backup` lanza una copia bajo demanda, por ejemplo para comprobar la configuración:
 
 ```bash
 # Con el contenedor en marcha
@@ -349,7 +348,7 @@ si la base de datos ya tiene usuarios, así que `./demo.sh up` reinicia la demo 
 
 ## Verificación
 
-Una vez desplegado, verifica que los servicios responden correctamente:
+Una vez desplegado, comprueba que los servicios responden:
 
 ```bash
 # Frontend

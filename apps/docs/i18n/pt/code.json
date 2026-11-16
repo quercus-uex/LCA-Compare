@@ -339,7 +339,7 @@
     "description": "The title of the tag list page"
   },
   "homepage.capture.description": {
-    "message": "API dos dados dos sensores (caudalímetro, fertilizante e trator) que alimentam o cálculo de ACV."
+    "message": "API dos dados dos sensores (caudalímetro, fertilizante e trator) usados no cálculo de ACV."
   },
   "homepage.link.introduction": {
     "message": "Introdução"

@@ -7,8 +7,8 @@ sidebar_position: 4
 
 ## GET `/fertilizer/:devEUI`
 
-Obtiene los datos del sensor de **fertilizante (fertilizer)** para un sensor específico.  
-El sensor se identifica mediante su valor **DevEUI** (Device Extended Unique Identifier).
+Obtiene los datos del sensor de fertilizante (fertilizer) para un sensor específico.  
+El sensor se identifica mediante su valor DevEUI (Device Extended Unique Identifier).
 
 ### Parámetros
 

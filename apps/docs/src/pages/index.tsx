@@ -38,7 +38,7 @@ const services: Service[] = [
     name: 'LCA Capture',
     description: (
       <Translate id="homepage.capture.description">
-        API de los datos de sensores (caudalímetro, fertilizante y tractor) que alimentan el cálculo de ACV.
+        API de los datos de sensores (caudalímetro, fertilizante y tractor) que se usan en el cálculo de ACV.
       </Translate>
     ),
     links: [

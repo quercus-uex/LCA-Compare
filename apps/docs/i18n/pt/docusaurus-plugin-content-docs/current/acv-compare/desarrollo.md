@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Instalação de Dependências
 
-LCA-Compare faz parte de um monorepo **pnpm 10** com **Turborepo**. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
+LCA-Compare faz parte de um monorepo pnpm 10 com Turborepo. Instale as dependências a partir da raiz do repositório, não a partir de cada aplicação separadamente:
 
 ```bash
 pnpm install
@@ -94,7 +94,7 @@ Executa `turbo dev --ui=tui`, que arranca em simultâneo os processos de desenvo
 pnpm docs:dev
 ```
 
-A documentação Docusaurus vive em `apps/docs` e é servida com `docusaurus start --host 0.0.0.0`.
+A documentação Docusaurus está em `apps/docs` e é servida com `docusaurus start --host 0.0.0.0`.
 
 ## Criar um Administrador
 
@@ -252,4 +252,4 @@ A localização geográfica é modelada com a hierarquia `Pais` → `Provincia` 
 
 A marca `esParcelaReferencia` (por omissão `false`) só pode ser atribuída por um administrador e permite que o comparador restrinja um conjunto a estas parcelas através do filtro `soloParcelasReferencia`.
 
-O administrador de uma organização acede aos dados de um membro apenas nas campanhas que este aceitou: a regra vive em `OrganizacionAccesoService` e é usada pelo detalhe de parcelas e resultados, pelo comparador e pelas estatísticas. A campanha é o ano UTC de `Cultivo.fechaInicioCampania`. As parcelas do próprio administrador contam apenas nas campanhas com que ele próprio contribui (`PUT /organizaciones/:id/campanias-administrador`), guardadas como consentimentos aceites. `/compare` e `/stats` continuam públicos: o `OptionalAuthGuard` identifica o utilizador se enviar um token válido, e filtrar por uma organização que não administra responde 403. O filtro `idsParcela` do comparador também responde 403 sem sessão; com sessão só alcança as parcelas do utilizador e, das alheias, as campanhas consentidas às organizações que administra; as restantes parcelas são ignoradas.
+O administrador de uma organização acede aos dados de um membro apenas nas campanhas que este aceitou. A regra está em `OrganizacionAccesoService`, que é usado pelo detalhe de parcelas e resultados, pelo comparador e pelas estatísticas. A campanha é o ano UTC de `Cultivo.fechaInicioCampania`. As parcelas do próprio administrador contam apenas nas campanhas com que ele próprio contribui (`PUT /organizaciones/:id/campanias-administrador`), guardadas como consentimentos aceites. `/compare` e `/stats` continuam públicos. O `OptionalAuthGuard` identifica o utilizador se enviar um token válido, e filtrar por uma organização que não administra responde 403. O filtro `idsParcela` do comparador também responde 403 sem sessão; com sessão só alcança as parcelas do utilizador e, das alheias, as campanhas consentidas às organizações que administra; as restantes parcelas são ignoradas.

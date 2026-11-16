@@ -7,7 +7,7 @@ sidebar_position: 4
 
 ## Instalación de dependencias
 
-LCA-Compare forma parte de un monorepo **pnpm 10** con **Turborepo**. Instala las dependencias desde la raíz del
+LCA-Compare forma parte de un monorepo pnpm 10 con Turborepo. Instala las dependencias desde la raíz del
 repositorio, no desde cada aplicación por separado:
 
 ```bash
@@ -105,7 +105,7 @@ Ejecuta `turbo dev --ui=tui`, que arranca a la vez los procesos de desarrollo de
 pnpm docs:dev
 ```
 
-La documentación Docusaurus vive en `apps/docs` y se sirve con `docusaurus start --host 0.0.0.0`.
+La documentación Docusaurus está en `apps/docs` y se sirve con `docusaurus start --host 0.0.0.0`.
 
 ## Crear un administrador
 
@@ -271,11 +271,11 @@ registrado como aviso en los logs del backend.
 La marca `esParcelaReferencia` (por defecto `false`) solo puede asignarla un administrador y permite que el comparador
 restrinja un conjunto a estas parcelas mediante el filtro `soloParcelasReferencia`.
 
-El administrador de una organización accede a los datos de un miembro solo en las campañas que este ha aceptado: la
-regla vive en `OrganizacionAccesoService` y la usan el detalle de parcelas y resultados, el comparador y las
+El administrador de una organización accede a los datos de un miembro solo en las campañas que este ha aceptado. La
+regla está en `OrganizacionAccesoService`, que usan el detalle de parcelas y resultados, el comparador y las
 estadísticas. La campaña es el año UTC de `Cultivo.fechaInicioCampania`. Las parcelas del propio administrador cuentan
 solo en las campañas que él mismo aporta (`PUT /organizaciones/:id/campanias-administrador`), guardadas como
-consentimientos aceptados. `/compare` y `/stats` siguen siendo públicos: `OptionalAuthGuard` identifica al usuario si envía un token
+consentimientos aceptados. `/compare` y `/stats` siguen siendo públicos. `OptionalAuthGuard` identifica al usuario si envía un token
 válido, y filtrar por una organización que no administra responde 403. El filtro `idsParcela` del comparador también
 responde 403 sin sesión, y con ella solo alcanza las parcelas del usuario y, de las ajenas, las campañas consentidas a
 las organizaciones que administra; el resto de parcelas se ignoran.

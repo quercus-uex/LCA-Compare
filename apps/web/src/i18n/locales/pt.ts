@@ -168,6 +168,10 @@ export const pt = {
       exportComparison: 'Exportar comparação',
       exportTarget: 'Exportar alvo',
       exportReference: 'Exportar referência',
+      exportTrace: 'Exportar rastreabilidade',
+      traceFull: 'Comparação completa',
+      traceReference: 'Apenas referência',
+      traceTarget: 'Apenas alvo',
     },
     result: {
       empty: 'O resultado da comparação aparecerá aqui',
@@ -182,6 +186,9 @@ export const pt = {
         'Diferença = (alvo − referência) / |referência| × 100. A vermelho, o alvo tem mais impacto do que a referência; a verde, menos.',
       insufficientOrganizationData: 'Não há dados suficientes: verifique se os membros da organização aceitaram campanhas que correspondam aos filtros.',
       organizationForbidden: 'Não administra a organização selecionada.',
+      
+      traceGenerating: 'A gerar exportação…',
+      traceGenerated: 'Exportação gerada',
     },
   },
   parcelas: {

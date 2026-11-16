@@ -33,14 +33,14 @@ POST /capture-acv    →    ACVService.execute()
 1. **`validate_parcela()`**: requires at least one plot identifier (SIGPAC with province, cadastral reference, or property code).
 2. **`get_process_class()`**: selects the process class according to `metadatos.cultivo.tipo` (`"Tomate"`, `"Olivo"`, or `"Viñedo"`).
 3. **`validate_cultivo()`**: checks that `metadatos.cultivo.produccion`, `metadatos.cultivo.superficie_cultivada`, `riegos.entre_calles` and, with pierced drippers, `riegos.entre_arboles` are greater than 0.
-4. **`calculate()`**: writes the flows to the openLCA subprocesses, calculates the product system, and builds the result. The openLCA processes are shared, so these steps are serialized with a lock (`olca_lock`): concurrent requests are handled one at a time.
+4. **`calculate()`**: writes the flows to the openLCA subprocesses, calculates the product system, and builds the result. The openLCA processes are shared, so these steps are serialized with a lock (`olca_lock`), and concurrent requests are handled one at a time.
 5. **`send_result_to_lca_compare()`**: sends the result to LCA-Compare (best-effort: errors are logged without interrupting the response).
 
 `POST /capture-acv-coeficientes` follows the same flow, but replaces `calculate()` with `calculate_con_coeficientes()`, which only uses the lock the first time, to extract the coefficients.
 
 ## Service Response
 
-The response contains five impact lists. Each element gives the EF 3.1 impact category (`category`), the amount per kg of product (`amount`), and its unit (`unit`). Each list includes every category of the method (25 in the example). The following excerpt from `examples/example_out.json` in the LCA Bridge repository is **truncated** to three categories, with rounded values:
+The response contains five impact lists. Each element gives the EF 3.1 impact category (`category`), the amount per kg of product (`amount`), and its unit (`unit`). Each list includes every category of the method (25 in the example). The following excerpt from `examples/example_out.json` in the LCA Bridge repository is truncated to three categories, with rounded values:
 
 ```json
 {
@@ -103,7 +103,7 @@ In the platform compose file, the result is sent to the `POST /capture` endpoint
 
 ## Interactive Documentation (Swagger)
 
-LCA Bridge exposes a **Swagger/OpenAPI** interface with the input schema of both endpoints and the ability to run test requests. The JSON specification is available at `/openapi.json`.
+LCA Bridge exposes a Swagger/OpenAPI interface with the input schema of both endpoints and the ability to run test requests. The JSON specification is available at `/openapi.json`.
 
 | Environment | URL |
 |---|---|

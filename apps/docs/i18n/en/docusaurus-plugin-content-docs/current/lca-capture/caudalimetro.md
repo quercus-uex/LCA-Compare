@@ -7,8 +7,8 @@ sidebar_position: 3
 
 ## GET `/flowmeter/:devEUI`
 
-Gets the **flowmeter** sensor data for a specific sensor.  
-The sensor is identified by its **DevEUI** value (Device Extended Unique Identifier).
+Gets the flowmeter sensor data for a specific sensor.  
+The sensor is identified by its DevEUI value (Device Extended Unique Identifier).
 
 ### Parameters
 

@@ -57,7 +57,7 @@ BACKUP_S3_ACCESS_KEY_ID=                 # Access key of the backup IAM user
 BACKUP_S3_SECRET_ACCESS_KEY=             # Secret key of the backup IAM user
 ```
 
-`DATABASE_URL` is not set: the compose file builds it as `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`. If a required variable is missing, `docker compose` stops and says which one.
+The compose file builds `DATABASE_URL` as `postgres://${DB_USER}:${DB_PASSWORD}@db:5432/acv`, so it is not set in `.env`. If a required variable is missing, `docker compose` stops and says which one.
 
 `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `CALC_API_KEY`, and `OLCA_DATA_DIR` are required. Email (SMTP) and OpenRouter are optional and can be left empty:
 
@@ -136,7 +136,7 @@ To update it, run `docker pull louislam/uptime-kuma:1` and `docker rm -f uptime-
 
 The `.github/workflows/build.yml` workflow builds and publishes the `lca-compare-backend`, `lca-compare-frontend`, and `lca-compare-backup` images to GHCR. It runs on every push to `main`, with the `main` and `sha-<hash>` tags; on every `vX.Y.Z` git tag, with `X.Y.Z`, `X.Y`, and `sha-<hash>`; and manually from GitHub. The LCA Bridge repository has an equivalent workflow that publishes `lca-bridge` and `openlca-ipc`, only with `main` and `sha-<hash>`.
 
-GitHub Actions does not connect to the server: deployment is manual.
+GitHub Actions does not connect to the server, so deployment is manual.
 
 ## Updating
 
@@ -166,14 +166,14 @@ docker compose up -d lca-bridge openlca-ipc
 
 The `db-backup` service performs automatic database backups. According to `BACKUP_SCHEDULE` (by default, every day at 03:00 UTC) it runs `pg_dump` against the `acv` database and gzips the output. The destination of the backups is controlled by two boolean variables, and at least one must be enabled (otherwise the `backup` command fails). If they are not set in `.env`, the compose file disables S3 and enables the local backup:
 
-- **`BACKUP_S3_ENABLED`**: uploads the backup to `s3://<bucket>/lca-compare-db/daily/`. On Sundays it also copies the backup to the `lca-compare-db/weekly/` prefix for longer retention.
-- **`BACKUP_LOCAL_ENABLED`**: saves the backup to a local directory on the machine. The directory is set with `BACKUP_LOCAL_DIR` (default `./backups`, relative to `compose.yaml`) and is mounted into the container as `/backups`. Backups are organized the same way as in S3: `daily/` and, on Sundays, `weekly/`.
+- `BACKUP_S3_ENABLED`: uploads the backup to `s3://<bucket>/lca-compare-db/daily/`. On Sundays it also copies the backup to the `lca-compare-db/weekly/` prefix.
+- `BACKUP_LOCAL_ENABLED`: saves the backup to a local directory on the machine. The directory is set with `BACKUP_LOCAL_DIR` (default `./backups`, relative to `compose.yaml`) and is mounted into the container as `/backups`. Backups are organized the same way as in S3: `daily/` and, on Sundays, `weekly/`.
 
 If both destinations are enabled, the dump is generated once and written to both. With only S3 enabled, the backup is streamed without using disk space on the server.
 
-Retention of the S3 backups is enforced by the bucket lifecycle rules (7 daily and 4 weekly). Local backups are **not rotated automatically**: `BACKUP_LOCAL_DIR` must be purged by other means (cron, logrotate...).
+Retention of the S3 backups is enforced by the bucket lifecycle rules (7 daily and 4 weekly). Local backups are not rotated automatically; `BACKUP_LOCAL_DIR` must be purged by other means (cron, logrotate...).
 
-The image is built from `docker/backup/` (PostgreSQL 17 client + AWS CLI + cron) and exposes the `backup` command — the same one cron runs — which you can also trigger manually.
+The image is built from `docker/backup/` (PostgreSQL 17 client + AWS CLI + cron) and exposes the `backup` command, the same one cron runs.
 
 ### AWS prerequisites
 
@@ -205,7 +205,7 @@ This setup is only needed if `BACKUP_S3_ENABLED=true`. Before the first deployme
 
 Attach the policy to a new user (e.g. `acv-db-backup`) and generate an access key with the "Application running outside AWS" use case. Those two values are `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY`.
 
-**3. Configure the lifecycle rules (retention).** Rotation is not done by the container: it is enforced by the bucket lifecycle rules, keeping 7 daily and 4 weekly backups:
+**3. Configure the lifecycle rules (retention).** Rotation is enforced by the bucket lifecycle rules, which keep 7 daily and 4 weekly backups:
 
 ```json
 {
@@ -234,11 +234,11 @@ aws s3api put-bucket-lifecycle-configuration \
   --lifecycle-configuration file://lifecycle.json
 ```
 
-The margins (8 and 29 days) guarantee keeping at least 7 and 4 complete copies, because AWS evaluates the rules only once a day.
+With 8 and 29 days, at least 7 and 4 complete copies are kept, because AWS evaluates the rules only once a day.
 
 ### Manual run and verification
 
-The `backup` command lets you trigger a backup on demand and check that everything works:
+The `backup` command runs a backup on demand, for example to check the configuration:
 
 ```bash
 # With the container running
@@ -296,7 +296,7 @@ The data is deterministic: one administrator, 8 sample farmers, and about 40 plo
 
 ## Verification
 
-After deployment, verify that the services respond correctly:
+After deployment, check that the services respond:
 
 ```bash
 # Frontend

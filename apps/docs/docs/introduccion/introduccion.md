@@ -18,7 +18,7 @@ por rango de fechas.
 
 ### LCA Bridge
 
-**LCA Bridge** es un microservicio en **Python** con **FastAPI** que recibe los datos de un cultivo (parcela, insumos,
+**LCA Bridge** es un microservicio en Python con FastAPI que recibe los datos de un cultivo (parcela, insumos,
 riego, maquinaria…), calcula su impacto ambiental con el [servidor IPC de openLCA](https://github.com/GreenDelta/olca-ipc-container)
 según el proceso de su tipo de cultivo (tomate, olivo o viñedo) y envía el resultado a LCA-Compare.
 
@@ -40,8 +40,8 @@ interna:
    usuario, la parcela y el cultivo, y crea el usuario y la parcela si no existen.
 4. El usuario consulta los resultados, los compara y genera informes desde la interfaz web de **LCA-Compare**.
 
-El envío a LCA-Compare es *best-effort*: si LCA-Compare no está disponible, LCA Bridge registra el error en su log y
-responde igualmente al cliente con el resultado.
+Si LCA-Compare no está disponible, LCA Bridge registra el error en su log y responde igualmente al cliente con el
+resultado (envío *best-effort*).
 
 ## Diagrama de la arquitectura software
 

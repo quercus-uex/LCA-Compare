@@ -39,7 +39,7 @@ POST /capture-acv    →    ACVService.execute()
 3. **`validate_cultivo()`**: comprueba que `metadatos.cultivo.produccion`, `metadatos.cultivo.superficie_cultivada`,
    `riegos.entre_calles` y, con goteros pinchados, `riegos.entre_arboles` son mayores que 0.
 4. **`calculate()`**: escribe los flujos en los subprocesos de openLCA, calcula el sistema de producto y construye el
-   resultado. Los procesos de openLCA son compartidos, así que estos pasos se serializan con un bloqueo (`olca_lock`):
+   resultado. Los procesos de openLCA son compartidos, así que estos pasos se serializan con un bloqueo (`olca_lock`) y
    las peticiones concurrentes se atienden de una en una.
 5. **`send_result_to_lca_compare()`**: envía el resultado a LCA-Compare (best-effort: los errores se registran en el
    log sin interrumpir la respuesta).
@@ -52,7 +52,7 @@ POST /capture-acv    →    ACVService.execute()
 La respuesta contiene cinco listas de impactos. Cada elemento indica la categoría de impacto de EF 3.1 (`category`),
 la cantidad por kg de producto (`amount`) y su unidad (`unit`). Cada lista incluye todas las categorías del método
 (25 en el ejemplo). El siguiente extracto de `examples/example_out.json` del repositorio de LCA Bridge está
-**truncado** a tres categorías y con los valores redondeados:
+truncado a tres categorías y con los valores redondeados:
 
 ```json
 {
@@ -117,7 +117,7 @@ Compare:
 
 ## Documentación interactiva (Swagger)
 
-LCA Bridge expone una interfaz **Swagger/OpenAPI** con el esquema de entrada de ambos endpoints y la posibilidad de
+LCA Bridge expone una interfaz Swagger/OpenAPI con el esquema de entrada de ambos endpoints y la posibilidad de
 ejecutar peticiones de prueba. La especificación en JSON está en `/openapi.json`.
 
 | Entorno | URL |

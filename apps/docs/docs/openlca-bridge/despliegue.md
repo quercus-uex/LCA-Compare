@@ -28,8 +28,8 @@ muestra la estructura del volumen:
 </p>
 
 :::note
-El subdirectorio `openlca-docker/` es un proyecto **Maven/Java** independiente que construye la imagen del contenedor
-del servidor IPC de openLCA. No tiene relación con el código Python del servicio puente.
+El subdirectorio `openlca-docker/` es un proyecto Maven/Java independiente que construye la imagen del contenedor
+del servidor IPC de openLCA. No tiene relación con el código Python de LCA Bridge.
 :::
 
 ## Variables de entorno
@@ -79,7 +79,7 @@ La base de datos debe estar en `openlca-docker/data/databases/ecoinvent`:
 docker compose up -d
 ```
 
-El servicio puente queda en el puerto **3000** y el servidor IPC en el **3333**. Los resultados se envían a
+LCA Bridge queda en el puerto 3000 y el servidor IPC en el 3333. Los resultados se envían a
 `http://host.docker.internal:8000` (el backend de LCA-Compare en desarrollo), salvo que se defina
 `LCA_COMPARE_BASE_URL`.
 

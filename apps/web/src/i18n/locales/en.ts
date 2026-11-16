@@ -168,6 +168,10 @@ export const en = {
       exportComparison: 'Export comparison',
       exportTarget: 'Export target',
       exportReference: 'Export reference',
+      exportTrace: 'Export traceability',
+      traceFull: 'Full comparison',
+      traceReference: 'Reference only',
+      traceTarget: 'Target only',
     },
     result: {
       empty: 'The comparison result will appear here',
@@ -182,6 +186,9 @@ export const en = {
         'Difference = (target − reference) / |reference| × 100. Red means the target has a higher impact than the reference; green, a lower one.',
       insufficientOrganizationData: 'Not enough data: check that the organization members have accepted campaigns that match the filters.',
       organizationForbidden: 'You do not manage the selected organization.',
+      
+      traceGenerating: 'Generating export…',
+      traceGenerated: 'Export generated',
     },
   },
   parcelas: {

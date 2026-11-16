@@ -1,3 +1,4 @@
+import { UnprocessableEntityException } from '@nestjs/common';
 import { CompareService, formatAmount, formatPercent } from './compare.service';
 import { ResultadoImpactoService } from '../resultadoimpacto/resultado-impacto.service';
 import { ParcelaService } from '../parcela/parcela.service';
@@ -5,7 +6,11 @@ import { ProvinciaService } from '../provincia/provincia.service';
 import { PoblacionService } from '../poblacion/poblacion.service';
 import { PaisService } from '../pais/pais.service';
 import { AiService } from '../ai/ai.service';
-import { IMPACT_KEYS, ResultadoImpactoWithRelations } from './compare.types';
+import {
+  IMPACT_KEYS,
+  type ResultadoImpactoTrace,
+  ResultadoImpactoWithRelations,
+} from './compare.types';
 import { CompareQueryItemDto } from './dto/compare-query.dto';
 import { CompareQueryBuilder } from './compare-query.builder';
 import { ResultadoImpactoDto } from '../resultadoimpacto/dto/resultado-impacto.dto';
@@ -75,33 +80,59 @@ function makeResultadoImpacto(
     id: string;
     cultivoTipo: string;
     parcelaId: string;
+    parcelaNombre: string;
     poblacionId: string;
     provinciaId: string;
     paisId: string;
     fechaInicio: Date;
   }>,
-): ResultadoImpactoWithRelations {
+): ResultadoImpactoTrace {
   return {
     id: relations?.id ?? 'ri-1',
     datos: datos as any,
+    impacto: { id: 'metodo-1', nombre: 'EF 3.1' },
     cultivo: {
       id: 'cult-1',
       tipo: relations?.cultivoTipo ?? 'trigo',
       fechaInicioCampania: relations?.fechaInicio ?? new Date('2025-01-01'),
+      superficieCultivada: 1.5,
+      produccion: 100,
+      consumoAgua: 20,
+      ciclo: 120,
       parcela: {
         id: relations?.parcelaId ?? 'par-1',
+        nombre: relations?.parcelaNombre ?? 'Parcela 1',
+        sigpac: 'SIGPAC-1',
+        refCat: null,
+        ptIdParcela: null,
+        esParcelaReferencia: true,
+        idPropietario: 'u-1',
+        propietario: {
+          nombre: 'Ana',
+          apellidos: 'García',
+          email: 'ana@example.com',
+        },
         idPoblacion: relations?.poblacionId ?? 'pop-1',
         poblacion: {
           id: relations?.poblacionId ?? 'pop-1',
+          nombre: 'Badajoz',
+          idCatastro: 123,
           idProvincia: relations?.provinciaId ?? 'prov-1',
           provincia: {
             id: relations?.provinciaId ?? 'prov-1',
+            nombre: 'Badajoz',
+            idCatastro: 456,
             idPais: relations?.paisId ?? 'pais-1',
+            pais: {
+              id: relations?.paisId ?? 'pais-1',
+              nombre: 'España',
+              codigo: 'ES',
+            },
           },
         },
       },
     },
-  } as unknown as ResultadoImpactoWithRelations;
+  } as unknown as ResultadoImpactoTrace;
 }
 
 describe('CompareService', () => {
@@ -109,7 +140,9 @@ describe('CompareService', () => {
   let resultadoImpactoService: jest.Mocked<
     Pick<ResultadoImpactoService, 'findMany' | 'findManyDatos'>
   >;
-  let parcelaService: jest.Mocked<Pick<ParcelaService, 'findManyByPointRange'>>;
+  let parcelaService: jest.Mocked<
+    Pick<ParcelaService, 'findMany' | 'findManyByPointRange'>
+  >;
   let provinciaService: jest.Mocked<Pick<ProvinciaService, 'findMany'>>;
   let poblacionService: jest.Mocked<Pick<PoblacionService, 'findMany'>>;
   let paisService: jest.Mocked<Pick<PaisService, 'findMany'>>;
@@ -133,7 +166,7 @@ describe('CompareService', () => {
       findMany: jest.fn(),
       findManyDatos: jest.fn(),
     };
-    parcelaService = { findManyByPointRange: jest.fn() };
+    parcelaService = { findMany: jest.fn(), findManyByPointRange: jest.fn() };
     provinciaService = { findMany: jest.fn() };
     poblacionService = { findMany: jest.fn() };
     paisService = { findMany: jest.fn() };
@@ -192,6 +225,155 @@ describe('CompareService', () => {
         expect(result).toBe(expectedResults);
       },
     );
+  });
+
+  describe('buildTraceExport', () => {
+    const org = { id: 'org-1', nombre: 'Cooperativa Sur' };
+    const refFilters: CompareQueryItemDto = {
+      idOrganizacion: org.id,
+      idPais: 'pais-1',
+      idsProvincia: ['prov-1'],
+      idsPoblacion: ['pop-1'],
+      // par-ajena no aparece en los resultados: su nombre no debe salir
+      idsParcela: ['par-a', 'par-b', 'par-ajena'],
+      tipoCultivo: 'trigo',
+      anioCampaniaInicio: 2023,
+      soloParcelasReferencia: true,
+    };
+    const tarFilters: CompareQueryItemDto = {
+      idOrganizacion: org.id,
+      tipoCultivo: 'cebada',
+    };
+
+    beforeEach(() => {
+      paisService.findMany.mockResolvedValue([
+        { id: 'pais-1', nombre: 'España', codigo: 'ES' },
+      ]);
+      provinciaService.findMany.mockResolvedValue([
+        { id: 'prov-1', nombre: 'Badajoz', idPais: 'pais-1', idCatastro: 1 },
+      ]);
+      poblacionService.findMany.mockResolvedValue([
+        { id: 'pop-1', nombre: 'Mérida', idProvincia: 'prov-1', idCatastro: 2 },
+      ]);
+    });
+
+    it('includes filters with resolved names, means, individual rows and comparison', async () => {
+      const refResults = [
+        makeResultadoImpacto(makeImpactDto(), {
+          id: 'ri-b',
+          parcelaId: 'par-b',
+          parcelaNombre: 'Parcela B',
+          fechaInicio: new Date('2024-03-01'),
+        }),
+        makeResultadoImpacto(makeImpactDto(), {
+          id: 'ri-a',
+          parcelaId: 'par-a',
+          parcelaNombre: 'Parcela A',
+          fechaInicio: new Date('2025-03-01'),
+        }),
+      ];
+      const tarResults = [
+        makeResultadoImpacto(
+          makeImpactDto({
+            impacto_total: [{ category: 'GWP', amount: 20, unit: 'kg CO2 eq' }],
+          }),
+          { id: 'ri-t', cultivoTipo: 'cebada' },
+        ),
+      ];
+
+      const trace = await service.buildTraceExport({
+        scope: 'full',
+        reference: {
+          filters: refFilters,
+          results: refResults,
+          organizacion: org,
+        },
+        target: { filters: tarFilters, results: tarResults, organizacion: org },
+      });
+
+      expect(trace.scope).toBe('full');
+      expect(trace.generatedAt).toEqual(expect.any(String));
+      expect(trace.reference!.count).toBe(2);
+      expect(trace.reference!.mean.impacto_total).toEqual([
+        { category: 'GWP', amount: 10, unit: 'kg CO2 eq' },
+        { category: 'AP', amount: 5, unit: 'mol H+ eq' },
+      ]);
+      // Rows are sorted by plot name and expose the owner with basic identity
+      expect(
+        trace.reference!.results.map((result) => result.cultivo.parcela.nombre),
+      ).toEqual(['Parcela A', 'Parcela B']);
+      expect(trace.reference!.results[0].cultivo.parcela.propietario).toEqual({
+        nombre: 'Ana García',
+        email: 'ana@example.com',
+      });
+      // Filter ids are kept and their names are resolved for readability
+      expect(trace.reference!.filters).toMatchObject({
+        idOrganizacion: org.id,
+        organizacion: org,
+        pais: { id: 'pais-1', nombre: 'España', codigo: 'ES' },
+        provincias: [{ id: 'prov-1', nombre: 'Badajoz' }],
+        poblaciones: [{ id: 'pop-1', nombre: 'Mérida' }],
+        // Parcel names come from the exported rows, never from a lookup
+        parcelas: [
+          { id: 'par-a', nombre: 'Parcela A' },
+          { id: 'par-b', nombre: 'Parcela B' },
+        ],
+        tipoCultivo: 'trigo',
+      });
+      expect(parcelaService.findMany).not.toHaveBeenCalled();
+      expect(trace.comparison!.impacto_total[0]).toMatchObject({
+        category: 'GWP',
+        refAmount: 10,
+        tarAmount: 20,
+        diff: 100,
+      });
+    });
+
+    it('exports only the target set when the scope is target', async () => {
+      const trace = await service.buildTraceExport({
+        scope: 'target',
+        target: {
+          filters: tarFilters,
+          results: [makeResultadoImpacto(makeImpactDto(), { id: 'ri-t' })],
+          organizacion: org,
+        },
+      });
+
+      expect(trace).toMatchObject({ scope: 'target' });
+      expect(trace.reference).toBeUndefined();
+      expect(trace.comparison).toBeUndefined();
+      expect(trace.target!.count).toBe(1);
+    });
+
+    it('rejects a set whose results have no crop with 422', async () => {
+      const result = makeResultadoImpacto(makeImpactDto());
+      await expect(
+        service.buildTraceExport({
+          scope: 'reference',
+          reference: {
+            filters: refFilters,
+            results: [{ ...result, cultivo: null }],
+            organizacion: org,
+          },
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('does not resolve filter names that are not present', async () => {
+      await service.buildTraceExport({
+        scope: 'target',
+        target: {
+          filters: { idOrganizacion: org.id },
+          results: [makeResultadoImpacto(makeImpactDto())],
+          organizacion: org,
+        },
+      });
+
+      expect(paisService.findMany).not.toHaveBeenCalled();
+      expect(provinciaService.findMany).not.toHaveBeenCalled();
+      expect(poblacionService.findMany).not.toHaveBeenCalled();
+      expect(parcelaService.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('organization filter', () => {

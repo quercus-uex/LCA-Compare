@@ -21,7 +21,7 @@ The openLCA IPC server uses the database to run environmental impact calculation
 </p>
 
 :::note
-The `openlca-docker/` subdirectory is an independent **Maven/Java** project that builds the openLCA IPC server container image. It is unrelated to the Python code of the bridge service.
+The `openlca-docker/` subdirectory is an independent Maven/Java project that builds the openLCA IPC server container image. It is unrelated to the Python code of LCA Bridge.
 :::
 
 ## Environment Variables
@@ -62,7 +62,7 @@ The `docker-compose.yml` file in the LCA Bridge repository starts the service lo
 docker compose up -d
 ```
 
-The bridge service listens on port **3000** and the IPC server on **3333**. Results are sent to `http://host.docker.internal:8000` (the LCA-Compare backend in development) unless `LCA_COMPARE_BASE_URL` is set.
+LCA Bridge listens on port 3000 and the IPC server on 3333. Results are sent to `http://host.docker.internal:8000` (the LCA-Compare backend in development) unless `LCA_COMPARE_BASE_URL` is set.
 
 ## Verification
 

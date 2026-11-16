@@ -3,6 +3,6 @@
   "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "Documentación sobre LCA Bridge, el servicio puente entre LCA Capture y openLCA."
+    "description": "Documentación sobre LCA Bridge, el servicio que calcula con openLCA el ACV de los datos de LCA Capture."
   }
 }

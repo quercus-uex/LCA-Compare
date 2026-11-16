@@ -17,14 +17,14 @@ https://monitoriza.dtagro.es/api/acv
 
 ## Filtro por datas
 
-Os endpoints de sensores admitem dois parâmetros de consulta opcionais para delimitar o intervalo de dados. Se não forem especificados, são devolvidos **todos os dados disponíveis** do sensor.
+Os endpoints de sensores admitem dois parâmetros de consulta opcionais para delimitar o intervalo de dados. Se não forem especificados, são devolvidos todos os dados disponíveis do sensor.
 
 | Tipo    | Nome        | Obrigatório | Descrição                                                            |
 | ------- | ----------- | ----------- | -------------------------------------------------------------------- |
 | `query` | `startDate` | NÃO         | Data de início do intervalo. Por omissão: `1970-01-01T00:00:00.000Z` |
 | `query` | `endDate`   | NÃO         | Data de fim do intervalo. Por omissão: data e hora atuais            |
 
-As datas seguem o formato **ISO 8601** (`YYYY-MM-DDTHH:mm:ssZ`).
+As datas seguem o formato ISO 8601 (`YYYY-MM-DDTHH:mm:ssZ`).
 
 :::note
 O formato de resposta dos endpoints de sensores não é definitivo e pode mudar.

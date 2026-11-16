@@ -6,9 +6,9 @@ sidebar_position: 4
 # JSON de entrada
 
 Los endpoints `POST /capture-acv` y `POST /capture-acv-coeficientes` reciben como cuerpo de la petición el JSON de un
-cultivo exportado por **LCA Capture**. El modelo se genera a partir del esquema `schema/lca_capture_schema_v1.json`
-del repositorio de LCA Bridge y no admite campos no definidos: un campo desconocido, un campo obligatorio ausente o un
-tipo incorrecto devuelven **HTTP 422**.
+cultivo exportado por LCA Capture. El modelo se genera a partir del esquema `schema/lca_capture_schema_v1.json`
+del repositorio de LCA Bridge y no admite campos no definidos. Un campo desconocido, un campo obligatorio ausente o un
+tipo incorrecto devuelven HTTP 422.
 
 Salvo que se indique otra unidad, las cantidades "por producción" (`*_produccion`, fertilizantes) se expresan **por
 tonelada de producto**, ya que `metadatos.cultivo.produccion` está en t/ha.
@@ -46,7 +46,7 @@ Los criterios de cálculo de cada campo están en
 
 :::note
 Debe informarse al menos uno de los tres identificadores (`es_sigpac` con `provincia`, `es_referencia_catastral` o
-`pt_id_parcela_predial`); en caso contrario, el servicio responde **HTTP 400**.
+`pt_id_parcela_predial`); en caso contrario, el servicio responde HTTP 400.
 :::
 
 ### `metadatos.cultivo`

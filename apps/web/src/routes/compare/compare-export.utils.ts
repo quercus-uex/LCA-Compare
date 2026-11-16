@@ -1,8 +1,7 @@
+import type { CompareExportScope } from 'common/compare';
 import { IMPACT_KEYS, IMPACT_LABEL_KEYS, type ImpactKey } from '../../common/constants.ts';
 import { translateEfCategory } from '../../common/utils.ts';
 import type { CompareResult } from '../../hooks/compare.hook.tsx';
-
-export type CompareExportMode = 'full' | 'reference' | 'target';
 
 type Translator = (key: string) => string;
 
@@ -15,7 +14,7 @@ type ExportPayload = Record<ImpactKey, ExportItem[]>;
 
 export const buildCompareExportPayload = (
   result: CompareResult,
-  mode: CompareExportMode,
+  mode: CompareExportScope,
 ): CompareResult | ExportPayload => {
   if (mode === 'full') return result;
   const pickAmount = (i: { refAmount: number; tarAmount?: number }): number | undefined =>
@@ -33,7 +32,7 @@ export const buildCompareExportPayload = (
 
 export const buildCompareCSV = (
   result: CompareResult,
-  mode: CompareExportMode,
+  mode: CompareExportScope,
   t: Translator,
 ): (string | number)[][] => {
   const header: (string | number)[] =

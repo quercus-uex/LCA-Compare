@@ -7,8 +7,8 @@ sidebar_position: 3
 
 ## GET `/flowmeter/:devEUI`
 
-Obtiene los datos del sensor de **caudalímetro (flowmeter)** para un sensor específico.  
-El sensor se identifica mediante su valor **DevEUI** (Device Extended Unique Identifier).
+Obtiene los datos del sensor de caudalímetro (flowmeter) para un sensor específico.  
+El sensor se identifica mediante su valor DevEUI (Device Extended Unique Identifier).
 
 ### Parámetros
 

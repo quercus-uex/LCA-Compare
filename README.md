@@ -1,7 +1,7 @@
 # LCA-Compare
 
 ## Introduction
-LCA-Compare is a web app for visualizing and comparing the Life Cycle Assessment (LCA) of crops, based on the results provided by [LCA Bridge](https://github.com/quercus-uex/LCA-Bridge).
+LCA-Compare is a web app for visualizing and comparing the Life Cycle Assessment (LCA) of crops.
 
 ▶️ Watch the explanatory video: [LCA-Compare on YouTube](https://youtu.be/zB5d2SOHeCM)
 
@@ -43,7 +43,7 @@ NestJS REST API. The current public controllers cover:
 - **Organizations** (`/organizaciones`, `/consentimientos`, `/notificaciones`) - Organizations, per-campaign consent requests and in-app notifications
 - **Administration** (`/admin`) - CRUD for users, plots, crops, impact methods and locations, plus viewing organizations and consents
 - **Locations** (`/pais`, `/provincia`, `/poblacion`) - Territorial data lookup
-- **LCA Bridge** (`/capture`) - Receives LCA results from LCA Bridge and creates the related user, plot and crop
+- **LCA Bridge** (`/capture`) - Receives LCA results and creates the related user, plot and crop
 
 The backend's OpenAPI documentation is available at `/docs` when accessing the server directly, or at `/api/docs` through the frontend proxy.
 

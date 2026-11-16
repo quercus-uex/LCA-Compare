@@ -287,8 +287,10 @@ export class CompareService implements OnModuleDestroy {
   }
 
   /**
-   * Payload de trazabilidad: las mismas filas que alimentan la comparativa,
-   * con sus metadatos, más la media y la comparativa agregada.
+   * Payload de trazabilidad: los resultados que cumplen los filtros en el
+   * momento de exportar (con los consentimientos vigentes), con sus metadatos,
+   * más la media y la comparativa agregada. Coincide con la comparativa
+   * mostrada salvo que los datos o los consentimientos hayan cambiado.
    */
   async buildTraceExport(params: {
     scope: CompareExportScope;
